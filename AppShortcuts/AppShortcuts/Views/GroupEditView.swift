@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// View for editing a single app group
 struct GroupEditView: View {
@@ -7,6 +8,7 @@ struct GroupEditView: View {
     
     @State private var groupName: String = ""
     @State private var shortcut: KeyboardShortcutData?
+    @State private var draggingApp: AppItem?
     
     private var group: AppGroup? {
         store.groups.first { $0.id == groupId }
@@ -45,7 +47,7 @@ struct GroupEditView: View {
                 
                 Divider()
                 
-                // Apps List
+                // Apps Grid
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Text("Applications")
@@ -53,29 +55,37 @@ struct GroupEditView: View {
                         
                         Spacer()
                         
-                        Text("\(group.apps.count) apps")
+                        Text("\(group.apps.count) \(group.apps.count == 1 ? "app" : "apps")")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
                     
                     if group.apps.isEmpty {
-                        Text("No apps added yet. Drag apps here from Finder.")
+                        Text("No apps added yet. Drag apps here or click the drop zone below.")
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .padding(.vertical, 8)
                     } else {
-                        List {
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 80, maximum: 100))], spacing: 16) {
                             ForEach(group.apps) { app in
-                                AppRowView(app: app) {
+                                AppGridItemView(app: app) {
                                     store.removeApp(app, from: groupId)
                                 }
-                            }
-                            .onMove { indices, newOffset in
-                                store.moveApp(in: groupId, from: indices, to: newOffset)
+                                .opacity(draggingApp?.id == app.id ? 0.01 : 1)
+                                .onDrag {
+                                    draggingApp = app
+                                    return NSItemProvider(object: app.id.uuidString as NSString)
+                                }
+                                .onDrop(of: [.text], delegate: AppReorderDelegate(
+                                    item: app,
+                                    draggingApp: $draggingApp,
+                                    store: store,
+                                    groupId: groupId
+                                ))
                             }
                         }
-                        .listStyle(.plain)
-                        .frame(minHeight: 150)
+                        .padding(.vertical, 8)
+                        .animation(.default, value: group.apps)
                     }
                     
                     // Drop zone for adding apps
@@ -105,6 +115,34 @@ struct GroupEditView: View {
             groupName = group.name
             shortcut = group.shortcut
         }
+    }
+}
+
+struct AppReorderDelegate: DropDelegate {
+    let item: AppItem
+    @Binding var draggingApp: AppItem?
+    let store: GroupStore
+    let groupId: UUID
+
+    func dropEntered(info: DropInfo) {
+        guard let draggingApp = draggingApp,
+              draggingApp.id != item.id,
+              let group = store.groups.first(where: { $0.id == groupId }),
+              let fromIndex = group.apps.firstIndex(of: draggingApp),
+              let toIndex = group.apps.firstIndex(of: item)
+        else { return }
+        
+        let destination = toIndex > fromIndex ? toIndex + 1 : toIndex
+        store.moveApp(in: groupId, from: IndexSet(integer: fromIndex), to: destination)
+    }
+    
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        return DropProposal(operation: .move)
+    }
+    
+    func performDrop(info: DropInfo) -> Bool {
+        draggingApp = nil
+        return true
     }
 }
 

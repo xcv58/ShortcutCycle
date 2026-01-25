@@ -57,6 +57,60 @@ struct AppRowView: View {
     }
 }
 
+/// A grid item representing a single app with icon and name
+struct AppGridItemView: View {
+    let app: AppItem
+    let onDelete: () -> Void
+    @State private var isHovered = false
+    
+    var body: some View {
+        VStack(spacing: 6) {
+            ZStack(alignment: .topTrailing) {
+                // App icon
+                Group {
+                    if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: app.bundleIdentifier) {
+                        Image(nsImage: NSWorkspace.shared.icon(forFile: appURL.path))
+                            .resizable()
+                            .frame(width: 48, height: 48)
+                    } else {
+                        Image(systemName: "app.fill")
+                            .font(.system(size: 36))
+                            .foregroundColor(.secondary)
+                            .frame(width: 48, height: 48)
+                    }
+                }
+                
+                // Delete button (visible on hover)
+                if isHovered {
+                    Button(action: onDelete) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 16))
+                            .foregroundColor(.white)
+                            .background(Circle().fill(Color.red))
+                    }
+                    .buttonStyle(.plain)
+                    .offset(x: 6, y: -6)
+                }
+            }
+            
+            Text(app.name)
+                .font(.caption)
+                .lineLimit(2)
+                .multilineTextAlignment(.center)
+                .frame(width: 80)
+        }
+        .padding(8)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(isHovered ? Color.accentColor.opacity(0.1) : Color.clear)
+        )
+        .onHover { hovering in
+            isHovered = hovering
+        }
+        .help(app.bundleIdentifier)
+    }
+}
+
 /// Drop zone for adding apps from Finder
 struct AppDropZoneView: View {
     @Binding var apps: [AppItem]
@@ -69,7 +123,7 @@ struct AppDropZoneView: View {
                 .font(.system(size: 24))
                 .foregroundColor(isTargeted ? .accentColor : .secondary)
             
-            Text("Drop apps here")
+            Text("Drop or click to add apps")
                 .font(.caption)
                 .foregroundColor(isTargeted ? .accentColor : .secondary)
         }
@@ -86,8 +140,31 @@ struct AppDropZoneView: View {
             RoundedRectangle(cornerRadius: 12)
                 .fill(isTargeted ? Color.accentColor.opacity(0.1) : Color.clear)
         )
+        .contentShape(Rectangle())
+        .onTapGesture {
+            openFilePicker()
+        }
         .onDrop(of: [.fileURL], isTargeted: $isTargeted) { providers in
             handleDrop(providers: providers)
+        }
+    }
+    
+    private func openFilePicker() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = true
+        panel.allowedContentTypes = [.application]
+        panel.directoryURL = URL(fileURLWithPath: "/Applications")
+        panel.message = "Select applications to add to this group"
+        panel.prompt = "Add"
+        
+        if panel.runModal() == .OK {
+            for url in panel.urls {
+                if let appItem = AppItem.from(appURL: url) {
+                    onAppAdded(appItem)
+                }
+            }
         }
     }
     
