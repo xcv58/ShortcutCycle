@@ -140,7 +140,7 @@ class GroupStore: ObservableObject {
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         
-        let exportPayload = SettingsExport(groups: groups)
+        let exportPayload = SettingsExport(groups: groups, settings: AppSettings.current())
         return try encoder.encode(exportPayload)
     }
     
@@ -155,6 +155,9 @@ class GroupStore: ObservableObject {
         self.groups = importPayload.groups
         self.selectedGroupId = groups.first?.id
         saveGroups()
+        
+        // Apply app settings if present (version 2+)
+        importPayload.settings?.apply()
         
         // Re-register shortcuts for new groups
         ShortcutManager.shared.registerAllShortcuts()

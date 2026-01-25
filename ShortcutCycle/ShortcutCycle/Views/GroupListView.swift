@@ -95,16 +95,31 @@ struct GroupListView: View {
 /// A single row in the groups list
 struct GroupRowView: View {
     let group: AppGroup
+    @EnvironmentObject var store: GroupStore
+    @State private var showDeleteConfirmation = false
     
     var body: some View {
         HStack(spacing: 8) {
+            // Enable/Disable toggle
+            Toggle("", isOn: Binding(
+                get: { group.isEnabled },
+                set: { _ in
+                    store.toggleGroupEnabled(group)
+                }
+            ))
+            .toggleStyle(.switch)
+            .controlSize(.mini)
+            .labelsHidden()
+            .help(group.isEnabled ? "Disable group" : "Enable group")
+            
             // Group icon
             Image(systemName: "folder.fill")
-                .foregroundColor(.accentColor)
+                .foregroundColor(group.isEnabled ? .accentColor : .gray)
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(group.name)
                     .fontWeight(.medium)
+                    .foregroundColor(group.isEnabled ? .primary : .secondary)
                 
                 if let shortcut = group.shortcut {
                     Text(shortcut.displayString)
@@ -130,8 +145,26 @@ struct GroupRowView: View {
                 .padding(.horizontal, 8)
                 .padding(.vertical, 2)
                 .background(Capsule().fill(Color.gray.opacity(0.5)))
+            
+            // Delete button
+            Button(action: { showDeleteConfirmation = true }) {
+                Image(systemName: "trash")
+                    .foregroundColor(.red.opacity(0.7))
+            }
+            .buttonStyle(.plain)
+            .help("Delete group")
         }
         .padding(.vertical, 4)
+        .opacity(group.isEnabled ? 1.0 : 0.6)
+        .confirmationDialog("Delete '\(group.name)'?", isPresented: $showDeleteConfirmation) {
+            Button("Delete", role: .destructive) {
+                store.deleteGroup(group)
+                ShortcutManager.shared.registerAllShortcuts()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This action cannot be undone.")
+        }
     }
 }
 
