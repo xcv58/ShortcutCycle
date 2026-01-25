@@ -1,0 +1,26 @@
+/* Japanese */
+"ShortcutCycle" = "ShortcutCycle";
+"Settings..." = "設定...";
+"Quit" = "終了";
+"No groups created yet" = "グループはまだ作成されていません";
+"Select a group from the sidebar or create a new one." = "サイドバーからグループを選択するか、新しいグループを作成してください。";
+"No Group Selected" = "グループが選択されていません";
+"Groups" = "グループ";
+"General" = "一般";
+"HUD Settings" = "HUD設定";
+"Show HUD when switching" = "切り替え時にHUDを表示";
+"Show shortcut in HUD" = "HUDにショートカットを表示";
+"Manage how the Heads-Up Display (HUD) appears when you cycle through applications." = "アプリケーション切り替え時のHUD（ヘッドアップディスプレイ）の表示方法を管理します。";
+"App Groups" = "アプリグループ";
+"Accessibility Permission Required" = "アクセシビリティ権限が必要です";
+"Open System Preferences" = "システム設定を開く";
+"Later" = "後で";
+"ShortcutCycle needs accessibility permission to register global keyboard shortcuts and switch between applications." = "ShortcutCycleは、グローバルキーボードショートカットを登録し、アプリケーションを切り替えるためにアクセシビリティ権限が必要です。";
+"Group Name" = "グループ名";
+"Enter group name" = "グループ名を入力";
+"Keyboard Shortcut" = "キーボードショートカット";
+"Applications" = "アプリケーション";
+"app" = "アプリ";
+"apps" = "アプリ";
+"No apps added yet. Drag apps here or click the drop zone below." = "アプリはまだ追加されていません。ここにアプリをドラッグするか、下のドロップゾーンをクリックしてください。";
+"Select a group to edit" = "編集するグループを選択";

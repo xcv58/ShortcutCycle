@@ -8,7 +8,9 @@ import Carbon
 class AppSwitcher: ObservableObject {
     static let shared = AppSwitcher()
     
-    private init() {}
+    private init() {
+        UserDefaults.standard.register(defaults: ["showHUD": true, "showShortcutInHUD": true])
+    }
     
     /// Handle a shortcut activation for a given group
     func handleShortcut(for group: AppGroup, store: GroupStore) {
@@ -28,11 +30,11 @@ class AppSwitcher: ObservableObject {
             let app = runningApps[0]
             if app.isActive {
                 app.hide()
-                showHUD(apps: runningApps, activeApp: app, modifiers: group.shortcut?.modifiers)
+                showHUD(apps: runningApps, activeApp: app, modifiers: group.shortcut?.modifiers, shortcut: group.shortcut?.displayString)
             } else {
                 app.activate(options: .activateIgnoringOtherApps)
                 store.updateLastActiveApp(bundleId: app.bundleIdentifier ?? "", for: group.id)
-                showHUD(apps: runningApps, activeApp: app, modifiers: group.shortcut?.modifiers)
+                showHUD(apps: runningApps, activeApp: app, modifiers: group.shortcut?.modifiers, shortcut: group.shortcut?.displayString)
             }
             
         default:
@@ -41,8 +43,10 @@ class AppSwitcher: ObservableObject {
         }
     }
     
-    private func showHUD(apps: [NSRunningApplication], activeApp: NSRunningApplication, modifiers: UInt32?) {
-        HUDManager.shared.scheduleShow(apps: apps, activeApp: activeApp, modifiers: modifiers)
+    private func showHUD(apps: [NSRunningApplication], activeApp: NSRunningApplication, modifiers: UInt32?, shortcut: String?) {
+        if UserDefaults.standard.bool(forKey: "showHUD") {
+            HUDManager.shared.scheduleShow(apps: apps, activeApp: activeApp, modifiers: modifiers, shortcut: shortcut)
+        }
     }
     
     /// Get all running apps that belong to a group, sorted by order in group
@@ -96,7 +100,7 @@ class AppSwitcher: ObservableObject {
         
         appToActivate.activate(options: .activateIgnoringOtherApps)
         store.updateLastActiveApp(bundleId: appToActivate.bundleIdentifier ?? "", for: group.id)
-        showHUD(apps: sortedApps, activeApp: appToActivate, modifiers: group.shortcut?.modifiers)
+        showHUD(apps: sortedApps, activeApp: appToActivate, modifiers: group.shortcut?.modifiers, shortcut: group.shortcut?.displayString)
     }
     
     /// Launch an app by bundle identifier
@@ -151,7 +155,7 @@ class HUDManager: ObservableObject {
     private init() {}
     
     /// Schedule showing the HUD with macOS Command+Tab logic
-    func scheduleShow(apps: [NSRunningApplication], activeApp: NSRunningApplication, modifiers: UInt32?) {
+    func scheduleShow(apps: [NSRunningApplication], activeApp: NSRunningApplication, modifiers: UInt32?, shortcut: String?) {
         // Cancel existing hide timer
         hideTimer?.invalidate()
         hideTimer = nil // Ensure we don't auto-hide while interacting
@@ -164,7 +168,7 @@ class HUDManager: ObservableObject {
         if (window?.isVisible == true) || isRepeated {
             showTimer?.invalidate()
             showTimer = nil
-            presentHUD(apps: apps, activeApp: activeApp)
+            presentHUD(apps: apps, activeApp: activeApp, shortcut: shortcut)
             startMonitoringModifiers(requiredModifiers: modifiers)
             return
         }
@@ -173,7 +177,7 @@ class HUDManager: ObservableObject {
         showTimer?.invalidate()
         showTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: false) { [weak self] _ in // 200ms delay
             Task { @MainActor in
-                self?.presentHUD(apps: apps, activeApp: activeApp)
+                self?.presentHUD(apps: apps, activeApp: activeApp, shortcut: shortcut)
                 self?.startMonitoringModifiers(requiredModifiers: modifiers)
             }
         }
@@ -182,7 +186,7 @@ class HUDManager: ObservableObject {
         startMonitoringModifiers(requiredModifiers: modifiers)
     }
     
-    private func presentHUD(apps: [NSRunningApplication], activeApp: NSRunningApplication) {
+    private func presentHUD(apps: [NSRunningApplication], activeApp: NSRunningApplication, shortcut: String?) {
         if window == nil {
             window = HUDWindow()
         }
@@ -190,7 +194,7 @@ class HUDManager: ObservableObject {
         guard let window = window else { return }
         
         // Update content
-        let hudView = AppSwitcherHUDView(apps: apps, activeApp: activeApp)
+        let hudView = AppSwitcherHUDView(apps: apps, activeApp: activeApp, shortcutString: shortcut)
         window.contentView = NSHostingView(rootView: hudView)
         
         // Resize and center

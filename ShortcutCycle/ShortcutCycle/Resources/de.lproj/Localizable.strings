@@ -1,0 +1,26 @@
+/* German */
+"ShortcutCycle" = "ShortcutCycle";
+"Settings..." = "Einstellungen...";
+"Quit" = "Beenden";
+"No groups created yet" = "Noch keine Gruppen erstellt";
+"Select a group from the sidebar or create a new one." = "Wählen Sie eine Gruppe aus der Seitenleiste oder erstellen Sie eine neue.";
+"No Group Selected" = "Keine Gruppe ausgewählt";
+"Groups" = "Gruppen";
+"General" = "Allgemein";
+"HUD Settings" = "HUD Einstellungen";
+"Show HUD when switching" = "HUD beim Umschalten anzeigen";
+"Show shortcut in HUD" = "Tastenkürzel im HUD anzeigen";
+"Manage how the Heads-Up Display (HUD) appears when you cycle through applications." = "Verwalten Sie, wie das Heads-Up Display (HUD) beim Wechseln durch Anwendungen angezeigt wird.";
+"App Groups" = "App-Gruppen";
+"Accessibility Permission Required" = "Zugriffsrechte erforderlich";
+"Open System Preferences" = "Systemeinstellungen öffnen";
+"Later" = "Später";
+"ShortcutCycle needs accessibility permission to register global keyboard shortcuts and switch between applications." = "ShortcutCycle benötigt Zugriffsrechte, um globale Tastenkürzel zu registrieren und zwischen Anwendungen zu wechseln.";
+"Group Name" = "Gruppenname";
+"Enter group name" = "Gruppenname eingeben";
+"Keyboard Shortcut" = "Tastenkürzel";
+"Applications" = "Anwendungen";
+"app" = "App";
+"apps" = "Apps";
+"No apps added yet. Drag apps here or click the drop zone below." = "Noch keine Apps hinzugefügt. Ziehen Sie Apps hierher oder klicken Sie auf den Ablagebereich unten.";
+"Select a group to edit" = "Wählen Sie eine Gruppe zum Bearbeiten";

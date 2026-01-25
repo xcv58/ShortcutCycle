@@ -1,0 +1,26 @@
+/* Chinese (Simplified) */
+"ShortcutCycle" = "ShortcutCycle";
+"Settings..." = "设置...";
+"Quit" = "退出";
+"No groups created yet" = "尚未创建群组";
+"Select a group from the sidebar or create a new one." = "从侧边栏选择一个群组或创建一个新群组。";
+"No Group Selected" = "未选择群组";
+"Groups" = "群组";
+"General" = "通用";
+"HUD Settings" = "HUD 设置";
+"Show HUD when switching" = "切换时显示 HUD";
+"Show shortcut in HUD" = "在 HUD 中显示快捷键";
+"Manage how the Heads-Up Display (HUD) appears when you cycle through applications." = "管理在应用程序之间切换时 HUD 的显示方式。";
+"App Groups" = "应用群组";
+"Accessibility Permission Required" = "需要辅助功能权限";
+"Open System Preferences" = "打开系统偏好设置";
+"Later" = "稍后";
+"ShortcutCycle needs accessibility permission to register global keyboard shortcuts and switch between applications." = "ShortcutCycle 需要辅助功能权限来注册全局快捷键并在应用程序之间切换。";
+"Group Name" = "群组名称";
+"Enter group name" = "输入群组名称";
+"Keyboard Shortcut" = "键盘快捷键";
+"Applications" = "应用程序";
+"app" = "个应用";
+"apps" = "个应用";
+"No apps added yet. Drag apps here or click the drop zone below." = "尚未添加应用。将应用拖到此处或点击下方的放置区域。";
+"Select a group to edit" = "选择要编辑的群组";

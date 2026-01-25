@@ -1,0 +1,26 @@
+/* English */
+"ShortcutCycle" = "ShortcutCycle";
+"Settings..." = "Settings...";
+"Quit" = "Quit";
+"No groups created yet" = "No groups created yet";
+"Select a group from the sidebar or create a new one." = "Select a group from the sidebar or create a new one.";
+"No Group Selected" = "No Group Selected";
+"Groups" = "Groups";
+"General" = "General";
+"HUD Settings" = "HUD Settings";
+"Show HUD when switching" = "Show HUD when switching";
+"Show shortcut in HUD" = "Show shortcut in HUD";
+"Manage how the Heads-Up Display (HUD) appears when you cycle through applications." = "Manage how the Heads-Up Display (HUD) appears when you cycle through applications.";
+"App Groups" = "App Groups";
+"Accessibility Permission Required" = "Accessibility Permission Required";
+"Open System Preferences" = "Open System Preferences";
+"Later" = "Later";
+"ShortcutCycle needs accessibility permission to register global keyboard shortcuts and switch between applications." = "ShortcutCycle needs accessibility permission to register global keyboard shortcuts and switch between applications.";
+"Group Name" = "Group Name";
+"Enter group name" = "Enter group name";
+"Keyboard Shortcut" = "Keyboard Shortcut";
+"Applications" = "Applications";
+"app" = "app";
+"apps" = "apps";
+"No apps added yet. Drag apps here or click the drop zone below." = "No apps added yet. Drag apps here or click the drop zone below.";
+"Select a group to edit" = "Select a group to edit";
