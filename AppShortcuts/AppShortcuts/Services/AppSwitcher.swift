@@ -1,6 +1,7 @@
 import Foundation
 import AppKit
 import SwiftUI
+import Carbon
 
 /// Handles the core app switching logic for groups
 @MainActor
@@ -27,11 +28,11 @@ class AppSwitcher: ObservableObject {
             let app = runningApps[0]
             if app.isActive {
                 app.hide()
-                showHUD(apps: runningApps, activeApp: app)
+                showHUD(apps: runningApps, activeApp: app, modifiers: group.shortcut?.modifiers)
             } else {
                 app.activate(options: .activateIgnoringOtherApps)
                 store.updateLastActiveApp(bundleId: app.bundleIdentifier ?? "", for: group.id)
-                showHUD(apps: runningApps, activeApp: app)
+                showHUD(apps: runningApps, activeApp: app, modifiers: group.shortcut?.modifiers)
             }
             
         default:
@@ -40,8 +41,8 @@ class AppSwitcher: ObservableObject {
         }
     }
     
-    private func showHUD(apps: [NSRunningApplication], activeApp: NSRunningApplication) {
-        HUDManager.shared.show(apps: apps, activeApp: activeApp)
+    private func showHUD(apps: [NSRunningApplication], activeApp: NSRunningApplication, modifiers: UInt32?) {
+        HUDManager.shared.scheduleShow(apps: apps, activeApp: activeApp, modifiers: modifiers)
     }
     
     /// Get all running apps that belong to a group, sorted by order in group
@@ -95,7 +96,7 @@ class AppSwitcher: ObservableObject {
         
         appToActivate.activate(options: .activateIgnoringOtherApps)
         store.updateLastActiveApp(bundleId: appToActivate.bundleIdentifier ?? "", for: group.id)
-        showHUD(apps: sortedApps, activeApp: appToActivate)
+        showHUD(apps: sortedApps, activeApp: appToActivate, modifiers: group.shortcut?.modifiers)
     }
     
     /// Launch an app by bundle identifier
@@ -143,15 +144,45 @@ class HUDManager: ObservableObject {
     
     private var window: HUDWindow?
     private var hideTimer: Timer?
+    private var showTimer: Timer?
+    private var eventMonitor: Any?
+    private var lastRequestTime: Date?
     
     private init() {}
     
-    /// Show the HUD with the specified running apps and active app
-    func show(apps: [NSRunningApplication], activeApp: NSRunningApplication) {
-        // Cancel existing timer
+    /// Schedule showing the HUD with macOS Command+Tab logic
+    func scheduleShow(apps: [NSRunningApplication], activeApp: NSRunningApplication, modifiers: UInt32?) {
+        // Cancel existing hide timer
         hideTimer?.invalidate()
+        hideTimer = nil // Ensure we don't auto-hide while interacting
         
-        // Ensure window exists
+        let now = Date()
+        let isRepeated = lastRequestTime != nil && now.timeIntervalSince(lastRequestTime!) < 0.5
+        lastRequestTime = now
+        
+        // If HUD is already visible or this is a repeated hit (cycling), show/update immediately
+        if (window?.isVisible == true) || isRepeated {
+            showTimer?.invalidate()
+            showTimer = nil
+            presentHUD(apps: apps, activeApp: activeApp)
+            startMonitoringModifiers(requiredModifiers: modifiers)
+            return
+        }
+        
+        // Otherwise, schedule show after a short delay (mimic "hold" to show)
+        showTimer?.invalidate()
+        showTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: false) { [weak self] _ in // 200ms delay
+            Task { @MainActor in
+                self?.presentHUD(apps: apps, activeApp: activeApp)
+                self?.startMonitoringModifiers(requiredModifiers: modifiers)
+            }
+        }
+        
+        // Start monitoring immediately to cancel if released early
+        startMonitoringModifiers(requiredModifiers: modifiers)
+    }
+    
+    private func presentHUD(apps: [NSRunningApplication], activeApp: NSRunningApplication) {
         if window == nil {
             window = HUDWindow()
         }
@@ -170,10 +201,62 @@ class HUDManager: ObservableObject {
             window.setFrame(NSRect(x: x, y: y, width: viewSize.width, height: viewSize.height), display: true)
         }
         
-        // Show window without activating it (so we don't steal focus from the app we just switched to/from)
         window.orderFront(nil)
+    }
+    
+    private func startMonitoringModifiers(requiredModifiers: UInt32?) {
+        // Stop existing monitor
+        if let monitor = eventMonitor {
+            NSEvent.removeMonitor(monitor)
+            eventMonitor = nil
+        }
         
-        // Schedule hide
+        guard let required = requiredModifiers, required > 0 else {
+            // No modifiers required? Just schedule hide after delay since we can't detect "release"
+             scheduleAutoHide()
+             return
+        }
+        
+        // Monitor flags changed
+        eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
+            Task { @MainActor in
+                self?.handleFlagsChanged(event: event, required: required)
+            }
+        }
+    }
+    
+    private func handleFlagsChanged(event: NSEvent, required: UInt32) {
+        let currentFlags = event.modifierFlags
+        
+        // Check if ANY of the required modifiers are still held.
+        // If the user releases the main modifier (e.g. Command), we hide.
+        // Carbon modifiers: cmdKey=256, shiftKey=512, optionKey=2048, controlKey=4096
+        
+        var isHeld = false
+        if (required & UInt32(cmdKey) != 0) && currentFlags.contains(.command) { isHeld = true }
+        if (required & UInt32(shiftKey) != 0) && currentFlags.contains(.shift) { isHeld = true }
+        if (required & UInt32(optionKey) != 0) && currentFlags.contains(.option) { isHeld = true }
+        if (required & UInt32(controlKey) != 0) && currentFlags.contains(.control) { isHeld = true }
+        
+        if !isHeld {
+            // Modifiers released
+            showTimer?.invalidate() // Cancel pending show
+            showTimer = nil
+            
+            if window?.isVisible == true {
+                hide() // Hide immediately
+            }
+            
+            // Stop monitoring
+            if let monitor = eventMonitor {
+                NSEvent.removeMonitor(monitor)
+                eventMonitor = nil
+            }
+        }
+    }
+    
+    private func scheduleAutoHide() {
+        hideTimer?.invalidate()
         hideTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: false) { [weak self] _ in
             Task { @MainActor in
                 self?.hide()
@@ -187,5 +270,11 @@ class HUDManager: ObservableObject {
         window = nil
         hideTimer?.invalidate()
         hideTimer = nil
+        showTimer?.invalidate()
+        showTimer = nil
+        if let monitor = eventMonitor {
+            NSEvent.removeMonitor(monitor)
+            eventMonitor = nil
+        }
     }
 }

@@ -53,48 +53,78 @@ struct AppSwitcherHUDView: View {
     let activeApp: NSRunningApplication
     
     var body: some View {
-        HStack(spacing: 16) {
-            ForEach(apps, id: \.processIdentifier) { app in
-                VStack(spacing: 8) {
+        VStack(spacing: 20) {
+            // Icons Row
+            HStack(spacing: 20) {
+                ForEach(apps, id: \.processIdentifier) { app in
                     if let icon = app.icon {
-                        Image(nsImage: icon)
-                            .resizable()
-                            .frame(width: 64, height: 64)
-                    } else {
-                        Image(systemName: "app.fill")
-                            .font(.system(size: 48))
-                            .frame(width: 64, height: 64)
-                            .foregroundColor(.secondary)
+                        HUDItemView(icon: icon, isActive: isActive(app))
                     }
-                    
-                    Text(app.localizedName ?? "App")
-                        .font(.caption)
-                        .foregroundColor(isAvailable(app) ? .primary : .secondary)
-                        .lineLimit(1)
-                        .frame(width: 80)
                 }
-                .padding(12)
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(isActive(app) ? Color.gray.opacity(0.3) : Color.clear)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.white.opacity(0.2), lineWidth: isActive(app) ? 1 : 0)
-                )
             }
+            .padding(.horizontal, 32) // Increased horizontal padding
+            .padding(.vertical, 16)
+            .background(
+                RoundedRectangle(cornerRadius: 28, style: .continuous) // Reduced curve (was Capsule)
+                    .fill(.ultraThinMaterial)
+                    // Add a dark tint for better contrast on any wallpaper
+                    .overlay(RoundedRectangle(cornerRadius: 28, style: .continuous).fill(Color.black.opacity(0.3))) 
+                    .shadow(color: .black.opacity(0.3), radius: 20, x: 0, y: 10)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+            )
+            
+            // Active App Name (Floating below)
+            Text(activeApp.localizedName ?? "App")
+                .font(.title3)
+                .fontWeight(.bold)
+                .fontDesign(.rounded)
+                .foregroundColor(.white)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 8)
+                .background(
+                    Capsule()
+                        .fill(.regularMaterial)
+                        .overlay(Capsule().fill(Color.black.opacity(0.2)))
+                )
+                .shadow(color: .black.opacity(0.3), radius: 5, x: 0, y: 2)
         }
-        .padding(24)
-        .background(.ultraThinMaterial)
-        .cornerRadius(20)
-        .shadow(radius: 20)
+        .padding(40) // Padding around the whole HUD to allow shadows/glows to breathe
     }
     
     private func isActive(_ app: NSRunningApplication) -> Bool {
         return app.processIdentifier == activeApp.processIdentifier
     }
+}
+
+struct HUDItemView: View {
+    let icon: NSImage
+    let isActive: Bool
     
-    private func isAvailable(_ app: NSRunningApplication) -> Bool {
-        return !app.isTerminated
+    var body: some View {
+        Image(nsImage: icon)
+            .resizable()
+            .aspectRatio(contentMode: .fit)
+            .frame(width: 72, height: 72)
+            .scaleEffect(isActive ? 1.15 : 1.0)
+            .saturation(isActive ? 1.1 : 0.8) // Dim inactive apps slightly
+            .opacity(isActive ? 1.0 : 0.7)
+            .blur(radius: 0)
+            .padding(12)
+            .background(
+                ZStack {
+                    if isActive {
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .fill(Color.white.opacity(0.2))
+                        
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .stroke(Color.white.opacity(0.5), lineWidth: 1)
+                            .shadow(color: .white.opacity(0.5), radius: 8, x: 0, y: 0) // Glow effect
+                    }
+                }
+            )
+            .animation(.spring(response: 0.35, dampingFraction: 0.7), value: isActive)
     }
 }
