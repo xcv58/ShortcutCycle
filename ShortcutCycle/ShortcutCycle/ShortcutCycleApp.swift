@@ -34,7 +34,7 @@ struct ShortcutCycleApp: App {
         }
         
         // Handle Dock icon visibility
-        .onChange(of: showDockIcon) { newValue in
+        .onChange(of: showDockIcon) { _, newValue in
             updateActivationPolicy(showDockIcon: newValue)
         }
     }

@@ -45,7 +45,7 @@ class ShortcutManager: ObservableObject {
         Self.nextHotKeyId += 1
         Self.groupIdMap[hotKeyId] = groupId
         
-        var hotKeyID = EventHotKeyID(signature: OSType(0x4153_4857), id: hotKeyId) // "ASHW"
+        let hotKeyID = EventHotKeyID(signature: OSType(0x4153_4857), id: hotKeyId) // "ASHW"
         
         let status = RegisterEventHotKey(
             shortcut.keyCode,

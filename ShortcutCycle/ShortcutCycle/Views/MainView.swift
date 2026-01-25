@@ -72,6 +72,7 @@ struct GeneralSettingsView: View {
     @AppStorage("showHUD") private var showHUD = true
     @AppStorage("showShortcutInHUD") private var showShortcutInHUD = true
     @AppStorage("showDockIcon") private var showDockIcon = true
+    @StateObject private var launchAtLogin = LaunchAtLoginManager.shared
     
     var body: some View {
         Form {
@@ -125,6 +126,9 @@ struct GeneralSettingsView: View {
             }
             
             Section {
+                Toggle("Open at Login", isOn: $launchAtLogin.isEnabled)
+                    .toggleStyle(.switch)
+                
                 Toggle(isOn: $showDockIcon) {
                     VStack(alignment: .leading) {
                         Text("Show Icon in Dock")
@@ -148,7 +152,7 @@ struct GeneralSettingsView: View {
         }
         .formStyle(.grouped)
         .navigationTitle("General")
-        .onChange(of: showDockIcon) { newValue in
+        .onChange(of: showDockIcon) { _, newValue in
             if newValue {
                 NSApp.setActivationPolicy(.regular)
             } else {

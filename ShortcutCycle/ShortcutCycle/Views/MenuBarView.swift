@@ -5,6 +5,7 @@ struct MenuBarView: View {
     @EnvironmentObject var store: GroupStore
     @Environment(\.openWindow) private var openWindow
     @AppStorage("showDockIcon") private var showDockIcon = true
+    @StateObject private var launchAtLogin = LaunchAtLoginManager.shared
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -36,6 +37,10 @@ struct MenuBarView: View {
             Divider()
             
             // Preferences
+            Toggle("Open at Login", isOn: $launchAtLogin.isEnabled)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+            
             Toggle("Show Icon in Dock", isOn: $showDockIcon)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
