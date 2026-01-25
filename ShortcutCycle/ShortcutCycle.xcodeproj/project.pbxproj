@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		001 /* AppShortcutsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101; };
+		001 /* ShortcutCycleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101; };
 		002 /* AppItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 102; };
 		003 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 103; };
 		004 /* GroupStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 104; };
@@ -24,8 +24,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		100 /* AppShortcuts.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AppShortcuts.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		101 /* AppShortcutsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppShortcutsApp.swift; sourceTree = "<group>"; };
+		100 /* ShortcutCycle.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ShortcutCycle.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		101 /* ShortcutCycleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutCycleApp.swift; sourceTree = "<group>"; };
 		102 /* AppItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppItem.swift; sourceTree = "<group>"; };
 		103 /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
 		104 /* GroupStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupStore.swift; sourceTree = "<group>"; };
@@ -39,7 +39,7 @@
 		112 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 		113 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
 		114 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		115 /* AppShortcuts.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AppShortcuts.entitlements; sourceTree = "<group>"; };
+		115 /* ShortcutCycle.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ShortcutCycle.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,28 +56,28 @@
 		300 = {
 			isa = PBXGroup;
 			children = (
-				301 /* AppShortcuts */,
+				301 /* ShortcutCycle */,
 				302 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		301 /* AppShortcuts */ = {
+		301 /* ShortcutCycle */ = {
 			isa = PBXGroup;
 			children = (
-				101 /* AppShortcutsApp.swift */,
+				101 /* ShortcutCycleApp.swift */,
 				303 /* Models */,
 				304 /* Services */,
 				305 /* Views */,
 				114 /* Assets.xcassets */,
-				115 /* AppShortcuts.entitlements */,
+				115 /* ShortcutCycle.entitlements */,
 			);
-			path = AppShortcuts;
+			path = ShortcutCycle;
 			sourceTree = "<group>";
 		};
 		302 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				100 /* AppShortcuts.app */,
+				100 /* ShortcutCycle.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -118,7 +118,7 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		400 /* AppShortcuts */ = {
+		400 /* ShortcutCycle */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 500;
 			buildPhases = (
@@ -130,9 +130,9 @@
 			);
 			dependencies = (
 			);
-			name = AppShortcuts;
-			productName = AppShortcuts;
-			productReference = 100 /* AppShortcuts.app */;
+			name = ShortcutCycle;
+			productName = ShortcutCycle;
+			productReference = 100 /* ShortcutCycle.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -163,7 +163,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				400 /* AppShortcuts */,
+				400 /* ShortcutCycle */,
 			);
 		};
 /* End PBXProject section */
@@ -184,7 +184,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				001 /* AppShortcutsApp.swift in Sources */,
+				001 /* ShortcutCycleApp.swift in Sources */,
 				002 /* AppItem.swift in Sources */,
 				003 /* AppGroup.swift in Sources */,
 				004 /* GroupStore.swift in Sources */,
@@ -324,7 +324,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = AppShortcuts/AppShortcuts.entitlements;
+				CODE_SIGN_ENTITLEMENTS = ShortcutCycle/ShortcutCycle.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -339,7 +339,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.appshortcuts.AppShortcuts;
+				PRODUCT_BUNDLE_IDENTIFIER = com.shortcutcycle.ShortcutCycle;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -351,7 +351,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = AppShortcuts/AppShortcuts.entitlements;
+				CODE_SIGN_ENTITLEMENTS = ShortcutCycle/ShortcutCycle.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -366,7 +366,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.appshortcuts.AppShortcuts;
+				PRODUCT_BUNDLE_IDENTIFIER = com.shortcutcycle.ShortcutCycle;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -376,7 +376,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		500 /* Build configuration list for PBXNativeTarget "AppShortcuts" */ = {
+		500 /* Build configuration list for PBXNativeTarget "ShortcutCycle" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				702 /* Debug */,
@@ -385,7 +385,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		601 /* Build configuration list for PBXProject "AppShortcuts" */ = {
+		601 /* Build configuration list for PBXProject "ShortcutCycle" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				700 /* Debug */,

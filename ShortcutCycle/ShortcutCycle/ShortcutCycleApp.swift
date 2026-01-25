@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct AppShortcutsApp: App {
+struct ShortcutCycleApp: App {
     @StateObject private var store = GroupStore()
     
     init() {
@@ -13,14 +13,14 @@ struct AppShortcutsApp: App {
     
     var body: some Scene {
         // Menu bar extra
-        MenuBarExtra("App Shortcuts", systemImage: "command.square.fill") {
+        MenuBarExtra("Shortcut Cycle", systemImage: "command.square.fill") {
             MenuBarView()
                 .environmentObject(store)
         }
         .menuBarExtraStyle(.window)
         
         // Settings window
-        Window("App Shortcuts", id: "settings") {
+        Window("Shortcut Cycle", id: "settings") {
             MainView()
                 .environmentObject(store)
                 .onAppear {

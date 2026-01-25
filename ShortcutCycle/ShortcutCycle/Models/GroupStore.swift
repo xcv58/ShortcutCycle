@@ -7,7 +7,7 @@ class GroupStore: ObservableObject {
     @Published var groups: [AppGroup] = []
     @Published var selectedGroupId: UUID?
     
-    private let saveKey = "AppShortcuts.Groups"
+    private let saveKey = "ShortcutCycle.Groups"
     
     init() {
         loadGroups()

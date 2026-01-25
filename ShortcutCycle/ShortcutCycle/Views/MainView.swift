@@ -30,7 +30,7 @@ struct MainView: View {
             }
             Button("Later", role: .cancel) {}
         } message: {
-            Text("App Shortcuts needs accessibility permission to register global keyboard shortcuts and switch between applications.")
+            Text("ShortcutCycle needs accessibility permission to register global keyboard shortcuts and switch between applications.")
         }
     }
     

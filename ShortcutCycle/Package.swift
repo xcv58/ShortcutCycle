@@ -2,19 +2,19 @@
 import PackageDescription
 
 let package = Package(
-    name: "AppShortcuts",
+    name: "ShortcutCycle",
     platforms: [
         .macOS(.v13)
     ],
     products: [
-        .executable(name: "AppShortcuts", targets: ["AppShortcuts"])
+        .executable(name: "ShortcutCycle", targets: ["ShortcutCycle"])
     ],
     dependencies: [],
     targets: [
         .executableTarget(
-            name: "AppShortcuts",
+            name: "ShortcutCycle",
             dependencies: [],
-            path: "AppShortcuts"
+            path: "ShortcutCycle"
         )
     ]
 )

@@ -9,7 +9,7 @@ struct MenuBarView: View {
         VStack(alignment: .leading, spacing: 0) {
             // Header
             HStack {
-                Text("App Shortcuts")
+                Text("ShortcutCycle")
                     .font(.headline)
                 Spacer()
             }
