@@ -1,1 +1,54 @@
 .env*
+# Xcode
+
+## Build results
+build/
+DerivedData/
+
+## Architecture-specific build folders
+*.moved-aside
+*.xcuserstate
+
+## User-specific files (Important: This covers your specific issue)
+xcuserdata/
+
+## Root-level files
+.DS_Store
+
+## Scheme files
+# Note: You might want to commit shared schemes. If so, uncomment the lines below.
+# !default.xcscheme
+# !*.management
+
+## Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+
+## CocoaPods
+# It is a debated topic whether to commit the Pods folder. 
+# Most teams prefer to exclude it and run 'pod install' instead.
+Pods/
+Podfile.lock
+
+## Carthage
+Carthage/Build/
+
+## Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+
+## Localization
+*.swp
+*.lock
+
+## macOS specific
+.AppleDB
+.AppleDesktop
+.AppleDouble
+.LSOverride
+.Trashes
+.Spotlight-V100
+.fseventsd
