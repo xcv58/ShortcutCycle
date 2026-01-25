@@ -12,21 +12,24 @@ struct MenuBarView: View {
             HStack {
                 Text("ShortcutCycle")
                     .font(.headline)
+                    .foregroundStyle(.primary)
                 Spacer()
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
             
             Divider()
             
             // Groups list
-            if store.groups.isEmpty {
-                Text("No groups created yet")
-                    .foregroundColor(.secondary)
-                    .padding()
-            } else {
-                ForEach(store.groups) { group in
-                    MenuBarGroupRow(group: group)
+            VStack(spacing: 0) {
+                if store.groups.isEmpty {
+                    Text("No groups created yet")
+                        .foregroundColor(.secondary)
+                        .padding()
+                } else {
+                    ForEach(store.groups) { group in
+                        MenuBarGroupRow(group: group)
+                    }
                 }
             }
             
@@ -34,14 +37,15 @@ struct MenuBarView: View {
             
             // Preferences
             Toggle("Show Icon in Dock", isOn: $showDockIcon)
-                .toggleStyle(.switch)
-                .padding(.horizontal, 12)
+                .padding(.horizontal, 14)
                 .padding(.vertical, 8)
+                .gridCellColumns(2)
             
             Divider()
             
             // Settings button
             MenuBarButton(title: "Settings...", icon: "gear") {
+                NSApp.activate(ignoringOtherApps: true)
                 openWindow(id: "settings")
             }
             
@@ -50,6 +54,7 @@ struct MenuBarView: View {
             }
         }
         .frame(width: 280)
+        .background(VisualEffectView(material: .popover, blendingMode: .behindWindow))
     }
 }
 
@@ -62,16 +67,19 @@ struct MenuBarButton: View {
     
     var body: some View {
         Button(action: action) {
-            HStack {
-                Label(title, systemImage: icon)
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .frame(width: 16)
+                Text(title)
                 Spacer()
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(isHovering ? Color.accentColor.opacity(0.1) : Color.clear)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 6)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .background(isHovering ? Color.accentColor : Color.clear)
+        .foregroundColor(isHovering ? .white : .primary)
         .onHover { hovering in
             isHovering = hovering
         }
@@ -85,7 +93,7 @@ struct MenuBarGroupRow: View {
     @State private var isHovering = false
     
     var body: some View {
-        HStack {
+        HStack(spacing: 8) {
             // Enable/Disable Toggle
             Toggle("", isOn: Binding(
                 get: { group.isEnabled },
@@ -96,20 +104,22 @@ struct MenuBarGroupRow: View {
             .controlSize(.mini)
             
             Image(systemName: "folder.fill")
-                .foregroundColor(group.isEnabled ? .accentColor : .gray)
+                .foregroundColor(group.isEnabled ? (isHovering ? .white : .accentColor) : .gray)
             
             Text(group.name)
-                .foregroundColor(group.isEnabled ? .primary : .secondary)
+                .foregroundColor(group.isEnabled ? (isHovering ? .white : .primary) : .secondary)
             
             Spacer()
             
-            if group.isEnabled, let shortcut = group.shortcut {
+            if let shortcut = group.shortcut {
                 Text(shortcut.displayString)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(isHovering ? .white.opacity(0.8) : .secondary)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
-                    .background(Color.gray.opacity(0.2))
+                    .background(
+                        isHovering ? Color.white.opacity(0.2) : Color.gray.opacity(0.1)
+                    )
                     .cornerRadius(4)
             }
             
@@ -117,13 +127,13 @@ struct MenuBarGroupRow: View {
             let runningCount = countRunningApps(in: group)
             if runningCount > 0 {
                 Circle()
-                    .fill(group.isEnabled ? Color.green : Color.gray)
-                    .frame(width: 8, height: 8)
+                    .fill(group.isEnabled ? (isHovering ? .white : Color.green) : Color.gray)
+                    .frame(width: 6, height: 6)
             }
         }
-        .padding(.horizontal, 12)
+        .padding(.horizontal, 14)
         .padding(.vertical, 6)
-        .background(isHovering ? Color.accentColor.opacity(0.1) : Color.clear)
+        .background(isHovering ? Color.accentColor : Color.clear)
         .contentShape(Rectangle())
         .onHover { hovering in
             isHovering = hovering
@@ -138,6 +148,24 @@ struct MenuBarGroupRow: View {
             guard let bundleId = app.bundleIdentifier else { return false }
             return groupBundleIds.contains(bundleId) && app.activationPolicy == .regular
         }.count
+    }
+}
+
+struct VisualEffectView: NSViewRepresentable {
+    let material: NSVisualEffectView.Material
+    let blendingMode: NSVisualEffectView.BlendingMode
+    
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let visualEffectView = NSVisualEffectView()
+        visualEffectView.material = material
+        visualEffectView.blendingMode = blendingMode
+        visualEffectView.state = .active
+        return visualEffectView
+    }
+    
+    func updateNSView(_ visualEffectView: NSVisualEffectView, context: Context) {
+        visualEffectView.material = material
+        visualEffectView.blendingMode = blendingMode
     }
 }
 

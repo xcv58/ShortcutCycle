@@ -74,37 +74,79 @@ struct GeneralSettingsView: View {
     @AppStorage("showDockIcon") private var showDockIcon = true
     
     var body: some View {
-        VStack {
-            Text("ShortcutCycle Settings")
-                .font(.title)
-            
-            Spacer()
-            
-            Form {
-                Section {
-                    Toggle("Show HUD when switching", isOn: $showHUD)
+        Form {
+            Section {
+                // HUD Preview
+                VStack(alignment: .center) {
+                    HUDPreviewView(showShortcut: showShortcutInHUD)
+                        .frame(height: 160)
+                        .frame(maxWidth: .infinity)
+                        .background(Color.black.opacity(0.05))
+                        .cornerRadius(8)
+                        .opacity(showHUD ? 1.0 : 0.5) // Dim when disabled
+                        .grayscale(showHUD ? 0.0 : 1.0) // Grayscale when disabled
+                        .saturation(showHUD ? 1.0 : 0.0)
+                        .overlay {
+                            if !showHUD {
+                                // optional: "Disabled" label overlay
+                                Text("HUD Disabled")
+                                    .font(.headline)
+                                    .foregroundColor(.secondary)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(.regularMaterial)
+                                    .cornerRadius(8)
+                            }
+                        }
+                        .padding(.bottom, 8)
                     
-                    if showHUD {
-                        Toggle("Show shortcut in HUD", isOn: $showShortcutInHUD)
-                            .padding(.leading)
-                    }
-                } header: {
-                    Text("HUD Settings")
-                } footer: {
-                    Text("Manage how the Heads-Up Display (HUD) appears when you cycle through applications.")
+                    Text("Preview of the Heads-Up Display")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
+                .listRowInsets(EdgeInsets())
+                .padding()
                 
-                Section {
-                    Toggle("Show Icon in Dock", isOn: $showDockIcon)
-                        .toggleStyle(.switch)
-                } header: {
-                    Text("Application Settings")
-                } footer: {
-                    Text("Control the visibility of the ShortcutCycle icon in the Dock.")
+                Toggle("Show HUD when switching", isOn: $showHUD)
+                
+                if showHUD {
+                    Toggle("Show shortcut in HUD", isOn: $showShortcutInHUD)
+                        .padding(.leading)
+                    
+                    Text("Displays the keyboard shortcut used to trigger the switch.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .padding(.leading)
                 }
+            } header: {
+                Text("HUD Behavior")
+            } footer: {
+                Text("The HUD appears briefly when you cycle through applications in a group.")
+            }
+            
+            Section {
+                Toggle(isOn: $showDockIcon) {
+                    VStack(alignment: .leading) {
+                        Text("Show Icon in Dock")
+                        if !showDockIcon {
+                            HStack(spacing: 4) {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .foregroundColor(.orange)
+                                Text("May require restart to take effect")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                }
+                .toggleStyle(.switch)
+            } header: {
+                Text("Application")
+            } footer: {
+                Text("Hiding the dock icon makes the app run in the background (Accessory mode).")
             }
         }
-        .padding()
+        .formStyle(.grouped)
         .navigationTitle("General")
         .onChange(of: showDockIcon) { newValue in
             if newValue {
@@ -113,13 +155,82 @@ struct GeneralSettingsView: View {
                 NSApp.setActivationPolicy(.accessory)
             }
         }
-        .onAppear {
-            // Set initial activation policy based on stored value
-            if showDockIcon {
-                NSApp.setActivationPolicy(.regular)
-            } else {
-                NSApp.setActivationPolicy(.accessory)
+    }
+}
+
+/// A static preview of the HUD for settings
+struct HUDPreviewView: View {
+    let showShortcut: Bool
+    @Environment(\.colorScheme) var colorScheme
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            // Icons Row
+            HStack(spacing: 16) {
+                // Mock icons
+                Image(systemName: "safari.fill")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 48, height: 48)
+                    .foregroundColor(.blue)
+                    .padding(8)
+                    .opacity(0.6)
+                
+                Image(systemName: "message.fill")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 48, height: 48)
+                    .foregroundColor(.green)
+                    .padding(8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(Color.primary.opacity(0.05))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(Color.primary.opacity(0.1), lineWidth: 1)
+                    )
+                    .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+                    .scaleEffect(1.1)
+                
+                Image(systemName: "envelope.fill")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 48, height: 48)
+                    .foregroundColor(.blue)
+                    .padding(8)
+                    .opacity(0.6)
             }
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(.ultraThinMaterial)
+                    .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 4)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .stroke(Color.primary.opacity(0.1), lineWidth: 1)
+            )
+            
+            // App Name Label
+            VStack(spacing: 2) {
+                Text("Messages")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                
+                if showShortcut {
+                    Text("⌃ ⌥ ⌘  C")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 6)
+            .background(
+                Capsule()
+                    .fill(.regularMaterial)
+            )
         }
     }
 }
