@@ -50,12 +50,14 @@ struct AppGroup: Identifiable, Codable, Equatable {
     var apps: [AppItem]
     var shortcut: KeyboardShortcutData?
     var lastActiveAppBundleId: String?
+    var isEnabled: Bool = true
     
-    init(id: UUID = UUID(), name: String, apps: [AppItem] = [], shortcut: KeyboardShortcutData? = nil) {
+    init(id: UUID = UUID(), name: String, apps: [AppItem] = [], shortcut: KeyboardShortcutData? = nil, isEnabled: Bool = true) {
         self.id = id
         self.name = name
         self.apps = apps
         self.shortcut = shortcut
+        self.isEnabled = isEnabled
     }
     
     mutating func addApp(_ app: AppItem) {

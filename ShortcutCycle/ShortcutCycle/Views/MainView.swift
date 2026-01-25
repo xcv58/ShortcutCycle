@@ -1,3 +1,4 @@
+
 import SwiftUI
 
 /// Main settings window view with sidebar and detail
@@ -70,24 +71,56 @@ struct GroupSettingsView: View {
 struct GeneralSettingsView: View {
     @AppStorage("showHUD") private var showHUD = true
     @AppStorage("showShortcutInHUD") private var showShortcutInHUD = true
+    @AppStorage("showDockIcon") private var showDockIcon = true
     
     var body: some View {
-        Form {
-            Section {
-                Toggle("Show HUD when switching", isOn: $showHUD)
-                
-                if showHUD {
-                    Toggle("Show shortcut in HUD", isOn: $showShortcutInHUD)
-                        .padding(.leading)
+        VStack {
+            Text("ShortcutCycle Settings")
+                .font(.title)
+            
+            Spacer()
+            
+            Form {
+                Section {
+                    Toggle("Show HUD when switching", isOn: $showHUD)
+                    
+                    if showHUD {
+                        Toggle("Show shortcut in HUD", isOn: $showShortcutInHUD)
+                            .padding(.leading)
+                    }
+                } header: {
+                    Text("HUD Settings")
+                } footer: {
+                    Text("Manage how the Heads-Up Display (HUD) appears when you cycle through applications.")
                 }
-            } header: {
-                Text("HUD Settings")
-            } footer: {
-                Text("Manage how the Heads-Up Display (HUD) appears when you cycle through applications.")
+                
+                Section {
+                    Toggle("Show Icon in Dock", isOn: $showDockIcon)
+                        .toggleStyle(.switch)
+                } header: {
+                    Text("Application Settings")
+                } footer: {
+                    Text("Control the visibility of the ShortcutCycle icon in the Dock.")
+                }
             }
         }
         .padding()
         .navigationTitle("General")
+        .onChange(of: showDockIcon) { newValue in
+            if newValue {
+                NSApp.setActivationPolicy(.regular)
+            } else {
+                NSApp.setActivationPolicy(.accessory)
+            }
+        }
+        .onAppear {
+            // Set initial activation policy based on stored value
+            if showDockIcon {
+                NSApp.setActivationPolicy(.regular)
+            } else {
+                NSApp.setActivationPolicy(.accessory)
+            }
+        }
     }
 }
 

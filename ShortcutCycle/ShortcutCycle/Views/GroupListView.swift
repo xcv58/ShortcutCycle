@@ -5,6 +5,8 @@ struct GroupListView: View {
     @EnvironmentObject var store: GroupStore
     @State private var isAddingGroup = false
     @State private var newGroupName = ""
+    @State private var groupToRename: AppGroup?
+    @State private var renameText = ""
     
     var body: some View {
         VStack(spacing: 0) {
@@ -14,6 +16,11 @@ struct GroupListView: View {
                     GroupRowView(group: group)
                         .tag(group.id)
                         .contextMenu {
+                            Button("Rename") {
+                                groupToRename = group
+                                renameText = group.name
+                            }
+                            
                             Button("Delete", role: .destructive) {
                                 store.deleteGroup(group)
                                 ShortcutManager.shared.registerAllShortcuts()
@@ -53,6 +60,21 @@ struct GroupListView: View {
                 }
                 .buttonStyle(.plain)
                 .padding(8)
+            }
+        }
+        .alert("Rename Group", isPresented: Binding(
+            get: { groupToRename != nil },
+            set: { if !$0 { groupToRename = nil } }
+        )) {
+            TextField("Name", text: $renameText)
+            Button("Rename") {
+                if let group = groupToRename, !renameText.isEmpty {
+                    store.renameGroup(group, newName: renameText)
+                }
+                groupToRename = nil
+            }
+            Button("Cancel", role: .cancel) {
+                groupToRename = nil
             }
         }
     }

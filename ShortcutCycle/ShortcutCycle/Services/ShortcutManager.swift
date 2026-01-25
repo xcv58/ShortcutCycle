@@ -28,7 +28,7 @@ class ShortcutManager: ObservableObject {
         unregisterAllShortcuts()
         
         // Register shortcuts for each group
-        for group in store.groups {
+        for group in store.groups where group.isEnabled {
             if let shortcut = group.shortcut {
                 registerShortcut(shortcut, for: group.id)
             }

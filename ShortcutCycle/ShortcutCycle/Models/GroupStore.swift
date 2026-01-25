@@ -123,10 +123,28 @@ class GroupStore: ObservableObject {
     }
     
     private func createDefaultGroups() {
-        let editorGroup = AppGroup(name: "Editors", apps: [])
-        let browserGroup = AppGroup(name: "Browsers", apps: [])
-        groups = [editorGroup, browserGroup]
-        selectedGroupId = editorGroup.id
+        let browsersGroup = AppGroup(name: "Browsers", apps: [])
+        let chatGroup = AppGroup(name: "Chat", apps: [])
+        
+        groups = [browsersGroup, chatGroup]
+        selectedGroupId = browsersGroup.id
         saveGroups()
+    }
+    
+    // MARK: - Group Actions
+    
+    func toggleGroupEnabled(_ group: AppGroup) {
+        if let index = groups.firstIndex(where: { $0.id == group.id }) {
+            groups[index].isEnabled.toggle()
+            saveGroups()
+            ShortcutManager.shared.registerAllShortcuts()
+        }
+    }
+    
+    func renameGroup(_ group: AppGroup, newName: String) {
+        if let index = groups.firstIndex(where: { $0.id == group.id }) {
+            groups[index].name = newName
+            saveGroups()
+        }
     }
 }
