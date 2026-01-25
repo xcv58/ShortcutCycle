@@ -1,5 +1,6 @@
 import Foundation
 import AppKit
+import SwiftUI
 
 /// Handles the core app switching logic for groups
 @MainActor
@@ -18,6 +19,7 @@ class AppSwitcher: ObservableObject {
             if let firstApp = group.apps.first {
                 launchApp(bundleIdentifier: firstApp.bundleIdentifier)
                 store.updateLastActiveApp(bundleId: firstApp.bundleIdentifier, for: group.id)
+                // Note: Can't show HUD effectively as app isn't running yet
             }
             
         case 1:
@@ -25,9 +27,11 @@ class AppSwitcher: ObservableObject {
             let app = runningApps[0]
             if app.isActive {
                 app.hide()
+                showHUD(apps: runningApps, activeApp: app)
             } else {
                 app.activate(options: .activateIgnoringOtherApps)
                 store.updateLastActiveApp(bundleId: app.bundleIdentifier ?? "", for: group.id)
+                showHUD(apps: runningApps, activeApp: app)
             }
             
         default:
@@ -36,54 +40,62 @@ class AppSwitcher: ObservableObject {
         }
     }
     
-    /// Get all running apps that belong to a group
+    private func showHUD(apps: [NSRunningApplication], activeApp: NSRunningApplication) {
+        HUDManager.shared.show(apps: apps, activeApp: activeApp)
+    }
+    
+    /// Get all running apps that belong to a group, sorted by order in group
     private func getRunningApps(in group: AppGroup) -> [NSRunningApplication] {
         let workspace = NSWorkspace.shared
         let runningApps = workspace.runningApplications
         
         let groupBundleIds = Set(group.apps.map { $0.bundleIdentifier })
         
-        return runningApps.filter { app in
+        let filteredApps = runningApps.filter { app in
             guard let bundleId = app.bundleIdentifier else { return false }
             return groupBundleIds.contains(bundleId) && app.activationPolicy == .regular
+        }
+        
+        // Sort apps by their position in the group's app list
+        return filteredApps.sorted { app1, app2 in
+            let index1 = group.apps.firstIndex { $0.bundleIdentifier == app1.bundleIdentifier } ?? Int.max
+            let index2 = group.apps.firstIndex { $0.bundleIdentifier == app2.bundleIdentifier } ?? Int.max
+            return index1 < index2
         }
     }
     
     /// Cycle through multiple running apps
     private func cycleApps(_ apps: [NSRunningApplication], group: AppGroup, store: GroupStore) {
-        // Sort apps by their position in the group's app list
-        let sortedApps = apps.sorted { app1, app2 in
-            let index1 = group.apps.firstIndex { $0.bundleIdentifier == app1.bundleIdentifier } ?? Int.max
-            let index2 = group.apps.firstIndex { $0.bundleIdentifier == app2.bundleIdentifier } ?? Int.max
-            return index1 < index2
-        }
+        // Apps are already sorted by getRunningApps
+        let sortedApps = apps
         
         // Check if any app in the group is currently frontmost
         let frontmostApp = NSWorkspace.shared.frontmostApplication
         let isGroupAppActive = sortedApps.contains { $0.processIdentifier == frontmostApp?.processIdentifier }
         
+        var appToActivate: NSRunningApplication
+        
         if isGroupAppActive {
             // Find the current app and switch to the next one
             if let currentIndex = sortedApps.firstIndex(where: { $0.processIdentifier == frontmostApp?.processIdentifier }) {
                 let nextIndex = (currentIndex + 1) % sortedApps.count
-                let nextApp = sortedApps[nextIndex]
-                nextApp.activate(options: .activateIgnoringOtherApps)
-                store.updateLastActiveApp(bundleId: nextApp.bundleIdentifier ?? "", for: group.id)
+                appToActivate = sortedApps[nextIndex]
+            } else {
+                appToActivate = sortedApps[0]
             }
         } else {
             // No group app is frontmost - bring the last used one, or first running
-            let appToActivate: NSRunningApplication
-            
             if let lastBundleId = group.lastActiveAppBundleId,
                let lastApp = sortedApps.first(where: { $0.bundleIdentifier == lastBundleId }) {
                 appToActivate = lastApp
             } else {
                 appToActivate = sortedApps[0]
             }
-            
-            appToActivate.activate(options: .activateIgnoringOtherApps)
-            store.updateLastActiveApp(bundleId: appToActivate.bundleIdentifier ?? "", for: group.id)
         }
+        
+        appToActivate.activate(options: .activateIgnoringOtherApps)
+        store.updateLastActiveApp(bundleId: appToActivate.bundleIdentifier ?? "", for: group.id)
+        showHUD(apps: sortedApps, activeApp: appToActivate)
     }
     
     /// Launch an app by bundle identifier
@@ -101,5 +113,79 @@ class AppSwitcher: ObservableObject {
                 print("Failed to launch app: \(error)")
             }
         }
+    }
+}
+
+// MARK: - HUD Components (Inline for compilation)
+
+class HUDWindow: NSPanel {
+    init() {
+        super.init(
+            contentRect: .zero,
+            styleMask: [.borderless, .nonactivatingPanel],
+            backing: .buffered,
+            defer: false
+        )
+        
+        self.isFloatingPanel = true
+        self.level = .floating
+        self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        self.backgroundColor = .clear
+        self.isOpaque = false
+        self.hasShadow = false
+        self.ignoresMouseEvents = true
+    }
+}
+
+@MainActor
+class HUDManager: ObservableObject {
+    static let shared = HUDManager()
+    
+    private var window: HUDWindow?
+    private var hideTimer: Timer?
+    
+    private init() {}
+    
+    /// Show the HUD with the specified running apps and active app
+    func show(apps: [NSRunningApplication], activeApp: NSRunningApplication) {
+        // Cancel existing timer
+        hideTimer?.invalidate()
+        
+        // Ensure window exists
+        if window == nil {
+            window = HUDWindow()
+        }
+        
+        guard let window = window else { return }
+        
+        // Update content
+        let hudView = AppSwitcherHUDView(apps: apps, activeApp: activeApp)
+        window.contentView = NSHostingView(rootView: hudView)
+        
+        // Resize and center
+        if let screen = NSScreen.main {
+            let viewSize = window.contentView?.fittingSize ?? CGSize(width: 400, height: 150)
+            let x = screen.visibleFrame.midX - viewSize.width / 2
+            let y = screen.visibleFrame.midY - viewSize.height / 2
+            window.setFrame(NSRect(x: x, y: y, width: viewSize.width, height: viewSize.height), display: true)
+        }
+        
+        // Show window without activating it (so we don't steal focus from the app we just switched to/from)
+        window.orderFront(nil)
+        
+        // Schedule hide
+        hideTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: false) { [weak self] _ in
+            Task { @MainActor in
+                self?.hide()
+            }
+        }
+    }
+    
+    /// Hide the HUD
+    func hide() {
+        window?.orderOut(nil)
+        window = nil
+        hideTimer?.invalidate()
+        hideTimer = nil
     }
 }

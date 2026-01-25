@@ -45,3 +45,56 @@ struct MainView: View {
     MainView()
         .environmentObject(GroupStore())
 }
+
+// MARK: - App Switcher HUD View (Inline for compilation)
+
+struct AppSwitcherHUDView: View {
+    let apps: [NSRunningApplication]
+    let activeApp: NSRunningApplication
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            ForEach(apps, id: \.processIdentifier) { app in
+                VStack(spacing: 8) {
+                    if let icon = app.icon {
+                        Image(nsImage: icon)
+                            .resizable()
+                            .frame(width: 64, height: 64)
+                    } else {
+                        Image(systemName: "app.fill")
+                            .font(.system(size: 48))
+                            .frame(width: 64, height: 64)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Text(app.localizedName ?? "App")
+                        .font(.caption)
+                        .foregroundColor(isAvailable(app) ? .primary : .secondary)
+                        .lineLimit(1)
+                        .frame(width: 80)
+                }
+                .padding(12)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(isActive(app) ? Color.gray.opacity(0.3) : Color.clear)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.white.opacity(0.2), lineWidth: isActive(app) ? 1 : 0)
+                )
+            }
+        }
+        .padding(24)
+        .background(.ultraThinMaterial)
+        .cornerRadius(20)
+        .shadow(radius: 20)
+    }
+    
+    private func isActive(_ app: NSRunningApplication) -> Bool {
+        return app.processIdentifier == activeApp.processIdentifier
+    }
+    
+    private func isAvailable(_ app: NSRunningApplication) -> Bool {
+        return !app.isTerminated
+    }
+}
