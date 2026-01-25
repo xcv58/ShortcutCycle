@@ -101,6 +101,8 @@ class GroupStore: ObservableObject {
         do {
             let data = try JSONEncoder().encode(groups)
             UserDefaults.standard.set(data, forKey: saveKey)
+            // Sync to iCloud if enabled
+            notifyCloudSync()
         } catch {
             print("Failed to save groups: \(error)")
         }
@@ -131,6 +133,34 @@ class GroupStore: ObservableObject {
         saveGroups()
     }
     
+    // MARK: - Export/Import
+    
+    /// Export all settings as JSON data
+    func exportData() throws -> Data {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        
+        let exportPayload = SettingsExport(groups: groups)
+        return try encoder.encode(exportPayload)
+    }
+    
+    /// Import settings from exported JSON data
+    func importData(_ data: Data) throws {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        
+        let importPayload = try decoder.decode(SettingsExport.self, from: data)
+        
+        // Replace all groups with imported data
+        self.groups = importPayload.groups
+        self.selectedGroupId = groups.first?.id
+        saveGroups()
+        
+        // Re-register shortcuts for new groups
+        ShortcutManager.shared.registerAllShortcuts()
+    }
+    
     // MARK: - Group Actions
     
     func toggleGroupEnabled(_ group: AppGroup) {
@@ -144,7 +174,25 @@ class GroupStore: ObservableObject {
     func renameGroup(_ group: AppGroup, newName: String) {
         if let index = groups.firstIndex(where: { $0.id == group.id }) {
             groups[index].name = newName
+            groups[index].lastModified = Date()
             saveGroups()
+        }
+    }
+    
+    // MARK: - Cloud Sync Support
+    
+    /// Replace all groups with synced data (used by CloudSyncManager)
+    func replaceAllGroups(_ newGroups: [AppGroup]) {
+        self.groups = newGroups
+        self.selectedGroupId = groups.first?.id
+        saveGroups()
+        ShortcutManager.shared.registerAllShortcuts()
+    }
+    
+    /// Notify cloud sync of local changes
+    func notifyCloudSync() {
+        if CloudSyncManager.shared.isSyncEnabled {
+            CloudSyncManager.shared.pushToCloud()
         }
     }
 }

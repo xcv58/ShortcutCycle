@@ -51,26 +51,31 @@ struct AppGroup: Identifiable, Codable, Equatable {
     var shortcut: KeyboardShortcutData?
     var lastActiveAppBundleId: String?
     var isEnabled: Bool = true
+    var lastModified: Date = Date()
     
-    init(id: UUID = UUID(), name: String, apps: [AppItem] = [], shortcut: KeyboardShortcutData? = nil, isEnabled: Bool = true) {
+    init(id: UUID = UUID(), name: String, apps: [AppItem] = [], shortcut: KeyboardShortcutData? = nil, isEnabled: Bool = true, lastModified: Date = Date()) {
         self.id = id
         self.name = name
         self.apps = apps
         self.shortcut = shortcut
         self.isEnabled = isEnabled
+        self.lastModified = lastModified
     }
     
     mutating func addApp(_ app: AppItem) {
         if !apps.contains(where: { $0.bundleIdentifier == app.bundleIdentifier }) {
             apps.append(app)
+            lastModified = Date()
         }
     }
     
     mutating func removeApp(_ app: AppItem) {
         apps.removeAll { $0.id == app.id }
+        lastModified = Date()
     }
     
     mutating func moveApp(from source: IndexSet, to destination: Int) {
         apps.move(fromOffsets: source, toOffset: destination)
+        lastModified = Date()
     }
 }

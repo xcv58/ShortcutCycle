@@ -1,5 +1,6 @@
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// Main settings window view with sidebar and detail
 struct MainView: View {
@@ -69,10 +70,20 @@ struct GroupSettingsView: View {
 }
 
 struct GeneralSettingsView: View {
+    @EnvironmentObject var store: GroupStore
     @AppStorage("showHUD") private var showHUD = true
     @AppStorage("showShortcutInHUD") private var showShortcutInHUD = true
     @AppStorage("showDockIcon") private var showDockIcon = true
     @StateObject private var launchAtLogin = LaunchAtLoginManager.shared
+    @StateObject private var cloudSync = CloudSyncManager.shared
+    
+    // Export/Import state
+    @State private var showExportError = false
+    @State private var showImportError = false
+    @State private var showImportConfirmation = false
+    @State private var showImportSuccess = false
+    @State private var errorMessage = ""
+    @State private var pendingImportURL: URL?
     
     var body: some View {
         Form {
@@ -149,9 +160,74 @@ struct GeneralSettingsView: View {
             } footer: {
                 Text("Hiding the dock icon makes the app run in the background (Accessory mode).")
             }
+            
+            Section {
+                HStack {
+                    Button("Export Settings...") {
+                        exportSettings()
+                    }
+                    
+                    Button("Import Settings...") {
+                        importSettings()
+                    }
+                }
+            } header: {
+                Text("Backup & Restore")
+            } footer: {
+                Text("Export your groups and settings to a JSON file for backup or transfer to another Mac.")
+            }
+            
+            Section {
+                Toggle("Sync with iCloud", isOn: $cloudSync.isSyncEnabled)
+                    .toggleStyle(.switch)
+                    .onChange(of: cloudSync.isSyncEnabled) { _, newValue in
+                        if newValue {
+                            cloudSync.setGroupStore(store)
+                        }
+                    }
+                
+                if cloudSync.isSyncEnabled {
+                    HStack {
+                        if cloudSync.isSyncing {
+                            ProgressView()
+                                .scaleEffect(0.7)
+                            Text("Syncing...")
+                                .foregroundColor(.secondary)
+                        } else if let lastSync = cloudSync.lastSyncDate {
+                            Text("Last synced: \(lastSync, style: .relative) ago")
+                                .foregroundColor(.secondary)
+                                .font(.caption)
+                        }
+                        
+                        Spacer()
+                        
+                        Button("Sync Now") {
+                            cloudSync.syncNow()
+                        }
+                        .disabled(cloudSync.isSyncing)
+                    }
+                    
+                    if let error = cloudSync.syncError {
+                        HStack {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundColor(.orange)
+                            Text(error)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+            } header: {
+                Text("iCloud Sync")
+            } footer: {
+                Text("Automatically sync your groups across all your Macs signed into the same iCloud account.")
+            }
         }
         .formStyle(.grouped)
         .navigationTitle("General")
+        .onAppear {
+            cloudSync.setGroupStore(store)
+        }
         .onChange(of: showDockIcon) { _, newValue in
             if newValue {
                 NSApp.setActivationPolicy(.regular)
@@ -159,6 +235,83 @@ struct GeneralSettingsView: View {
                 NSApp.setActivationPolicy(.accessory)
             }
         }
+        .alert("Export Failed", isPresented: $showExportError) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(errorMessage)
+        }
+        .alert("Import Failed", isPresented: $showImportError) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(errorMessage)
+        }
+        .alert("Import Settings?", isPresented: $showImportConfirmation) {
+            Button("Cancel", role: .cancel) {
+                pendingImportURL = nil
+            }
+            Button("Import", role: .destructive) {
+                performImport()
+            }
+        } message: {
+            Text("This will replace all your current groups and settings. This action cannot be undone.")
+        }
+        .alert("Import Successful", isPresented: $showImportSuccess) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Your settings have been imported successfully.")
+        }
+    }
+    
+    // MARK: - Export/Import Actions
+    
+    private func exportSettings() {
+        let savePanel = NSSavePanel()
+        savePanel.allowedContentTypes = [.json]
+        savePanel.nameFieldStringValue = "ShortcutCycle-Settings.json"
+        savePanel.title = "Export Settings"
+        savePanel.message = "Choose where to save your settings"
+        
+        savePanel.begin { response in
+            guard response == .OK, let url = savePanel.url else { return }
+            
+            do {
+                let data = try store.exportData()
+                try data.write(to: url)
+            } catch {
+                errorMessage = error.localizedDescription
+                showExportError = true
+            }
+        }
+    }
+    
+    private func importSettings() {
+        let openPanel = NSOpenPanel()
+        openPanel.allowedContentTypes = [.json]
+        openPanel.allowsMultipleSelection = false
+        openPanel.canChooseDirectories = false
+        openPanel.title = "Import Settings"
+        openPanel.message = "Select a ShortcutCycle settings file"
+        
+        openPanel.begin { response in
+            guard response == .OK, let url = openPanel.url else { return }
+            pendingImportURL = url
+            showImportConfirmation = true
+        }
+    }
+    
+    private func performImport() {
+        guard let url = pendingImportURL else { return }
+        
+        do {
+            let data = try Data(contentsOf: url)
+            try store.importData(data)
+            showImportSuccess = true
+        } catch {
+            errorMessage = error.localizedDescription
+            showImportError = true
+        }
+        
+        pendingImportURL = nil
     }
 }
 
