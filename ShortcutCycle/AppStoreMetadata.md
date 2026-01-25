@@ -27,7 +27,7 @@ shortcuts, productivity, hotkeys, automation, workflow, key binder, macro, cycle
 https://github.com/xcv58/ShortcutCycle/issues
 
 ## Copyright
-2024 ShortcutCycle
+2026 ShortcutCycle
 
 ## Screenshots Guide (Required)
 
