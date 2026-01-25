@@ -37,14 +37,25 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Prepare for DMG
-echo "Preparing app for DMG..."
-mkdir -p "$EXPORT_PATH"
-cp -r "$ARCHIVE_PATH/Products/Applications/$APP_NAME.app" "$EXPORT_PATH/"
+# Create DMG using create-dmg tool
+echo "Creating DMG using create-dmg..."
 
-# Create DMG using hdiutil
-echo "Creating DMG..."
-hdiutil create -volname "$APP_NAME" -srcfolder "$EXPORT_PATH" -ov -format UDZO "$DMG_NAME"
+if [ ! -d "scripts/create-dmg-tool" ]; then
+    echo "Error: create-dmg tool not found in scripts/create-dmg-tool"
+    exit 1
+fi
+
+./scripts/create-dmg-tool/create-dmg \
+  --volname "$APP_NAME" \
+  --window-pos 200 120 \
+  --window-size 650 400 \
+  --icon-size 100 \
+  --icon "$APP_NAME.app" 175 120 \
+  --hide-extension "$APP_NAME.app" \
+  --app-drop-link 475 120 \
+  --background "scripts/dmg_background.png" \
+  "$DMG_NAME" \
+  "$ARCHIVE_PATH/Products/Applications/$APP_NAME.app"
 
 if [ $? -ne 0 ]; then
     echo "DMG creation failed"
