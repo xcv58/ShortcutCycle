@@ -208,7 +208,7 @@
 				013 /* MenuBarView.swift in Sources */,
 				015 /* LaunchAtLoginManager.swift in Sources */,
 				016 /* SettingsExport.swift in Sources */,
-				017 /* CloudSyncManager.swift in Sources */,
+				/* 017 CloudSyncManager.swift in Sources - Temporarily disabled */
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

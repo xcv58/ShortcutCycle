@@ -101,8 +101,7 @@ class GroupStore: ObservableObject {
         do {
             let data = try JSONEncoder().encode(groups)
             UserDefaults.standard.set(data, forKey: saveKey)
-            // Sync to iCloud if enabled
-            notifyCloudSync()
+            // notifyCloudSync() // Temporarily disabled
         } catch {
             print("Failed to save groups: \(error)")
         }
@@ -189,10 +188,15 @@ class GroupStore: ObservableObject {
         ShortcutManager.shared.registerAllShortcuts()
     }
     
+    /* Temporarily disabled - iCloud sync
     /// Notify cloud sync of local changes
     func notifyCloudSync() {
         if CloudSyncManager.shared.isSyncEnabled {
             CloudSyncManager.shared.pushToCloud()
         }
     }
+    */
+    
+    // Stub for when iCloud is disabled
+    func notifyCloudSync() { }
 }

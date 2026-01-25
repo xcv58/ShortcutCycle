@@ -75,7 +75,7 @@ struct GeneralSettingsView: View {
     @AppStorage("showShortcutInHUD") private var showShortcutInHUD = true
     @AppStorage("showDockIcon") private var showDockIcon = true
     @StateObject private var launchAtLogin = LaunchAtLoginManager.shared
-    @StateObject private var cloudSync = CloudSyncManager.shared
+    // @StateObject private var cloudSync = CloudSyncManager.shared // Temporarily disabled
     
     // Export/Import state
     @State private var showExportError = false
@@ -177,6 +177,9 @@ struct GeneralSettingsView: View {
                 Text("Export your groups and settings to a JSON file for backup or transfer to another Mac.")
             }
             
+            // MARK: - iCloud Sync (Temporarily Disabled)
+            // Uncomment when Apple Developer account is renewed
+            /*
             Section {
                 Toggle("Sync with iCloud", isOn: $cloudSync.isSyncEnabled)
                     .toggleStyle(.switch)
@@ -222,12 +225,11 @@ struct GeneralSettingsView: View {
             } footer: {
                 Text("Automatically sync your groups across all your Macs signed into the same iCloud account.")
             }
+            */
         }
         .formStyle(.grouped)
         .navigationTitle("General")
-        .onAppear {
-            cloudSync.setGroupStore(store)
-        }
+        // .onAppear { cloudSync.setGroupStore(store) } // Temporarily disabled
         .onChange(of: showDockIcon) { _, newValue in
             if newValue {
                 NSApp.setActivationPolicy(.regular)
