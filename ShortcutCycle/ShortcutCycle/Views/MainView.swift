@@ -164,12 +164,6 @@ struct GeneralSettingsView: View {
                     Text("May require restart to take effect fully.".localized(language: selectedLanguage))
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    
-                    // DEBUG: Show bundle status
-                    let status = Bundle.main.path(forResource: selectedLanguage, ofType: "lproj") != nil ? "Bundle Found" : "Bundle Missing"
-                    Text("Debug: \(selectedLanguage) - \(status)")
-                        .font(.caption2)
-                        .foregroundColor(status == "Bundle Found" ? .green : .red)
                 }
             } header: {
                 Text("Application".localized(language: selectedLanguage))

@@ -4,7 +4,7 @@ import Foundation
 struct AppSettings: Codable {
     var showHUD: Bool
     var showShortcutInHUD: Bool
-    var selectedLanguage: String // "system" (default) or language code e.g. "en", "fr"
+    var selectedLanguage: String? // Optional for backward compatibility
     
     /// Load current settings from UserDefaults
     static func current() -> AppSettings {
@@ -19,7 +19,7 @@ struct AppSettings: Codable {
     func apply() {
         UserDefaults.standard.set(showHUD, forKey: "showHUD")
         UserDefaults.standard.set(showShortcutInHUD, forKey: "showShortcutInHUD")
-        UserDefaults.standard.set(selectedLanguage, forKey: "selectedLanguage")
+        UserDefaults.standard.set(selectedLanguage ?? "system", forKey: "selectedLanguage")
     }
 }
 
