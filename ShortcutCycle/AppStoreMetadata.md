@@ -1,5 +1,8 @@
 # App Store Metadata
 
+## Pricing
+Tier 4 ($3.99 USD) - One-time purchase
+
 ## App Name
 ShortcutCycle
 

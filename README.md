@@ -39,7 +39,7 @@ Requirements:
 git clone https://github.com/xcv58/ShortcutCycle.git
 
 # Open project
-open ShortcutCycle.xcodeproj
+open ShortcutCycle/ShortcutCycle.xcodeproj
 
 # Build and Run
 ```
