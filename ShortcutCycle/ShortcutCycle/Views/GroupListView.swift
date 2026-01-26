@@ -7,6 +7,7 @@ struct GroupListView: View {
     @State private var newGroupName = ""
     @State private var groupToRename: AppGroup?
     @State private var renameText = ""
+    @AppStorage("selectedLanguage") private var selectedLanguage = "system"
     
     var body: some View {
         VStack(spacing: 0) {
@@ -73,7 +74,8 @@ struct GroupListView: View {
                 }
                 groupToRename = nil
             }
-            Button("Cancel", role: .cancel) {
+
+            Button("Cancel".localized(language: selectedLanguage), role: .cancel) {
                 groupToRename = nil
             }
         }
@@ -97,9 +99,11 @@ struct GroupRowView: View {
     let group: AppGroup
     @EnvironmentObject var store: GroupStore
     @State private var showDeleteConfirmation = false
+    @State private var isHovering = false
+    @AppStorage("selectedLanguage") private var selectedLanguage = "system"
     
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 6) {
             // Enable/Disable toggle
             Toggle("", isOn: Binding(
                 get: { group.isEnabled },
@@ -110,7 +114,7 @@ struct GroupRowView: View {
             .toggleStyle(.switch)
             .controlSize(.mini)
             .labelsHidden()
-            .help(group.isEnabled ? "Disable group" : "Enable group")
+            .help(group.isEnabled ? "Disable group".localized(language: selectedLanguage) : "Enable group".localized(language: selectedLanguage))
             
             // Group icon
             Image(systemName: "folder.fill")
@@ -120,6 +124,8 @@ struct GroupRowView: View {
                 Text(group.name)
                     .fontWeight(.medium)
                     .foregroundColor(group.isEnabled ? .primary : .secondary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
                 
                 if let shortcut = group.shortcut {
                     Text(shortcut.displayString)
@@ -129,41 +135,54 @@ struct GroupRowView: View {
                         .padding(.vertical, 2)
                         .background(Color.gray.opacity(0.2))
                         .cornerRadius(4)
+                        .lineLimit(1)
                 } else {
-                    Text("No shortcut")
+                    Text("No shortcut".localized(language: selectedLanguage))
                         .font(.caption)
                         .foregroundColor(.secondary)
+                        .lineLimit(1)
                 }
             }
+            .layoutPriority(1) // Prioritize text visibility
             
-            Spacer()
+            Spacer(minLength: 0)
             
             // App count badge
             Text("\(group.apps.count)")
                 .font(.caption)
                 .foregroundColor(.white)
-                .padding(.horizontal, 8)
+                .padding(.horizontal, 6)
                 .padding(.vertical, 2)
                 .background(Capsule().fill(Color.gray.opacity(0.5)))
+                .layoutPriority(1)
             
-            // Delete button
-            Button(action: { showDeleteConfirmation = true }) {
-                Image(systemName: "trash")
-                    .foregroundColor(.red.opacity(0.7))
+            // Delete button (Visible only on hover)
+            if isHovering {
+                Button(action: { showDeleteConfirmation = true }) {
+                    Image(systemName: "trash")
+                        .foregroundColor(.red.opacity(0.7))
+                }
+                .buttonStyle(.plain)
+                .help("Delete group".localized(language: selectedLanguage))
+                .transition(.opacity)
             }
-            .buttonStyle(.plain)
-            .help("Delete group")
         }
         .padding(.vertical, 4)
         .opacity(group.isEnabled ? 1.0 : 0.6)
+        .contentShape(Rectangle())
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.2)) {
+                isHovering = hovering
+            }
+        }
         .confirmationDialog("Delete '\(group.name)'?", isPresented: $showDeleteConfirmation) {
-            Button("Delete", role: .destructive) {
+            Button("Delete".localized(language: selectedLanguage), role: .destructive) {
                 store.deleteGroup(group)
                 ShortcutManager.shared.registerAllShortcuts()
             }
-            Button("Cancel", role: .cancel) {}
+            Button("Cancel".localized(language: selectedLanguage), role: .cancel) {}
         } message: {
-            Text("This action cannot be undone.")
+            Text("This action cannot be undone.".localized(language: selectedLanguage))
         }
     }
 }

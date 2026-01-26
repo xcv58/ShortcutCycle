@@ -59,7 +59,7 @@ struct GroupSettingsView: View {
     var body: some View {
         NavigationSplitView {
             GroupListView()
-                .frame(minWidth: 200)
+                .frame(minWidth: 220)
         } detail: {
             if let selectedId = store.selectedGroupId {
                 GroupEditView(groupId: selectedId)
