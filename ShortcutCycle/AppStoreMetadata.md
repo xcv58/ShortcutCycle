@@ -72,6 +72,47 @@ ShortcutCycle requires Accessibility permissions to register global hotkeys and 
 6. Press the shortcut to cycle between the apps. The HUD will appear briefly.
 7. Verify that the HUD correctly displays the apps and switching works as intended.
 
+## Screencast Scenarios
+
+### Scenario 1: Cycle Through Apps (Dark Theme)
+**Duration**: ~15 seconds
+
+1. Start with Safari open (Dark Mode enabled system-wide)
+2. Press `Option + 1` — HUD appears showing Safari → Chrome → Edge
+3. Press again — cycles to Chrome, HUD updates
+4. Press again — cycles to Edge
+5. Press again — loops back to Safari
+6. End shot: HUD fading out with elegant blur effect
+
+**Key Focus**: The beautiful dark HUD animation and smooth cycling
+
+---
+
+### Scenario 2: Quick Group Toggle via Menu Bar
+**Duration**: ~10 seconds
+
+1. Click the ShortcutCycle menu bar icon
+2. Show the dropdown with 3 groups: "Browsers", "Messaging", "Dev Tools"
+3. Toggle OFF "Messaging" group (switch changes to disabled state)
+4. Show the group greyed out
+5. Toggle it back ON
+6. Close the menu
+
+**Key Focus**: Fast, easy control without opening Settings
+
+---
+
+### Scenario 3: Multi-Group Workflow
+**Duration**: ~15 seconds
+
+1. Press `Option + 1` — Browsers group cycles (Safari → Chrome)
+2. HUD disappears
+3. Press `Option + 2` — Messaging group activates (Slack → Discord → Messages)
+4. Cycle once to show Discord
+5. Press `Option + 1` again — instantly back to Browsers
+
+**Key Focus**: Multiple shortcuts for different contexts, seamless switching
+
 ## Screenshots Guide (Required)
 
 Follow this step-by-step guide to create high-quality screenshots that meet Apple's requirements (Mac 12.9" Display).
