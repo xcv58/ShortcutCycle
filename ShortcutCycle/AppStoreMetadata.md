@@ -51,6 +51,27 @@ https://github.com/xcv58/ShortcutCycle/issues
 ## Copyright
 2026 ShortcutCycle
 
+## App Review Information
+
+### Contact Information
+*   **First Name**: [Your First Name]
+*   **Last Name**: [Your Last Name]
+*   **Phone Number**: [Your Phone Number]
+*   **Email**: [Your Email]
+
+### App Review Notes
+**Accessibility Permission Required**:
+ShortcutCycle requires Accessibility permissions to register global hotkeys and switch between applications. Upon launch, the app will prompt for these permissions. Please grant them in System Settings > Privacy & Security > Accessibility for the app to function.
+
+**Test Instructions**:
+1. Launch ShortcutCycle.
+2. Grant Accessibility permissions when prompted.
+3. Click the menu bar icon and select **Settings...**.
+4. Create a group (e.g., "Web") and drag Safari and another app into it.
+5. Record a shortcut (e.g., `Option + 1`).
+6. Press the shortcut to cycle between the apps. The HUD will appear briefly.
+7. Verify that the HUD correctly displays the apps and switching works as intended.
+
 ## Screenshots Guide (Required)
 
 Follow this step-by-step guide to create high-quality screenshots that meet Apple's requirements (Mac 12.9" Display).
