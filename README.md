@@ -11,6 +11,13 @@ ShortcutCycle helps you switch between your favorite apps with just one keyboard
 - **Save Your Settings**: Easily save your settings to a file to keep them safe or share with friends.
 - **Light & Dark**: Looks great in both Light and Dark modes.
 
+### Accessibility
+We believe tools should be for everyone. ShortcutCycle supports:
+- **VoiceOver**: Fully labeled controls and navigation.
+- **Voice Control**: All features accessible via standard voice commands.
+- **High Contrast**: Uses standard system colors for maximum readability.
+- **Differentiate Without Color**: Critical information uses text or position, not just color.
+
 ## How to Install
 
 1. Get the latest version from the [Releases](https://github.com/xcv58/ShortcutCycle/releases) page.
