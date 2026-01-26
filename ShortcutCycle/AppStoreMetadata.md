@@ -60,12 +60,11 @@ https://github.com/xcv58/ShortcutCycle/issues
 *   **Email**: [Your Email]
 
 ### App Review Notes
-**Accessibility Permission Required**:
-ShortcutCycle requires Accessibility permissions to register global hotkeys and switch between applications. Upon launch, the app will prompt for these permissions. Please grant them in System Settings > Privacy & Security > Accessibility for the app to function.
+
 
 **Test Instructions**:
 1. Launch ShortcutCycle.
-2. Grant Accessibility permissions when prompted.
+
 3. Click the menu bar icon and select **Settings...**.
 4. Create a group (e.g., "Web") and drag Safari and another app into it.
 5. Record a shortcut (e.g., `Option + 1`).

@@ -9,10 +9,7 @@ struct ShortcutCycleApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     
     init() {
-        // Request accessibility permission on first launch
-        if !AccessibilityHelper.shared.hasAccessibilityPermission {
-            AccessibilityHelper.shared.requestAccessibilityPermission()
-        }
+        setupShortcutManager()
     }
     
     var body: some Scene {
@@ -29,7 +26,7 @@ struct ShortcutCycleApp: App {
             MainView()
                 .environmentObject(store)
                 .onAppear {
-                    setupShortcutManager()
+                    // setupShortcutManager() called in init
                 }
         }
         .defaultSize(width: 700, height: 500)

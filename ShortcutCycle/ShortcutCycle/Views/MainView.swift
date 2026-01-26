@@ -6,7 +6,6 @@ import UniformTypeIdentifiers
 struct MainView: View {
     @EnvironmentObject var store: GroupStore
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
-    @State private var showAccessibilityAlert = false
     @State private var selectedTab = "groups"
     
     var body: some View {
@@ -25,25 +24,14 @@ struct MainView: View {
         }
         .frame(minWidth: 600, minHeight: 400)
         .onAppear {
-            checkAccessibility()
+            // No accessibility check needed
         }
         .environment(\.locale, LanguageManager.shared.locale)
         .id(selectedLanguage) // Force full redraw when language changes
-        .alert("Accessibility Permission Required", isPresented: $showAccessibilityAlert) {
-            Button("Open System Preferences") {
-                AccessibilityHelper.shared.openAccessibilityPreferences()
-            }
-            Button("Later", role: .cancel) {}
-        } message: {
-            Text("ShortcutCycle needs accessibility permission to register global keyboard shortcuts and switch between applications.")
-        }
+
     }
     
-    private func checkAccessibility() {
-        if !AccessibilityHelper.shared.hasAccessibilityPermission {
-            showAccessibilityAlert = true
-        }
-    }
+
 }
 
 #Preview {

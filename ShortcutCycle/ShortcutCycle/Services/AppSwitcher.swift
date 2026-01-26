@@ -163,6 +163,9 @@ class HUDManager: ObservableObject {
     private var showTimer: Timer?
     private var eventMonitor: Any?
     private var lastRequestTime: Date?
+
+    private var previousFrontmostApp: NSRunningApplication?
+    private var pendingActiveApp: NSRunningApplication?
     
     // Track the currently selected app in the HUD
     public private(set) var currentSelectedApp: NSRunningApplication?
@@ -181,7 +184,36 @@ class HUDManager: ObservableObject {
         
         let now = Date()
         let isRepeated = lastRequestTime != nil && now.timeIntervalSince(lastRequestTime!) < 0.5
+
+        if let lastRequestTime = lastRequestTime {
+             // check repeated
+        }
         lastRequestTime = now
+        
+        // Store pending active app for fast switching
+        self.pendingActiveApp = activeApp
+        
+        // Capture the previous frontmost app if we aren't already visible
+        // We do this BEFORE we activate ourselves
+        if window?.isVisible != true {
+             self.previousFrontmostApp = NSWorkspace.shared.frontmostApplication
+        }
+        
+        // Activate our app so we can receive local events
+        NSApp.activate(ignoringOtherApps: true)
+        
+        // Fix for "Splash" issue:
+        // If the Settings window is open, activating the app brings it to the front, which is jarring.
+        // We push it to the back immediately after activation if it's not the HUD.
+        // We use dispatch async to ensure it happens after activation logic settles.
+        DispatchQueue.main.async {
+            NSApp.windows.forEach { win in
+                if win !== self.window && win.isVisible {
+                    // This is likely the Settings window
+                    win.orderBack(nil)
+                }
+            }
+        }
         
         // If HUD is already visible or this is a repeated hit (cycling), show/update immediately
         if (window?.isVisible == true) || isRepeated {
@@ -242,11 +274,13 @@ class HUDManager: ObservableObject {
              return
         }
         
-        // Monitor flags changed
-        eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
+        
+        // Monitor flags changed - use LOCAL monitor now since we are active
+        eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
             Task { @MainActor in
                 self?.handleFlagsChanged(event: event, required: required)
             }
+            return event
         }
     }
     
@@ -267,6 +301,14 @@ class HUDManager: ObservableObject {
             // Modifiers released
             showTimer?.invalidate() // Cancel pending show
             showTimer = nil
+            
+            // Fast switch: user released keys before HUD appeared
+            // We must insure the pending app is activated, because our previous activation (in cycleApps)
+            // might have been preempted by our own activation (to receive events).
+            if let pending = pendingActiveApp {
+                pending.activate(options: [.activateAllWindows])
+                pendingActiveApp = nil
+            }
             
             if window?.isVisible == true {
                 hide() // Hide immediately
@@ -294,6 +336,25 @@ class HUDManager: ObservableObject {
         window?.orderOut(nil)
         window = nil
         currentSelectedApp = nil
+        
+        // Restore previous app if we haven't activated a new one (e.g. user just released keys without selecting anything, though typically `activate` handles this)
+        // Actually, explicit activation logic is usually handled by the caller (cycleApps calls activate).
+        // But if we just showed HUD and cancelled, we might want to go back.
+        // The current design activates the app *during* cycle logic.
+        // But wait, if we became active to show HUD, we steal focus. If we hide HUD, we should probably yield focus back if no selection was made?
+        // Actually, if a selection IS made, `cycleApps` or `handleShortcut` activates the target app.
+        // If the HUD is just dismissed (e.g. without change?), we should theoretically go back.
+        // However, standard cmd+tab behavior is: if you release, you switch to the selected app.
+        
+        // In our case, `cycleApps` *pre-activates* the app?
+        // Let's look at `cycleApps`: it calls `appToActivate.activate`.
+        // If `cycleApps` activated the app, we are fine.
+        
+        // But we need to make sure WE don't stay active if the user cancels or we are done.
+        if NSApp.isActive {
+            NSApp.hide(nil) // Simple way to yield focus back to previous
+        }
+        
         hideTimer?.invalidate()
         hideTimer = nil
         showTimer?.invalidate()
