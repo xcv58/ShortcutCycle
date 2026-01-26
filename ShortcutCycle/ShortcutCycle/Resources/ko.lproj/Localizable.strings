@@ -62,3 +62,8 @@
 "Import" = "가져오기";
 "Import Successful" = "가져오기 성공";
 "Your settings have been imported successfully." = "설정을 성공적으로 가져왔습니다.";
+
+
+/* Settings Shortcut */
+"Settings Window" = "설정 창";
+"Shortcuts" = "단축키";

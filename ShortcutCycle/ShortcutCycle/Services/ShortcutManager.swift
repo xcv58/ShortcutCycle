@@ -19,6 +19,13 @@ class ShortcutManager: ObservableObject {
     
     /// Register all shortcuts from the group store
     func registerAllShortcuts() {
+        // Register the settings toggle shortcut
+        KeyboardShortcuts.onKeyUp(for: .toggleSettings) { [weak self] in
+            Task { @MainActor in
+                self?.handleToggleSettings()
+            }
+        }
+        
         // Unregister all previously registered shortcuts first
         // This is crucial to handle deleted groups or disabled groups
         unregisterAllShortcuts()
@@ -77,6 +84,49 @@ class ShortcutManager: ObservableObject {
         }
         
         AppSwitcher.shared.handleShortcut(for: group, store: store)
+    }
+    
+    /// Handle the settings toggle shortcut
+    private func handleToggleSettings() {
+        // Find if the settings window is already open
+        let settingsWindow = NSApp.windows.first { window in
+            // Check by identifier first (if exposed) or title
+            // Note: SwiftUI windows might not expose identifier easily in NSWindow, 
+            // but usually the title matches the WindowGroup title
+            return window.title == "Shortcut Cycle" && window.styleMask.contains(.titled)
+        }
+        
+        if let window = settingsWindow {
+            if window.isKeyWindow {
+                // If it's already the key window, close it to toggle off
+                window.close()
+            } else {
+                // If it's open but not key, bring it to front
+                window.makeKeyAndOrderFront(nil)
+                NSApp.activate(ignoringOtherApps: true)
+            }
+        } else {
+            // Window is closed/not in memory.
+            // There is no easy way to "open" a SwiftUI WindowGroup from here 
+            // without an environment handle to openWindow.
+            // However, we can use the URL scheme if we had one, or rely on NSApp.
+            // A workaround for SwiftUI lifecycle apps is hard.
+            // Let's try to activate the app, which might bring the default window (Settings) up if it's the only one.
+            NSApp.activate(ignoringOtherApps: true)
+            
+            // If the app is activation policy accessory, activating it might not show a window if it was closed.
+            // We might need to rely on the user keeping it open or minimize behavior.
+            // Alternatively, in `ShortcutCycleApp`, we have the Window.
+            // NOTE: A common workaround is to use `NSApp.sendAction`.
+            // But strict SwiftUI lifecycle makes this hard.
+            
+            // Let's just try activating for now. If it doesn't work, we might need a more complex solution
+            // involving passing a closure or notification to the App struct.
+            
+            // Send a notification that the App struct can listen to?
+            // Or simpler: NotificationCenter
+            NotificationCenter.default.post(name: Notification.Name("ToggleSettingsWindow"), object: nil)
+        }
     }
     
     /// Reset a shortcut (clear the assigned key combination)

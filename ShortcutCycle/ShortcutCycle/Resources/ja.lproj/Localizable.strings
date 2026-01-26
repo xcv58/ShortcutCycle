@@ -62,3 +62,8 @@
 "Import" = "インポート";
 "Import Successful" = "インポート成功";
 "Your settings have been imported successfully." = "設定が正常にインポートされました。";
+
+
+/* Settings Shortcut */
+"Settings Window" = "設定ウィンドウ";
+"Shortcuts" = "ショートカット";

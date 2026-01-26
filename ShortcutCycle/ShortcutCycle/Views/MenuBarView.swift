@@ -57,6 +57,10 @@ struct MenuBarView: View {
         }
         .frame(width: 280)
         .background(VisualEffectView(material: .popover, blendingMode: .behindWindow))
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("ToggleSettingsWindow"))) { _ in
+             NSApp.activate(ignoringOtherApps: true)
+             openWindow(id: "settings")
+        }
     }
 }
 

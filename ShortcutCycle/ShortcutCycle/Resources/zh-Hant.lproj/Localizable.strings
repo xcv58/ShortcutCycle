@@ -62,3 +62,8 @@
 "Import" = "匯入";
 "Import Successful" = "匯入成功";
 "Your settings have been imported successfully." = "您的設定已成功匯入。";
+
+
+/* Settings Shortcut */
+"Settings Window" = "設定視窗";
+"Shortcuts" = "快速鍵";

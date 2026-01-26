@@ -7,4 +7,7 @@ extension KeyboardShortcuts.Name {
     static func forGroup(_ id: UUID) -> Self {
         Self("group-\(id.uuidString)")
     }
+    
+    /// Global shortcut to toggle the settings window
+    static let toggleSettings = Self("toggleSettings")
 }

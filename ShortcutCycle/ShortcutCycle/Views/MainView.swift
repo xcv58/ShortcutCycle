@@ -1,6 +1,6 @@
-
 import SwiftUI
 import UniformTypeIdentifiers
+import KeyboardShortcuts
 
 /// Main settings window view with sidebar and detail
 struct MainView: View {
@@ -130,6 +130,16 @@ struct GeneralSettingsView: View {
                 Text("HUD Behavior".localized(language: selectedLanguage))
             } footer: {
                 Text("The HUD appears briefly when you cycle through applications in a group.".localized(language: selectedLanguage))
+            }
+            
+            Section {
+                HStack {
+                    Text("Settings Window".localized(language: selectedLanguage))
+                    Spacer()
+                    KeyboardShortcuts.Recorder(for: .toggleSettings)
+                }
+            } header: {
+                Text("Shortcuts".localized(language: selectedLanguage))
             }
             
             Section {

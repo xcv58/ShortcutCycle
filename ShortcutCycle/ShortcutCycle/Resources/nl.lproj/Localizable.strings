@@ -62,3 +62,8 @@
 "Import" = "Importeren";
 "Import Successful" = "Importeren geslaagd";
 "Your settings have been imported successfully." = "Uw instellingen zijn succesvol geïmporteerd.";
+
+
+/* Settings Shortcut */
+"Settings Window" = "Instellingenvenster";
+"Shortcuts" = "Sneltoetsen";

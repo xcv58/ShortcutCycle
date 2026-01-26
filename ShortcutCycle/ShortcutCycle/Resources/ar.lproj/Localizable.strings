@@ -62,3 +62,8 @@
 "Import" = "استيراد";
 "Import Successful" = "تم الاستيراد بنجاح";
 "Your settings have been imported successfully." = "تم استيراد إعداداتك بنجاح.";
+
+
+/* Settings Shortcut */
+"Settings Window" = "نافذة الإعدادات";
+"Shortcuts" = "اختصارات";

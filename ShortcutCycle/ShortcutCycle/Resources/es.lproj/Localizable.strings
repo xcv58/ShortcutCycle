@@ -62,3 +62,8 @@
 "Import" = "Importar";
 "Import Successful" = "Importación exitosa";
 "Your settings have been imported successfully." = "Tus ajustes han sido importados correctamente.";
+
+
+/* Settings Shortcut */
+"Settings Window" = "Ventana de ajustes";
+"Shortcuts" = "Atajos";

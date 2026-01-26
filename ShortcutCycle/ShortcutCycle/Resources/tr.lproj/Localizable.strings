@@ -62,3 +62,8 @@
 "Import" = "İçe Aktar";
 "Import Successful" = "İçe Aktarma Başarılı";
 "Your settings have been imported successfully." = "Ayarlarınız başarıyla içe aktarıldı.";
+
+
+/* Settings Shortcut */
+"Settings Window" = "Ayarlar Penceresi";
+"Shortcuts" = "Kısayollar";
