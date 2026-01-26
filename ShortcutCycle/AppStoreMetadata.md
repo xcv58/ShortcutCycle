@@ -8,7 +8,9 @@ ShortcutCycle
 
 ## Subtitle
 Switch apps instantly with hotkeys
-(Alternatives: "Cycle through your apps instantly", "The missing App Switcher")
+
+## Promotional Text
+Group your favorite apps and switch between them instantly with a single keyboard shortcut. Simplify your workflow and save time every day!
 
 ## App Icon
 `ShortcutCycle/ShortcutCycle/Assets.xcassets/AppIcon.appiconset/1024.png`
@@ -17,21 +19,31 @@ Switch apps instantly with hotkeys
 [Privacy Policy](https://github.com/xcv58/ShortcutCycle/blob/master/PRIVACY_POLICY.md) (File created at root: `PRIVACY_POLICY.md`)
 
 ## Description
-Unlock the full potential of your productivity with ShortcutCycle!
+ShortcutCycle helps you switch between your favorite apps with just one keyboard shortcut. Instead of remembering many shortcuts, just group your apps and use one key to cycle through them.
 
-ShortcutCycle allows you to organize your favorite shortcuts into groups and cycle through them with a single global hotkey. Whether you're a developer, designer, or power user, keeping your most-used tools at your fingertips has never been easier.
+**Group Your Apps by Context**
+Put related apps together so they are always at your fingertips:
+- **Browsers**: Chrome, Safari, Edge, or even Chrome Apps.
+- **Messaging**: Slack, Discord, Microsoft Teams, and Apple Messages.
+- **Development**: Xcode, Terminal, and Simulator.
+- **Design**: Figma, Sketch, and Adobe Creative Cloud.
+
+**One Key Magic**
+Press your global shortcut to open the first app in your group. Press it again to switch to the next one. It's the fastest way to navigate your Mac without taking your hands off the keyboard.
 
 **Key Features:**
-*   **Command Cycling**: Assign a single hotkey to rotate through a list of related shortcuts.
-*   **Custom Groups**: Create unlimited groups for different workflows (e.g., Coding, Design, social media).
-*   **Visual HUD**: see which shortcut is active with a beautiful, unobtrusive Heads-Up Display.
-*   **Global Hotkeys**: Trigger your shortcut cycles from anywhere in macOS.
-*   **App Specific**: Trigger shortcut cycles only when a specific app is in focus.
+- **Instant Access**: If an app isn't running, ShortcutCycle launches it for you.
+- **Visual HUD**: A beautiful, native-looking overlay shows you which app is active and what's coming up next.
+- **Your Language**: Fully localized in 15 languages, including English, Japanese, Chinese, German, Spanish, French, and more.
+- **Import/Export**: Save your settings to a JSON file to keep them safe or share with others.
 
-Optimize your workflow and reduce finger gymnastics. Download ShortcutCycle today!
+**Built for Everyone**
+ShortcutCycle is designed with accessibility in mind, supporting VoiceOver, Voice Control, Dark Interface, Sufficient Contrast, and Reduced Motion.
+
+Optimize your workflow and stop digging through your Applications folder. Download ShortcutCycle today!
 
 ## Keywords
-shortcuts, productivity, hotkeys, automation, workflow, key binder, macro, cycle, utilities, developer tools
+shortcuts, productivity, app switcher, hotkey, automation, workflow, tool, mac, cycle, utility
 
 ## Support URL
 https://github.com/xcv58/ShortcutCycle/issues
