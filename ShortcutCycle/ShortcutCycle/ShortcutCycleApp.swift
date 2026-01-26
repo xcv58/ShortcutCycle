@@ -1,9 +1,11 @@
 import SwiftUI
 
+
 @main
 struct ShortcutCycleApp: App {
     @StateObject private var store = GroupStore()
-    @AppStorage("showDockIcon") private var showDockIcon = true
+    
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     
     init() {
         // Request accessibility permission on first launch
@@ -32,24 +34,6 @@ struct ShortcutCycleApp: App {
         .commands {
             CommandGroup(replacing: .newItem) {}
         }
-        
-        // Handle Dock icon visibility
-        .onChange(of: showDockIcon) { _, newValue in
-            updateActivationPolicy(showDockIcon: newValue)
-        }
-    }
-    
-    private func updateActivationPolicy(showDockIcon: Bool) {
-        if showDockIcon {
-            NSApp.setActivationPolicy(.regular)
-        } else {
-            NSApp.setActivationPolicy(.accessory)
-        }
-        
-        // If switching to regular, we might want to activate the app
-        if showDockIcon {
-            NSApp.activate(ignoringOtherApps: true)
-        }
     }
     
     private func setupShortcutManager() {
@@ -57,5 +41,13 @@ struct ShortcutCycleApp: App {
             ShortcutManager.shared.setGroupStore(store)
             ShortcutManager.shared.registerAllShortcuts()
         }
+    }
+}
+
+
+class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        // Run as a menu bar app (no dock icon)
+        NSApp.setActivationPolicy(.accessory)
     }
 }

@@ -73,7 +73,6 @@ struct GeneralSettingsView: View {
     @EnvironmentObject var store: GroupStore
     @AppStorage("showHUD") private var showHUD = true
     @AppStorage("showShortcutInHUD") private var showShortcutInHUD = true
-    @AppStorage("showDockIcon") private var showDockIcon = true
     @StateObject private var launchAtLogin = LaunchAtLoginManager.shared
     // @StateObject private var cloudSync = CloudSyncManager.shared // Temporarily disabled
     
@@ -139,26 +138,8 @@ struct GeneralSettingsView: View {
             Section {
                 Toggle("Open at Login", isOn: $launchAtLogin.isEnabled)
                     .toggleStyle(.switch)
-                
-                Toggle(isOn: $showDockIcon) {
-                    VStack(alignment: .leading) {
-                        Text("Show Icon in Dock")
-                        if !showDockIcon {
-                            HStack(spacing: 4) {
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                    .foregroundColor(.orange)
-                                Text("May require restart to take effect")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                    }
-                }
-                .toggleStyle(.switch)
             } header: {
                 Text("Application")
-            } footer: {
-                Text("Hiding the dock icon makes the app run in the background (Accessory mode).")
             }
             
             Section {
@@ -176,67 +157,9 @@ struct GeneralSettingsView: View {
             } footer: {
                 Text("Export your groups and settings to a JSON file for backup or transfer to another Mac.")
             }
-            
-            // MARK: - iCloud Sync (Temporarily Disabled)
-            // Uncomment when Apple Developer account is renewed
-            /*
-            Section {
-                Toggle("Sync with iCloud", isOn: $cloudSync.isSyncEnabled)
-                    .toggleStyle(.switch)
-                    .onChange(of: cloudSync.isSyncEnabled) { _, newValue in
-                        if newValue {
-                            cloudSync.setGroupStore(store)
-                        }
-                    }
-                
-                if cloudSync.isSyncEnabled {
-                    HStack {
-                        if cloudSync.isSyncing {
-                            ProgressView()
-                                .scaleEffect(0.7)
-                            Text("Syncing...")
-                                .foregroundColor(.secondary)
-                        } else if let lastSync = cloudSync.lastSyncDate {
-                            Text("Last synced: \(lastSync, style: .relative) ago")
-                                .foregroundColor(.secondary)
-                                .font(.caption)
-                        }
-                        
-                        Spacer()
-                        
-                        Button("Sync Now") {
-                            cloudSync.syncNow()
-                        }
-                        .disabled(cloudSync.isSyncing)
-                    }
-                    
-                    if let error = cloudSync.syncError {
-                        HStack {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundColor(.orange)
-                            Text(error)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                }
-            } header: {
-                Text("iCloud Sync")
-            } footer: {
-                Text("Automatically sync your groups across all your Macs signed into the same iCloud account.")
-            }
-            */
         }
         .formStyle(.grouped)
         .navigationTitle("General")
-        // .onAppear { cloudSync.setGroupStore(store) } // Temporarily disabled
-        .onChange(of: showDockIcon) { _, newValue in
-            if newValue {
-                NSApp.setActivationPolicy(.regular)
-            } else {
-                NSApp.setActivationPolicy(.accessory)
-            }
-        }
         .alert("Export Failed", isPresented: $showExportError) {
             Button("OK", role: .cancel) {}
         } message: {

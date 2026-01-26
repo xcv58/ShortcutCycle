@@ -32,7 +32,7 @@ class AppSwitcher: ObservableObject {
                 app.hide()
                 showHUD(apps: runningApps, activeApp: app, modifiers: group.shortcut?.modifiers, shortcut: group.shortcut?.displayString)
             } else {
-                app.activate(options: [])
+                app.activate(options: .activateIgnoringOtherApps)
                 store.updateLastActiveApp(bundleId: app.bundleIdentifier ?? "", for: group.id)
                 showHUD(apps: runningApps, activeApp: app, modifiers: group.shortcut?.modifiers, shortcut: group.shortcut?.displayString)
             }
@@ -74,31 +74,42 @@ class AppSwitcher: ObservableObject {
         // Apps are already sorted by getRunningApps
         let sortedApps = apps
         
-        // Check if any app in the group is currently frontmost
-        let frontmostApp = NSWorkspace.shared.frontmostApplication
-        let isGroupAppActive = sortedApps.contains { $0.processIdentifier == frontmostApp?.processIdentifier }
-        
         var appToActivate: NSRunningApplication
         
-        if isGroupAppActive {
-            // Find the current app and switch to the next one
-            if let currentIndex = sortedApps.firstIndex(where: { $0.processIdentifier == frontmostApp?.processIdentifier }) {
+        // Check if we are already cycling (HUD visible)
+        // If so, use the HUD's current selection as the reference point to avoid stale state issues
+        if HUDManager.shared.isVisible, let current = HUDManager.shared.currentSelectedApp {
+            if let currentIndex = sortedApps.firstIndex(where: { $0.processIdentifier == current.processIdentifier }) {
                 let nextIndex = (currentIndex + 1) % sortedApps.count
                 appToActivate = sortedApps[nextIndex]
             } else {
                 appToActivate = sortedApps[0]
             }
         } else {
-            // No group app is frontmost - bring the last used one, or first running
-            if let lastBundleId = group.lastActiveAppBundleId,
-               let lastApp = sortedApps.first(where: { $0.bundleIdentifier == lastBundleId }) {
-                appToActivate = lastApp
+            // New cycle start - check current system state
+            let frontmostApp = NSWorkspace.shared.frontmostApplication
+            let isGroupAppActive = sortedApps.contains { $0.processIdentifier == frontmostApp?.processIdentifier }
+            
+            if isGroupAppActive {
+                // Find the current app and switch to the next one
+                if let currentIndex = sortedApps.firstIndex(where: { $0.processIdentifier == frontmostApp?.processIdentifier }) {
+                    let nextIndex = (currentIndex + 1) % sortedApps.count
+                    appToActivate = sortedApps[nextIndex]
+                } else {
+                    appToActivate = sortedApps[0]
+                }
             } else {
-                appToActivate = sortedApps[0]
+                // No group app is frontmost - bring the last used one, or first running
+                if let lastBundleId = group.lastActiveAppBundleId,
+                   let lastApp = sortedApps.first(where: { $0.bundleIdentifier == lastBundleId }) {
+                    appToActivate = lastApp
+                } else {
+                    appToActivate = sortedApps[0]
+                }
             }
         }
         
-        appToActivate.activate(options: [])
+        appToActivate.activate(options: .activateIgnoringOtherApps)
         store.updateLastActiveApp(bundleId: appToActivate.bundleIdentifier ?? "", for: group.id)
         showHUD(apps: sortedApps, activeApp: appToActivate, modifiers: group.shortcut?.modifiers, shortcut: group.shortcut?.displayString)
     }
@@ -152,6 +163,13 @@ class HUDManager: ObservableObject {
     private var eventMonitor: Any?
     private var lastRequestTime: Date?
     
+    // Track the currently selected app in the HUD
+    public private(set) var currentSelectedApp: NSRunningApplication?
+    
+    var isVisible: Bool {
+        window?.isVisible == true
+    }
+    
     private init() {}
     
     /// Schedule showing the HUD with macOS Command+Tab logic
@@ -190,6 +208,8 @@ class HUDManager: ObservableObject {
         if window == nil {
             window = HUDWindow()
         }
+        
+        currentSelectedApp = activeApp
         
         guard let window = window else { return }
         
@@ -272,6 +292,7 @@ class HUDManager: ObservableObject {
     func hide() {
         window?.orderOut(nil)
         window = nil
+        currentSelectedApp = nil
         hideTimer?.invalidate()
         hideTimer = nil
         showTimer?.invalidate()

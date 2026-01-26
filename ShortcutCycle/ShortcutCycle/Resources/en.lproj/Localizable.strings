@@ -24,3 +24,30 @@
 "apps" = "apps";
 "No apps added yet. Drag apps here or click the drop zone below." = "No apps added yet. Drag apps here or click the drop zone below.";
 "Select a group to edit" = "Select a group to edit";
+
+/* HUD Section */
+"HUD Behavior" = "HUD Behavior";
+"The HUD appears briefly when you cycle through applications in a group." = "The HUD appears briefly when you cycle through applications in a group.";
+"Preview of the Heads-Up Display" = "Preview of the Heads-Up Display";
+"HUD Disabled" = "HUD Disabled";
+
+
+/* Application Section */
+"Application" = "Application";
+"Open at Login" = "Open at Login";
+
+/* Backup & Restore Section */
+"Backup & Restore" = "Backup & Restore";
+"Export Settings..." = "Export Settings...";
+"Import Settings..." = "Import Settings...";
+"Export your groups and settings to a JSON file for backup or transfer to another Mac." = "Export your groups and settings to a JSON file for backup or transfer to another Mac.";
+
+/* Export/Import Alerts */
+"Export Failed" = "Export Failed";
+"Import Failed" = "Import Failed";
+"Import Settings?" = "Import Settings?";
+"This will replace all your current groups and settings. This action cannot be undone." = "This will replace all your current groups and settings. This action cannot be undone.";
+"Cancel" = "Cancel";
+"Import" = "Import";
+"Import Successful" = "Import Successful";
+"Your settings have been imported successfully." = "Your settings have been imported successfully.";

@@ -4,7 +4,6 @@ import SwiftUI
 struct MenuBarView: View {
     @EnvironmentObject var store: GroupStore
     @Environment(\.openWindow) private var openWindow
-    @AppStorage("showDockIcon") private var showDockIcon = true
     @StateObject private var launchAtLogin = LaunchAtLoginManager.shared
     
     var body: some View {
@@ -40,11 +39,6 @@ struct MenuBarView: View {
             Toggle("Open at Login", isOn: $launchAtLogin.isEnabled)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
-            
-            Toggle("Show Icon in Dock", isOn: $showDockIcon)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 8)
-                .gridCellColumns(2)
             
             Divider()
             

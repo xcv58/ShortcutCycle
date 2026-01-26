@@ -2,14 +2,12 @@ import Foundation
 
 /// App preferences stored in @AppStorage
 struct AppSettings: Codable {
-    var showDockIcon: Bool
     var showHUD: Bool
     var showShortcutInHUD: Bool
     
     /// Load current settings from UserDefaults
     static func current() -> AppSettings {
         AppSettings(
-            showDockIcon: UserDefaults.standard.object(forKey: "showDockIcon") as? Bool ?? true,
             showHUD: UserDefaults.standard.object(forKey: "showHUD") as? Bool ?? true,
             showShortcutInHUD: UserDefaults.standard.object(forKey: "showShortcutInHUD") as? Bool ?? true
         )
@@ -17,7 +15,6 @@ struct AppSettings: Codable {
     
     /// Apply settings to UserDefaults
     func apply() {
-        UserDefaults.standard.set(showDockIcon, forKey: "showDockIcon")
         UserDefaults.standard.set(showHUD, forKey: "showHUD")
         UserDefaults.standard.set(showShortcutInHUD, forKey: "showShortcutInHUD")
     }
