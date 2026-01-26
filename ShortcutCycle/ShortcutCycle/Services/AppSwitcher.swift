@@ -37,9 +37,12 @@ class AppSwitcher: ObservableObject {
                 app.hide()
                 showHUD(apps: runningApps, activeApp: app, modifierFlags: modifierFlags, shortcut: shortcutString)
             } else {
-                app.activate(options: [.activateAllWindows])
                 store.updateLastActiveApp(bundleId: app.bundleIdentifier ?? "", for: group.id)
-                showHUD(apps: runningApps, activeApp: app, modifierFlags: modifierFlags, shortcut: shortcutString)
+                let hudShown = showHUD(apps: runningApps, activeApp: app, modifierFlags: modifierFlags, shortcut: shortcutString)
+                
+                if !hudShown {
+                   app.activate(options: [.activateAllWindows])
+                }
             }
             
         default:
@@ -56,10 +59,13 @@ class AppSwitcher: ObservableObject {
         return shortcut.modifiers
     }
     
-    private func showHUD(apps: [NSRunningApplication], activeApp: NSRunningApplication, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?) {
+    @discardableResult
+    private func showHUD(apps: [NSRunningApplication], activeApp: NSRunningApplication, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?) -> Bool {
         if UserDefaults.standard.bool(forKey: "showHUD") {
             HUDManager.shared.scheduleShow(apps: apps, activeApp: activeApp, modifierFlags: modifierFlags, shortcut: shortcut)
+            return true
         }
+        return false
     }
     
     /// Get all running apps that belong to a group, sorted by order in group
@@ -123,9 +129,13 @@ class AppSwitcher: ObservableObject {
         }
         
         
-        appToActivate.activate(options: [.activateAllWindows])
+        
         store.updateLastActiveApp(bundleId: appToActivate.bundleIdentifier ?? "", for: group.id)
-        showHUD(apps: sortedApps, activeApp: appToActivate, modifierFlags: modifierFlags, shortcut: shortcut)
+        let hudShown = showHUD(apps: sortedApps, activeApp: appToActivate, modifierFlags: modifierFlags, shortcut: shortcut)
+        
+        if !hudShown {
+            appToActivate.activate(options: [.activateAllWindows])
+        }
     }
     
     /// Launch an app by bundle identifier
@@ -284,6 +294,14 @@ class HUDManager: ObservableObject {
              return
         }
         
+        // Check if ANY of the required modifiers are currently held.
+        // This prevents the HUD from getting stuck if the keys were already released
+        // before we started monitoring.
+        let currentFlags = NSEvent.modifierFlags
+        if !checkModifiersHeld(currentFlags: currentFlags, required: required) {
+             finalizeSwitchAndHide()
+             return
+        }
         
         // Monitor flags changed - use LOCAL monitor now since we are active
         eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
@@ -294,40 +312,41 @@ class HUDManager: ObservableObject {
         }
     }
     
+    private func checkModifiersHeld(currentFlags: NSEvent.ModifierFlags, required: NSEvent.ModifierFlags) -> Bool {
+        if required.contains(.command) && currentFlags.contains(.command) { return true }
+        if required.contains(.shift) && currentFlags.contains(.shift) { return true }
+        if required.contains(.option) && currentFlags.contains(.option) { return true }
+        if required.contains(.control) && currentFlags.contains(.control) { return true }
+        return false
+    }
+    
     private func handleFlagsChanged(event: NSEvent, required: NSEvent.ModifierFlags) {
         let currentFlags = event.modifierFlags
         
-        // Check if ANY of the required modifiers are still held.
-        // If the user releases the main modifier (e.g. Command), we hide.
+        if !checkModifiersHeld(currentFlags: currentFlags, required: required) {
+             finalizeSwitchAndHide()
+        }
+    }
+    
+    private func finalizeSwitchAndHide() {
+        // Modifiers released
+        showTimer?.invalidate() // Cancel pending show
+        showTimer = nil
         
-        var isHeld = false
-        if required.contains(.command) && currentFlags.contains(.command) { isHeld = true }
-        if required.contains(.shift) && currentFlags.contains(.shift) { isHeld = true }
-        if required.contains(.option) && currentFlags.contains(.option) { isHeld = true }
-        if required.contains(.control) && currentFlags.contains(.control) { isHeld = true }
+        // Fast switch: user released keys before HUD appeared or while it was visible
+        if let pending = pendingActiveApp {
+            pending.activate(options: [.activateAllWindows])
+            pendingActiveApp = nil
+        }
         
-        if !isHeld {
-            // Modifiers released
-            showTimer?.invalidate() // Cancel pending show
-            showTimer = nil
-            
-            // Fast switch: user released keys before HUD appeared
-            // We must insure the pending app is activated, because our previous activation (in cycleApps)
-            // might have been preempted by our own activation (to receive events).
-            if let pending = pendingActiveApp {
-                pending.activate(options: [.activateAllWindows])
-                pendingActiveApp = nil
-            }
-            
-            if window?.isVisible == true {
-                hide() // Hide immediately
-            }
-            
-            // Stop monitoring
-            if let monitor = eventMonitor {
-                NSEvent.removeMonitor(monitor)
-                eventMonitor = nil
-            }
+        if window?.isVisible == true {
+            hide() // Hide immediately
+        }
+        
+        // Stop monitoring
+        if let monitor = eventMonitor {
+            NSEvent.removeMonitor(monitor)
+            eventMonitor = nil
         }
     }
     
@@ -346,22 +365,14 @@ class HUDManager: ObservableObject {
         window = nil
         currentSelectedApp = nil
         
-        // Restore previous app if we haven't activated a new one (e.g. user just released keys without selecting anything, though typically `activate` handles this)
-        // Actually, explicit activation logic is usually handled by the caller (cycleApps calls activate).
-        // But if we just showed HUD and cancelled, we might want to go back.
-        // The current design activates the app *during* cycle logic.
-        // But wait, if we became active to show HUD, we steal focus. If we hide HUD, we should probably yield focus back if no selection was made?
-        // Actually, if a selection IS made, `cycleApps` or `handleShortcut` activates the target app.
-        // If the HUD is just dismissed (e.g. without change?), we should theoretically go back.
-        // However, standard cmd+tab behavior is: if you release, you switch to the selected app.
+        // Ensure we activate the pending app if it exists (fallback)
+        if let pending = pendingActiveApp {
+            pending.activate(options: [.activateAllWindows])
+            pendingActiveApp = nil
+        }
         
-        // In our case, `cycleApps` *pre-activates* the app?
-        // Let's look at `cycleApps`: it calls `appToActivate.activate`.
-        // If `cycleApps` activated the app, we are fine.
-        
-        // But we need to make sure WE don't stay active if the user cancels or we are done.
         if NSApp.isActive {
-            NSApp.hide(nil) // Simple way to yield focus back to previous
+            NSApp.hide(nil) // Yield focus back
         }
         
         hideTimer?.invalidate()
