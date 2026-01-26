@@ -13,7 +13,7 @@
 		004 /* GroupStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 104 /* GroupStore.swift */; };
 		006 /* AppSwitcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 106 /* AppSwitcher.swift */; };
 		007 /* ShortcutManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 107 /* ShortcutManager.swift */; };
-		008 /* ShortcutRecorderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 108 /* ShortcutRecorderView.swift */; };
+		008 /* KeyboardShortcutsNames.swift in Sources */ = {isa = PBXBuildFile; fileRef = 108 /* KeyboardShortcutsNames.swift */; };
 		009 /* AppDropZoneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 109 /* AppDropZoneView.swift */; };
 		010 /* GroupEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110 /* GroupEditView.swift */; };
 		011 /* GroupListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111 /* GroupListView.swift */; };
@@ -22,6 +22,7 @@
 		014 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 114 /* Assets.xcassets */; };
 		015 /* LaunchAtLoginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 116 /* LaunchAtLoginManager.swift */; };
 		016 /* SettingsExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 117 /* SettingsExport.swift */; };
+		017 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 901 /* KeyboardShortcuts */; };
 		DFD9E1762F26F9B500609463 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = DFD9E1742F26F9B500609463 /* Localizable.strings */; };
 /* End PBXBuildFile section */
 
@@ -33,7 +34,7 @@
 		104 /* GroupStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupStore.swift; sourceTree = "<group>"; };
 		106 /* AppSwitcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSwitcher.swift; sourceTree = "<group>"; };
 		107 /* ShortcutManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutManager.swift; sourceTree = "<group>"; };
-		108 /* ShortcutRecorderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutRecorderView.swift; sourceTree = "<group>"; };
+		108 /* KeyboardShortcutsNames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcutsNames.swift; sourceTree = "<group>"; };
 		109 /* AppDropZoneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDropZoneView.swift; sourceTree = "<group>"; };
 		110 /* GroupEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupEditView.swift; sourceTree = "<group>"; };
 		111 /* GroupListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupListView.swift; sourceTree = "<group>"; };
@@ -66,6 +67,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				017 /* KeyboardShortcuts in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -108,6 +110,7 @@
 				102 /* AppItem.swift */,
 				103 /* AppGroup.swift */,
 				104 /* GroupStore.swift */,
+				108 /* KeyboardShortcutsNames.swift */,
 				117 /* SettingsExport.swift */,
 			);
 			path = Models;
@@ -127,7 +130,6 @@
 		305 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				108 /* ShortcutRecorderView.swift */,
 				109 /* AppDropZoneView.swift */,
 				110 /* GroupEditView.swift */,
 				111 /* GroupListView.swift */,
@@ -161,6 +163,9 @@
 			dependencies = (
 			);
 			name = ShortcutCycle;
+			packageProductDependencies = (
+				901 /* KeyboardShortcuts */,
+			);
 			productName = ShortcutCycle;
 			productReference = 100 /* ShortcutCycle.app */;
 			productType = "com.apple.product-type.application";
@@ -203,6 +208,9 @@
 				nl,
 			);
 			mainGroup = 300;
+			packageReferences = (
+				900 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
+			);
 			productRefGroup = 302 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -235,7 +243,7 @@
 				004 /* GroupStore.swift in Sources */,
 				006 /* AppSwitcher.swift in Sources */,
 				007 /* ShortcutManager.swift in Sources */,
-				008 /* ShortcutRecorderView.swift in Sources */,
+				008 /* KeyboardShortcutsNames.swift in Sources */,
 				009 /* AppDropZoneView.swift in Sources */,
 				010 /* GroupEditView.swift in Sources */,
 				011 /* GroupListView.swift in Sources */,
@@ -468,6 +476,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		900 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sindresorhus/KeyboardShortcuts";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		901 /* KeyboardShortcuts */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 900 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
+			productName = KeyboardShortcuts;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 600 /* Project object */;
 }

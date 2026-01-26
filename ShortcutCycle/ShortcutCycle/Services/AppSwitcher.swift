@@ -2,6 +2,7 @@ import Foundation
 import AppKit
 import SwiftUI
 import Carbon
+import KeyboardShortcuts
 
 /// Handles the core app switching logic for groups
 @MainActor
@@ -15,6 +16,10 @@ class AppSwitcher: ObservableObject {
     /// Handle a shortcut activation for a given group
     func handleShortcut(for group: AppGroup, store: GroupStore) {
         let runningApps = getRunningApps(in: group)
+        
+        // Get modifier flags from the current shortcut using KeyboardShortcuts
+        let modifierFlags = getModifierFlags(for: group)
+        let shortcutString = group.shortcutDisplayString
         
         switch runningApps.count {
         case 0:
@@ -30,22 +35,30 @@ class AppSwitcher: ObservableObject {
             let app = runningApps[0]
             if app.isActive {
                 app.hide()
-                showHUD(apps: runningApps, activeApp: app, modifiers: group.shortcut?.modifiers, shortcut: group.shortcut?.displayString)
+                showHUD(apps: runningApps, activeApp: app, modifierFlags: modifierFlags, shortcut: shortcutString)
             } else {
                 app.activate(options: [.activateAllWindows])
                 store.updateLastActiveApp(bundleId: app.bundleIdentifier ?? "", for: group.id)
-                showHUD(apps: runningApps, activeApp: app, modifiers: group.shortcut?.modifiers, shortcut: group.shortcut?.displayString)
+                showHUD(apps: runningApps, activeApp: app, modifierFlags: modifierFlags, shortcut: shortcutString)
             }
             
         default:
             // Multiple apps running - cycle through them
-            cycleApps(runningApps, group: group, store: store)
+            cycleApps(runningApps, group: group, store: store, modifierFlags: modifierFlags, shortcut: shortcutString)
         }
     }
     
-    private func showHUD(apps: [NSRunningApplication], activeApp: NSRunningApplication, modifiers: UInt32?, shortcut: String?) {
+    /// Get the NSEvent.ModifierFlags from the KeyboardShortcuts shortcut
+    private func getModifierFlags(for group: AppGroup) -> NSEvent.ModifierFlags? {
+        guard let shortcut = KeyboardShortcuts.getShortcut(for: group.shortcutName) else {
+            return nil
+        }
+        return shortcut.modifiers
+    }
+    
+    private func showHUD(apps: [NSRunningApplication], activeApp: NSRunningApplication, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?) {
         if UserDefaults.standard.bool(forKey: "showHUD") {
-            HUDManager.shared.scheduleShow(apps: apps, activeApp: activeApp, modifiers: modifiers, shortcut: shortcut)
+            HUDManager.shared.scheduleShow(apps: apps, activeApp: activeApp, modifierFlags: modifierFlags, shortcut: shortcut)
         }
     }
     
@@ -70,7 +83,7 @@ class AppSwitcher: ObservableObject {
     }
     
     /// Cycle through multiple running apps
-    private func cycleApps(_ apps: [NSRunningApplication], group: AppGroup, store: GroupStore) {
+    private func cycleApps(_ apps: [NSRunningApplication], group: AppGroup, store: GroupStore, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?) {
         // Apps are already sorted by getRunningApps
         let sortedApps = apps
         
@@ -112,7 +125,7 @@ class AppSwitcher: ObservableObject {
         
         appToActivate.activate(options: [.activateAllWindows])
         store.updateLastActiveApp(bundleId: appToActivate.bundleIdentifier ?? "", for: group.id)
-        showHUD(apps: sortedApps, activeApp: appToActivate, modifiers: group.shortcut?.modifiers, shortcut: group.shortcut?.displayString)
+        showHUD(apps: sortedApps, activeApp: appToActivate, modifierFlags: modifierFlags, shortcut: shortcut)
     }
     
     /// Launch an app by bundle identifier
@@ -177,7 +190,7 @@ class HUDManager: ObservableObject {
     private init() {}
     
     /// Schedule showing the HUD with macOS Command+Tab logic
-    func scheduleShow(apps: [NSRunningApplication], activeApp: NSRunningApplication, modifiers: UInt32?, shortcut: String?) {
+    func scheduleShow(apps: [NSRunningApplication], activeApp: NSRunningApplication, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?) {
         // Cancel existing hide timer
         hideTimer?.invalidate()
         hideTimer = nil // Ensure we don't auto-hide while interacting
@@ -185,9 +198,6 @@ class HUDManager: ObservableObject {
         let now = Date()
         let isRepeated = lastRequestTime != nil && now.timeIntervalSince(lastRequestTime!) < 0.5
 
-        if let lastRequestTime = lastRequestTime {
-             // check repeated
-        }
         lastRequestTime = now
         
         // Store pending active app for fast switching
@@ -220,7 +230,7 @@ class HUDManager: ObservableObject {
             showTimer?.invalidate()
             showTimer = nil
             presentHUD(apps: apps, activeApp: activeApp, shortcut: shortcut)
-            startMonitoringModifiers(requiredModifiers: modifiers)
+            startMonitoringModifiers(requiredModifiers: modifierFlags)
             return
         }
         
@@ -229,12 +239,12 @@ class HUDManager: ObservableObject {
         showTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: false) { [weak self] _ in // 200ms delay
             Task { @MainActor in
                 self?.presentHUD(apps: apps, activeApp: activeApp, shortcut: shortcut)
-                self?.startMonitoringModifiers(requiredModifiers: modifiers)
+                self?.startMonitoringModifiers(requiredModifiers: modifierFlags)
             }
         }
         
         // Start monitoring immediately to cancel if released early
-        startMonitoringModifiers(requiredModifiers: modifiers)
+        startMonitoringModifiers(requiredModifiers: modifierFlags)
     }
     
     private func presentHUD(apps: [NSRunningApplication], activeApp: NSRunningApplication, shortcut: String?) {
@@ -261,14 +271,14 @@ class HUDManager: ObservableObject {
         window.orderFront(nil)
     }
     
-    private func startMonitoringModifiers(requiredModifiers: UInt32?) {
+    private func startMonitoringModifiers(requiredModifiers: NSEvent.ModifierFlags?) {
         // Stop existing monitor
         if let monitor = eventMonitor {
             NSEvent.removeMonitor(monitor)
             eventMonitor = nil
         }
         
-        guard let required = requiredModifiers, required > 0 else {
+        guard let required = requiredModifiers, !required.isEmpty else {
             // No modifiers required? Just schedule hide after delay since we can't detect "release"
              scheduleAutoHide()
              return
@@ -284,18 +294,17 @@ class HUDManager: ObservableObject {
         }
     }
     
-    private func handleFlagsChanged(event: NSEvent, required: UInt32) {
+    private func handleFlagsChanged(event: NSEvent, required: NSEvent.ModifierFlags) {
         let currentFlags = event.modifierFlags
         
         // Check if ANY of the required modifiers are still held.
         // If the user releases the main modifier (e.g. Command), we hide.
-        // Carbon modifiers: cmdKey=256, shiftKey=512, optionKey=2048, controlKey=4096
         
         var isHeld = false
-        if (required & UInt32(cmdKey) != 0) && currentFlags.contains(.command) { isHeld = true }
-        if (required & UInt32(shiftKey) != 0) && currentFlags.contains(.shift) { isHeld = true }
-        if (required & UInt32(optionKey) != 0) && currentFlags.contains(.option) { isHeld = true }
-        if (required & UInt32(controlKey) != 0) && currentFlags.contains(.control) { isHeld = true }
+        if required.contains(.command) && currentFlags.contains(.command) { isHeld = true }
+        if required.contains(.shift) && currentFlags.contains(.shift) { isHeld = true }
+        if required.contains(.option) && currentFlags.contains(.option) { isHeld = true }
+        if required.contains(.control) && currentFlags.contains(.control) { isHeld = true }
         
         if !isHeld {
             // Modifiers released

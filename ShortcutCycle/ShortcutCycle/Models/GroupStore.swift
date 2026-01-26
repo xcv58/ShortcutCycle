@@ -81,13 +81,6 @@ class GroupStore: ObservableObject {
     
     // MARK: - Shortcut Management
     
-    func setShortcut(_ shortcut: KeyboardShortcutData?, for groupId: UUID) {
-        if let index = groups.firstIndex(where: { $0.id == groupId }) {
-            groups[index].shortcut = shortcut
-            saveGroups()
-        }
-    }
-    
     func updateLastActiveApp(bundleId: String, for groupId: UUID) {
         if let index = groups.firstIndex(where: { $0.id == groupId }) {
             groups[index].lastActiveAppBundleId = bundleId

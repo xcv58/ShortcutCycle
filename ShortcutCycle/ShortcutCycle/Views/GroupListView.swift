@@ -1,4 +1,5 @@
 import SwiftUI
+import KeyboardShortcuts
 
 /// Sidebar view showing the list of all groups
 struct GroupListView: View {
@@ -128,8 +129,8 @@ struct GroupRowView: View {
                     .lineLimit(1)
                     .truncationMode(.tail)
                 
-                if let shortcut = group.shortcut {
-                    Text(shortcut.displayString)
+                if let shortcutString = group.shortcutDisplayString {
+                    Text(shortcutString)
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .padding(.horizontal, 6)

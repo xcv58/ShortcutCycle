@@ -1,5 +1,6 @@
 import SwiftUI
 import UniformTypeIdentifiers
+import KeyboardShortcuts
 
 /// View for editing a single app group
 struct GroupEditView: View {
@@ -7,7 +8,6 @@ struct GroupEditView: View {
     let groupId: UUID
     
     @State private var groupName: String = ""
-    @State private var shortcut: KeyboardShortcutData?
     @State private var draggingApp: AppItem?
     
     private var group: AppGroup? {
@@ -38,11 +38,13 @@ struct GroupEditView: View {
                     Text("Keyboard Shortcut")
                         .font(.headline)
                     
-                    ShortcutRecorderView(shortcut: $shortcut)
-                        .onChange(of: shortcut) { _, newValue in
-                            store.setShortcut(newValue, for: groupId)
-                            ShortcutManager.shared.registerAllShortcuts()
-                        }
+                    HStack {
+                        KeyboardShortcuts.Recorder(for: .forGroup(groupId))
+                            .onChange(of: KeyboardShortcuts.getShortcut(for: .forGroup(groupId))) { _, _ in
+                                // Re-register shortcuts when changed
+                                ShortcutManager.shared.registerAllShortcuts()
+                            }
+                    }
                 }
                 
                 Divider()
@@ -113,7 +115,6 @@ struct GroupEditView: View {
     private func loadGroupData() {
         if let group = group {
             groupName = group.name
-            shortcut = group.shortcut
         }
     }
 }

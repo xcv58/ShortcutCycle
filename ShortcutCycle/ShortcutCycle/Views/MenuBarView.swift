@@ -1,4 +1,5 @@
 import SwiftUI
+import KeyboardShortcuts
 
 /// Menu bar popover view showing quick access to groups
 struct MenuBarView: View {
@@ -112,8 +113,8 @@ struct MenuBarGroupRow: View {
             
             Spacer()
             
-            if let shortcut = group.shortcut {
-                Text(shortcut.displayString)
+            if let shortcutString = group.shortcutDisplayString {
+                Text(shortcutString)
                     .font(.caption)
                     .foregroundColor(isHovering ? .white.opacity(0.8) : .secondary)
                     .padding(.horizontal, 6)

@@ -1,20 +1,17 @@
 import Foundation
-import Carbon.HIToolbox
+import KeyboardShortcuts
 import AppKit
 
-/// Manages global keyboard shortcuts using Carbon Event Manager
+/// Manages global keyboard shortcuts using the KeyboardShortcuts library
 @MainActor
 class ShortcutManager: ObservableObject {
     static let shared = ShortcutManager()
     
-    private var hotKeyRefs: [UUID: EventHotKeyRef] = [:]
     private var groupStore: GroupStore?
-    private static var nextHotKeyId: UInt32 = 1
-    private static var groupIdMap: [UInt32: UUID] = [:]
     
-    private init() {
-        setupEventHandler()
-    }
+    private var registeredGroupIds: Set<UUID> = []
+    
+    private init() {}
     
     func setGroupStore(_ store: GroupStore) {
         self.groupStore = store
@@ -22,106 +19,59 @@ class ShortcutManager: ObservableObject {
     
     /// Register all shortcuts from the group store
     func registerAllShortcuts() {
-        guard let store = groupStore else { return }
-        
-        // Unregister all existing shortcuts first
+        // Unregister all previously registered shortcuts first
+        // This is crucial to handle deleted groups or disabled groups
         unregisterAllShortcuts()
         
-        // Register shortcuts for each group
+        guard let store = groupStore else { return }
+        
+        // Register shortcuts for each enabled group that has a shortcut
         for group in store.groups where group.isEnabled {
-            if let shortcut = group.shortcut {
-                registerShortcut(shortcut, for: group.id)
+            registerShortcut(for: group)
+        }
+    }
+    
+    /// Register a single shortcut handler for a group
+    func registerShortcut(for group: AppGroup) {
+        let shortcutName = group.shortcutName
+        
+        // Only register if group has a shortcut assigned
+        guard KeyboardShortcuts.getShortcut(for: shortcutName) != nil else {
+            return
+        }
+        
+        let groupId = group.id
+        
+        // Register the callback for when the shortcut is pressed
+        KeyboardShortcuts.onKeyUp(for: shortcutName) { [weak self] in
+            Task { @MainActor in
+                self?.handleShortcut(for: groupId)
             }
         }
+        
+        registeredGroupIds.insert(groupId)
+        print("Registered shortcut for group: \(group.name) (\(groupId))")
     }
     
-    /// Register a single shortcut for a group
-    func registerShortcut(_ shortcut: KeyboardShortcutData, for groupId: UUID) {
-        // Unregister existing shortcut for this group if any
-        unregisterShortcut(for: groupId)
-        
-        var hotKeyRef: EventHotKeyRef?
-        let hotKeyId = Self.nextHotKeyId
-        Self.nextHotKeyId += 1
-        Self.groupIdMap[hotKeyId] = groupId
-        
-        let hotKeyID = EventHotKeyID(signature: OSType(0x4153_4857), id: hotKeyId) // "ASHW"
-        
-        let status = RegisterEventHotKey(
-            shortcut.keyCode,
-            shortcut.modifiers,
-            hotKeyID,
-            GetApplicationEventTarget(),
-            0,
-            &hotKeyRef
-        )
-        
-        if status == noErr, let ref = hotKeyRef {
-            hotKeyRefs[groupId] = ref
-            print("Registered hotkey for group: \(groupId)")
-        } else {
-            print("Failed to register hotkey: \(status)")
-        }
-    }
-    
-    /// Unregister a shortcut for a group
+    /// Unregister a shortcut for a specific group
     func unregisterShortcut(for groupId: UUID) {
-        if let ref = hotKeyRefs[groupId] {
-            UnregisterEventHotKey(ref)
-            hotKeyRefs.removeValue(forKey: groupId)
-            // Remove from groupIdMap
-            Self.groupIdMap = Self.groupIdMap.filter { $0.value != groupId }
-        }
+        let shortcutName = KeyboardShortcuts.Name.forGroup(groupId)
+        KeyboardShortcuts.disable(shortcutName)
+        registeredGroupIds.remove(groupId)
     }
     
     /// Unregister all shortcuts
     private func unregisterAllShortcuts() {
-        for (_, ref) in hotKeyRefs {
-            UnregisterEventHotKey(ref)
+        for groupId in registeredGroupIds {
+            let shortcutName = KeyboardShortcuts.Name.forGroup(groupId)
+            KeyboardShortcuts.disable(shortcutName)
         }
-        hotKeyRefs.removeAll()
-        Self.groupIdMap.removeAll()
+        registeredGroupIds.removeAll()
     }
     
-    /// Setup the Carbon event handler for hot keys
-    private func setupEventHandler() {
-        var eventType = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
-        
-        InstallEventHandler(
-            GetApplicationEventTarget(),
-            { (_, event, _) -> OSStatus in
-                var hotKeyID = EventHotKeyID()
-                
-                let status = GetEventParameter(
-                    event,
-                    EventParamName(kEventParamDirectObject),
-                    EventParamType(typeEventHotKeyID),
-                    nil,
-                    MemoryLayout<EventHotKeyID>.size,
-                    nil,
-                    &hotKeyID
-                )
-                
-                if status == noErr {
-                    // Handle the hot key on the main thread
-                    Task { @MainActor in
-                        ShortcutManager.shared.handleHotKey(id: hotKeyID.id)
-                    }
-                }
-                
-                return noErr
-            },
-            1,
-            &eventType,
-            nil,
-            nil
-        )
-    }
-    
-    /// Handle a hot key press
-    private func handleHotKey(id: UInt32) {
-        guard let groupId = Self.groupIdMap[id],
-              let store = groupStore,
+    /// Handle a shortcut press for a given group ID
+    private func handleShortcut(for groupId: UUID) {
+        guard let store = groupStore,
               let group = store.groups.first(where: { $0.id == groupId }) else {
             return
         }
@@ -129,15 +79,9 @@ class ShortcutManager: ObservableObject {
         AppSwitcher.shared.handleShortcut(for: group, store: store)
     }
     
-    /// Convert NSEvent modifier flags to Carbon modifiers
-    static func carbonModifiers(from flags: NSEvent.ModifierFlags) -> UInt32 {
-        var carbonFlags: UInt32 = 0
-        
-        if flags.contains(.command) { carbonFlags |= UInt32(cmdKey) }
-        if flags.contains(.option) { carbonFlags |= UInt32(optionKey) }
-        if flags.contains(.control) { carbonFlags |= UInt32(controlKey) }
-        if flags.contains(.shift) { carbonFlags |= UInt32(shiftKey) }
-        
-        return carbonFlags
+    /// Reset a shortcut (clear the assigned key combination)
+    func resetShortcut(for groupId: UUID) {
+        let shortcutName = KeyboardShortcuts.Name.forGroup(groupId)
+        KeyboardShortcuts.reset(shortcutName)
     }
 }
