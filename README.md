@@ -15,8 +15,10 @@ ShortcutCycle helps you switch between your favorite apps with just one keyboard
 We believe tools should be for everyone. ShortcutCycle supports:
 - **VoiceOver**: Fully labeled controls and navigation.
 - **Voice Control**: All features accessible via standard voice commands.
-- **High Contrast**: Uses standard system colors for maximum readability.
-- **Differentiate Without Color**: Critical information uses text or position, not just color.
+- **Dark Interface**: Fully compatible with macOS Dark Mode.
+- **Differentiate Without Color Alone**: Critical information uses text or position, not just color.
+- **Sufficient Contrast**: Uses standard system colors for maximum readability.
+- **Reduced Motion**: Standard animations respect system preferences.
 
 ## How to Install
 
