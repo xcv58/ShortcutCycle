@@ -32,7 +32,7 @@ class AppSwitcher: ObservableObject {
                 app.hide()
                 showHUD(apps: runningApps, activeApp: app, modifiers: group.shortcut?.modifiers, shortcut: group.shortcut?.displayString)
             } else {
-                app.activate(options: .activateIgnoringOtherApps)
+                app.activate(options: [.activateAllWindows])
                 store.updateLastActiveApp(bundleId: app.bundleIdentifier ?? "", for: group.id)
                 showHUD(apps: runningApps, activeApp: app, modifiers: group.shortcut?.modifiers, shortcut: group.shortcut?.displayString)
             }
@@ -109,7 +109,8 @@ class AppSwitcher: ObservableObject {
             }
         }
         
-        appToActivate.activate(options: .activateIgnoringOtherApps)
+        
+        appToActivate.activate(options: [.activateAllWindows])
         store.updateLastActiveApp(bundleId: appToActivate.bundleIdentifier ?? "", for: group.id)
         showHUD(apps: sortedApps, activeApp: appToActivate, modifiers: group.shortcut?.modifiers, shortcut: group.shortcut?.displayString)
     }
