@@ -1,44 +1,45 @@
 # ShortcutCycle
 
-ShortcutCycle is a macOS utility that allows you to cycle through multiple applications using a single keyboard shortcut. It acts as a "Group Switcher" - you define a group of apps and assign a global hotkey. Pressing the hotkey activates the first app, pressing again cycles to the next one, and so on.
+ShortcutCycle helps you switch between your favorite apps with just one keyboard shortcut. Instead of remembering many shortcuts, just group your apps (like "Chat Apps" or "Work Apps") and use one key to cycle through them.
 
 ## Features
 
-- **App Groups**: Create multiple groups of applications (e.g., "Development" might include Xcode, Terminal, and Simulator).
-- **Single Hotkey Cycle**: Assign one global shortcut to cycle through all open apps in a group.
-- **Smart Activation**: If no app in the group is running, it launches the first one. If one or more are running, it cycles through them.
-- **HUD Display**: Shows a beautiful, native-like Heads-Up Display when switching, showing which app is active and what's next.
-- **HUD Customization**: Toggle HUD visibility and whether to show the shortcut hint.
-- **Localization**: Supports English, Japanese, Chinese (Simplified), and German.
-- **Dark Mode Support**: Fully compatible with macOS Light and Dark modes.
+- **Group Apps**: Put related apps together (e.g., "Browsers" for Chrome, Safari, Edge; or "Messaging" for Slack, Discord, Messages).
+- **One Key Magic**: Press your shortcut to open the first app. Press it again to switch to the next one.
+- **See What's Happening**: A nice overlay shows you which app is coming up next.
+- **Your Language**: Works in 15 languages including English, Japanese, Chinese, German, Spanish, French, and many more.
+- **Save Your Settings**: Easily save your settings to a file to keep them safe or share with friends.
+- **Light & Dark**: Looks great in both Light and Dark modes.
 
-## Installation
+## How to Install
 
-1. Download the latest `.dmg` from the [Releases](https://github.com/xcv58/ShortcutCycle/releases) page.
+1. Get the latest version from the [Releases](https://github.com/xcv58/ShortcutCycle/releases) page.
 2. Drag `ShortcutCycle` to your Applications folder.
-3. Launch the app. You will see a menu bar icon.
-4. Grant **Accessibility Permissions** when prompted (required to intercept global shortcuts and switch apps).
+3. Open the app. You'll see a small icon in your menu bar.
+4. The app will ask for **Accessibility Permissions**. This is needed so it can listen to your shortcuts.
 
-## Usage
+## How to Use
 
-1. Click the menu bar icon and select **Settings...**.
-2. Create a new group using the `+` button in the sidebar.
-3. Drag and drop applications into the group area.
-4. Record a global keyboard shortcut (e.g., `Option + 1`).
-5. Close the settings window.
-6. Press your shortcut (`Option + 1`) to launch or switch to the apps in that group!
+1. Click the menu bar icon and pick **Settings...**.
+2. Click the `+` button to make a new group of apps.
+3. Drag the apps you want into the group.
+4. Record a keyboard shortcut (like `Option + 1`).
+5. Close the window.
+6. Now, just press `Option + 1` to open or switch between your apps!
 
-## Building from Source
+## For Developers
+
+If you want to build the app yourself:
 
 Requirements:
-- macOS 14.0+
-- Xcode 15.0+
+- macOS 14.0 or later
+- Xcode 15.0 or later
 
 ```bash
-# Clone the repository
+# Clone the code
 git clone https://github.com/xcv58/ShortcutCycle.git
 
-# Open project
+# Open the project
 open ShortcutCycle/ShortcutCycle.xcodeproj
 
 # Build and Run
