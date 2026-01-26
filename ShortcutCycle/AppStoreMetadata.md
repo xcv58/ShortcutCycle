@@ -7,7 +7,14 @@ Tier 4 ($3.99 USD) - One-time purchase
 ShortcutCycle
 
 ## Subtitle
-Cycle through your shortcut groups effortlessly
+Switch apps instantly with hotkeys
+(Alternatives: "Cycle through your apps instantly", "The missing App Switcher")
+
+## App Icon
+`ShortcutCycle/ShortcutCycle/Assets.xcassets/AppIcon.appiconset/1024.png`
+
+## Privacy Policy
+[Privacy Policy](https://github.com/xcv58/ShortcutCycle/blob/master/PRIVACY_POLICY.md) (File created at root: `PRIVACY_POLICY.md`)
 
 ## Description
 Unlock the full potential of your productivity with ShortcutCycle!
