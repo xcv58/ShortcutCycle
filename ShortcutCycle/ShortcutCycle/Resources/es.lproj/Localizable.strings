@@ -1,0 +1,54 @@
+/* Spanish */
+"ShortcutCycle" = "ShortcutCycle";
+"Settings..." = "Ajustes...";
+"Quit" = "Salir";
+"No groups created yet" = "No se han creado grupos";
+"Select a group from the sidebar or create a new one." = "Selecciona un grupo de la barra lateral o crea uno nuevo.";
+"No Group Selected" = "Ningún grupo seleccionado";
+"Groups" = "Grupos";
+"General" = "General";
+"HUD Settings" = "Ajustes del HUD";
+"Show HUD when switching" = "Mostrar HUD al cambiar";
+"Show shortcut in HUD" = "Mostrar atajo en el HUD";
+"Manage how the Heads-Up Display (HUD) appears when you cycle through applications." = "Gestiona cómo aparece el HUD cuando cambias entre aplicaciones.";
+"App Groups" = "Grupos de aplicaciones";
+"Accessibility Permission Required" = "Permiso de accesibilidad requerido";
+"Open System Preferences" = "Abrir Preferencias del Sistema";
+"Later" = "Más tarde";
+"ShortcutCycle needs accessibility permission to register global keyboard shortcuts and switch between applications." = "ShortcutCycle necesita permiso de accesibilidad para registrar atajos de teclado globales y cambiar entre aplicaciones.";
+"Group Name" = "Nombre del grupo";
+"Enter group name" = "Introduce el nombre del grupo";
+"Keyboard Shortcut" = "Atajo de teclado";
+"Applications" = "Aplicaciones";
+"app" = "app";
+"apps" = "apps";
+"No apps added yet. Drag apps here or click the drop zone below." = "No hay aplicaciones añadidas. Arrastra aplicaciones aquí o haz clic en la zona inferior.";
+"Select a group to edit" = "Selecciona un grupo para editar";
+
+/* HUD Section */
+"HUD Behavior" = "Comportamiento del HUD";
+"The HUD appears briefly when you cycle through applications in a group." = "El HUD aparece brevemente cuando cambias entre aplicaciones en un grupo.";
+"Preview of the Heads-Up Display" = "Vista previa del HUD";
+"HUD Disabled" = "HUD desactivado";
+
+/* Application Section */
+"Application" = "Aplicación";
+"Open at Login" = "Abrir al iniciar sesión";
+"Language" = "Idioma";
+"System Default" = "Predeterminado del sistema";
+
+/* Backup & Restore Section */
+"Backup & Restore" = "Copia de seguridad y restauración";
+"Export Settings..." = "Exportar ajustes...";
+"Import Settings..." = "Importar ajustes...";
+"Export your groups and settings to a JSON file for backup or transfer to another Mac." = "Exporta tus grupos y ajustes a un archivo JSON para copia de seguridad o transferencia a otro Mac.";
+
+/* Export/Import Alerts */
+"Export Failed" = "Error al exportar";
+"Import Failed" = "Error al importar";
+"Import Settings?" = "¿Importar ajustes?";
+"This will replace all your current groups and settings. This action cannot be undone." = "Esto reemplazará todos tus grupos y ajustes actuales. Esta acción no se puede deshacer.";
+"Cancel" = "Cancelar";
+"Import" = "Importar";
+"Import Successful" = "Importación exitosa";
+"Your settings have been imported successfully." = "Tus ajustes han sido importados correctamente.";

@@ -1,0 +1,54 @@
+/* Chinese (Traditional) */
+"ShortcutCycle" = "ShortcutCycle";
+"Settings..." = "設定...";
+"Quit" = "退出";
+"No groups created yet" = "尚未建立群組";
+"Select a group from the sidebar or create a new one." = "從側邊欄選擇一個群組或建立一個新群組。";
+"No Group Selected" = "未選擇群組";
+"Groups" = "群組";
+"General" = "一般";
+"HUD Settings" = "HUD 設定";
+"Show HUD when switching" = "切換時顯示 HUD";
+"Show shortcut in HUD" = "在 HUD 中顯示快速鍵";
+"Manage how the Heads-Up Display (HUD) appears when you cycle through applications." = "管理在應用程式之間切換時 HUD 的顯示方式。";
+"App Groups" = "應用程式群組";
+"Accessibility Permission Required" = "需要輔助使用權限";
+"Open System Preferences" = "打開系統設定";
+"Later" = "稍後";
+"ShortcutCycle needs accessibility permission to register global keyboard shortcuts and switch between applications." = "ShortcutCycle 需要輔助使用權限來註冊全域快速鍵並在應用程式之間切換。";
+"Group Name" = "群組名稱";
+"Enter group name" = "輸入群組名稱";
+"Keyboard Shortcut" = "鍵盤快速鍵";
+"Applications" = "應用程式";
+"app" = "個應用";
+"apps" = "個應用";
+"No apps added yet. Drag apps here or click the drop zone below." = "尚未加入應用程式。將應用程式拖到此處或按一下下方的放置區域。";
+"Select a group to edit" = "選擇要編輯的群組";
+
+/* HUD Section */
+"HUD Behavior" = "HUD 行為";
+"The HUD appears briefly when you cycle through applications in a group." = "在群組應用程式之間切換時，HUD 會短暫顯示。";
+"Preview of the Heads-Up Display" = "HUD 預覽";
+"HUD Disabled" = "HUD 已停用";
+
+/* Application Section */
+"Application" = "應用程式";
+"Open at Login" = "登入時打開";
+"Language" = "語言";
+"System Default" = "系統預設";
+
+/* Backup & Restore Section */
+"Backup & Restore" = "備份與還原";
+"Export Settings..." = "匯出設定...";
+"Import Settings..." = "匯入設定...";
+"Export your groups and settings to a JSON file for backup or transfer to another Mac." = "將您的群組和設定匯出為 JSON 檔案，以便備份或傳輸到另一台 Mac。";
+
+/* Export/Import Alerts */
+"Export Failed" = "匯出失敗";
+"Import Failed" = "匯入失敗";
+"Import Settings?" = "匯入設定？";
+"This will replace all your current groups and settings. This action cannot be undone." = "這將替換您目前所有的群組和設定。此操作無法復原。";
+"Cancel" = "取消";
+"Import" = "匯入";
+"Import Successful" = "匯入成功";
+"Your settings have been imported successfully." = "您的設定已成功匯入。";

@@ -6,6 +6,8 @@ struct MenuBarView: View {
     @Environment(\.openWindow) private var openWindow
     @StateObject private var launchAtLogin = LaunchAtLoginManager.shared
     
+    var selectedLanguage: String = "system"
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Header
@@ -23,7 +25,7 @@ struct MenuBarView: View {
             // Groups list
             VStack(spacing: 0) {
                 if store.groups.isEmpty {
-                    Text("No groups created yet")
+                    Text("No groups created yet".localized(language: selectedLanguage))
                         .foregroundColor(.secondary)
                         .padding()
                 } else {
@@ -36,19 +38,19 @@ struct MenuBarView: View {
             Divider()
             
             // Preferences
-            Toggle("Open at Login", isOn: $launchAtLogin.isEnabled)
+            Toggle("Open at Login".localized(language: selectedLanguage), isOn: $launchAtLogin.isEnabled)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
             
             Divider()
             
             // Settings button
-            MenuBarButton(title: "Settings...", icon: "gear") {
+            MenuBarButton(title: "Settings...".localized(language: selectedLanguage), icon: "gear") {
                 NSApp.activate(ignoringOtherApps: true)
                 openWindow(id: "settings")
             }
             
-            MenuBarButton(title: "Quit", icon: "power") {
+            MenuBarButton(title: "Quit".localized(language: selectedLanguage), icon: "power") {
                 NSApplication.shared.terminate(nil)
             }
         }

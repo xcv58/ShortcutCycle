@@ -24,3 +24,31 @@
 "apps" = "个应用";
 "No apps added yet. Drag apps here or click the drop zone below." = "尚未添加应用。将应用拖到此处或点击下方的放置区域。";
 "Select a group to edit" = "选择要编辑的群组";
+
+/* HUD Section */
+"HUD Behavior" = "HUD 行为";
+"The HUD appears briefly when you cycle through applications in a group." = "在群组应用之间切换时，HUD 会短暂显示。";
+"Preview of the Heads-Up Display" = "HUD 预览";
+"HUD Disabled" = "HUD 已禁用";
+
+/* Application Section */
+"Application" = "应用程序";
+"Open at Login" = "登录时打开";
+"Language" = "语言";
+"System Default" = "系统默认";
+
+/* Backup & Restore Section */
+"Backup & Restore" = "备份与恢复";
+"Export Settings..." = "导出设置...";
+"Import Settings..." = "导入设置...";
+"Export your groups and settings to a JSON file for backup or transfer to another Mac." = "将您的群组和设置导出为 JSON 文件，以便备份或传输到另一台 Mac。";
+
+/* Export/Import Alerts */
+"Export Failed" = "导出失败";
+"Import Failed" = "导入失败";
+"Import Settings?" = "导入设置？";
+"This will replace all your current groups and settings. This action cannot be undone." = "这将替换您当前的所有群组和设置。此操作无法撤销。";
+"Cancel" = "取消";
+"Import" = "导入";
+"Import Successful" = "导入成功";
+"Your settings have been imported successfully." = "您的设置已成功导入。";

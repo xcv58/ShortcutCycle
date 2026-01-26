@@ -24,3 +24,31 @@
 "apps" = "Apps";
 "No apps added yet. Drag apps here or click the drop zone below." = "Noch keine Apps hinzugefügt. Ziehen Sie Apps hierher oder klicken Sie auf den Ablagebereich unten.";
 "Select a group to edit" = "Wählen Sie eine Gruppe zum Bearbeiten";
+
+/* HUD Section */
+"HUD Behavior" = "HUD-Verhalten";
+"The HUD appears briefly when you cycle through applications in a group." = "Das HUD wird kurz angezeigt, wenn Sie durch Anwendungen in einer Gruppe wechseln.";
+"Preview of the Heads-Up Display" = "Vorschau des Heads-Up Displays";
+"HUD Disabled" = "HUD deaktiviert";
+
+/* Application Section */
+"Application" = "Anwendung";
+"Open at Login" = "Bei Anmeldung öffnen";
+"Language" = "Sprache";
+"System Default" = "Systemstandard";
+
+/* Backup & Restore Section */
+"Backup & Restore" = "Sichern & Wiederherstellen";
+"Export Settings..." = "Einstellungen exportieren...";
+"Import Settings..." = "Einstellungen importieren...";
+"Export your groups and settings to a JSON file for backup or transfer to another Mac." = "Exportieren Sie Ihre Gruppen und Einstellungen in eine JSON-Datei zur Sicherung oder Übertragung auf einen anderen Mac.";
+
+/* Export/Import Alerts */
+"Export Failed" = "Export fehlgeschlagen";
+"Import Failed" = "Import fehlgeschlagen";
+"Import Settings?" = "Einstellungen importieren?";
+"This will replace all your current groups and settings. This action cannot be undone." = "Dies ersetzt alle Ihre aktuellen Gruppen und Einstellungen. Diese Aktion kann nicht rückgängig gemacht werden.";
+"Cancel" = "Abbrechen";
+"Import" = "Importieren";
+"Import Successful" = "Import erfolgreich";
+"Your settings have been imported successfully." = "Ihre Einstellungen wurden erfolgreich importiert.";

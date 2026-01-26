@@ -24,3 +24,31 @@
 "apps" = "アプリ";
 "No apps added yet. Drag apps here or click the drop zone below." = "アプリはまだ追加されていません。ここにアプリをドラッグするか、下のドロップゾーンをクリックしてください。";
 "Select a group to edit" = "編集するグループを選択";
+
+/* HUD Section */
+"HUD Behavior" = "HUDの動作";
+"The HUD appears briefly when you cycle through applications in a group." = "グループ内のアプリケーションを循環するときにHUDが一時的に表示されます。";
+"Preview of the Heads-Up Display" = "ヘッドアップディスプレイのプレビュー";
+"HUD Disabled" = "HUD無効";
+
+/* Application Section */
+"Application" = "アプリケーション";
+"Open at Login" = "ログイン時に開く";
+"Language" = "言語";
+"System Default" = "システムデフォルト";
+
+/* Backup & Restore Section */
+"Backup & Restore" = "バックアップと復元";
+"Export Settings..." = "設定をエクスポート...";
+"Import Settings..." = "設定をインポート...";
+"Export your groups and settings to a JSON file for backup or transfer to another Mac." = "バックアップや他のMacへの移行のために、グループと設定をJSONファイルにエクスポートします。";
+
+/* Export/Import Alerts */
+"Export Failed" = "エクスポート失敗";
+"Import Failed" = "インポート失敗";
+"Import Settings?" = "設定をインポートしますか？";
+"This will replace all your current groups and settings. This action cannot be undone." = "これにより、現在のすべてのグループと設定が置き換えられます。この操作は取り消せません。";
+"Cancel" = "キャンセル";
+"Import" = "インポート";
+"Import Successful" = "インポート成功";
+"Your settings have been imported successfully." = "設定が正常にインポートされました。";

@@ -1,0 +1,54 @@
+/* Arabic */
+"ShortcutCycle" = "ShortcutCycle";
+"Settings..." = "الإعدادات...";
+"Quit" = "إنهاء";
+"No groups created yet" = "لم يتم إنشاء مجموعات بعد";
+"Select a group from the sidebar or create a new one." = "اختر مجموعة من الشريط الجانبي أو أنشئ مجموعة جديدة.";
+"No Group Selected" = "لم يتم تحديد مجموعة";
+"Groups" = "المجموعات";
+"General" = "عام";
+"HUD Settings" = "إعدادات HUD";
+"Show HUD when switching" = "إظهار HUD عند التبديل";
+"Show shortcut in HUD" = "إظهار الاختصار في HUD";
+"Manage how the Heads-Up Display (HUD) appears when you cycle through applications." = "إدارة كيفية ظهور شاشة العرض الرأسية (HUD) عند التنقل بين التطبيقات.";
+"App Groups" = "مجموعات التطبيقات";
+"Accessibility Permission Required" = "إذن الوصول مطلوب";
+"Open System Preferences" = "فتح إعدادات النظام";
+"Later" = "لاحقاً";
+"ShortcutCycle needs accessibility permission to register global keyboard shortcuts and switch between applications." = "يحتاج ShortcutCycle إلى إذن الوصول لتسجيل اختصارات لوحة المفاتيح العالمية والتبديل بين التطبيقات.";
+"Group Name" = "اسم المجموعة";
+"Enter group name" = "أدخل اسم المجموعة";
+"Keyboard Shortcut" = "اختصار لوحة المفاتيح";
+"Applications" = "التطبيقات";
+"app" = "تطبيق";
+"apps" = "تطبيقات";
+"No apps added yet. Drag apps here or click the drop zone below." = "لم يتم إضافة تطبيقات بعد. اسحب التطبيقات هنا أو انقر فوق المنطقة أدناه.";
+"Select a group to edit" = "اختر مجموعة للتعديل";
+
+/* HUD Section */
+"HUD Behavior" = "سلوك HUD";
+"The HUD appears briefly when you cycle through applications in a group." = "يظهر HUD لفترة وجيزة عند التنقل بين التطبيقات في المجموعة.";
+"Preview of the Heads-Up Display" = "معاينة HUD";
+"HUD Disabled" = "تم تعطيل HUD";
+
+/* Application Section */
+"Application" = "التطبيق";
+"Open at Login" = "فتح عند تسجيل الدخول";
+"Language" = "اللغة";
+"System Default" = "افتراضي النظام";
+
+/* Backup & Restore Section */
+"Backup & Restore" = "النسخ الاحتياطي والاستعادة";
+"Export Settings..." = "تصدير الإعدادات...";
+"Import Settings..." = "استيراد الإعدادات...";
+"Export your groups and settings to a JSON file for backup or transfer to another Mac." = "تصدير مجموعاتك وإعداداتك إلى ملف JSON للنسخ الاحتياطي أو النقل إلى جهاز Mac آخر.";
+
+/* Export/Import Alerts */
+"Export Failed" = "فشل التصدير";
+"Import Failed" = "فشل الاستيراد";
+"Import Settings?" = "استيراد الإعدادات؟";
+"This will replace all your current groups and settings. This action cannot be undone." = "سيؤدي هذا إلى استبدال جميع مجموعاتك وإعداداتك الحالية. لا يمكن التراجع عن هذا الإجراء.";
+"Cancel" = "إلغاء";
+"Import" = "استيراد";
+"Import Successful" = "تم الاستيراد بنجاح";
+"Your settings have been imported successfully." = "تم استيراد إعداداتك بنجاح.";

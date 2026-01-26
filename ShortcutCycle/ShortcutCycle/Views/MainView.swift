@@ -5,24 +5,30 @@ import UniformTypeIdentifiers
 /// Main settings window view with sidebar and detail
 struct MainView: View {
     @EnvironmentObject var store: GroupStore
+    @AppStorage("selectedLanguage") private var selectedLanguage = "system"
     @State private var showAccessibilityAlert = false
+    @State private var selectedTab = "groups"
     
     var body: some View {
-        TabView {
+        TabView(selection: $selectedTab) {
             GroupSettingsView()
                 .tabItem {
-                    Label("Groups", systemImage: "rectangle.stack.3.hexagon")
+                    Label("Groups".localized(language: selectedLanguage), systemImage: "rectangle.stack.3.hexagon")
                 }
+                .tag("groups")
             
-            GeneralSettingsView()
+            GeneralSettingsView(selectedLanguage: selectedLanguage)
                 .tabItem {
-                    Label("General", systemImage: "gear")
+                    Label("General".localized(language: selectedLanguage), systemImage: "gear")
                 }
+                .tag("general")
         }
         .frame(minWidth: 600, minHeight: 400)
         .onAppear {
             checkAccessibility()
         }
+        .environment(\.locale, LanguageManager.shared.locale)
+        .id(selectedLanguage) // Force full redraw when language changes
         .alert("Accessibility Permission Required", isPresented: $showAccessibilityAlert) {
             Button("Open System Preferences") {
                 AccessibilityHelper.shared.openAccessibilityPreferences()
@@ -74,7 +80,9 @@ struct GeneralSettingsView: View {
     @AppStorage("showHUD") private var showHUD = true
     @AppStorage("showShortcutInHUD") private var showShortcutInHUD = true
     @StateObject private var launchAtLogin = LaunchAtLoginManager.shared
-    // @StateObject private var cloudSync = CloudSyncManager.shared // Temporarily disabled
+    
+    // Derived language for localization updates
+    var selectedLanguage: String = "system"
     
     // Export/Import state
     @State private var showExportError = false
@@ -89,7 +97,7 @@ struct GeneralSettingsView: View {
             Section {
                 // HUD Preview
                 VStack(alignment: .center) {
-                    HUDPreviewView(showShortcut: showShortcutInHUD)
+                    HUDPreviewView(showShortcut: showShortcutInHUD, selectedLanguage: selectedLanguage)
                         .frame(height: 160)
                         .frame(maxWidth: .infinity)
                         .background(Color.black.opacity(0.05))
@@ -100,7 +108,7 @@ struct GeneralSettingsView: View {
                         .overlay {
                             if !showHUD {
                                 // optional: "Disabled" label overlay
-                                Text("HUD Disabled")
+                                Text("HUD Disabled".localized(language: selectedLanguage))
                                     .font(.headline)
                                     .foregroundColor(.secondary)
                                     .padding(.horizontal, 12)
@@ -111,79 +119,104 @@ struct GeneralSettingsView: View {
                         }
                         .padding(.bottom, 8)
                     
-                    Text("Preview of the Heads-Up Display")
+                    Text("Preview of the Heads-Up Display".localized(language: selectedLanguage))
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
                 .listRowInsets(EdgeInsets())
                 .padding()
                 
-                Toggle("Show HUD when switching", isOn: $showHUD)
+                Toggle("Show HUD when switching".localized(language: selectedLanguage), isOn: $showHUD)
                 
                 if showHUD {
-                    Toggle("Show shortcut in HUD", isOn: $showShortcutInHUD)
+                    Toggle("Show shortcut in HUD".localized(language: selectedLanguage), isOn: $showShortcutInHUD)
                         .padding(.leading)
                     
-                    Text("Displays the keyboard shortcut used to trigger the switch.")
+                    Text("Displays the keyboard shortcut used to trigger the switch.".localized(language: selectedLanguage))
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .padding(.leading)
                 }
             } header: {
-                Text("HUD Behavior")
+                Text("HUD Behavior".localized(language: selectedLanguage))
             } footer: {
-                Text("The HUD appears briefly when you cycle through applications in a group.")
+                Text("The HUD appears briefly when you cycle through applications in a group.".localized(language: selectedLanguage))
             }
             
             Section {
-                Toggle("Open at Login", isOn: $launchAtLogin.isEnabled)
+                Toggle("Open at Login".localized(language: selectedLanguage), isOn: $launchAtLogin.isEnabled)
                     .toggleStyle(.switch)
+                
+                Picker("Language".localized(language: selectedLanguage), selection: Binding(
+                    get: { UserDefaults.standard.string(forKey: "selectedLanguage") ?? "system" },
+                    set: { newValue in
+                        UserDefaults.standard.set(newValue, forKey: "selectedLanguage")
+                    }
+                )) {
+                    Text("\("System Default".localized(language: selectedLanguage)) (\(Locale.current.language.languageCode?.identifier ?? "en"))").tag("system")
+                    ForEach(LanguageManager.shared.supportedLanguages, id: \.code) { language in
+                        Text(language.name).tag(language.code)
+                    }
+                }
+                .pickerStyle(.menu)
+                
+                if selectedLanguage != "system" {
+                    Text("May require restart to take effect fully.".localized(language: selectedLanguage))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    // DEBUG: Show bundle status
+                    let status = Bundle.main.path(forResource: selectedLanguage, ofType: "lproj") != nil ? "Bundle Found" : "Bundle Missing"
+                    Text("Debug: \(selectedLanguage) - \(status)")
+                        .font(.caption2)
+                        .foregroundColor(status == "Bundle Found" ? .green : .red)
+                }
             } header: {
-                Text("Application")
+                Text("Application".localized(language: selectedLanguage))
             }
             
             Section {
                 HStack {
-                    Button("Export Settings...") {
+                    Button("Export Settings...".localized(language: selectedLanguage)) {
                         exportSettings()
                     }
                     
-                    Button("Import Settings...") {
+                    Button("Import Settings...".localized(language: selectedLanguage)) {
                         importSettings()
                     }
                 }
             } header: {
-                Text("Backup & Restore")
+                Text("Backup & Restore".localized(language: selectedLanguage))
             } footer: {
-                Text("Export your groups and settings to a JSON file for backup or transfer to another Mac.")
+                Text("Export your groups and settings to a JSON file for backup or transfer to another Mac.".localized(language: selectedLanguage))
             }
         }
         .formStyle(.grouped)
-        .navigationTitle("General")
-        .alert("Export Failed", isPresented: $showExportError) {
+        .navigationTitle("General".localized(language: selectedLanguage))
+        .alert("Export Failed".localized(language: selectedLanguage), isPresented: $showExportError) {
             Button("OK", role: .cancel) {}
         } message: {
             Text(errorMessage)
         }
-        .alert("Import Failed", isPresented: $showImportError) {
+        .alert("Import Failed".localized(language: selectedLanguage), isPresented: $showImportError) {
             Button("OK", role: .cancel) {}
         } message: {
             Text(errorMessage)
         }
-        .alert("Import Settings?", isPresented: $showImportConfirmation) {
-            Button("Cancel", role: .cancel) {
+        .alert("Import Settings?".localized(language: selectedLanguage), isPresented: $showImportConfirmation) {
+            Button("Cancel".localized(language: selectedLanguage), role: .cancel) {
                 pendingImportURL = nil
             }
-            Button("Import", role: .destructive) {
+            Button("Import".localized(language: selectedLanguage), role: .destructive) {
                 performImport()
             }
         } message: {
-            Text("This will replace all your current groups and settings. This action cannot be undone.")
+            Text("This will replace all your current groups and settings. This action cannot be undone.".localized(language: selectedLanguage))
         }
-        .alert("Import Successful", isPresented: $showImportSuccess) {
+        .alert("Import Successful".localized(language: selectedLanguage), isPresented: $showImportSuccess) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("Your settings have been imported successfully.")
+            Text("Your settings have been imported successfully.".localized(language: selectedLanguage))
         }
     }
     
@@ -193,8 +226,8 @@ struct GeneralSettingsView: View {
         let savePanel = NSSavePanel()
         savePanel.allowedContentTypes = [.json]
         savePanel.nameFieldStringValue = "ShortcutCycle-Settings.json"
-        savePanel.title = "Export Settings"
-        savePanel.message = "Choose where to save your settings"
+        savePanel.title = "Export Settings".localized(language: selectedLanguage)
+        savePanel.message = "Choose where to save your settings".localized(language: selectedLanguage)
         
         savePanel.begin { response in
             guard response == .OK, let url = savePanel.url else { return }
@@ -214,8 +247,8 @@ struct GeneralSettingsView: View {
         openPanel.allowedContentTypes = [.json]
         openPanel.allowsMultipleSelection = false
         openPanel.canChooseDirectories = false
-        openPanel.title = "Import Settings"
-        openPanel.message = "Select a ShortcutCycle settings file"
+        openPanel.title = "Import Settings".localized(language: selectedLanguage)
+        openPanel.message = "Select a ShortcutCycle settings file".localized(language: selectedLanguage)
         
         openPanel.begin { response in
             guard response == .OK, let url = openPanel.url else { return }
@@ -243,6 +276,7 @@ struct GeneralSettingsView: View {
 /// A static preview of the HUD for settings
 struct HUDPreviewView: View {
     let showShortcut: Bool
+    var selectedLanguage: String = "system"
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
@@ -412,5 +446,58 @@ struct HUDItemView: View {
                 }
             )
             .animation(.spring(response: 0.35, dampingFraction: 0.7), value: isActive)
+    }
+}
+
+// MARK: - Language Helper
+
+class LanguageManager {
+    static let shared = LanguageManager()
+    
+    struct Language {
+        let code: String
+        let name: String
+    }
+    
+    let supportedLanguages = [
+        Language(code: "en", name: "English"),
+        Language(code: "de", name: "Deutsch"),
+        Language(code: "fr", name: "Français"),
+        Language(code: "es", name: "Español"),
+        Language(code: "ja", name: "日本語"),
+        Language(code: "pt-BR", name: "Português (Brasil)"),
+        Language(code: "zh-Hans", name: "简体中文"),
+        Language(code: "zh-Hant", name: "繁體中文"),
+        Language(code: "it", name: "Italiano"),
+        Language(code: "ko", name: "한국어"),
+        Language(code: "ar", name: "العربية"),
+        Language(code: "nl", name: "Nederlands"),
+        Language(code: "pl", name: "Polski"),
+        Language(code: "tr", name: "Türkçe"),
+        Language(code: "ru", name: "Русский")
+    ]
+    
+    var locale: Locale {
+        let selected = UserDefaults.standard.string(forKey: "selectedLanguage") ?? "system"
+        if selected == "system" {
+            return Locale.current
+        }
+        return Locale(identifier: selected)
+    }
+}
+
+// MARK: - String Localization Helper
+
+extension String {
+    func localized(language: String) -> String {
+        let selectedLanguage = language == "system" ? Locale.current.language.languageCode?.identifier : language
+        
+        guard let code = selectedLanguage,
+              let path = Bundle.main.path(forResource: code, ofType: "lproj"),
+              let bundle = Bundle(path: path) else {
+            return NSLocalizedString(self, comment: "")
+        }
+        
+        return NSLocalizedString(self, tableName: nil, bundle: bundle, value: "", comment: "")
     }
 }

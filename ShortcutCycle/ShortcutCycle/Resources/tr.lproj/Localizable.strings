@@ -1,0 +1,54 @@
+/* Turkish */
+"ShortcutCycle" = "ShortcutCycle";
+"Settings..." = "Ayarlar...";
+"Quit" = "Çıkış";
+"No groups created yet" = "Henüz grup oluşturulmadı";
+"Select a group from the sidebar or create a new one." = "Kenar çubuğundan bir grup seçin veya yeni bir tane oluşturun.";
+"No Group Selected" = "Grup Seçilmedi";
+"Groups" = "Gruplar";
+"General" = "Genel";
+"HUD Settings" = "HUD Ayarları";
+"Show HUD when switching" = "Geçiş yaparken HUD'u göster";
+"Show shortcut in HUD" = "Kısayolu HUD'da göster";
+"Manage how the Heads-Up Display (HUD) appears when you cycle through applications." = "Uygulamalar arasında geçiş yaparken Heads-Up Display (HUD) görünümünü yönetin.";
+"App Groups" = "Uygulama Grupları";
+"Accessibility Permission Required" = "Erişilebilirlik İzni Gerekli";
+"Open System Preferences" = "Sistem Ayarlarını Aç";
+"Later" = "Daha Sonra";
+"ShortcutCycle needs accessibility permission to register global keyboard shortcuts and switch between applications." = "ShortcutCycle, küresel klavye kısayollarını kaydetmek ve uygulamalar arasında geçiş yapmak için erişilebilirlik iznine ihtiyaç duyar.";
+"Group Name" = "Grup Adı";
+"Enter group name" = "Grup adı girin";
+"Keyboard Shortcut" = "Klavye Kısayolu";
+"Applications" = "Uygulamalar";
+"app" = "uygulama";
+"apps" = "uygulamalar";
+"No apps added yet. Drag apps here or click the drop zone below." = "Henüz uygulama eklenmedi. Uygulamaları buraya sürükleyin veya aşağıdaki alana tıklayın.";
+"Select a group to edit" = "Düzenlemek için bir grup seçin";
+
+/* HUD Section */
+"HUD Behavior" = "HUD Davranışı";
+"The HUD appears briefly when you cycle through applications in a group." = "Bir gruptaki uygulamalar arasında geçiş yaparken HUD kısa süreliğine görünür.";
+"Preview of the Heads-Up Display" = "HUD Önizlemesi";
+"HUD Disabled" = "HUD Devre Dışı";
+
+/* Application Section */
+"Application" = "Uygulama";
+"Open at Login" = "Girişte Aç";
+"Language" = "Dil";
+"System Default" = "Sistem Varsayılanı";
+
+/* Backup & Restore Section */
+"Backup & Restore" = "Yedekleme ve Geri Yükleme";
+"Export Settings..." = "Ayarları Dışa Aktar...";
+"Import Settings..." = "Ayarları İçe Aktar...";
+"Export your groups and settings to a JSON file for backup or transfer to another Mac." = "Yedekleme veya başka bir Mac'e aktarım için gruplarınızı ve ayarlarınızı bir JSON dosyasına dışa aktarın.";
+
+/* Export/Import Alerts */
+"Export Failed" = "Dışa Aktarma Başarısız";
+"Import Failed" = "İçe Aktarma Başarısız";
+"Import Settings?" = "Ayarlar İçe Aktarılsın Mı?";
+"This will replace all your current groups and settings. This action cannot be undone." = "Bu işlem mevcut tüm gruplarınızı ve ayarlarınızı değiştirecektir. Bu işlem geri alınamaz.";
+"Cancel" = "İptal";
+"Import" = "İçe Aktar";
+"Import Successful" = "İçe Aktarma Başarılı";
+"Your settings have been imported successfully." = "Ayarlarınız başarıyla içe aktarıldı.";

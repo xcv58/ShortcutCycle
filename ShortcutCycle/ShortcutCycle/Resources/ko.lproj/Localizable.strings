@@ -1,0 +1,54 @@
+/* Korean */
+"ShortcutCycle" = "ShortcutCycle";
+"Settings..." = "설정...";
+"Quit" = "종료";
+"No groups created yet" = "생성된 그룹 없음";
+"Select a group from the sidebar or create a new one." = "사이드바에서 그룹을 선택하거나 새 그룹을 만드세요.";
+"No Group Selected" = "선택된 그룹 없음";
+"Groups" = "그룹";
+"General" = "일반";
+"HUD Settings" = "HUD 설정";
+"Show HUD when switching" = "전환 시 HUD 표시";
+"Show shortcut in HUD" = "HUD에 단축키 표시";
+"Manage how the Heads-Up Display (HUD) appears when you cycle through applications." = "앱 전환 시 헤드업 디스플레이(HUD)가 표시되는 방식을 관리합니다.";
+"App Groups" = "앱 그룹";
+"Accessibility Permission Required" = "손쉬운 사용 권한 필요";
+"Open System Preferences" = "시스템 설정 열기";
+"Later" = "나중에";
+"ShortcutCycle needs accessibility permission to register global keyboard shortcuts and switch between applications." = "ShortcutCycle이 전역 단축키를 등록하고 앱을 전환하려면 손쉬운 사용 권한이 필요합니다.";
+"Group Name" = "그룹 이름";
+"Enter group name" = "그룹 이름 입력";
+"Keyboard Shortcut" = "키보드 단축키";
+"Applications" = "애플리케이션";
+"app" = "개 앱";
+"apps" = "개 앱";
+"No apps added yet. Drag apps here or click the drop zone below." = "앱이 추가되지 않았습니다. 여기로 앱을 드래그하거나 아래 영역을 클릭하세요.";
+"Select a group to edit" = "편집할 그룹 선택";
+
+/* HUD Section */
+"HUD Behavior" = "HUD 동작";
+"The HUD appears briefly when you cycle through applications in a group." = "그룹 내 앱을 순환할 때 HUD가 잠시 나타납니다.";
+"Preview of the Heads-Up Display" = "HUD 미리보기";
+"HUD Disabled" = "HUD 비활성화됨";
+
+/* Application Section */
+"Application" = "애플리케이션";
+"Open at Login" = "로그인 시 열기";
+"Language" = "언어";
+"System Default" = "시스템 기본값";
+
+/* Backup & Restore Section */
+"Backup & Restore" = "백업 및 복원";
+"Export Settings..." = "설정 내보내기...";
+"Import Settings..." = "설정 가져오기...";
+"Export your groups and settings to a JSON file for backup or transfer to another Mac." = "백업 또는 다른 Mac으로의 전송을 위해 그룹 및 설정을 JSON 파일로 내보냅니다.";
+
+/* Export/Import Alerts */
+"Export Failed" = "내보내기 실패";
+"Import Failed" = "가져오기 실패";
+"Import Settings?" = "설정을 가져오시겠습니까?";
+"This will replace all your current groups and settings. This action cannot be undone." = "현재의 모든 그룹과 설정이 대체됩니다. 이 작업은 되돌릴 수 없습니다.";
+"Cancel" = "취소";
+"Import" = "가져오기";
+"Import Successful" = "가져오기 성공";
+"Your settings have been imported successfully." = "설정을 성공적으로 가져왔습니다.";

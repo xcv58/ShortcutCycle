@@ -1,0 +1,54 @@
+/* Dutch */
+"ShortcutCycle" = "ShortcutCycle";
+"Settings..." = "Instellingen...";
+"Quit" = "Stop";
+"No groups created yet" = "Nog geen groepen gemaakt";
+"Select a group from the sidebar or create a new one." = "Selecteer een groep uit de zijbalk of maak een nieuwe aan.";
+"No Group Selected" = "Geen groep geselecteerd";
+"Groups" = "Groepen";
+"General" = "Algemeen";
+"HUD Settings" = "HUD-instellingen";
+"Show HUD when switching" = "Toon HUD bij schakelen";
+"Show shortcut in HUD" = "Toon sneltoets in HUD";
+"Manage how the Heads-Up Display (HUD) appears when you cycle through applications." = "Beheer hoe de Heads-Up Display (HUD) verschijnt wanneer u door applicaties bladert.";
+"App Groups" = "App-groepen";
+"Accessibility Permission Required" = "Toegankelijkheidsbevoegdheid vereist";
+"Open System Preferences" = "Open Systeeminstellingen";
+"Later" = "Later";
+"ShortcutCycle needs accessibility permission to register global keyboard shortcuts and switch between applications." = "ShortcutCycle heeft toegankelijkheidsbevoegdheid nodig om globale sneltoetsen te registreren en tussen applicaties te schakelen.";
+"Group Name" = "Groepsnaam";
+"Enter group name" = "Voer groepsnaam in";
+"Keyboard Shortcut" = "Sneltoets";
+"Applications" = "Applicaties";
+"app" = "app";
+"apps" = "apps";
+"No apps added yet. Drag apps here or click the drop zone below." = "Nog geen apps toegevoegd. Sleep apps hierheen of klik op het gebied hieronder.";
+"Select a group to edit" = "Selecteer een groep om te bewerken";
+
+/* HUD Section */
+"HUD Behavior" = "HUD-gedrag";
+"The HUD appears briefly when you cycle through applications in a group." = "De HUD verschijnt kort wanneer u door applicaties in een groep bladert.";
+"Preview of the Heads-Up Display" = "Voorbeeld van HUD";
+"HUD Disabled" = "HUD uitgeschakeld";
+
+/* Application Section */
+"Application" = "Applicatie";
+"Open at Login" = "Openen bij inloggen";
+"Language" = "Taal";
+"System Default" = "Systeemstandaard";
+
+/* Backup & Restore Section */
+"Backup & Restore" = "Back-up en herstel";
+"Export Settings..." = "Exporteer instellingen...";
+"Import Settings..." = "Importeer instellingen...";
+"Export your groups and settings to a JSON file for backup or transfer to another Mac." = "Exporteer uw groepen en instellingen naar een JSON-bestand voor back-up of overdracht naar een andere Mac.";
+
+/* Export/Import Alerts */
+"Export Failed" = "Exporteren mislukt";
+"Import Failed" = "Importeren mislukt";
+"Import Settings?" = "Instellingen importeren?";
+"This will replace all your current groups and settings. This action cannot be undone." = "Dit vervangt al uw huidige groepen en instellingen. Deze actie kan niet ongedaan worden gemaakt.";
+"Cancel" = "Annuleren";
+"Import" = "Importeren";
+"Import Successful" = "Importeren geslaagd";
+"Your settings have been imported successfully." = "Uw instellingen zijn succesvol geïmporteerd.";

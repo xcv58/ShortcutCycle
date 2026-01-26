@@ -1,0 +1,54 @@
+/* Russian */
+"ShortcutCycle" = "ShortcutCycle";
+"Settings..." = "Настройки...";
+"Quit" = "Выход";
+"No groups created yet" = "Группы еще не созданы";
+"Select a group from the sidebar or create a new one." = "Выберите группу на боковой панели или создайте новую.";
+"No Group Selected" = "Группа не выбрана";
+"Groups" = "Группы";
+"General" = "Общие";
+"HUD Settings" = "Настройки HUD";
+"Show HUD when switching" = "Показывать HUD при переключении";
+"Show shortcut in HUD" = "Показывать ярлык в HUD";
+"Manage how the Heads-Up Display (HUD) appears when you cycle through applications." = "Управление отображением HUD при переключении между приложениями.";
+"App Groups" = "Группы приложений";
+"Accessibility Permission Required" = "Требуется разрешение на универсальный доступ";
+"Open System Preferences" = "Открыть Системные настройки";
+"Later" = "Позже";
+"ShortcutCycle needs accessibility permission to register global keyboard shortcuts and switch between applications." = "ShortcutCycle требуется разрешение на универсальный доступ для регистрации глобальных сочетаний клавиш и переключения между приложениями.";
+"Group Name" = "Имя группы";
+"Enter group name" = "Введите имя группы";
+"Keyboard Shortcut" = "Сочетание клавиш";
+"Applications" = "Приложения";
+"app" = "приложение";
+"apps" = "приложения";
+"No apps added yet. Drag apps here or click the drop zone below." = "Приложения еще не добавлены. Перетащите приложения сюда или нажмите на область ниже.";
+"Select a group to edit" = "Выберите группу для редактирования";
+
+/* HUD Section */
+"HUD Behavior" = "Поведение HUD";
+"The HUD appears briefly when you cycle through applications in a group." = "HUD кратко отображается при переключении между приложениями в группе.";
+"Preview of the Heads-Up Display" = "Предпросмотр HUD";
+"HUD Disabled" = "HUD отключен";
+
+/* Application Section */
+"Application" = "Приложение";
+"Open at Login" = "Открывать при входе";
+"Language" = "Язык";
+"System Default" = "Системный по умолчанию";
+
+/* Backup & Restore Section */
+"Backup & Restore" = "Резервное копирование и восстановление";
+"Export Settings..." = "Экспорт настроек...";
+"Import Settings..." = "Импорт настроек...";
+"Export your groups and settings to a JSON file for backup or transfer to another Mac." = "Экспорт групп и настроек в файл JSON для резервного копирования или переноса на другой Mac.";
+
+/* Export/Import Alerts */
+"Export Failed" = "Ошибка экспорта";
+"Import Failed" = "Ошибка импорта";
+"Import Settings?" = "Импортировать настройки?";
+"This will replace all your current groups and settings. This action cannot be undone." = "Это заменит все ваши текущие группы и настройки. Это действие нельзя отменить.";
+"Cancel" = "Отмена";
+"Import" = "Импорт";
+"Import Successful" = "Импорт выполнен успешно";
+"Your settings have been imported successfully." = "Ваши настройки были успешно импортированы.";

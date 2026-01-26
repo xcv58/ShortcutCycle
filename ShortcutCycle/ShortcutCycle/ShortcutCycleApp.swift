@@ -4,6 +4,7 @@ import SwiftUI
 @main
 struct ShortcutCycleApp: App {
     @StateObject private var store = GroupStore()
+    @AppStorage("selectedLanguage") private var selectedLanguage = "system"
     
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     
@@ -17,8 +18,9 @@ struct ShortcutCycleApp: App {
     var body: some Scene {
         // Menu bar extra
         MenuBarExtra("Shortcut Cycle", systemImage: "command.square.fill") {
-            MenuBarView()
+            MenuBarView(selectedLanguage: selectedLanguage)
                 .environmentObject(store)
+                .id(selectedLanguage) // Force redraw on language change
         }
         .menuBarExtraStyle(.window)
         
