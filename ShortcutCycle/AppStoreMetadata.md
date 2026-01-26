@@ -31,18 +31,42 @@ https://github.com/xcv58/ShortcutCycle/issues
 
 ## Screenshots Guide (Required)
 
-You need to upload at least one screenshot to the Mac App Store.
+Follow this step-by-step guide to create high-quality screenshots that meet Apple's requirements (Mac 12.9" Display).
 
-**Requirements:**
-*   **Resolution**: 16:10 aspect ratio. Recommended: **2880 x 1800** pixels (MacBook Pro 15"/16" retina).
-    *   Alternative: 2560 x 1600 (MacBook Pro 13").
-*   **Format**: PNG or JPEG (High quality, no transparency).
-*   **Count**: Max 10 screenshots.
+### 1. Requirements
+*   **Resolution**: 16:10 aspect ratio. **2880 x 1800** pixels is the golden standard.
+*   **Format**: PNG (preferred) or High-Quality JPEG. No transparency (alpha channel).
+*   **Count**: 1-10 screenshots per localization.
 
-**Recommended Shots:**
-1.  **Main Window**: Show the group list with a few groups (e.g., "Coding", "Writing").
-2.  **HUD in Action**: Capture the HUD overlay appearing when cycling (this is your key visual feature).
-    *   *Tip*: You might need to use a timer on the screenshot tool (`Cmd+Shift+5`) to capture the HUD while holding the shortcut.
-3.  **Edit Mode**: Show the interface for editing a group and adding apps.
-4.  **Menu Bar**: Show the menu bar icon menu to demonstrate quick access.
+### 2. Strategy: Themes & Localization
+*   **Themes**: Capture your main scenarios in **Light Mode** and **Dark Mode**. Apple's App Store automatically shows the version matching the user's system setting if you provide both.
+*   **Languages**: You support 15 languages! To increase global conversion, capture the UI in key markets:
+    *   **English (US)**
+    *   **Japanese**
+    *   **Chinese (Simplified)**
+    *   **German** / **Spanish**
+
+### 3. Step-by-Step Workflow
+1.  **Preparation**:
+    *   Set your wallpaper to distinct solid colors or the minimal macOS default (Abstract).
+    *   Hide your desktop icons (`defaults write com.apple.finder CreateDesktop false; killall Finder`).
+    *   Open **ShortcutCycle**.
+2.  **Capture Scenes**:
+    *   **Main Window**: Show the Group List populated with realistic example groups ("Coding", "Social", "Design").
+    *   **HUD Overlay (Critical)**: Use a timer (Open `Screenshot.app` > Options > Timer 5s) to capture the HUD mid-cycle. This explains your app's core value instantly.
+    *   **Settings UI**: Show generic settings or the Language Picker to hint at customization.
+    *   **Menu Bar**: Open the menu bar dropdown to show quick controls.
+3.  **Process**:
+    *   Ensure the window shadows are consistent (or remove them if putting into a device frame).
+    *   Resize strictly to **2880 x 1800** or **2560 x 1600**.
+
+### 4. Recommended Tools (Mac Compatible)
+*   **Screenshots.pro** (Free/Web):
+    1.  Select "Desktop" or "MacBook" device.
+    2.  Upload screenshot.
+    3.  Download.
+*   **Canva** (Free/Paid):
+    *   Search for "Mac App Store Screenshot".
+    *   Drag your screenshot into the pre-made MacBook frames.
+    *   This is often the most reliable way to get the exact 2880x1800 dimension.
 
