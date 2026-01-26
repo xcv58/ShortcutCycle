@@ -24,6 +24,16 @@
 "apps" = "تطبيقات";
 "No apps added yet. Drag apps here or click the drop zone below." = "لم يتم إضافة تطبيقات بعد. اسحب التطبيقات هنا أو انقر فوق المنطقة أدناه.";
 "Select a group to edit" = "اختر مجموعة للتعديل";
+"Drop or click to add apps" = "اسحب أو انقر لإضافة تطبيقات";
+"Select applications to add to this group" = "حدد التطبيقات لإضافتها إلى هذه المجموعة";
+"Add" = "إضافة";
+"Rename" = "إعادة تسمية";
+"Delete" = "حذف";
+"Enable group" = "تفعيل المجموعة";
+"Disable group" = "تعطيل المجموعة";
+"No shortcut" = "لا يوجد اختصار";
+"Delete group" = "حذف المجموعة";
+"This action cannot be undone." = "لا يمكن التراجع عن هذا الإجراء.";
 
 /* HUD Section */
 "HUD Behavior" = "سلوك HUD";

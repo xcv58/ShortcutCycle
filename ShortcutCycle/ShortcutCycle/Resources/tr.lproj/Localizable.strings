@@ -24,6 +24,16 @@
 "apps" = "uygulamalar";
 "No apps added yet. Drag apps here or click the drop zone below." = "Henüz uygulama eklenmedi. Uygulamaları buraya sürükleyin veya aşağıdaki alana tıklayın.";
 "Select a group to edit" = "Düzenlemek için bir grup seçin";
+"Drop or click to add apps" = "Uygulama eklemek için sürükleyin veya tıklayın";
+"Select applications to add to this group" = "Bu gruba eklenecek uygulamaları seçin";
+"Add" = "Ekle";
+"Rename" = "Yeniden Adlandır";
+"Delete" = "Sil";
+"Enable group" = "Grubu etkinleştir";
+"Disable group" = "Grubu devre dışı bırak";
+"No shortcut" = "Kısayol yok";
+"Delete group" = "Grubu sil";
+"This action cannot be undone." = "Bu işlem geri alınamaz.";
 
 /* HUD Section */
 "HUD Behavior" = "HUD Davranışı";

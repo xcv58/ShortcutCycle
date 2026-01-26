@@ -24,6 +24,16 @@
 "apps" = "个应用";
 "No apps added yet. Drag apps here or click the drop zone below." = "尚未添加应用。将应用拖到此处或点击下方的放置区域。";
 "Select a group to edit" = "选择要编辑的群组";
+"Drop or click to add apps" = "拖放或点击以添加应用";
+"Select applications to add to this group" = "选择要添加到此群组的应用";
+"Add" = "添加";
+"Rename" = "重命名";
+"Delete" = "删除";
+"Enable group" = "启用群组";
+"Disable group" = "禁用群组";
+"No shortcut" = "无快捷键";
+"Delete group" = "删除群组";
+"This action cannot be undone." = "此操作无法撤销。";
 
 /* HUD Section */
 "HUD Behavior" = "HUD 行为";

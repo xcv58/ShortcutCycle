@@ -24,6 +24,16 @@
 "apps" = "アプリ";
 "No apps added yet. Drag apps here or click the drop zone below." = "アプリはまだ追加されていません。ここにアプリをドラッグするか、下のドロップゾーンをクリックしてください。";
 "Select a group to edit" = "編集するグループを選択";
+"Drop or click to add apps" = "ドラッグまたはクリックしてアプリを追加";
+"Select applications to add to this group" = "このグループに追加するアプリケーションを選択";
+"Add" = "追加";
+"Rename" = "名前を変更";
+"Delete" = "削除";
+"Enable group" = "グループを有効化";
+"Disable group" = "グループを無効化";
+"No shortcut" = "ショートカットなし";
+"Delete group" = "グループを削除";
+"This action cannot be undone." = "この操作は取り消せません。";
 
 /* HUD Section */
 "HUD Behavior" = "HUDの動作";

@@ -24,6 +24,16 @@
 "apps" = "Apps";
 "No apps added yet. Drag apps here or click the drop zone below." = "Noch keine Apps hinzugefügt. Ziehen Sie Apps hierher oder klicken Sie auf den Ablagebereich unten.";
 "Select a group to edit" = "Wählen Sie eine Gruppe zum Bearbeiten";
+"Drop or click to add apps" = "Apps ablegen oder klicken";
+"Select applications to add to this group" = "Wählen Sie Apps für diese Gruppe aus";
+"Add" = "Hinzufügen";
+"Rename" = "Umbenennen";
+"Delete" = "Löschen";
+"Enable group" = "Gruppe aktivieren";
+"Disable group" = "Gruppe deaktivieren";
+"No shortcut" = "Kein Tastenkürzel";
+"Delete group" = "Gruppe löschen";
+"This action cannot be undone." = "Diese Aktion kann nicht rückgängig gemacht werden.";
 
 /* HUD Section */
 "HUD Behavior" = "HUD-Verhalten";

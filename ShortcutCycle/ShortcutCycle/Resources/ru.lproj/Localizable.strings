@@ -24,6 +24,16 @@
 "apps" = "приложения";
 "No apps added yet. Drag apps here or click the drop zone below." = "Приложения еще не добавлены. Перетащите приложения сюда или нажмите на область ниже.";
 "Select a group to edit" = "Выберите группу для редактирования";
+"Drop or click to add apps" = "Перетащите или нажмите, чтобы добавить приложения";
+"Select applications to add to this group" = "Выберите приложения для добавления в эту группу";
+"Add" = "Добавить";
+"Rename" = "Переименовать";
+"Delete" = "Удалить";
+"Enable group" = "Включить группу";
+"Disable group" = "Отключить группу";
+"No shortcut" = "Нет сочетания клавиш";
+"Delete group" = "Удалить группу";
+"This action cannot be undone." = "Это действие нельзя отменить.";
 
 /* HUD Section */
 "HUD Behavior" = "Поведение HUD";

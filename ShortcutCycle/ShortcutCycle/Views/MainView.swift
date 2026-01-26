@@ -16,7 +16,7 @@ struct MainView: View {
                 }
                 .tag("groups")
             
-            GeneralSettingsView(selectedLanguage: selectedLanguage)
+            GeneralSettingsView()
                 .tabItem {
                     Label("General".localized(language: selectedLanguage), systemImage: "gear")
                 }
@@ -43,6 +43,7 @@ struct MainView: View {
 
 struct GroupSettingsView: View {
     @EnvironmentObject var store: GroupStore
+    @AppStorage("selectedLanguage") private var selectedLanguage = "system"
     
     var body: some View {
         NavigationSplitView {
@@ -53,13 +54,13 @@ struct GroupSettingsView: View {
                 GroupEditView(groupId: selectedId)
             } else {
                 ContentUnavailableView(
-                    "No Group Selected",
+                    "No Group Selected".localized(language: selectedLanguage),
                     systemImage: "folder",
-                    description: Text("Select a group from the sidebar or create a new one.")
+                    description: Text("Select a group from the sidebar or create a new one.".localized(language: selectedLanguage))
                 )
             }
         }
-        .navigationTitle("App Groups")
+        .navigationTitle("App Groups".localized(language: selectedLanguage))
     }
 }
 
@@ -70,7 +71,7 @@ struct GeneralSettingsView: View {
     @StateObject private var launchAtLogin = LaunchAtLoginManager.shared
     
     // Derived language for localization updates
-    var selectedLanguage: String = "system"
+    @AppStorage("selectedLanguage") private var selectedLanguage = "system"
     
     // Export/Import state
     @State private var showExportError = false
@@ -141,7 +142,7 @@ struct GeneralSettingsView: View {
                         UserDefaults.standard.set(newValue, forKey: "selectedLanguage")
                     }
                 )) {
-                    Text("\("System Default".localized(language: selectedLanguage)) (\(Locale.current.language.languageCode?.identifier ?? "en"))").tag("system")
+                    Text("\("System Default".localized(language: "system")) (\(Locale.current.language.languageCode?.identifier ?? "en"))").tag("system")
                     ForEach(LanguageManager.shared.supportedLanguages, id: \.code) { language in
                         Text(language.name).tag(language.code)
                     }

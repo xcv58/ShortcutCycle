@@ -24,6 +24,16 @@
 "apps" = "개 앱";
 "No apps added yet. Drag apps here or click the drop zone below." = "앱이 추가되지 않았습니다. 여기로 앱을 드래그하거나 아래 영역을 클릭하세요.";
 "Select a group to edit" = "편집할 그룹 선택";
+"Drop or click to add apps" = "앱을 추가하려면 드래그하거나 클릭하세요";
+"Select applications to add to this group" = "이 그룹에 추가할 애플리케이션 선택";
+"Add" = "추가";
+"Rename" = "이름 변경";
+"Delete" = "삭제";
+"Enable group" = "그룹 활성화";
+"Disable group" = "그룹 비활성화";
+"No shortcut" = "단축키 없음";
+"Delete group" = "그룹 삭제";
+"This action cannot be undone." = "이 작업은 취소할 수 없습니다.";
 
 /* HUD Section */
 "HUD Behavior" = "HUD 동작";

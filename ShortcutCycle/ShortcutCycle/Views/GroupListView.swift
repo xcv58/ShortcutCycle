@@ -17,12 +17,12 @@ struct GroupListView: View {
                     GroupRowView(group: group)
                         .tag(group.id)
                         .contextMenu {
-                            Button("Rename") {
+                            Button("Rename".localized(language: selectedLanguage)) {
                                 groupToRename = group
                                 renameText = group.name
                             }
                             
-                            Button("Delete", role: .destructive) {
+                            Button("Delete".localized(language: selectedLanguage), role: .destructive) {
                                 store.deleteGroup(group)
                                 ShortcutManager.shared.registerAllShortcuts()
                             }
@@ -33,6 +33,7 @@ struct GroupListView: View {
                 }
             }
             .listStyle(.sidebar)
+            .id(selectedLanguage) // Force redraw of list and context menus when language changes
             
             Divider()
             

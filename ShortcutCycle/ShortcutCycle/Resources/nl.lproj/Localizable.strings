@@ -24,6 +24,16 @@
 "apps" = "apps";
 "No apps added yet. Drag apps here or click the drop zone below." = "Nog geen apps toegevoegd. Sleep apps hierheen of klik op het gebied hieronder.";
 "Select a group to edit" = "Selecteer een groep om te bewerken";
+"Drop or click to add apps" = "Sleep of klik om apps toe te voegen";
+"Select applications to add to this group" = "Selecteer apps om toe te voegen aan deze groep";
+"Add" = "Toevoegen";
+"Rename" = "Naam wijzigen";
+"Delete" = "Verwijderen";
+"Enable group" = "Groep inschakelen";
+"Disable group" = "Groep uitschakelen";
+"No shortcut" = "Geen sneltoets";
+"Delete group" = "Groep verwijderen";
+"This action cannot be undone." = "Deze actie kan niet ongedaan worden gemaakt.";
 
 /* HUD Section */
 "HUD Behavior" = "HUD-gedrag";

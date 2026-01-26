@@ -116,6 +116,7 @@ struct AppDropZoneView: View {
     @Binding var apps: [AppItem]
     @State private var isTargeted = false
     let onAppAdded: (AppItem) -> Void
+    @AppStorage("selectedLanguage") private var selectedLanguage = "system"
     
     var body: some View {
         VStack(spacing: 8) {
@@ -123,7 +124,7 @@ struct AppDropZoneView: View {
                 .font(.system(size: 24))
                 .foregroundColor(isTargeted ? .accentColor : .secondary)
             
-            Text("Drop or click to add apps")
+            Text("Drop or click to add apps".localized(language: selectedLanguage))
                 .font(.caption)
                 .foregroundColor(isTargeted ? .accentColor : .secondary)
         }
@@ -156,8 +157,8 @@ struct AppDropZoneView: View {
         panel.allowsMultipleSelection = true
         panel.allowedContentTypes = [.application]
         panel.directoryURL = URL(fileURLWithPath: "/Applications")
-        panel.message = "Select applications to add to this group"
-        panel.prompt = "Add"
+        panel.message = "Select applications to add to this group".localized(language: selectedLanguage)
+        panel.prompt = "Add".localized(language: selectedLanguage)
         
         if panel.runModal() == .OK {
             for url in panel.urls {
