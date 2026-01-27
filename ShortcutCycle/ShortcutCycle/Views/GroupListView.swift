@@ -9,6 +9,7 @@ struct GroupListView: View {
     @State private var groupToRename: AppGroup?
     @State private var renameText = ""
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
+    @FocusState private var isInputFocused: Bool
     
     var body: some View {
         VStack(spacing: 0) {
@@ -40,10 +41,14 @@ struct GroupListView: View {
             // Add group button
             if isAddingGroup {
                 HStack {
-                    TextField("Group name", text: $newGroupName)
+                    TextField("Enter group name".localized(language: selectedLanguage), text: $newGroupName)
                         .textFieldStyle(.roundedBorder)
+                        .focused($isInputFocused)
                         .onSubmit {
                             addGroup()
+                        }
+                        .onAppear {
+                            isInputFocused = true
                         }
                     
                     Button(action: addGroup) {
@@ -58,10 +63,14 @@ struct GroupListView: View {
                 .padding(8)
             } else {
                 Button(action: { isAddingGroup = true }) {
-                    Label("Add Group", systemImage: "plus")
+                    HStack {
+                        Label("Add Group".localized(language: selectedLanguage), systemImage: "plus")
+                        Spacer()
+                    }
+                    .padding(8) // Increase hit area
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .padding(8)
             }
         }
         .alert("Rename Group", isPresented: Binding(
