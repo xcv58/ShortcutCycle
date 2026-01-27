@@ -35,7 +35,7 @@ class AppSwitcher: ObservableObject {
             let app = runningApps[0]
             if app.isActive {
                 app.hide()
-                showHUD(apps: runningApps, activeApp: app, modifierFlags: modifierFlags, shortcut: shortcutString)
+                showHUD(apps: runningApps, activeApp: app, modifierFlags: modifierFlags, shortcut: shortcutString, shouldActivate: false)
             } else {
                 store.updateLastActiveApp(bundleId: app.bundleIdentifier ?? "", for: group.id)
                 let hudShown = showHUD(apps: runningApps, activeApp: app, modifierFlags: modifierFlags, shortcut: shortcutString)
@@ -60,9 +60,9 @@ class AppSwitcher: ObservableObject {
     }
     
     @discardableResult
-    private func showHUD(apps: [NSRunningApplication], activeApp: NSRunningApplication, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?) -> Bool {
+    private func showHUD(apps: [NSRunningApplication], activeApp: NSRunningApplication, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, shouldActivate: Bool = true) -> Bool {
         if UserDefaults.standard.bool(forKey: "showHUD") {
-            HUDManager.shared.scheduleShow(apps: apps, activeApp: activeApp, modifierFlags: modifierFlags, shortcut: shortcut)
+            HUDManager.shared.scheduleShow(apps: apps, activeApp: activeApp, modifierFlags: modifierFlags, shortcut: shortcut, shouldActivate: shouldActivate)
             return true
         }
         return false
@@ -200,7 +200,7 @@ class HUDManager: ObservableObject {
     private init() {}
     
     /// Schedule showing the HUD with macOS Command+Tab logic
-    func scheduleShow(apps: [NSRunningApplication], activeApp: NSRunningApplication, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?) {
+    func scheduleShow(apps: [NSRunningApplication], activeApp: NSRunningApplication, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, shouldActivate: Bool = true) {
         // Cancel existing hide timer
         hideTimer?.invalidate()
         hideTimer = nil // Ensure we don't auto-hide while interacting
@@ -211,7 +211,7 @@ class HUDManager: ObservableObject {
         lastRequestTime = now
         
         // Store pending active app for fast switching
-        self.pendingActiveApp = activeApp
+        self.pendingActiveApp = shouldActivate ? activeApp : nil
         
         // Capture the previous frontmost app if we aren't already visible
         // We do this BEFORE we activate ourselves
