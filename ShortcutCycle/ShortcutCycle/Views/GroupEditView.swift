@@ -148,7 +148,7 @@ struct AppReorderDelegate: DropDelegate {
 }
 
 #Preview {
-    let store = GroupStore()
+    let store = GroupStore.shared
     
     return GroupEditView(groupId: store.groups.first?.id ?? UUID())
         .environmentObject(store)

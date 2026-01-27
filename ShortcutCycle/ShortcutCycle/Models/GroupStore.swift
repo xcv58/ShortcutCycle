@@ -4,12 +4,14 @@ import SwiftUI
 /// Observable store for managing app groups with persistence
 @MainActor
 class GroupStore: ObservableObject {
+    static let shared = GroupStore()
+    
     @Published var groups: [AppGroup] = []
     @Published var selectedGroupId: UUID?
     
     private let saveKey = "ShortcutCycle.Groups"
     
-    init() {
+    private init() {
         loadGroups()
     }
     
@@ -42,6 +44,9 @@ class GroupStore: ObservableObject {
             selectedGroupId = groups.first?.id
         }
         saveGroups()
+        
+        // Update shortcuts immediately
+        ShortcutManager.shared.registerAllShortcuts()
     }
     
     func updateGroup(_ group: AppGroup) {
@@ -96,7 +101,7 @@ class GroupStore: ObservableObject {
             UserDefaults.standard.set(data, forKey: saveKey)
             // notifyCloudSync() // Temporarily disabled
         } catch {
-            print("Failed to save groups: \(error)")
+            print("GroupStore: Failed to save groups: \(error)")
         }
     }
     

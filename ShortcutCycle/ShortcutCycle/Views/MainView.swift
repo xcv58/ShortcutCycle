@@ -36,7 +36,7 @@ struct MainView: View {
 
 #Preview {
     MainView()
-        .environmentObject(GroupStore())
+        .environmentObject(GroupStore.shared)
 }
 
 // MARK: - Subviews (Consolidated)

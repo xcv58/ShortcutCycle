@@ -107,6 +107,7 @@ class AppSwitcher: ObservableObject {
         } else {
             // New cycle start - check current system state
             let frontmostApp = NSWorkspace.shared.frontmostApplication
+            
             let isGroupAppActive = sortedApps.contains { $0.processIdentifier == frontmostApp?.processIdentifier }
             
             if isGroupAppActive {
@@ -130,7 +131,9 @@ class AppSwitcher: ObservableObject {
         
         
         
+        
         store.updateLastActiveApp(bundleId: appToActivate.bundleIdentifier ?? "", for: group.id)
+        
         let hudShown = showHUD(apps: sortedApps, activeApp: appToActivate, modifierFlags: modifierFlags, shortcut: shortcut)
         
         if !hudShown {

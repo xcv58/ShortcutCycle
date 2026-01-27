@@ -177,5 +177,5 @@ struct VisualEffectView: NSViewRepresentable {
 
 #Preview {
     MenuBarView()
-        .environmentObject(GroupStore())
+        .environmentObject(GroupStore.shared)
 }

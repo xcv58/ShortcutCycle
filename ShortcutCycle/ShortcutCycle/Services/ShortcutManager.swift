@@ -7,15 +7,14 @@ import AppKit
 class ShortcutManager: ObservableObject {
     static let shared = ShortcutManager()
     
-    private var groupStore: GroupStore?
+    private var groupStore: GroupStore {
+        GroupStore.shared
+    }
     
     private var registeredGroupIds: Set<UUID> = []
+    private var observedGroupIds: Set<UUID> = []
     
     private init() {}
-    
-    func setGroupStore(_ store: GroupStore) {
-        self.groupStore = store
-    }
     
     /// Register all shortcuts from the group store
     func registerAllShortcuts() {
@@ -30,7 +29,7 @@ class ShortcutManager: ObservableObject {
         // This is crucial to handle deleted groups or disabled groups
         unregisterAllShortcuts()
         
-        guard let store = groupStore else { return }
+        let store = groupStore
         
         // Register shortcuts for each enabled group that has a shortcut
         for group in store.groups where group.isEnabled {
@@ -49,15 +48,20 @@ class ShortcutManager: ObservableObject {
         
         let groupId = group.id
         
-        // Register the callback for when the shortcut is pressed
-        KeyboardShortcuts.onKeyUp(for: shortcutName) { [weak self] in
-            Task { @MainActor in
-                self?.handleShortcut(for: groupId)
+        // Smart Registration: Only add the listener closure ONCE per group ID
+        if !observedGroupIds.contains(groupId) {
+            // Register the callback for when the shortcut is pressed
+            KeyboardShortcuts.onKeyUp(for: shortcutName) { [weak self] in
+                Task { @MainActor in
+                    self?.handleShortcut(for: groupId)
+                }
             }
+            observedGroupIds.insert(groupId)
         }
         
+        // Always enable the shortcut (it might have been disabled by unregisterAllShortcuts)
+        KeyboardShortcuts.enable(shortcutName)
         registeredGroupIds.insert(groupId)
-
     }
     
     /// Unregister a shortcut for a specific group
@@ -78,8 +82,8 @@ class ShortcutManager: ObservableObject {
     
     /// Handle a shortcut press for a given group ID
     private func handleShortcut(for groupId: UUID) {
-        guard let store = groupStore,
-              let group = store.groups.first(where: { $0.id == groupId }) else {
+        let store = groupStore
+        guard let group = store.groups.first(where: { $0.id == groupId }) else {
             return
         }
         

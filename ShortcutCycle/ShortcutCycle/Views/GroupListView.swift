@@ -25,7 +25,6 @@ struct GroupListView: View {
                             
                             Button("Delete".localized(language: selectedLanguage), role: .destructive) {
                                 store.deleteGroup(group)
-                                ShortcutManager.shared.registerAllShortcuts()
                             }
                         }
                 }
@@ -180,7 +179,6 @@ struct GroupRowView: View {
         .confirmationDialog("Delete '\(group.name)'?", isPresented: $showDeleteConfirmation) {
             Button("Delete".localized(language: selectedLanguage), role: .destructive) {
                 store.deleteGroup(group)
-                ShortcutManager.shared.registerAllShortcuts()
             }
             Button("Cancel".localized(language: selectedLanguage), role: .cancel) {}
         } message: {
@@ -191,6 +189,6 @@ struct GroupRowView: View {
 
 #Preview {
     GroupListView()
-        .environmentObject(GroupStore())
+        .environmentObject(GroupStore.shared)
         .frame(width: 250, height: 400)
 }
