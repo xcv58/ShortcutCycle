@@ -480,7 +480,7 @@
 /* Begin XCRemoteSwiftPackageReference section */
 		900 /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/sindresorhus/KeyboardShortcuts";
+			repositoryURL = "https://github.com/sindresorhus/KeyboardShortcuts.git";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 2.0.0;
