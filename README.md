@@ -1,18 +1,21 @@
 # ShortcutCycle
 
-ShortcutCycle helps you switch between your favorite apps with just one keyboard shortcut. Instead of remembering many shortcuts, just group your apps (like "Chat Apps" or "Work Apps") and use one key to cycle through them.
+**Switch apps instantly with hotkeys**
+
+ShortcutCycle helps you switch between your favorite apps with just one keyboard shortcut. Instead of remembering many shortcuts, just group your apps (like "Chat Apps" or "Work Apps") and use one key to cycle through them. Simplify your workflow and save time every day!
 
 ## Features
 
 - **Group Apps**: Put related apps together (e.g., "Browsers" for Chrome, Safari, Edge; or "Messaging" for Slack, Discord, Messages).
-- **One Key Magic**: Press your shortcut to open the first app. Press it again to switch to the next one.
-- **See What's Happening**: A nice overlay shows you which app is coming up next.
-- **Your Language**: Works in 15 languages including English, Japanese, Chinese, German, Spanish, French, and many more.
-- **Save Your Settings**: Easily save your settings to a file to keep them safe or share with friends.
+- **One Key Magic**: Press your global shortcut to cycle through apps in the group. Press it again to switch to the next one.
+- **See What's Happening**: A beautiful, native-looking HUD overlay shows you which app is active and what's coming up next.
+- **Instant Access**: Automatically launches apps if they aren't running when you switch to them.
+- **Multi-language**: Fully localized in 15 languages including English, Japanese, Chinese, German, Spanish, French, and many more.
+- **Import/Export**: Save your groups and settings to a JSON file to keep them safe or share with others.
 - **Light & Dark**: Looks great in both Light and Dark modes.
 
 ### Accessibility
-We believe tools should be for everyone. ShortcutCycle supports:
+We believe tools should be for everyone. ShortcutCycle is built with accessibility in mind:
 - **VoiceOver**: Fully labeled controls and navigation.
 - **Voice Control**: All features accessible via standard voice commands.
 - **Dark Interface**: Fully compatible with macOS Dark Mode.
@@ -20,25 +23,34 @@ We believe tools should be for everyone. ShortcutCycle supports:
 - **Sufficient Contrast**: Uses standard system colors for maximum readability.
 - **Reduced Motion**: Standard animations respect system preferences.
 
-## How to Install
+## Installation
 
-1. Get the latest version from the [Releases](https://github.com/xcv58/ShortcutCycle/releases) page.
-2. Drag `ShortcutCycle` to your Applications folder.
+### From Releases
+1. Download the latest `ShortcutCycle.dmg` from the [Releases page](https://github.com/xcv58/ShortcutCycle/releases).
+2. Open it and drag `ShortcutCycle` to your Applications folder.
 3. Open the app. You'll see a small icon in your menu bar.
-4. The app will ask for **Accessibility Permissions**. This is needed so it can listen to your shortcuts.
 
-## How to Use
+### From Source
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/xcv58/ShortcutCycle.git
+   ```
+2. Open `ShortcutCycle/ShortcutCycle.xcodeproj` in Xcode.
+3. Build and Run (Command + R).
 
-1. Click the menu bar icon and pick **Settings...**.
-2. Click the `+` button to make a new group of apps.
-3. Drag the apps you want into the group.
-4. Record a keyboard shortcut (like `Option + 1`).
-5. Close the window.
-6. Now, just press `Option + 1` to open or switch between your apps!
+## Usage
+
+1. Launch ShortcutCycle.
+2. Click the menu bar icon and select **Settings...**.
+3. Create a group (click `+`) and drag apps into it.
+4. Record a global shortcut (e.g., `Option + 1`).
+5. Press the shortcut to open the first app or cycle between them!
+
+## Privacy Policy
+
+Everything runs locally on your Mac. No data is collected.
 
 ## For Developers
-
-If you want to build the app yourself:
 
 Requirements:
 - macOS 14.0 or later
@@ -50,8 +62,6 @@ git clone https://github.com/xcv58/ShortcutCycle.git
 
 # Open the project
 open ShortcutCycle/ShortcutCycle.xcodeproj
-
-# Build and Run
 ```
 
 ## License

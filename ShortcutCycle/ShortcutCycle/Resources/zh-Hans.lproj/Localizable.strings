@@ -12,10 +12,8 @@
 "Show shortcut in HUD" = "在 HUD 中显示快捷键";
 "Manage how the Heads-Up Display (HUD) appears when you cycle through applications." = "管理在应用程序之间切换时 HUD 的显示方式。";
 "App Groups" = "应用群组";
-"Accessibility Permission Required" = "需要辅助功能权限";
 "Open System Preferences" = "打开系统偏好设置";
 "Later" = "稍后";
-"ShortcutCycle needs accessibility permission to register global keyboard shortcuts and switch between applications." = "ShortcutCycle 需要辅助功能权限来注册全局快捷键并在应用程序之间切换。";
 "Group Name" = "群组名称";
 "Enter group name" = "输入群组名称";
 "Keyboard Shortcut" = "键盘快捷键";

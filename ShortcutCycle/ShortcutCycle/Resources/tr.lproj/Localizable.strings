@@ -12,10 +12,8 @@
 "Show shortcut in HUD" = "Kısayolu HUD'da göster";
 "Manage how the Heads-Up Display (HUD) appears when you cycle through applications." = "Uygulamalar arasında geçiş yaparken Heads-Up Display (HUD) görünümünü yönetin.";
 "App Groups" = "Uygulama Grupları";
-"Accessibility Permission Required" = "Erişilebilirlik İzni Gerekli";
 "Open System Preferences" = "Sistem Ayarlarını Aç";
 "Later" = "Daha Sonra";
-"ShortcutCycle needs accessibility permission to register global keyboard shortcuts and switch between applications." = "ShortcutCycle, küresel klavye kısayollarını kaydetmek ve uygulamalar arasında geçiş yapmak için erişilebilirlik iznine ihtiyaç duyar.";
 "Group Name" = "Grup Adı";
 "Enter group name" = "Grup adı girin";
 "Keyboard Shortcut" = "Klavye Kısayolu";

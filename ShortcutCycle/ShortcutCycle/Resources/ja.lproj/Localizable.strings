@@ -12,10 +12,8 @@
 "Show shortcut in HUD" = "HUDにショートカットを表示";
 "Manage how the Heads-Up Display (HUD) appears when you cycle through applications." = "アプリケーション切り替え時のHUD（ヘッドアップディスプレイ）の表示方法を管理します。";
 "App Groups" = "アプリグループ";
-"Accessibility Permission Required" = "アクセシビリティ権限が必要です";
 "Open System Preferences" = "システム設定を開く";
 "Later" = "後で";
-"ShortcutCycle needs accessibility permission to register global keyboard shortcuts and switch between applications." = "ShortcutCycleは、グローバルキーボードショートカットを登録し、アプリケーションを切り替えるためにアクセシビリティ権限が必要です。";
 "Group Name" = "グループ名";
 "Enter group name" = "グループ名を入力";
 "Keyboard Shortcut" = "キーボードショートカット";

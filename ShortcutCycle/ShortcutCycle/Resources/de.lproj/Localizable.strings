@@ -12,10 +12,8 @@
 "Show shortcut in HUD" = "Tastenkürzel im HUD anzeigen";
 "Manage how the Heads-Up Display (HUD) appears when you cycle through applications." = "Verwalten Sie, wie das Heads-Up Display (HUD) beim Wechseln durch Anwendungen angezeigt wird.";
 "App Groups" = "App-Gruppen";
-"Accessibility Permission Required" = "Zugriffsrechte erforderlich";
 "Open System Preferences" = "Systemeinstellungen öffnen";
 "Later" = "Später";
-"ShortcutCycle needs accessibility permission to register global keyboard shortcuts and switch between applications." = "ShortcutCycle benötigt Zugriffsrechte, um globale Tastenkürzel zu registrieren und zwischen Anwendungen zu wechseln.";
 "Group Name" = "Gruppenname";
 "Enter group name" = "Gruppenname eingeben";
 "Keyboard Shortcut" = "Tastenkürzel";

@@ -12,10 +12,8 @@
 "Show shortcut in HUD" = "Mostrar atajo en el HUD";
 "Manage how the Heads-Up Display (HUD) appears when you cycle through applications." = "Gestiona cómo aparece el HUD cuando cambias entre aplicaciones.";
 "App Groups" = "Grupos de aplicaciones";
-"Accessibility Permission Required" = "Permiso de accesibilidad requerido";
 "Open System Preferences" = "Abrir Preferencias del Sistema";
 "Later" = "Más tarde";
-"ShortcutCycle needs accessibility permission to register global keyboard shortcuts and switch between applications." = "ShortcutCycle necesita permiso de accesibilidad para registrar atajos de teclado globales y cambiar entre aplicaciones.";
 "Group Name" = "Nombre del grupo";
 "Enter group name" = "Introduce el nombre del grupo";
 "Keyboard Shortcut" = "Atajo de teclado";

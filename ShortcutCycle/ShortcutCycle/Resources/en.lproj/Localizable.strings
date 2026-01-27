@@ -12,10 +12,8 @@
 "Show shortcut in HUD" = "Show shortcut in HUD";
 "Manage how the Heads-Up Display (HUD) appears when you cycle through applications." = "Manage how the Heads-Up Display (HUD) appears when you cycle through applications.";
 "App Groups" = "App Groups";
-"Accessibility Permission Required" = "Accessibility Permission Required";
 "Open System Preferences" = "Open System Preferences";
 "Later" = "Later";
-"ShortcutCycle needs accessibility permission to register global keyboard shortcuts and switch between applications." = "ShortcutCycle needs accessibility permission to register global keyboard shortcuts and switch between applications.";
 "Group Name" = "Group Name";
 "Enter group name" = "Enter group name";
 "Keyboard Shortcut" = "Keyboard Shortcut";

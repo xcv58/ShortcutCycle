@@ -12,10 +12,8 @@
 "Show shortcut in HUD" = "Показывать ярлык в HUD";
 "Manage how the Heads-Up Display (HUD) appears when you cycle through applications." = "Управление отображением HUD при переключении между приложениями.";
 "App Groups" = "Группы приложений";
-"Accessibility Permission Required" = "Требуется разрешение на универсальный доступ";
 "Open System Preferences" = "Открыть Системные настройки";
 "Later" = "Позже";
-"ShortcutCycle needs accessibility permission to register global keyboard shortcuts and switch between applications." = "ShortcutCycle требуется разрешение на универсальный доступ для регистрации глобальных сочетаний клавиш и переключения между приложениями.";
 "Group Name" = "Имя группы";
 "Enter group name" = "Введите имя группы";
 "Keyboard Shortcut" = "Сочетание клавиш";

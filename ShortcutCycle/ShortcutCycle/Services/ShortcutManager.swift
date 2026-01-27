@@ -57,7 +57,7 @@ class ShortcutManager: ObservableObject {
         }
         
         registeredGroupIds.insert(groupId)
-        print("Registered shortcut for group: \(group.name) (\(groupId))")
+
     }
     
     /// Unregister a shortcut for a specific group

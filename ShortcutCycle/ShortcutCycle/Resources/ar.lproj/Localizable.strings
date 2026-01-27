@@ -12,10 +12,8 @@
 "Show shortcut in HUD" = "إظهار الاختصار في HUD";
 "Manage how the Heads-Up Display (HUD) appears when you cycle through applications." = "إدارة كيفية ظهور شاشة العرض الرأسية (HUD) عند التنقل بين التطبيقات.";
 "App Groups" = "مجموعات التطبيقات";
-"Accessibility Permission Required" = "إذن الوصول مطلوب";
 "Open System Preferences" = "فتح إعدادات النظام";
 "Later" = "لاحقاً";
-"ShortcutCycle needs accessibility permission to register global keyboard shortcuts and switch between applications." = "يحتاج ShortcutCycle إلى إذن الوصول لتسجيل اختصارات لوحة المفاتيح العالمية والتبديل بين التطبيقات.";
 "Group Name" = "اسم المجموعة";
 "Enter group name" = "أدخل اسم المجموعة";
 "Keyboard Shortcut" = "اختصار لوحة المفاتيح";

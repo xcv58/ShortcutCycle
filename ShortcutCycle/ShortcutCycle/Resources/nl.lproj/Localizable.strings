@@ -12,10 +12,8 @@
 "Show shortcut in HUD" = "Toon sneltoets in HUD";
 "Manage how the Heads-Up Display (HUD) appears when you cycle through applications." = "Beheer hoe de Heads-Up Display (HUD) verschijnt wanneer u door applicaties bladert.";
 "App Groups" = "App-groepen";
-"Accessibility Permission Required" = "Toegankelijkheidsbevoegdheid vereist";
 "Open System Preferences" = "Open Systeeminstellingen";
 "Later" = "Later";
-"ShortcutCycle needs accessibility permission to register global keyboard shortcuts and switch between applications." = "ShortcutCycle heeft toegankelijkheidsbevoegdheid nodig om globale sneltoetsen te registreren en tussen applicaties te schakelen.";
 "Group Name" = "Groepsnaam";
 "Enter group name" = "Voer groepsnaam in";
 "Keyboard Shortcut" = "Sneltoets";
