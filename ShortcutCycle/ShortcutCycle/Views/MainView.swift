@@ -132,6 +132,7 @@ struct GeneralSettingsView: View {
                 Text("The HUD appears briefly when you cycle through applications in a group.".localized(language: selectedLanguage))
             }
             
+            #if DEBUG
             Section {
                 HStack {
                     Text("Settings Window".localized(language: selectedLanguage))
@@ -141,6 +142,7 @@ struct GeneralSettingsView: View {
             } header: {
                 Text("Shortcuts".localized(language: selectedLanguage))
             }
+            #endif
             
             Section {
                 Toggle("Open at Login".localized(language: selectedLanguage), isOn: $launchAtLogin.isEnabled)
