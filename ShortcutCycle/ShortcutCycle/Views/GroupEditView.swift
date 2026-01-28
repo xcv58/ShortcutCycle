@@ -24,7 +24,7 @@ struct GroupEditView: View {
                     
                     TextField("Enter group name", text: $groupName)
                         .textFieldStyle(.roundedBorder)
-                        .onChange(of: groupName) { _, newValue in
+                        .onChange(of: groupName) { newValue in
                             var updatedGroup = group
                             updatedGroup.name = newValue
                             store.updateGroup(updatedGroup)
@@ -40,11 +40,22 @@ struct GroupEditView: View {
                     
                     HStack {
                         KeyboardShortcuts.Recorder(for: .forGroup(groupId))
-                            .onChange(of: KeyboardShortcuts.getShortcut(for: .forGroup(groupId))) { _, _ in
+                            .onChange(of: KeyboardShortcuts.getShortcut(for: .forGroup(groupId))) { _ in
                                 // Re-register shortcuts when changed
                                 ShortcutManager.shared.registerAllShortcuts()
                             }
                     }
+                    
+                    Toggle("Cycle through all apps (open if needed)", isOn: Binding(
+                        get: { group.shouldOpenAppIfNeeded },
+                        set: { newValue in
+                            var updatedGroup = group
+                            updatedGroup.openAppIfNeeded = newValue
+                            store.updateGroup(updatedGroup)
+                        }
+                    ))
+                    .font(.caption)
+                    .padding(.top, 4)
                 }
                 
                 Divider()
@@ -107,7 +118,7 @@ struct GroupEditView: View {
         .onAppear {
             loadGroupData()
         }
-        .onChange(of: groupId) { _, _ in
+        .onChange(of: groupId) { _ in
             loadGroupData()
         }
     }

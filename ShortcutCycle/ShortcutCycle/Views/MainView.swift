@@ -53,11 +53,22 @@ struct GroupSettingsView: View {
             if let selectedId = store.selectedGroupId {
                 GroupEditView(groupId: selectedId)
             } else {
-                ContentUnavailableView(
-                    "No Group Selected".localized(language: selectedLanguage),
-                    systemImage: "folder",
-                    description: Text("Select a group from the sidebar or create a new one.".localized(language: selectedLanguage))
-                )
+                VStack(spacing: 16) {
+                    Image(systemName: "folder")
+                        .font(.system(size: 48))
+                        .foregroundStyle(.secondary)
+                    
+                    Text("No Group Selected".localized(language: selectedLanguage))
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    
+                    Text("Select a group from the sidebar or create a new one.".localized(language: selectedLanguage))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .padding()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
         .navigationTitle("App Groups".localized(language: selectedLanguage))
@@ -348,9 +359,21 @@ struct HUDPreviewView: View {
 
 // MARK: - HUD Views
 
+struct HUDAppItem: Identifiable, Equatable {
+    let id: String // Bundle ID
+    let name: String
+    let icon: NSImage?
+    let isRunning: Bool
+    
+    // For Equatable
+    static func == (lhs: HUDAppItem, rhs: HUDAppItem) -> Bool {
+        lhs.id == rhs.id
+    }
+}
+
 struct AppSwitcherHUDView: View {
-    let apps: [NSRunningApplication]
-    let activeApp: NSRunningApplication
+    let apps: [HUDAppItem]
+    let activeAppId: String
     let shortcutString: String?
     
     @AppStorage("showShortcutInHUD") private var showShortcutInHUD = true
@@ -360,9 +383,9 @@ struct AppSwitcherHUDView: View {
         VStack(spacing: 20) {
             // Icons Row
             HStack(spacing: 20) {
-                ForEach(apps, id: \.processIdentifier) { app in
+                ForEach(apps) { app in
                     if let icon = app.icon {
-                        HUDItemView(icon: icon, isActive: isActive(app))
+                        HUDItemView(icon: icon, isActive: app.id == activeAppId, isRunning: app.isRunning)
                     }
                 }
             }
@@ -385,11 +408,13 @@ struct AppSwitcherHUDView: View {
             
             // Active App Name
             VStack(spacing: 4) {
-                Text(activeApp.localizedName ?? "App")
-                    .font(.title3)
-                    .fontWeight(.bold)
-                    .fontDesign(.rounded)
-                    .foregroundColor(.primary)
+                if let activeApp = apps.first(where: { $0.id == activeAppId }) {
+                    Text(activeApp.name)
+                        .font(.title3)
+                        .fontWeight(.bold)
+                        .fontDesign(.rounded)
+                        .foregroundColor(.primary)
+                }
                 
                 if showShortcutInHUD, let shortcut = shortcutString {
                     Text(shortcut)
@@ -402,21 +427,18 @@ struct AppSwitcherHUDView: View {
             .padding(.vertical, 8)
             .background(
                 Capsule()
-                    .fill(.regularMaterial)
-                    .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
+                .fill(.regularMaterial)
+                .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
             )
         }
         .padding(40)
-    }
-    
-    private func isActive(_ app: NSRunningApplication) -> Bool {
-        return app.processIdentifier == activeApp.processIdentifier
     }
 }
 
 struct HUDItemView: View {
     let icon: NSImage
     let isActive: Bool
+    let isRunning: Bool
     
     var body: some View {
         Image(nsImage: icon)
@@ -424,9 +446,19 @@ struct HUDItemView: View {
             .aspectRatio(contentMode: .fit)
             .frame(width: 72, height: 72)
             .scaleEffect(isActive ? 1.15 : 1.0)
-            .saturation(isActive ? 1.1 : 0.8)
-            .opacity(isActive ? 1.0 : 0.7)
+            .saturation(isActive ? 1.1 : (isRunning ? 0.8 : 0.2)) // Grayscale if not running
+            .opacity(isActive ? 1.0 : (isRunning ? 0.7 : 0.5)) // Dimmer if not running
             .blur(radius: 0)
+            .overlay(alignment: .bottomTrailing) {
+                 if !isRunning {
+                     Image(systemName: "arrow.up.circle.fill")
+                         .font(.system(size: 20))
+                         .foregroundColor(.white)
+                         .background(Circle().fill(Color.blue))
+                         .offset(x: 4, y: 4)
+                         .shadow(radius: 2)
+                 }
+            }
             .padding(12)
             .background(
                 ZStack {

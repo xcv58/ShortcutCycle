@@ -9,46 +9,218 @@ import KeyboardShortcuts
 class AppSwitcher: ObservableObject {
     static let shared = AppSwitcher()
     
+    // Cache for app icons to improve performance
+    private var iconCache: [String: NSImage] = [:]
+    
     private init() {
         UserDefaults.standard.register(defaults: ["showHUD": true, "showShortcutInHUD": true])
     }
     
     /// Handle a shortcut activation for a given group
     func handleShortcut(for group: AppGroup, store: GroupStore) {
-        let runningApps = getRunningApps(in: group)
-        
-        // Get modifier flags from the current shortcut using KeyboardShortcuts
         let modifierFlags = getModifierFlags(for: group)
         let shortcutString = group.shortcutDisplayString
         
-        switch runningApps.count {
-        case 0:
-            // No apps running - launch the first app in the group
+        let hudItems = getHUDItems(for: group)
+        
+        if hudItems.isEmpty { return }
+        
+        // If "Open App If Needed" is enabled, we cycle through ALL apps
+        if group.shouldOpenAppIfNeeded {
+             cycleAllApps(hudItems: hudItems, group: group, store: store, modifierFlags: modifierFlags, shortcut: shortcutString)
+        } else {
+             // Legacy behavior: Only cycle running apps
+             cycleRunningAppsOnly(hudItems: hudItems, group: group, store: store, modifierFlags: modifierFlags, shortcut: shortcutString)
+        }
+    }
+    
+    // MARK: - Logic for "Open App If Needed" (New Feature)
+    
+    private func cycleAllApps(hudItems: [HUDAppItem], group: AppGroup, store: GroupStore, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?) {
+        // Determine the next app to activate
+        var nextAppId: String
+        
+        // Check if we are already cycling (HUD visible)
+        if HUDManager.shared.isVisible, let currentId = HUDManager.shared.currentSelectedAppId {
+             if let currentIndex = hudItems.firstIndex(where: { $0.id == currentId }) {
+                 let nextIndex = (currentIndex + 1) % hudItems.count
+                 nextAppId = hudItems[nextIndex].id
+             } else {
+                 nextAppId = hudItems[0].id
+             }
+        } else {
+            // New cycle
+            let frontmostApp = NSWorkspace.shared.frontmostApplication
+            // Check if frontmost is in our group
+            if let frontmostId = frontmostApp?.bundleIdentifier,
+               let currentIndex = hudItems.firstIndex(where: { $0.id == frontmostId }) {
+                // Yes, switch to next
+                let nextIndex = (currentIndex + 1) % hudItems.count
+                nextAppId = hudItems[nextIndex].id
+            } else {
+                // Frontmost is not in group (or not running), start with last active or first
+                if let lastBundleId = group.lastActiveAppBundleId,
+                   hudItems.contains(where: { $0.id == lastBundleId }) {
+                    nextAppId = lastBundleId
+                } else {
+                    nextAppId = hudItems[0].id
+                }
+            }
+        }
+        
+        // Perform Switch
+        store.updateLastActiveApp(bundleId: nextAppId, for: group.id)
+        
+        // We always want to activate the selected app eventually.
+        // If HUD is shown, it will handle activation lazily (on key release).
+        // If HUD is disabled, we activate immediately.
+        let hudShown = showHUD(items: hudItems, activeAppId: nextAppId, modifierFlags: modifierFlags, shortcut: shortcut, shouldActivate: true)
+        
+        if !hudShown {
+             activateOrLaunch(bundleId: nextAppId)
+        }
+    }
+    
+    // MARK: - Legacy Logic (Only Running Apps)
+    
+    private func cycleRunningAppsOnly(hudItems: [HUDAppItem], group: AppGroup, store: GroupStore, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?) {
+        let runningItems = hudItems.filter { $0.isRunning }
+        
+        if runningItems.isEmpty {
+            // No apps running - fallback to launching the first app
             if let firstApp = group.apps.first {
                 launchApp(bundleIdentifier: firstApp.bundleIdentifier)
                 store.updateLastActiveApp(bundleId: firstApp.bundleIdentifier, for: group.id)
-                // Note: Can't show HUD effectively as app isn't running yet
             }
+            return
+        }
+        
+        if runningItems.count == 1 {
+            // Toggle behavior
+            let item = runningItems[0]
+            let app = NSRunningApplication.runningApplications(withBundleIdentifier: item.id).first
             
-        case 1:
-            // Only one app running - toggle between front and hidden
-            let app = runningApps[0]
-            if app.isActive {
-                app.hide()
-                showHUD(apps: runningApps, activeApp: app, modifierFlags: modifierFlags, shortcut: shortcutString, shouldActivate: false)
+            if app?.isActive == true {
+                app?.hide()
+                showHUD(items: runningItems, activeAppId: item.id, modifierFlags: modifierFlags, shortcut: shortcut, shouldActivate: false)
             } else {
-                store.updateLastActiveApp(bundleId: app.bundleIdentifier ?? "", for: group.id)
-                let hudShown = showHUD(apps: runningApps, activeApp: app, modifierFlags: modifierFlags, shortcut: shortcutString)
-                
+                store.updateLastActiveApp(bundleId: item.id, for: group.id)
+                let hudShown = showHUD(items: runningItems, activeAppId: item.id, modifierFlags: modifierFlags, shortcut: shortcut)
                 if !hudShown {
-                   app.activate(options: [.activateAllWindows])
+                    app?.activate(options: [.activateAllWindows])
                 }
             }
-            
-        default:
-            // Multiple apps running - cycle through them
-            cycleApps(runningApps, group: group, store: store, modifierFlags: modifierFlags, shortcut: shortcutString)
+            return
         }
+        
+        // Cycle logic
+        var nextAppId: String
+        
+        if HUDManager.shared.isVisible, let currentId = HUDManager.shared.currentSelectedAppId {
+             if let currentIndex = runningItems.firstIndex(where: { $0.id == currentId }) {
+                 let nextIndex = (currentIndex + 1) % runningItems.count
+                 nextAppId = runningItems[nextIndex].id
+             } else {
+                 nextAppId = runningItems[0].id
+             }
+        } else {
+            let frontmostApp = NSWorkspace.shared.frontmostApplication
+            if let frontmostId = frontmostApp?.bundleIdentifier,
+               let currentIndex = runningItems.firstIndex(where: { $0.id == frontmostId }) {
+                let nextIndex = (currentIndex + 1) % runningItems.count
+                nextAppId = runningItems[nextIndex].id
+            } else {
+                if let lastBundleId = group.lastActiveAppBundleId,
+                   runningItems.contains(where: { $0.id == lastBundleId }) {
+                    nextAppId = lastBundleId
+                } else {
+                    nextAppId = runningItems[0].id
+                }
+            }
+        }
+        
+        store.updateLastActiveApp(bundleId: nextAppId, for: group.id)
+        
+        let hudShown = showHUD(items: runningItems, activeAppId: nextAppId, modifierFlags: modifierFlags, shortcut: shortcut)
+        
+        if !hudShown {
+             activateOrLaunch(bundleId: nextAppId)
+        }
+    }
+    
+    // MARK: - Helpers
+    
+    private func getHUDItems(for group: AppGroup) -> [HUDAppItem] {
+        if group.shouldOpenAppIfNeeded {
+            return group.apps.map { appItem in
+                let runningApps = NSRunningApplication.runningApplications(withBundleIdentifier: appItem.bundleIdentifier)
+                let isRunning = !runningApps.isEmpty
+                
+                return HUDAppItem(
+                    id: appItem.bundleIdentifier,
+                    name: appItem.name,
+                    icon: getIcon(for: appItem),
+                    isRunning: isRunning
+                )
+            }
+        } else {
+            // Original logic: only running apps, sorted by group order
+            let runningApps = getRunningApps(in: group)
+            return runningApps.map { app in
+                HUDAppItem(
+                    id: app.bundleIdentifier ?? "",
+                    name: app.localizedName ?? "App",
+                    icon: app.icon,
+                    isRunning: true
+                )
+            }
+        }
+    }
+    
+    private func getRunningApps(in group: AppGroup) -> [NSRunningApplication] {
+        let workspace = NSWorkspace.shared
+        let runningApps = workspace.runningApplications
+        let groupBundleIds = Set(group.apps.map { $0.bundleIdentifier })
+        
+        let filteredApps = runningApps.filter { app in
+            guard let bundleId = app.bundleIdentifier else { return false }
+            return groupBundleIds.contains(bundleId) && app.activationPolicy == .regular
+        }
+        
+        return filteredApps.sorted { app1, app2 in
+            let index1 = group.apps.firstIndex { $0.bundleIdentifier == app1.bundleIdentifier } ?? Int.max
+            let index2 = group.apps.firstIndex { $0.bundleIdentifier == app2.bundleIdentifier } ?? Int.max
+            return index1 < index2
+        }
+    }
+    
+    private func getIcon(for appItem: AppItem) -> NSImage? {
+        if let cached = iconCache[appItem.bundleIdentifier] {
+            return cached
+        }
+        
+        var icon: NSImage?
+        
+        // Try to get icon from running app first (most accurate)
+        if let runningApp = NSRunningApplication.runningApplications(withBundleIdentifier: appItem.bundleIdentifier).first {
+            icon = runningApp.icon
+        }
+        
+        // Try path
+        if icon == nil, let path = appItem.iconPath {
+             icon = NSWorkspace.shared.icon(forFile: path)
+        }
+        
+        // Try finding app by bundle ID
+        if icon == nil, let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: appItem.bundleIdentifier) {
+            icon = NSWorkspace.shared.icon(forFile: url.path)
+        }
+        
+        if let icon = icon {
+            iconCache[appItem.bundleIdentifier] = icon
+        }
+        
+        return icon
     }
     
     /// Get the NSEvent.ModifierFlags from the KeyboardShortcuts shortcut
@@ -60,89 +232,24 @@ class AppSwitcher: ObservableObject {
     }
     
     @discardableResult
-    private func showHUD(apps: [NSRunningApplication], activeApp: NSRunningApplication, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, shouldActivate: Bool = true) -> Bool {
+    private func showHUD(items: [HUDAppItem], activeAppId: String, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, shouldActivate: Bool = true) -> Bool {
         if UserDefaults.standard.bool(forKey: "showHUD") {
-            HUDManager.shared.scheduleShow(apps: apps, activeApp: activeApp, modifierFlags: modifierFlags, shortcut: shortcut, shouldActivate: shouldActivate)
+            HUDManager.shared.scheduleShow(items: items, activeAppId: activeAppId, modifierFlags: modifierFlags, shortcut: shortcut, shouldActivate: shouldActivate)
             return true
         }
         return false
     }
     
-    /// Get all running apps that belong to a group, sorted by order in group
-    private func getRunningApps(in group: AppGroup) -> [NSRunningApplication] {
-        let workspace = NSWorkspace.shared
-        let runningApps = workspace.runningApplications
-        
-        let groupBundleIds = Set(group.apps.map { $0.bundleIdentifier })
-        
-        let filteredApps = runningApps.filter { app in
-            guard let bundleId = app.bundleIdentifier else { return false }
-            return groupBundleIds.contains(bundleId) && app.activationPolicy == .regular
-        }
-        
-        // Sort apps by their position in the group's app list
-        return filteredApps.sorted { app1, app2 in
-            let index1 = group.apps.firstIndex { $0.bundleIdentifier == app1.bundleIdentifier } ?? Int.max
-            let index2 = group.apps.firstIndex { $0.bundleIdentifier == app2.bundleIdentifier } ?? Int.max
-            return index1 < index2
-        }
-    }
-    
-    /// Cycle through multiple running apps
-    private func cycleApps(_ apps: [NSRunningApplication], group: AppGroup, store: GroupStore, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?) {
-        // Apps are already sorted by getRunningApps
-        let sortedApps = apps
-        
-        var appToActivate: NSRunningApplication
-        
-        // Check if we are already cycling (HUD visible)
-        // If so, use the HUD's current selection as the reference point to avoid stale state issues
-        if HUDManager.shared.isVisible, let current = HUDManager.shared.currentSelectedApp {
-            if let currentIndex = sortedApps.firstIndex(where: { $0.processIdentifier == current.processIdentifier }) {
-                let nextIndex = (currentIndex + 1) % sortedApps.count
-                appToActivate = sortedApps[nextIndex]
-            } else {
-                appToActivate = sortedApps[0]
-            }
+    private func activateOrLaunch(bundleId: String) {
+        if let app = NSRunningApplication.runningApplications(withBundleIdentifier: bundleId).first {
+             app.activate(options: [.activateAllWindows])
         } else {
-            // New cycle start - check current system state
-            let frontmostApp = NSWorkspace.shared.frontmostApplication
-            
-            let isGroupAppActive = sortedApps.contains { $0.processIdentifier == frontmostApp?.processIdentifier }
-            
-            if isGroupAppActive {
-                // Find the current app and switch to the next one
-                if let currentIndex = sortedApps.firstIndex(where: { $0.processIdentifier == frontmostApp?.processIdentifier }) {
-                    let nextIndex = (currentIndex + 1) % sortedApps.count
-                    appToActivate = sortedApps[nextIndex]
-                } else {
-                    appToActivate = sortedApps[0]
-                }
-            } else {
-                // No group app is frontmost - bring the last used one, or first running
-                if let lastBundleId = group.lastActiveAppBundleId,
-                   let lastApp = sortedApps.first(where: { $0.bundleIdentifier == lastBundleId }) {
-                    appToActivate = lastApp
-                } else {
-                    appToActivate = sortedApps[0]
-                }
-            }
-        }
-        
-        
-        
-        
-        store.updateLastActiveApp(bundleId: appToActivate.bundleIdentifier ?? "", for: group.id)
-        
-        let hudShown = showHUD(apps: sortedApps, activeApp: appToActivate, modifierFlags: modifierFlags, shortcut: shortcut)
-        
-        if !hudShown {
-            appToActivate.activate(options: [.activateAllWindows])
+             launchApp(bundleIdentifier: bundleId)
         }
     }
     
     /// Launch an app by bundle identifier
-    private func launchApp(bundleIdentifier: String) {
+    func launchApp(bundleIdentifier: String) {
         guard let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier) else {
             print("Could not find app with bundle identifier: \(bundleIdentifier)")
             return
@@ -191,10 +298,10 @@ class HUDManager: ObservableObject {
     private var lastRequestTime: Date?
 
     private var previousFrontmostApp: NSRunningApplication?
-    private var pendingActiveApp: NSRunningApplication?
+    private var pendingActiveAppId: String?
     
     // Track the currently selected app in the HUD
-    public private(set) var currentSelectedApp: NSRunningApplication?
+    public private(set) var currentSelectedAppId: String?
     
     var isVisible: Bool {
         window?.isVisible == true
@@ -203,7 +310,7 @@ class HUDManager: ObservableObject {
     private init() {}
     
     /// Schedule showing the HUD with macOS Command+Tab logic
-    func scheduleShow(apps: [NSRunningApplication], activeApp: NSRunningApplication, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, shouldActivate: Bool = true) {
+    func scheduleShow(items: [HUDAppItem], activeAppId: String, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, shouldActivate: Bool = true) {
         // Cancel existing hide timer
         hideTimer?.invalidate()
         hideTimer = nil // Ensure we don't auto-hide while interacting
@@ -214,7 +321,7 @@ class HUDManager: ObservableObject {
         lastRequestTime = now
         
         // Store pending active app for fast switching
-        self.pendingActiveApp = shouldActivate ? activeApp : nil
+        self.pendingActiveAppId = shouldActivate ? activeAppId : nil
         
         // Capture the previous frontmost app if we aren't already visible
         // We do this BEFORE we activate ourselves
@@ -226,13 +333,9 @@ class HUDManager: ObservableObject {
         NSApp.activate(ignoringOtherApps: true)
         
         // Fix for "Splash" issue:
-        // If the Settings window is open, activating the app brings it to the front, which is jarring.
-        // We push it to the back immediately after activation if it's not the HUD.
-        // We use dispatch async to ensure it happens after activation logic settles.
         DispatchQueue.main.async {
             NSApp.windows.forEach { win in
                 if win !== self.window && win.isVisible {
-                    // This is likely the Settings window
                     win.orderBack(nil)
                 }
             }
@@ -242,7 +345,7 @@ class HUDManager: ObservableObject {
         if (window?.isVisible == true) || isRepeated {
             showTimer?.invalidate()
             showTimer = nil
-            presentHUD(apps: apps, activeApp: activeApp, shortcut: shortcut)
+            presentHUD(items: items, activeAppId: activeAppId, shortcut: shortcut)
             startMonitoringModifiers(requiredModifiers: modifierFlags)
             return
         }
@@ -251,7 +354,7 @@ class HUDManager: ObservableObject {
         showTimer?.invalidate()
         showTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: false) { [weak self] _ in // 200ms delay
             Task { @MainActor in
-                self?.presentHUD(apps: apps, activeApp: activeApp, shortcut: shortcut)
+                self?.presentHUD(items: items, activeAppId: activeAppId, shortcut: shortcut)
                 self?.startMonitoringModifiers(requiredModifiers: modifierFlags)
             }
         }
@@ -260,17 +363,17 @@ class HUDManager: ObservableObject {
         startMonitoringModifiers(requiredModifiers: modifierFlags)
     }
     
-    private func presentHUD(apps: [NSRunningApplication], activeApp: NSRunningApplication, shortcut: String?) {
+    private func presentHUD(items: [HUDAppItem], activeAppId: String, shortcut: String?) {
         if window == nil {
             window = HUDWindow()
         }
         
-        currentSelectedApp = activeApp
+        currentSelectedAppId = activeAppId
         
         guard let window = window else { return }
         
         // Update content
-        let hudView = AppSwitcherHUDView(apps: apps, activeApp: activeApp, shortcutString: shortcut)
+        let hudView = AppSwitcherHUDView(apps: items, activeAppId: activeAppId, shortcutString: shortcut)
         window.contentView = NSHostingView(rootView: hudView)
         
         // Resize and center
@@ -298,8 +401,6 @@ class HUDManager: ObservableObject {
         }
         
         // Check if ANY of the required modifiers are currently held.
-        // This prevents the HUD from getting stuck if the keys were already released
-        // before we started monitoring.
         let currentFlags = NSEvent.modifierFlags
         if !checkModifiersHeld(currentFlags: currentFlags, required: required) {
              finalizeSwitchAndHide()
@@ -337,9 +438,9 @@ class HUDManager: ObservableObject {
         showTimer = nil
         
         // Fast switch: user released keys before HUD appeared or while it was visible
-        if let pending = pendingActiveApp {
-            pending.activate(options: [.activateAllWindows])
-            pendingActiveApp = nil
+        if let pendingId = pendingActiveAppId {
+            activateOrLaunch(bundleId: pendingId)
+            pendingActiveAppId = nil
         }
         
         if window?.isVisible == true {
@@ -350,6 +451,15 @@ class HUDManager: ObservableObject {
         if let monitor = eventMonitor {
             NSEvent.removeMonitor(monitor)
             eventMonitor = nil
+        }
+    }
+    
+    private func activateOrLaunch(bundleId: String) {
+        if let app = NSRunningApplication.runningApplications(withBundleIdentifier: bundleId).first {
+             app.activate(options: [.activateAllWindows])
+        } else {
+             // Use AppSwitcher shared helper to launch
+             AppSwitcher.shared.launchApp(bundleIdentifier: bundleId)
         }
     }
     
@@ -366,12 +476,12 @@ class HUDManager: ObservableObject {
     func hide() {
         window?.orderOut(nil)
         window = nil
-        currentSelectedApp = nil
+        currentSelectedAppId = nil
         
         // Ensure we activate the pending app if it exists (fallback)
-        if let pending = pendingActiveApp {
-            pending.activate(options: [.activateAllWindows])
-            pendingActiveApp = nil
+        if let pendingId = pendingActiveAppId {
+            activateOrLaunch(bundleId: pendingId)
+            pendingActiveAppId = nil
         }
         
         if NSApp.isActive {

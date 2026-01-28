@@ -40,9 +40,8 @@ class CloudSyncManager: ObservableObject {
         }
     }
     
-    deinit {
-        stopSync()
-    }
+    // deinit removed as CloudSyncManager is a singleton and deinit logic caused concurrency issues.
+    // original deinit called stopSync() which is MainActor-isolated.
     
     // MARK: - Public Methods
     
