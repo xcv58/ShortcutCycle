@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(ShortcutCycleCore)
+import ShortcutCycleCore
+#endif
 import UniformTypeIdentifiers
 
 /// A row representing a single app in the group list

@@ -3,6 +3,9 @@ import AppKit
 import SwiftUI
 import Carbon
 import KeyboardShortcuts
+#if canImport(ShortcutCycleCore)
+import ShortcutCycleCore
+#endif
 
 /// Handles the core app switching logic for groups
 @MainActor
@@ -40,33 +43,17 @@ class AppSwitcher: ObservableObject {
         // Determine the next app to activate
         var nextAppId: String
         
-        // Check if we are already cycling (HUD visible)
-        if HUDManager.shared.isVisible, let currentId = HUDManager.shared.currentSelectedAppId {
-             if let currentIndex = hudItems.firstIndex(where: { $0.id == currentId }) {
-                 let nextIndex = (currentIndex + 1) % hudItems.count
-                 nextAppId = hudItems[nextIndex].id
-             } else {
-                 nextAppId = hudItems[0].id
-             }
-        } else {
-            // New cycle
-            let frontmostApp = NSWorkspace.shared.frontmostApplication
-            // Check if frontmost is in our group
-            if let frontmostId = frontmostApp?.bundleIdentifier,
-               let currentIndex = hudItems.firstIndex(where: { $0.id == frontmostId }) {
-                // Yes, switch to next
-                let nextIndex = (currentIndex + 1) % hudItems.count
-                nextAppId = hudItems[nextIndex].id
-            } else {
-                // Frontmost is not in group (or not running), start with last active or first
-                if let lastBundleId = group.lastActiveAppBundleId,
-                   hudItems.contains(where: { $0.id == lastBundleId }) {
-                    nextAppId = lastBundleId
-                } else {
-                    nextAppId = hudItems[0].id
-                }
-            }
-        }
+        // Use shared logic
+        let cycleItems = hudItems.map { CyclingAppItem(id: $0.id) }
+        let frontmostApp = NSWorkspace.shared.frontmostApplication
+        
+        nextAppId = AppCyclingLogic.nextAppId(
+            items: cycleItems,
+            currentFrontmostAppId: frontmostApp?.bundleIdentifier,
+            currentHUDSelectionId: HUDManager.shared.currentSelectedAppId,
+            lastActiveAppId: group.lastActiveAppBundleId,
+            isHUDVisible: HUDManager.shared.isVisible
+        )
         
         // Perform Switch
         store.updateLastActiveApp(bundleId: nextAppId, for: group.id)
@@ -116,28 +103,17 @@ class AppSwitcher: ObservableObject {
         // Cycle logic
         var nextAppId: String
         
-        if HUDManager.shared.isVisible, let currentId = HUDManager.shared.currentSelectedAppId {
-             if let currentIndex = runningItems.firstIndex(where: { $0.id == currentId }) {
-                 let nextIndex = (currentIndex + 1) % runningItems.count
-                 nextAppId = runningItems[nextIndex].id
-             } else {
-                 nextAppId = runningItems[0].id
-             }
-        } else {
-            let frontmostApp = NSWorkspace.shared.frontmostApplication
-            if let frontmostId = frontmostApp?.bundleIdentifier,
-               let currentIndex = runningItems.firstIndex(where: { $0.id == frontmostId }) {
-                let nextIndex = (currentIndex + 1) % runningItems.count
-                nextAppId = runningItems[nextIndex].id
-            } else {
-                if let lastBundleId = group.lastActiveAppBundleId,
-                   runningItems.contains(where: { $0.id == lastBundleId }) {
-                    nextAppId = lastBundleId
-                } else {
-                    nextAppId = runningItems[0].id
-                }
-            }
-        }
+        // Use shared logic
+        let cycleItems = runningItems.map { CyclingAppItem(id: $0.id) }
+        let frontmostApp = NSWorkspace.shared.frontmostApplication
+        
+        nextAppId = AppCyclingLogic.nextAppId(
+            items: cycleItems,
+            currentFrontmostAppId: frontmostApp?.bundleIdentifier,
+            currentHUDSelectionId: HUDManager.shared.currentSelectedAppId,
+            lastActiveAppId: group.lastActiveAppBundleId,
+            isHUDVisible: HUDManager.shared.isVisible
+        )
         
         store.updateLastActiveApp(bundleId: nextAppId, for: group.id)
         

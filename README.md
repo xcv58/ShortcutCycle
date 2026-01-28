@@ -2,6 +2,8 @@
 
 **Switch apps instantly with hotkeys**
 
+[![Test](https://github.com/xcv58/ShortcutCycle/actions/workflows/test.yml/badge.svg)](https://github.com/xcv58/ShortcutCycle/actions/workflows/test.yml)
+
 ShortcutCycle helps you switch between your favorite apps with just one keyboard shortcut. Instead of remembering many shortcuts, just group your apps (like "Chat Apps" or "Work Apps") and use one key to cycle through them. Simplify your workflow and save time every day!
 
 ## Features

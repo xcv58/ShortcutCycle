@@ -1,5 +1,8 @@
 import Foundation
 import ServiceManagement
+#if canImport(ShortcutCycleCore)
+import ShortcutCycleCore
+#endif
 
 /// Manages the Launch at Login setting using SMAppService
 @MainActor
