@@ -1,5 +1,8 @@
 import CloudKit
+import CloudKit
+#if canImport(ShortcutCycleCore)
 import ShortcutCycleCore
+#endif
 import Combine
 
 /// Manages iCloud key-value sync for settings

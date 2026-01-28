@@ -3,7 +3,9 @@ import AppKit
 import SwiftUI
 import Carbon
 import KeyboardShortcuts
+#if canImport(ShortcutCycleCore)
 import ShortcutCycleCore
+#endif
 
 /// Handles the core app switching logic for groups
 @MainActor

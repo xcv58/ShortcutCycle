@@ -1,7 +1,9 @@
 import Foundation
 import KeyboardShortcuts
 import AppKit
+#if canImport(ShortcutCycleCore)
 import ShortcutCycleCore
+#endif
 
 /// Manages global keyboard shortcuts using the KeyboardShortcuts library
 @MainActor

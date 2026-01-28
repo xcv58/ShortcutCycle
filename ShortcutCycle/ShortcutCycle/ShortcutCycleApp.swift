@@ -1,6 +1,8 @@
 import SwiftUI
 import KeyboardShortcuts
+#if canImport(ShortcutCycleCore)
 import ShortcutCycleCore
+#endif
 
 
 @main

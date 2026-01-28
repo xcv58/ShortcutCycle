@@ -21,13 +21,11 @@ let package = Package(
             ],
             path: "ShortcutCycle",
             sources: [
-                "Services/AppCyclingLogic.swift",
                 "Models/AppGroup.swift",
                 "Models/AppItem.swift",
                 "Models/GroupStore.swift",
                 "Models/SettingsExport.swift",
-                "Models/KeyboardShortcutsNames.swift",
-                "Models/NotificationNames.swift"
+                "Models/KeyboardShortcutsNames.swift"
             ]
         ),
         .executableTarget(
@@ -38,13 +36,11 @@ let package = Package(
             ],
             path: "ShortcutCycle",
             exclude: [
-                "Services/AppCyclingLogic.swift",
                 "Models/AppGroup.swift",
                 "Models/AppItem.swift",
                 "Models/GroupStore.swift",
                 "Models/SettingsExport.swift",
-                "Models/KeyboardShortcutsNames.swift",
-                "Models/NotificationNames.swift"
+                "Models/KeyboardShortcutsNames.swift"
             ]
         ),
         .testTarget(
