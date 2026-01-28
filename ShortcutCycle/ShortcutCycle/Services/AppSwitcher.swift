@@ -84,15 +84,10 @@ class AppSwitcher: ObservableObject {
     // MARK: - Legacy Logic (Only Running Apps)
     
     private func cycleRunningAppsOnly(hudItems: [HUDAppItem], group: AppGroup, store: GroupStore, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?) {
-        // Filter out non-running items for this logic, although getHUDItems should have handled it roughly,
-        // but wait, getHUDItems returns running items only if toggle is off? Let's check implementation below.
-        // Yes.
-        
         let runningItems = hudItems.filter { $0.isRunning }
         
         if runningItems.isEmpty {
-            // No apps running - verify if we should launch first app?
-            // Original logic: "No apps running - launch the first app in the group"
+            // No apps running - fallback to launching the first app
             if let firstApp = group.apps.first {
                 launchApp(bundleIdentifier: firstApp.bundleIdentifier)
                 store.updateLastActiveApp(bundleId: firstApp.bundleIdentifier, for: group.id)
