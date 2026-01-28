@@ -1,4 +1,5 @@
 import SwiftUI
+import ShortcutCycleCore
 import KeyboardShortcuts
 
 /// Menu bar popover view showing quick access to groups

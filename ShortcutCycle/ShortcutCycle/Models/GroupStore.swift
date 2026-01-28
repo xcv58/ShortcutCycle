@@ -3,19 +3,22 @@ import SwiftUI
 
 /// Observable store for managing app groups with persistence
 @MainActor
-class GroupStore: ObservableObject {
-    static let shared = GroupStore()
+public class GroupStore: ObservableObject {
+    public static let shared = GroupStore()
     
-    @Published var groups: [AppGroup] = []
-    @Published var selectedGroupId: UUID?
+    @Published public var groups: [AppGroup] = []
+    @Published public var selectedGroupId: UUID?
     
     private let saveKey = "ShortcutCycle.Groups"
+    private let userDefaults: UserDefaults
     
-    private init() {
+    // Internal init for testing
+    init(userDefaults: UserDefaults = .standard) {
+        self.userDefaults = userDefaults
         loadGroups()
     }
     
-    var selectedGroup: AppGroup? {
+    public var selectedGroup: AppGroup? {
         get {
             groups.first { $0.id == selectedGroupId }
         }
@@ -30,7 +33,7 @@ class GroupStore: ObservableObject {
     
     // MARK: - CRUD Operations
     
-    func addGroup(name: String) -> AppGroup {
+    public func addGroup(name: String) -> AppGroup {
         let group = AppGroup(name: name)
         groups.append(group)
         selectedGroupId = group.id
@@ -38,7 +41,7 @@ class GroupStore: ObservableObject {
         return group
     }
     
-    func deleteGroup(_ group: AppGroup) {
+    public func deleteGroup(_ group: AppGroup) {
         groups.removeAll { $0.id == group.id }
         if selectedGroupId == group.id {
             selectedGroupId = groups.first?.id
@@ -46,38 +49,38 @@ class GroupStore: ObservableObject {
         saveGroups()
         
         // Update shortcuts immediately
-        ShortcutManager.shared.registerAllShortcuts()
+        NotificationCenter.default.post(name: .shortcutsNeedUpdate, object: nil)
     }
     
-    func updateGroup(_ group: AppGroup) {
+    public func updateGroup(_ group: AppGroup) {
         if let index = groups.firstIndex(where: { $0.id == group.id }) {
             groups[index] = group
             saveGroups()
         }
     }
     
-    func moveGroups(from source: IndexSet, to destination: Int) {
+    public func moveGroups(from source: IndexSet, to destination: Int) {
         groups.move(fromOffsets: source, toOffset: destination)
         saveGroups()
     }
     
     // MARK: - App Management
     
-    func addApp(_ app: AppItem, to groupId: UUID) {
+    public func addApp(_ app: AppItem, to groupId: UUID) {
         if let index = groups.firstIndex(where: { $0.id == groupId }) {
             groups[index].addApp(app)
             saveGroups()
         }
     }
     
-    func removeApp(_ app: AppItem, from groupId: UUID) {
+    public func removeApp(_ app: AppItem, from groupId: UUID) {
         if let index = groups.firstIndex(where: { $0.id == groupId }) {
             groups[index].removeApp(app)
             saveGroups()
         }
     }
     
-    func moveApp(in groupId: UUID, from source: IndexSet, to destination: Int) {
+    public func moveApp(in groupId: UUID, from source: IndexSet, to destination: Int) {
         if let index = groups.firstIndex(where: { $0.id == groupId }) {
             groups[index].moveApp(from: source, to: destination)
             saveGroups()
@@ -86,7 +89,7 @@ class GroupStore: ObservableObject {
     
     // MARK: - Shortcut Management
     
-    func updateLastActiveApp(bundleId: String, for groupId: UUID) {
+    public func updateLastActiveApp(bundleId: String, for groupId: UUID) {
         if let index = groups.firstIndex(where: { $0.id == groupId }) {
             groups[index].lastActiveAppBundleId = bundleId
             saveGroups()
@@ -98,7 +101,7 @@ class GroupStore: ObservableObject {
     private func saveGroups() {
         do {
             let data = try JSONEncoder().encode(groups)
-            UserDefaults.standard.set(data, forKey: saveKey)
+            userDefaults.set(data, forKey: saveKey)
             // notifyCloudSync() // Temporarily disabled
         } catch {
             print("GroupStore: Failed to save groups: \(error)")
@@ -106,7 +109,7 @@ class GroupStore: ObservableObject {
     }
     
     private func loadGroups() {
-        guard let data = UserDefaults.standard.data(forKey: saveKey) else {
+        guard let data = userDefaults.data(forKey: saveKey) else {
             // Create default groups on first launch
             createDefaultGroups()
             return
@@ -133,7 +136,7 @@ class GroupStore: ObservableObject {
     // MARK: - Export/Import
     
     /// Export all settings as JSON data
-    func exportData() throws -> Data {
+    public func exportData() throws -> Data {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -143,7 +146,7 @@ class GroupStore: ObservableObject {
     }
     
     /// Import settings from exported JSON data
-    func importData(_ data: Data) throws {
+    public func importData(_ data: Data) throws {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         
@@ -158,20 +161,20 @@ class GroupStore: ObservableObject {
         importPayload.settings?.apply()
         
         // Re-register shortcuts for new groups
-        ShortcutManager.shared.registerAllShortcuts()
+        NotificationCenter.default.post(name: .shortcutsNeedUpdate, object: nil)
     }
     
     // MARK: - Group Actions
     
-    func toggleGroupEnabled(_ group: AppGroup) {
+    public func toggleGroupEnabled(_ group: AppGroup) {
         if let index = groups.firstIndex(where: { $0.id == group.id }) {
             groups[index].isEnabled.toggle()
             saveGroups()
-            ShortcutManager.shared.registerAllShortcuts()
+            NotificationCenter.default.post(name: .shortcutsNeedUpdate, object: nil)
         }
     }
     
-    func renameGroup(_ group: AppGroup, newName: String) {
+    public func renameGroup(_ group: AppGroup, newName: String) {
         if let index = groups.firstIndex(where: { $0.id == group.id }) {
             groups[index].name = newName
             groups[index].lastModified = Date()
@@ -182,11 +185,11 @@ class GroupStore: ObservableObject {
     // MARK: - Cloud Sync Support
     
     /// Replace all groups with synced data (used by CloudSyncManager)
-    func replaceAllGroups(_ newGroups: [AppGroup]) {
+    public func replaceAllGroups(_ newGroups: [AppGroup]) {
         self.groups = newGroups
         self.selectedGroupId = groups.first?.id
         saveGroups()
-        ShortcutManager.shared.registerAllShortcuts()
+        NotificationCenter.default.post(name: .shortcutsNeedUpdate, object: nil)
     }
     
     /* Temporarily disabled - iCloud sync

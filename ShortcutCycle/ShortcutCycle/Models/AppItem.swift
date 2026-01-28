@@ -1,13 +1,13 @@
 import Foundation
 
 /// Represents a single application that can be part of a group
-struct AppItem: Identifiable, Codable, Equatable, Hashable {
-    let id: UUID
-    let bundleIdentifier: String
-    let name: String
-    var iconPath: String?
+public struct AppItem: Identifiable, Codable, Equatable, Hashable {
+    public let id: UUID
+    public let bundleIdentifier: String
+    public let name: String
+    public var iconPath: String?
     
-    init(id: UUID = UUID(), bundleIdentifier: String, name: String, iconPath: String? = nil) {
+    public init(id: UUID = UUID(), bundleIdentifier: String, name: String, iconPath: String? = nil) {
         self.id = id
         self.bundleIdentifier = bundleIdentifier
         self.name = name
@@ -15,7 +15,7 @@ struct AppItem: Identifiable, Codable, Equatable, Hashable {
     }
     
     /// Create an AppItem from a file URL pointing to an .app bundle
-    static func from(appURL: URL) -> AppItem? {
+    public static func from(appURL: URL) -> AppItem? {
         guard let bundle = Bundle(url: appURL),
               let bundleIdentifier = bundle.bundleIdentifier else {
             return nil

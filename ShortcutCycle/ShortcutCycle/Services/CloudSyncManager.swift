@@ -1,4 +1,5 @@
-import Foundation
+import CloudKit
+import ShortcutCycleCore
 import Combine
 
 /// Manages iCloud key-value sync for settings

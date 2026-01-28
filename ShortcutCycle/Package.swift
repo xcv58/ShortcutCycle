@@ -14,12 +14,43 @@ let package = Package(
         .package(url: "https://github.com/sindresorhus/KeyboardShortcuts.git", from: "2.0.0")
     ],
     targets: [
-        .executableTarget(
-            name: "ShortcutCycle",
+        .target(
+            name: "ShortcutCycleCore",
             dependencies: [
                 .product(name: "KeyboardShortcuts", package: "KeyboardShortcuts")
             ],
-            path: "ShortcutCycle"
+            path: "ShortcutCycle",
+            sources: [
+                "Services/AppCyclingLogic.swift",
+                "Models/AppGroup.swift",
+                "Models/AppItem.swift",
+                "Models/GroupStore.swift",
+                "Models/SettingsExport.swift",
+                "Models/KeyboardShortcutsNames.swift",
+                "Models/NotificationNames.swift"
+            ]
+        ),
+        .executableTarget(
+            name: "ShortcutCycle",
+            dependencies: [
+                "ShortcutCycleCore",
+                .product(name: "KeyboardShortcuts", package: "KeyboardShortcuts")
+            ],
+            path: "ShortcutCycle",
+            exclude: [
+                "Services/AppCyclingLogic.swift",
+                "Models/AppGroup.swift",
+                "Models/AppItem.swift",
+                "Models/GroupStore.swift",
+                "Models/SettingsExport.swift",
+                "Models/KeyboardShortcutsNames.swift",
+                "Models/NotificationNames.swift"
+            ]
+        ),
+        .testTarget(
+            name: "ShortcutCycleTests",
+            dependencies: ["ShortcutCycleCore"],
+            path: "Tests/ShortcutCycleTests"
         )
     ]
 )

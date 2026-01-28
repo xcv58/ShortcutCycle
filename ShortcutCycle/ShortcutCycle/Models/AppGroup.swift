@@ -2,16 +2,16 @@ import Foundation
 import KeyboardShortcuts
 
 /// Represents a group of applications with a shared keyboard shortcut
-struct AppGroup: Identifiable, Codable, Equatable {
-    let id: UUID
-    var name: String
-    var apps: [AppItem]
-    var lastActiveAppBundleId: String?
-    var isEnabled: Bool = true
-    var lastModified: Date = Date()
-    var openAppIfNeeded: Bool?
+public struct AppGroup: Identifiable, Codable, Equatable {
+    public let id: UUID
+    public var name: String
+    public var apps: [AppItem]
+    public var lastActiveAppBundleId: String?
+    public var isEnabled: Bool = true
+    public var lastModified: Date = Date()
+    public var openAppIfNeeded: Bool?
     
-    var shouldOpenAppIfNeeded: Bool {
+    public var shouldOpenAppIfNeeded: Bool {
         openAppIfNeeded ?? false
     }
     
@@ -19,7 +19,7 @@ struct AppGroup: Identifiable, Codable, Equatable {
     // This allows old data to be decoded without crashing
     private var shortcut: LegacyKeyboardShortcutData?
     
-    init(id: UUID = UUID(), name: String, apps: [AppItem] = [], isEnabled: Bool = true, openAppIfNeeded: Bool? = nil, lastModified: Date = Date()) {
+    public init(id: UUID = UUID(), name: String, apps: [AppItem] = [], isEnabled: Bool = true, openAppIfNeeded: Bool? = nil, lastModified: Date = Date()) {
         self.id = id
         self.name = name
         self.apps = apps
@@ -28,25 +28,25 @@ struct AppGroup: Identifiable, Codable, Equatable {
         self.lastModified = lastModified
     }
     
-    mutating func addApp(_ app: AppItem) {
+    public mutating func addApp(_ app: AppItem) {
         if !apps.contains(where: { $0.bundleIdentifier == app.bundleIdentifier }) {
             apps.append(app)
             lastModified = Date()
         }
     }
     
-    mutating func removeApp(_ app: AppItem) {
+    public mutating func removeApp(_ app: AppItem) {
         apps.removeAll { $0.id == app.id }
         lastModified = Date()
     }
     
-    mutating func moveApp(from source: IndexSet, to destination: Int) {
+    public mutating func moveApp(from source: IndexSet, to destination: Int) {
         apps.move(fromOffsets: source, toOffset: destination)
         lastModified = Date()
     }
     
     /// Get the KeyboardShortcuts.Name for this group
-    var shortcutName: KeyboardShortcuts.Name {
+    public var shortcutName: KeyboardShortcuts.Name {
         .forGroup(id)
     }
 }
@@ -59,7 +59,7 @@ private struct LegacyKeyboardShortcutData: Codable, Equatable {
 }
 
 // MARK: - MainActor helper for shortcut access
-extension AppGroup {
+public extension AppGroup {
     /// Check if this group has a shortcut assigned (must be called from main actor)
     @MainActor
     var hasShortcut: Bool {

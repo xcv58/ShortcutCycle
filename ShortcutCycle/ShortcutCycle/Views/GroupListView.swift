@@ -1,4 +1,5 @@
 import SwiftUI
+import ShortcutCycleCore
 import KeyboardShortcuts
 
 /// Sidebar view showing the list of all groups

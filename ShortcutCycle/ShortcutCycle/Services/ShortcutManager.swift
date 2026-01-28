@@ -1,6 +1,7 @@
 import Foundation
 import KeyboardShortcuts
 import AppKit
+import ShortcutCycleCore
 
 /// Manages global keyboard shortcuts using the KeyboardShortcuts library
 @MainActor
@@ -14,7 +15,12 @@ class ShortcutManager: ObservableObject {
     private var registeredGroupIds: Set<UUID> = []
     private var observedGroupIds: Set<UUID> = []
     
-    private init() {}
+    private init() {
+        // Observers
+        NotificationCenter.default.addObserver(forName: .shortcutsNeedUpdate, object: nil, queue: .main) { [weak self] _ in
+            self?.registerAllShortcuts()
+        }
+    }
     
     /// Register all shortcuts from the group store
     func registerAllShortcuts() {
