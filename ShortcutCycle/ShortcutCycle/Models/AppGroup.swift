@@ -9,16 +9,22 @@ struct AppGroup: Identifiable, Codable, Equatable {
     var lastActiveAppBundleId: String?
     var isEnabled: Bool = true
     var lastModified: Date = Date()
+    var openAppIfNeeded: Bool?
+    
+    var shouldOpenAppIfNeeded: Bool {
+        openAppIfNeeded ?? false
+    }
     
     // Legacy property for migration - will be ignored after first load
     // This allows old data to be decoded without crashing
     private var shortcut: LegacyKeyboardShortcutData?
     
-    init(id: UUID = UUID(), name: String, apps: [AppItem] = [], isEnabled: Bool = true, lastModified: Date = Date()) {
+    init(id: UUID = UUID(), name: String, apps: [AppItem] = [], isEnabled: Bool = true, openAppIfNeeded: Bool? = nil, lastModified: Date = Date()) {
         self.id = id
         self.name = name
         self.apps = apps
         self.isEnabled = isEnabled
+        self.openAppIfNeeded = openAppIfNeeded
         self.lastModified = lastModified
     }
     
