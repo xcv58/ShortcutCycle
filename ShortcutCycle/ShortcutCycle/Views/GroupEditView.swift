@@ -12,6 +12,7 @@ struct GroupEditView: View {
     
     @State private var groupName: String = ""
     @State private var draggingApp: AppItem?
+    @State private var isHovering: Bool = false
     
     private var group: AppGroup? {
         store.groups.first { $0.id == groupId }
@@ -26,8 +27,19 @@ struct GroupEditView: View {
                     Text("Group Name")
                         .font(.headline)
                     
-                    TextField("Enter group name", text: $groupName)
-                        .textFieldStyle(.roundedBorder)
+                    TextField("Untitled Group", text: $groupName)
+                        .font(.title2)
+                        .fontWeight(.medium)
+                        .textFieldStyle(.plain)
+                        .padding(.vertical, 4)
+                        .padding(.horizontal, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(isHovering ? Color.secondary.opacity(0.1) : Color.clear)
+                        )
+                        .onHover { hovering in
+                            isHovering = hovering
+                        }
                         .onChange(of: groupName) { newValue in
                             var updatedGroup = group
                             updatedGroup.name = newValue

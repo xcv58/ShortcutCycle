@@ -57,6 +57,7 @@ struct GroupSettingsView: View {
         } detail: {
             if let selectedId = store.selectedGroupId {
                 GroupEditView(groupId: selectedId)
+                    .id(selectedId)
             } else {
                 VStack(spacing: 16) {
                     Image(systemName: "folder")
