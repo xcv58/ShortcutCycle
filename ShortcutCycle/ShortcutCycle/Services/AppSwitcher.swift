@@ -259,7 +259,7 @@ class HUDWindow: NSPanel {
         self.backgroundColor = .clear
         self.isOpaque = false
         self.hasShadow = false
-        self.ignoresMouseEvents = true
+        self.ignoresMouseEvents = false // Enable mouse events for selection
     }
 }
 
@@ -270,8 +270,11 @@ class HUDManager: ObservableObject {
     private var window: HUDWindow?
     private var hideTimer: Timer?
     private var showTimer: Timer?
-    private var eventMonitor: Any?
+    private var eventMonitors: [Any] = []
+    private var appResignObserver: NSObjectProtocol?
     private var lastRequestTime: Date?
+    
+    private var currentItems: [HUDAppItem] = []
 
     private var previousFrontmostApp: NSRunningApplication?
     private var pendingActiveAppId: String?
@@ -344,12 +347,23 @@ class HUDManager: ObservableObject {
             window = HUDWindow()
         }
         
+        self.currentItems = items
         currentSelectedAppId = activeAppId
         
         guard let window = window else { return }
         
         // Update content
-        let hudView = AppSwitcherHUDView(apps: items, activeAppId: activeAppId, shortcutString: shortcut)
+        var hudView = AppSwitcherHUDView(apps: items, activeAppId: activeAppId, shortcutString: shortcut)
+        
+        // Handle selection from UI (click)
+        hudView.onSelect = { [weak self] selectedId in
+            Task { @MainActor in
+                // Set pending active app to the selected one, so hide() activates the correct app
+                self?.pendingActiveAppId = selectedId
+                self?.hide()
+            }
+        }
+        
         window.contentView = NSHostingView(rootView: hudView)
         
         // Resize and center
@@ -364,10 +378,15 @@ class HUDManager: ObservableObject {
     }
     
     private func startMonitoringModifiers(requiredModifiers: NSEvent.ModifierFlags?) {
-        // Stop existing monitor
-        if let monitor = eventMonitor {
+        // Stop existing monitors
+        for monitor in eventMonitors {
             NSEvent.removeMonitor(monitor)
-            eventMonitor = nil
+        }
+        eventMonitors.removeAll()
+        
+        if let observer = appResignObserver {
+            NotificationCenter.default.removeObserver(observer)
+            appResignObserver = nil
         }
         
         guard let required = requiredModifiers, !required.isEmpty else {
@@ -384,12 +403,68 @@ class HUDManager: ObservableObject {
         }
         
         // Monitor flags changed - use LOCAL monitor now since we are active
-        eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
+        let flagsMonitor = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
             Task { @MainActor in
                 self?.handleFlagsChanged(event: event, required: required)
             }
             return event
         }
+        eventMonitors.append(flagsMonitor)
+        
+        // Monitor Arrow Keys for navigation
+        let keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            return self?.handleKeyDown(event: event) ?? event
+        }
+        eventMonitors.append(keyMonitor)
+        
+        // Monitor Click Away (Focus Loss)
+        appResignObserver = NotificationCenter.default.addObserver(forName: NSApplication.didResignActiveNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.hide()
+        }
+    }
+    
+    private func handleKeyDown(event: NSEvent) -> NSEvent? {
+        guard let currentId = currentSelectedAppId,
+              let currentIndex = currentItems.firstIndex(where: { $0.id == currentId }) else {
+            return event
+        }
+        
+        var nextIndex = currentIndex
+        let count = currentItems.count
+        let isGrid = count > 9
+        let columns = 5
+        
+        switch event.keyCode {
+        case 123: // Left
+            nextIndex = (currentIndex - 1 + count) % count
+        case 124: // Right
+            nextIndex = (currentIndex + 1) % count
+        case 125: // Down
+            if isGrid {
+                let candidate = currentIndex + columns
+                if candidate < count { nextIndex = candidate }
+            } else {
+                 nextIndex = (currentIndex + 1) % count
+            }
+        case 126: // Up
+            if isGrid {
+                let candidate = currentIndex - columns
+                if candidate >= 0 { nextIndex = candidate }
+            } else {
+                nextIndex = (currentIndex - 1 + count) % count
+            }
+        default:
+            return event
+        }
+        
+        if nextIndex != currentIndex {
+            let newId = currentItems[nextIndex].id
+            presentHUD(items: currentItems, activeAppId: newId, shortcut: nil)
+            self.pendingActiveAppId = newId
+            return nil // Consume event
+        }
+        
+        return event
     }
     
     private func checkModifiersHeld(currentFlags: NSEvent.ModifierFlags, required: NSEvent.ModifierFlags) -> Bool {
@@ -424,9 +499,14 @@ class HUDManager: ObservableObject {
         }
         
         // Stop monitoring
-        if let monitor = eventMonitor {
+        for monitor in eventMonitors {
             NSEvent.removeMonitor(monitor)
-            eventMonitor = nil
+        }
+        eventMonitors.removeAll()
+        
+        if let observer = appResignObserver {
+            NotificationCenter.default.removeObserver(observer)
+            appResignObserver = nil
         }
     }
     
@@ -468,9 +548,14 @@ class HUDManager: ObservableObject {
         hideTimer = nil
         showTimer?.invalidate()
         showTimer = nil
-        if let monitor = eventMonitor {
+        for monitor in eventMonitors {
             NSEvent.removeMonitor(monitor)
-            eventMonitor = nil
+        }
+        eventMonitors.removeAll()
+        
+        if let observer = appResignObserver {
+            NotificationCenter.default.removeObserver(observer)
+            appResignObserver = nil
         }
     }
 }

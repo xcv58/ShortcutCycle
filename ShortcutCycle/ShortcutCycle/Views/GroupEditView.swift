@@ -18,8 +18,9 @@ struct GroupEditView: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            if let group = group {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                if let group = group {
                 // Group Name
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Group Name")
@@ -118,13 +119,14 @@ struct GroupEditView: View {
             }
         }
         .padding()
-        .onAppear {
-            loadGroupData()
-        }
-        .onChange(of: groupId) { _ in
-            loadGroupData()
-        }
     }
+    .onAppear {
+        loadGroupData()
+    }
+    .onChange(of: groupId) { _ in
+        loadGroupData()
+    }
+}
     
     private func loadGroupData() {
         if let group = group {

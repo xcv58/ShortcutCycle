@@ -10,6 +10,7 @@ struct MenuBarView: View {
     @Environment(\.openWindow) private var openWindow
     @StateObject private var launchAtLogin = LaunchAtLoginManager.shared
     @AppStorage("appTheme") private var appTheme: AppTheme = .system
+
     
     var selectedLanguage: String = "system"
     
@@ -28,17 +29,20 @@ struct MenuBarView: View {
             Divider()
             
             // Groups list
-            VStack(spacing: 0) {
-                if store.groups.isEmpty {
-                    Text("No groups created yet".localized(language: selectedLanguage))
-                        .foregroundColor(.secondary)
-                        .padding()
-                } else {
-                    ForEach(store.groups) { group in
-                        MenuBarGroupRow(group: group)
+            ScrollView {
+                VStack(spacing: 0) {
+                    if store.groups.isEmpty {
+                        Text("No groups created yet".localized(language: selectedLanguage))
+                            .foregroundColor(.secondary)
+                            .padding()
+                    } else {
+                        ForEach(store.groups) { group in
+                            MenuBarGroupRow(group: group)
+                        }
                     }
                 }
             }
+            .frame(minHeight: 400, maxHeight: 800) // Force at least 400pt, up to 800pt
             
             Divider()
             
@@ -46,8 +50,6 @@ struct MenuBarView: View {
             Toggle("Open at Login".localized(language: selectedLanguage), isOn: $launchAtLogin.isEnabled)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
-            
-            Divider()
             
             Divider()
                 .padding(.vertical, 4)
@@ -249,3 +251,5 @@ struct WindowAppearanceApplier: NSViewRepresentable {
         }
     }
 }
+
+
