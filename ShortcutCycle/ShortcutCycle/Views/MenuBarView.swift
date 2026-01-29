@@ -9,6 +9,7 @@ struct MenuBarView: View {
     @EnvironmentObject var store: GroupStore
     @Environment(\.openWindow) private var openWindow
     @StateObject private var launchAtLogin = LaunchAtLoginManager.shared
+    @AppStorage("appTheme") private var appTheme: AppTheme = .system
     
     var selectedLanguage: String = "system"
     
@@ -48,6 +49,42 @@ struct MenuBarView: View {
             
             Divider()
             
+            Divider()
+                .padding(.vertical, 4)
+            
+            // Theme selection
+            HStack(spacing: 0) {
+                Text("Appearance".localized(language: selectedLanguage))
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .padding(.leading, 14)
+                
+                Spacer()
+                
+                HStack(spacing: 2) {
+                    ForEach(AppTheme.allCases) { theme in
+                        Button {
+                            appTheme = theme
+                        } label: {
+                            Image(systemName: theme.icon)
+                                .font(.system(size: 14))
+                                .frame(width: 28, height: 28)
+                                .background(appTheme == theme ? Color.accentColor : Color.clear)
+                                .foregroundColor(appTheme == theme ? .white : .primary)
+                                .cornerRadius(6)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .help(theme.displayName.localized(language: selectedLanguage))
+                    }
+                }
+                .padding(.horizontal, 8)
+            }
+            .padding(.vertical, 4)
+            
+            Divider()
+                .padding(.vertical, 4)
+            
             // Settings button
             MenuBarButton(title: "Settings...".localized(language: selectedLanguage), icon: "gear") {
                 NSApp.activate(ignoringOtherApps: true)
@@ -60,10 +97,12 @@ struct MenuBarView: View {
         }
         .frame(width: 280)
         .background(VisualEffectView(material: .popover, blendingMode: .behindWindow))
+        .background(WindowAppearanceApplier(colorScheme: appTheme.colorScheme))
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("ToggleSettingsWindow"))) { _ in
              NSApp.activate(ignoringOtherApps: true)
              openWindow(id: "settings")
         }
+        .preferredColorScheme(appTheme.colorScheme)
     }
 }
 
@@ -181,4 +220,32 @@ struct VisualEffectView: NSViewRepresentable {
 #Preview {
     MenuBarView()
         .environmentObject(GroupStore.shared)
+}
+
+struct WindowAppearanceApplier: NSViewRepresentable {
+    var colorScheme: ColorScheme?
+    
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        DispatchQueue.main.async {
+            updateWindowAppearance(for: view)
+        }
+        return view
+    }
+    
+    func updateNSView(_ nsView: NSView, context: Context) {
+        DispatchQueue.main.async {
+            updateWindowAppearance(for: nsView)
+        }
+    }
+    
+    private func updateWindowAppearance(for view: NSView) {
+        guard let window = view.window else { return }
+        
+        if let colorScheme = colorScheme {
+            window.appearance = NSAppearance(named: colorScheme == .dark ? .darkAqua : .aqua)
+        } else {
+            window.appearance = nil // Reset to system
+        }
+    }
 }

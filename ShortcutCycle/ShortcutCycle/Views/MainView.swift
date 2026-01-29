@@ -9,6 +9,7 @@ import KeyboardShortcuts
 struct MainView: View {
     @EnvironmentObject var store: GroupStore
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
+    @AppStorage("appTheme") private var appTheme: AppTheme = .system
     @State private var selectedTab = "groups"
     
     var body: some View {
@@ -25,6 +26,7 @@ struct MainView: View {
                 }
                 .tag("general")
         }
+        .preferredColorScheme(appTheme.colorScheme)
         .frame(minWidth: 600, minHeight: 400)
         .onAppear {
             // No accessibility check needed
@@ -82,6 +84,7 @@ struct GeneralSettingsView: View {
     @EnvironmentObject var store: GroupStore
     @AppStorage("showHUD") private var showHUD = true
     @AppStorage("showShortcutInHUD") private var showShortcutInHUD = true
+    @AppStorage("appTheme") private var appTheme: AppTheme = .system
     @StateObject private var launchAtLogin = LaunchAtLoginManager.shared
     
     // Derived language for localization updates
@@ -161,6 +164,13 @@ struct GeneralSettingsView: View {
             Section {
                 Toggle("Open at Login".localized(language: selectedLanguage), isOn: $launchAtLogin.isEnabled)
                     .toggleStyle(.switch)
+                
+                Picker("Appearance".localized(language: selectedLanguage), selection: $appTheme) {
+                    ForEach(AppTheme.allCases) { theme in
+                        Text(theme.displayName.localized(language: selectedLanguage)).tag(theme)
+                    }
+                }
+                .pickerStyle(.segmented)
                 
                 Picker("Language".localized(language: selectedLanguage), selection: Binding(
                     get: { UserDefaults.standard.string(forKey: "selectedLanguage") ?? "system" },
