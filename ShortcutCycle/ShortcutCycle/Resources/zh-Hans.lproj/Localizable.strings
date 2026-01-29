@@ -67,3 +67,13 @@
 "Shortcuts" = "快捷键";
 
 "Add Group" = "添加群组";
+
+
+/* Appearance Section */
+"Appearance" = "外观";
+"Light" = "浅色";
+"Dark" = "深色";
+
+
+/* Additional Settings */
+"May require restart to take effect fully." = "可能需要重新启动才能完全生效。";

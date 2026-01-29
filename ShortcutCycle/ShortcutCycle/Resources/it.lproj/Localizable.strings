@@ -66,3 +66,13 @@
 "Settings Window" = "Finestra impostazioni";
 "Shortcuts" = "Comandi rapidi";
 "Add Group" = "Aggiungi gruppo";
+
+
+/* Appearance Section */
+"Appearance" = "Aspetto";
+"Light" = "Chiaro";
+"Dark" = "Scuro";
+
+
+/* Additional Settings */
+"May require restart to take effect fully." = "Potrebbe richiedere il riavvio per avere effetto.";

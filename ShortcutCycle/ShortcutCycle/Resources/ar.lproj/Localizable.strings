@@ -67,3 +67,13 @@
 "Shortcuts" = "اختصارات";
 
 "Add Group" = "إضافة مجموعة";
+
+
+/* Appearance Section */
+"Appearance" = "المظهر";
+"Light" = "فاتح";
+"Dark" = "داكن";
+
+
+/* Additional Settings */
+"May require restart to take effect fully." = "قد يتطلب إعادة التشغيل ليصبح ساري المفعول بالكامل.";

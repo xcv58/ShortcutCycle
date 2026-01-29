@@ -66,3 +66,15 @@
 "Shortcuts" = "Shortcuts";
 
 "Add Group" = "Add Group";
+
+
+/* Appearance Section */
+"Appearance" = "Appearance";
+"System Default" = "System Default";
+"Light" = "Light";
+"Dark" = "Dark";
+
+
+/* Additional Settings */
+"Language" = "Language";
+"May require restart to take effect fully." = "May require restart to take effect fully.";

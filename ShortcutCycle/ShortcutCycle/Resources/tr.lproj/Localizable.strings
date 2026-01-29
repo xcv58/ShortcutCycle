@@ -66,3 +66,13 @@
 "Settings Window" = "Ayarlar Penceresi";
 "Shortcuts" = "Kısayollar";
 "Add Group" = "Grup Ekle";
+
+
+/* Appearance Section */
+"Appearance" = "Görünüm";
+"Light" = "Açık";
+"Dark" = "Koyu";
+
+
+/* Additional Settings */
+"May require restart to take effect fully." = "Tam olarak etkili olması için yeniden başlatma gerekebilir.";

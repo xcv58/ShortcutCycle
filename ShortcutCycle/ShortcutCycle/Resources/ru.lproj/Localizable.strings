@@ -66,3 +66,13 @@
 "Settings Window" = "Окно настроек";
 "Shortcuts" = "Горячие клавиши";
 "Add Group" = "Добавить группу";
+
+
+/* Appearance Section */
+"Appearance" = "Оформление";
+"Light" = "Светлое";
+"Dark" = "Темное";
+
+
+/* Additional Settings */
+"May require restart to take effect fully." = "Может потребоваться перезапуск.";

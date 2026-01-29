@@ -66,3 +66,13 @@
 "Settings Window" = "설정 창";
 "Shortcuts" = "단축키";
 "Add Group" = "그룹 추가";
+
+
+/* Appearance Section */
+"Appearance" = "모양";
+"Light" = "라이트";
+"Dark" = "다크";
+
+
+/* Additional Settings */
+"May require restart to take effect fully." = "완전히 적용하려면 재시작이 필요할 수 있습니다.";

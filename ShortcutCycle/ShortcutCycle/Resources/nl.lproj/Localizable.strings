@@ -66,3 +66,13 @@
 "Settings Window" = "Instellingenvenster";
 "Shortcuts" = "Sneltoetsen";
 "Add Group" = "Groep toevoegen";
+
+
+/* Appearance Section */
+"Appearance" = "Weergave";
+"Light" = "Licht";
+"Dark" = "Donker";
+
+
+/* Additional Settings */
+"May require restart to take effect fully." = "Opnieuw opstarten is mogelijk vereist.";

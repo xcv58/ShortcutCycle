@@ -66,3 +66,13 @@
 "Settings Window" = "Fenêtre des paramètres";
 "Shortcuts" = "Raccourcis";
 "Add Group" = "Ajouter un groupe";
+
+
+/* Appearance Section */
+"Appearance" = "Apparence";
+"Light" = "Clair";
+"Dark" = "Sombre";
+
+
+/* Additional Settings */
+"May require restart to take effect fully." = "Un redémarrage peut être nécessaire pour prendre effet complètement.";

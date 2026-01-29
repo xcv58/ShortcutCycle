@@ -66,3 +66,13 @@
 "Settings Window" = "設定ウィンドウ";
 "Shortcuts" = "ショートカット";
 "Add Group" = "グループを追加";
+
+
+/* Appearance Section */
+"Appearance" = "外観";
+"Light" = "ライト";
+"Dark" = "ダーク";
+
+
+/* Additional Settings */
+"May require restart to take effect fully." = "完全に反映させるには再起動が必要な場合があります。";

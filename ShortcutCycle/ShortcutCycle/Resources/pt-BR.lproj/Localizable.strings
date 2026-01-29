@@ -66,3 +66,13 @@
 "Settings Window" = "Janela de Configurações";
 "Shortcuts" = "Atalhos";
 "Add Group" = "Adicionar grupo";
+
+
+/* Appearance Section */
+"Appearance" = "Aparência";
+"Light" = "Claro";
+"Dark" = "Escuro";
+
+
+/* Additional Settings */
+"May require restart to take effect fully." = "Pode ser necessário reiniciar para ter efeito total.";
