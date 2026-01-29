@@ -73,83 +73,146 @@ https://github.com/xcv58/ShortcutCycle/issues
 
 ## Screencast Scenarios
 
-### Scenario 1: Cycle Through Apps (Dark Theme)
-**Duration**: ~15 seconds
+We need **3 screencasts**, each **15-30 seconds** long. We will use `KeyCastr` to visualize keystrokes.
 
-1. Start with Safari open (Dark Mode enabled system-wide)
-2. Press `Option + 1` — HUD appears showing Safari → Chrome → Edge
-3. Press again — cycles to Chrome, HUD updates
-4. Press again — cycles to Edge
-5. Press again — loops back to Safari
-6. End shot: HUD fading out with elegant blur effect
+### Video 1: Core Switching & One-Line View
+**Theme**: Light (System)
+**Focus**: The "One Key Magic" and linear HUD layout.
 
-**Key Focus**: The beautiful dark HUD animation and smooth cycling
+1.  **Setup**: A group "Browsers" with 3-4 apps (Safari, Chrome, Arc/Edge).
+2.  **Action**:
+    *   Press `Option + 1` repeatedly to cycle through the apps.
+    *   Show the **Horizontal List (One Line)** HUD layout.
+    *   Demonstrate launching: Close one browser, cycle to it, and show it launching automatically.
+    *   *Overlay*: "Switch instantly" / "Auto-launch apps".
+
+### Video 2: Grid View, Arrow Keys & No-HUD Mode
+**Theme**: Dark
+**Focus**: Handling many apps, keyboard navigation, and "Pro" speed.
+
+1.  **Setup**: A group "Productivity" with 7+ apps (Notes, Calendar, Reminders, Mail, Music, etc.) to trigger the **Grid View**.
+2.  **Action**:
+    *   A. **Grid HUD**: Activate the group. Show the beautiful **Grid Layout** HUD.
+    *   B. **Arrow Keys**: Instead of cycling, use **Right/Down/Left arrow keys** to highlight different apps in the grid. Select one to switch.
+    *   C. **No-HUD High Speed**: Briefly open Menu Bar -> Toggle "Show HUD" **OFF**.
+    *   Press shortcut quickly -> Show instant switching (like Command+Tab but faster) without any overlay.
+    *   *Overlay*: "Grid View for power users" / "Silent Mode for speed".
+
+### Video 3: Customization & Localization
+**Theme**: Mixed
+**Focus**: Global support and personalization.
+
+1.  **Setup**: Settings Window open.
+2.  **Action**:
+    *   **Theme**: Toggle Appearance from System -> Dark -> Light. Show the UI adapting instantly.
+    *   **Language**: Change Language from English -> Japanese -> Chinese (Simplified).
+    *   Show the UI labels updating in real-time.
+    *   End with a shot of the Menu Bar dropdown showing the localized text.
 
 ---
-
-### Scenario 2: Quick Group Toggle via Menu Bar
-**Duration**: ~10 seconds
-
-1. Click the ShortcutCycle menu bar icon
-2. Show the dropdown with 3 groups: "Browsers", "Messaging", "Dev Tools"
-3. Toggle OFF "Messaging" group (switch changes to disabled state)
-4. Show the group greyed out
-5. Toggle it back ON
-6. Close the menu
-
-**Key Focus**: Fast, easy control without opening Settings
-
----
-
-### Scenario 3: Multi-Group Workflow
-**Duration**: ~15 seconds
-
-1. Press `Option + 1` — Browsers group cycles (Safari → Chrome)
-2. HUD disappears
-3. Press `Option + 2` — Messaging group activates (Slack → Discord → Messages)
-4. Cycle once to show Discord
-5. Press `Option + 1` again — instantly back to Browsers
-
-**Key Focus**: Multiple shortcuts for different contexts, seamless switching
 
 ## Screenshots Guide (Required)
 
-Follow this step-by-step guide to create high-quality screenshots that meet Apple's requirements (Mac 12.9" Display).
+**Goal**: 10 High-Quality Screenshots.
+**Resolution**: **2880 x 1800** (16:10 aspect ratio).
+**Strategy**: Alternating Light/Dark mode.
 
-### 1. Requirements
-*   **Resolution**: 16:10 aspect ratio. **2880 x 1800** pixels is the golden standard.
-*   **Format**: PNG (preferred) or High-Quality JPEG. No transparency (alpha channel).
-*   **Count**: 1-10 screenshots per localization.
+### Tools & setup
+Use the following **Hammerspoon script** to toggle window size to exactly 1440x900 (which is 2x density for 2880x1800):
 
-### 2. Strategy: Themes & Localization
-*   **Themes**: Capture your main scenarios in **Light Mode** and **Dark Mode**. Apple's App Store automatically shows the version matching the user's system setting if you provide both.
-*   **Languages**: You support 15 languages! To increase global conversion, capture the UI in key markets:
-    *   **English (US)**
-    *   **Japanese**
-    *   **Chinese (Simplified)**
-    *   **German** / **Spanish**
+```lua
+-- Shortcut to resize the focused window to 1440x900
+hs.hotkey.bind({"cmd", "alt", "ctrl"}, "R", function()
+  local win = hs.window.focusedWindow()
+  if win then
+    local f = win:frame()
+    -- Set the width and height
+    f.w = 1440
+    f.h = 900
+    -- Center the window
+    local screen = win:screen()
+    local max = screen:frame()
+    f.x = max.x + (max.w / 2) - (f.w / 2)
+    f.y = max.y + (max.h / 2) - (f.h / 2)
+    win:setFrame(f, 0)
+  else
+    hs.alert.show("No focused window found")
+  end
+end)
+```
 
-### 3. Step-by-Step Workflow
-1.  **Preparation**:
-    *   Set your wallpaper to distinct solid colors or the minimal macOS default (Abstract).
-    *   Hide your desktop icons (`defaults write com.apple.finder CreateDesktop false; killall Finder`).
-    *   Open **ShortcutCycle**.
-2.  **Capture Scenes**:
-    *   **Main Window**: Show the Group List populated with realistic example groups ("Coding", "Social", "Design").
-    *   **HUD Overlay (Critical)**: Use a timer (Open `Screenshot.app` > Options > Timer 5s) to capture the HUD mid-cycle. This explains your app's core value instantly.
-    *   **Settings UI**: Show generic settings or the Language Picker to hint at customization.
-    *   **Menu Bar**: Open the menu bar dropdown to show quick controls.
-3.  **Process**:
-    *   Ensure the window shadows are consistent (or remove them if putting into a device frame).
-    *   Resize strictly to **2880 x 1800** or **2560 x 1600**.
+### Shot List
 
-### 4. Recommended Tools (Mac Compatible)
-*   **Screenshots.pro** (Free/Web):
-    1.  Select "Desktop" or "MacBook" device.
-    2.  Upload screenshot.
-    3.  Download.
-*   **Canva** (Free/Paid):
-    *   Search for "Mac App Store Screenshot".
-    *   Drag your screenshot into the pre-made MacBook frames.
-    *   This is often the most reliable way to get the exact 2880x1800 dimension.
+**1. Main Window - Light Mode**
+*   **Content**: "Groups" sidebar selected. Populated with "Browsers", "Communication", "Dev".
+*   **Focus**: Clean UI, localized specific group names.
+
+**2. Main Window - Dark Mode**
+*   **Content**: Same as above but in Dark Mode. Maybe different active group.
+
+**3. HUD Overlay - Horizontal List (Light Mode)**
+*   **Action**: Mid-cycle on a group with 3 apps (e.g., Safari, Calendar, Mail).
+*   **Focus**: The sleek, floating one-line HUD.
+
+**4. HUD Overlay - Grid View (Dark Mode)**
+*   **Action**: Mid-cycle on a large group (8+ apps).
+*   **Focus**: The grid layout capability for power users.
+
+**5. Settings - General (Light Mode)**
+*   **Content**: General Settings tab.
+*   **Focus**: Showing "Launch at Login", "Theme", and "Language" options.
+
+**6. Settings - Group Editing (Dark Mode)**
+*   **Content**: Editing a specific group.
+*   **Focus**: Drag & drop UI (if visible/mockable), "Cycle through all apps" toggle.
+
+**7. Menu Bar Dropdown (Light/System)**
+*   **Content**: Menu bar icon clicked, showing the list of groups and toggles.
+*   **Focus**: Quick control access.
+
+**8. Action Shot - "Browsers" (Context)**
+*   **Content**: Desktop with Safari and Chrome visible, HUD overlay cycling between them.
+
+**9. Action Shot - "Coding" (Context)**
+*   **Content**: Visual Studio Code, Terminal, Simulator.
+*   **Focus**: Developer workflow.
+
+**10. Localization Showcase (Mosaic)**
+*   **Content**: A composite of the Settings window in 3-4 different languages (English, Japanese, German, Chinese).
+
+### Built-in Apps to Use
+For consistency and copyright safety, prefer macOS built-in apps or highly recognizable free tools.
+
+**Core macOS Apps:**
+*   **Productivity**: Safari, Mail, Calendar, Reminders, Notes, Freeform.
+*   **Media**: Music, TV, Podcasts, Photos, Books.
+*   **Info**: Maps, Weather, News, Stocks, Home, Find My.
+*   **Utilities**: System Settings, Terminal, Activity Monitor, Calculator, Voice Memos, TextEdit, Preview.
+*   **Communication**: Messages, FaceTime, Contacts.
+
+**Safe 3rd Party**: VS Code, Chrome, Firefox, Slack (common and generally safe for generic context).
+
+### Grouping Strategies for Screenshots
+Use these presets to create realistic looking groups for your screenshots:
+
+1.  **The "Office" Setup (Productivity)**
+    *   *Apps*: Mail, Calendar, Reminders, Notes, Pages.
+    *   *Vibe*: Professional, organized. Good for Light Mode.
+
+2.  **The "Creative" Setup (Visuals)**
+    *   *Apps*: Photos, Music, Freeform, Safari (showing a design site), Preview.
+    *   *Vibe*: Colorful, artistic.
+
+3.  **The "Developer" Setup (Power User)**
+    *   *Apps*: Terminal, VS Code (or Xcode icon), Activity Monitor, System Settings.
+    *   *Vibe*: Technical, dense information. Perfect for **Dark Mode** & **Grid View**.
+
+4.  **The "Social" Setup (Communication)**
+    *   *Apps*: Messages, FaceTime, Mail, Slack.
+    *   *Vibe*: Personal, connected.
+
+5.  **The "Dashboard" Setup (Information)**
+    *   *Apps*: Weather, Stocks, News, Home, Maps.
+    *   *Vibe*: Widget-like, data-heavy. Good for showing off the HUD icons.
+
 
