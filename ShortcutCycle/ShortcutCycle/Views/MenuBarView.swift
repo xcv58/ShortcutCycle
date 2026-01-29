@@ -14,6 +14,8 @@ struct MenuBarView: View {
     
     var selectedLanguage: String = "system"
     
+    @State private var listHeight: CGFloat = 0
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Header
@@ -41,8 +43,16 @@ struct MenuBarView: View {
                         }
                     }
                 }
+                .background(
+                    GeometryReader { geo in
+                         Color.clear.preference(key: HeightPreferenceKey.self, value: geo.size.height)
+                    }
+                )
             }
-            .frame(minHeight: 400, maxHeight: 800) // Force at least 400pt, up to 800pt
+            .frame(height: listHeight > 0 ? min(listHeight, 800) : nil)
+            .onPreferenceChange(HeightPreferenceKey.self) { height in
+                listHeight = height
+            }
             
             Divider()
             
@@ -249,6 +259,13 @@ struct WindowAppearanceApplier: NSViewRepresentable {
         } else {
             window.appearance = nil // Reset to system
         }
+    }
+}
+
+struct HeightPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
     }
 }
 

@@ -16,6 +16,6 @@ All notable changes to this project will be documented in this file.
 - **Metadata**: Updated App Store plans and metadata.
 
 ### Fixed
-- **Menu Bar**: Fixed height calculation to correctly display all groups.
+- **Menu Bar**: Implemented dynamic height to correctly fit content, preventing excessive height or layout collapse.
 - **Group Names**: Fixed an issue where group names could become stale.
 - **HUD Theme**: Ensure App Switcher HUD properly respects the selected theme.
