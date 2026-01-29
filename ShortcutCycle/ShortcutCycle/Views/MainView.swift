@@ -390,6 +390,7 @@ struct AppSwitcherHUDView: View {
     let shortcutString: String?
     
     @AppStorage("showShortcutInHUD") private var showShortcutInHUD = true
+    @AppStorage("appTheme") private var appTheme: AppTheme = .system
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
@@ -445,6 +446,8 @@ struct AppSwitcherHUDView: View {
             )
         }
         .padding(40)
+        .preferredColorScheme(appTheme.colorScheme)
+        .background(WindowAppearanceApplier(colorScheme: appTheme.colorScheme))
     }
 }
 
@@ -541,3 +544,4 @@ extension String {
         return NSLocalizedString(self, tableName: nil, bundle: bundle, value: "", comment: "")
     }
 }
+
