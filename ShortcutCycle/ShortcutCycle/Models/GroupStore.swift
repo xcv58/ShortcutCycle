@@ -3,7 +3,7 @@ import SwiftUI
 
 /// Observable store for managing app groups with persistence
 @MainActor
-public class GroupStore: NSObject, ObservableObject {
+public class GroupStore: ObservableObject {
     public static let shared = GroupStore()
     
     @Published public var groups: [AppGroup] = []
@@ -17,15 +17,12 @@ public class GroupStore: NSObject, ObservableObject {
     private var backupPending = false
     private let backupDebounceInterval: TimeInterval = 60.0
     private var lastBackupTime: Date = .distantPast
-    private var lastBackupDataHash: Int?
     
     // Internal init for testing
     init(userDefaults: UserDefaults = .standard) {
         self.userDefaults = userDefaults
-        super.init()
         loadGroups()
         setupTerminationObserver()
-        setupSettingsObservers()
     }
     
     /// Setup observer to backup when app terminates
@@ -43,40 +40,7 @@ public class GroupStore: NSObject, ObservableObject {
         }
     }
 
-    /// Setup observers for settings changes to trigger backup
-    private func setupSettingsObservers() {
-        let keys = ["showHUD", "showShortcutInHUD", "selectedLanguage", "appTheme"]
-        for key in keys {
-            userDefaults.addObserver(self, forKeyPath: key, options: [.new, .old], context: nil)
-        }
-    }
-    
-    public override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
-        if let key = keyPath, ["showHUD", "showShortcutInHUD", "selectedLanguage", "appTheme"].contains(key) {
-            // Check if value actually changed
-            if let change = change,
-               let oldValue = change[.oldKey],
-               let newValue = change[.newKey] {
-                // If values are equal, ignore this update
-                if (oldValue as? NSObject) == (newValue as? NSObject) {
-                    return
-                }
-            }
-            
-            Task { @MainActor in
-                scheduleAutoBackup()
-            }
-        } else {
-            super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
-        }
-    }
-    
-    deinit {
-        let keys = ["showHUD", "showShortcutInHUD", "selectedLanguage", "appTheme"]
-        for key in keys {
-            userDefaults.removeObserver(self, forKeyPath: key)
-        }
-    }
+
     
     /// Force immediate backup if one is pending (public for testing)
     public func flushPendingBackup() {
@@ -122,8 +86,11 @@ public class GroupStore: NSObject, ObservableObject {
     
     public func updateGroup(_ group: AppGroup) {
         if let index = groups.firstIndex(where: { $0.id == group.id }) {
-            groups[index] = group
-            saveGroups()
+            // Prevent redundant saves if group hasn't changed
+            if groups[index] != group {
+                groups[index] = group
+                saveGroups()
+            }
         }
     }
     
@@ -210,17 +177,11 @@ public class GroupStore: NSObject, ObservableObject {
         do {
             let data = try exportData()
             
-            if shouldSkipBackup(newData: data) {
-                return
-            }
-
             let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = "yyyy-MM-dd HH-mm-ss"
             let timestamp = dateFormatter.string(from: Date())
             let backupFile = backupDirectory.appendingPathComponent("backup \(timestamp).json")
             try data.write(to: backupFile, options: .atomic)
-            
-            lastBackupDataHash = data.hashValue
             
             // Cleanup: keep only the 100 most recent backups
             cleanupOldBackups(in: backupDirectory, keeping: 100)
@@ -242,46 +203,7 @@ public class GroupStore: NSObject, ObservableObject {
         return url
     }
     
-    /// Check if the new backup data is identical to previous backups
-    private func shouldSkipBackup(newData: Data) -> Bool {
-        // 1. Fast check: Hash comparison
-        if let lastHash = lastBackupDataHash, lastHash == newData.hashValue {
-             print("GroupStore: Skipping backup - Identical content (hash match)")
-             return true
-        }
-        
-        // 2. Robust check: Compare with latest file on disk (if no hash or hash mismatch but potential match)
-        // Only needed if we don't have a hash (e.g. first run)
-        if lastBackupDataHash == nil {
-            let fileManager = FileManager.default
-            let dir = backupDirectory
-            let existingFiles = try? fileManager.contentsOfDirectory(at: dir, includingPropertiesForKeys: [.creationDateKey])
-            
-            let backupFiles = existingFiles?.filter { $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json" } ?? []
-            
-            if let latest = backupFiles.sorted(by: { 
-                ((try? $0.resourceValues(forKeys: [.creationDateKey]))?.creationDate ?? .distantPast) >
-                ((try? $1.resourceValues(forKeys: [.creationDateKey]))?.creationDate ?? .distantPast)
-            }).first {
-                 if let existingData = try? Data(contentsOf: latest) {
-                     // Decode both to compare (ignoring exportDate)
-                     let decoder = JSONDecoder()
-                     decoder.dateDecodingStrategy = .iso8601
-                     
-                     if let existingExport = try? decoder.decode(SettingsExport.self, from: existingData),
-                        let currentExport = try? decoder.decode(SettingsExport.self, from: newData),
-                        currentExport.isContentEqual(to: existingExport) {
-                         
-                         lastBackupDataHash = newData.hashValue
-                         print("GroupStore: Skipping backup - Identical content (verified via decode)")
-                         return true
-                     }
-                 }
-            }
-        }
-        
-        return false
-    }
+
 
     
     /// Remove old backup files, keeping only the specified number of most recent ones
