@@ -98,5 +98,10 @@
 "Select a ShortcutCycle settings file" = "Bir ShortcutCycle ayar dosyası seçin";
 
 /* Group Edit View */
-"Cycle through all apps (open if needed)" = "Tüm uygulamalarda gezin (gerekirse aç)";
+"Cycling Mode" = "Geçiş modu";
+"Running apps only" = "Yalnızca çalışan uygulamalar";
+"All apps (open if needed)" = "Tüm uygulamalar (gerekirse aç)";
 "Displays the keyboard shortcut used to trigger the switch." = "Geçişi tetiklemek için kullanılan klavye kısayolunu gösterir.";
+"Opening…" = "Açılıyor…";
+"Cycle through all apps in the group. Non-running apps will be launched when selected." = "Gruptaki tüm uygulamalarda gezin. Çalışmayan uygulamalar seçildiğinde açılır.";
+"Cycle through running apps only. If no app is running, the first app in the group will be launched." = "Yalnızca çalışan uygulamalarda gezin. Hiçbir uygulama çalışmıyorsa gruptaki ilk uygulama açılır.";

@@ -98,5 +98,10 @@
 "Select a ShortcutCycle settings file" = "ShortcutCycle設定ファイルを選択";
 
 /* Group Edit View */
-"Cycle through all apps (open if needed)" = "すべてのアプリを循環（必要に応じて開く）";
+"Cycling Mode" = "サイクルモード";
+"Running apps only" = "実行中のアプリのみ";
+"All apps (open if needed)" = "すべてのアプリ（必要に応じて開く）";
 "Displays the keyboard shortcut used to trigger the switch." = "切り替えに使用するキーボードショートカットを表示します。";
+"Opening…" = "起動中…";
+"Cycle through all apps in the group. Non-running apps will be launched when selected." = "グループ内のすべてのアプリを循環します。実行中でないアプリは選択時に起動されます。";
+"Cycle through running apps only. If no app is running, the first app in the group will be launched." = "実行中のアプリのみを循環します。アプリが起動していない場合、グループの最初のアプリが起動されます。";

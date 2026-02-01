@@ -99,5 +99,10 @@
 "Select a ShortcutCycle settings file" = "اختر ملف إعدادات ShortcutCycle";
 
 /* Group Edit View */
-"Cycle through all apps (open if needed)" = "التنقل بين جميع التطبيقات (فتح إذا لزم الأمر)";
+"Cycling Mode" = "وضع التنقل";
+"Running apps only" = "التطبيقات المشغلة فقط";
+"All apps (open if needed)" = "جميع التطبيقات (فتح إذا لزم الأمر)";
 "Displays the keyboard shortcut used to trigger the switch." = "يعرض اختصار لوحة المفاتيح المستخدم لتشغيل التبديل.";
+"Opening…" = "جارٍ الفتح…";
+"Cycle through all apps in the group. Non-running apps will be launched when selected." = "التنقل بين جميع التطبيقات في المجموعة. سيتم فتح التطبيقات غير المشغلة عند اختيارها.";
+"Cycle through running apps only. If no app is running, the first app in the group will be launched." = "التنقل بين التطبيقات المشغلة فقط. إذا لم يكن أي تطبيق مشغلاً، سيتم فتح أول تطبيق في المجموعة.";

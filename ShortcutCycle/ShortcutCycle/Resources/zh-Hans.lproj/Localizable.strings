@@ -99,5 +99,10 @@
 "Select a ShortcutCycle settings file" = "选择 ShortcutCycle 设置文件";
 
 /* Group Edit View */
-"Cycle through all apps (open if needed)" = "循环所有应用（必要时打开）";
+"Cycling Mode" = "循环模式";
+"Running apps only" = "仅运行中的应用";
+"All apps (open if needed)" = "所有应用（必要时打开）";
 "Displays the keyboard shortcut used to trigger the switch." = "显示用于触发切换的键盘快捷键。";
+"Opening…" = "正在打开…";
+"Cycle through all apps in the group. Non-running apps will be launched when selected." = "循环组内所有应用。未运行的应用在选中时将被启动。";
+"Cycle through running apps only. If no app is running, the first app in the group will be launched." = "仅循环运行中的应用。如果没有应用在运行，将启动组内的第一个应用。";

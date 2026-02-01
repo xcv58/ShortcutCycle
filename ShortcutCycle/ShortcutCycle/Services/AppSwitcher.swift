@@ -25,11 +25,10 @@ class AppSwitcher: ObservableObject {
         let shortcutString = group.shortcutDisplayString
         
         let hudItems = getHUDItems(for: group)
-        
-        if hudItems.isEmpty { return }
-        
+
         // If "Open App If Needed" is enabled, we cycle through ALL apps
         if group.shouldOpenAppIfNeeded {
+             if hudItems.isEmpty { return }
              cycleAllApps(hudItems: hudItems, group: group, store: store, modifierFlags: modifierFlags, shortcut: shortcutString)
         } else {
              // Legacy behavior: Only cycle running apps
@@ -58,19 +57,21 @@ class AppSwitcher: ObservableObject {
             isHUDVisible: HUDManager.shared.isVisible
         )
 
-        // If no app from the group is running, always select the first app
+        // If no app from the group is running, launch the first app and show overlay
         if !hasRunningApp {
             nextAppId = hudItems[0].id
+            store.updateLastActiveApp(bundleId: nextAppId, for: group.id)
+            activateOrLaunch(bundleId: nextAppId)
+            if let item = hudItems.first {
+                LaunchOverlayManager.shared.show(appName: item.name, appIcon: item.icon)
+            }
+            return
         }
 
         // Perform Switch
         store.updateLastActiveApp(bundleId: nextAppId, for: group.id)
 
-        // We always want to activate the selected app eventually.
-        // If HUD is shown, it will handle activation lazily (on key release).
-        // If HUD is disabled, we activate immediately.
-        // Show HUD immediately (skip delay) when no app from the group is running.
-        let hudShown = showHUD(items: hudItems, activeAppId: nextAppId, modifierFlags: modifierFlags, shortcut: shortcut, shouldActivate: true, immediate: !hasRunningApp)
+        let hudShown = showHUD(items: hudItems, activeAppId: nextAppId, modifierFlags: modifierFlags, shortcut: shortcut, shouldActivate: true)
 
         if !hudShown {
              activateOrLaunch(bundleId: nextAppId)
@@ -83,17 +84,14 @@ class AppSwitcher: ObservableObject {
         let runningItems = hudItems.filter { $0.isRunning }
         
         if runningItems.isEmpty {
-            // No apps running - launch the first app and show HUD immediately
+            // No apps running - launch the first app and show launching overlay
             if let firstApp = group.apps.first {
                 launchApp(bundleIdentifier: firstApp.bundleIdentifier)
                 store.updateLastActiveApp(bundleId: firstApp.bundleIdentifier, for: group.id)
-                let firstItem = HUDAppItem(
-                    id: firstApp.bundleIdentifier,
-                    name: firstApp.name,
-                    icon: getIcon(for: firstApp),
-                    isRunning: false
+                LaunchOverlayManager.shared.show(
+                    appName: firstApp.name,
+                    appIcon: getIcon(for: firstApp)
                 )
-                showHUD(items: [firstItem], activeAppId: firstApp.bundleIdentifier, modifierFlags: modifierFlags, shortcut: shortcut, shouldActivate: false, immediate: true)
             }
             return
         }
@@ -255,6 +253,125 @@ class AppSwitcher: ObservableObject {
                 print("Failed to launch app: \(error)")
             }
         }
+    }
+}
+
+// MARK: - Launch Overlay
+
+@MainActor
+class LaunchOverlayManager {
+    static let shared = LaunchOverlayManager()
+
+    private var window: NSPanel?
+    private var dismissTimer: Timer?
+
+    private init() {}
+
+    func show(appName: String, appIcon: NSImage?) {
+        dismiss()
+
+        let panel = NSPanel(
+            contentRect: .zero,
+            styleMask: [.borderless, .nonactivatingPanel],
+            backing: .buffered,
+            defer: false
+        )
+        panel.isFloatingPanel = true
+        panel.level = .floating
+        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        panel.backgroundColor = .clear
+        panel.isOpaque = false
+        panel.hasShadow = false
+        panel.ignoresMouseEvents = true
+
+        let view = NSHostingView(rootView: LaunchOverlayView(appName: appName, appIcon: appIcon))
+        panel.contentView = view
+
+        if let screen = NSScreen.main {
+            let size = view.fittingSize
+            let x = screen.visibleFrame.midX - size.width / 2
+            let y = screen.visibleFrame.midY - size.height / 2
+            panel.setFrame(NSRect(x: x, y: y, width: size.width, height: size.height), display: true)
+        }
+
+        panel.alphaValue = 0
+        panel.orderFront(nil)
+
+        self.window = panel
+
+        // Fade in
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.2
+            panel.animator().alphaValue = 1.0
+        }
+
+        // Auto-dismiss after 1.0s with fade out
+        dismissTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { [weak self] _ in
+            Task { @MainActor in
+                self?.dismiss()
+            }
+        }
+    }
+
+    func dismiss() {
+        dismissTimer?.invalidate()
+        dismissTimer = nil
+
+        guard let panel = window else { return }
+
+        NSAnimationContext.runAnimationGroup({ context in
+            context.duration = 0.4
+            panel.animator().alphaValue = 0
+        }, completionHandler: { [weak self] in
+            panel.orderOut(nil)
+            self?.window = nil
+        })
+    }
+}
+
+struct LaunchOverlayView: View {
+    let appName: String
+    let appIcon: NSImage?
+    @AppStorage("appTheme") private var appTheme: AppTheme = .system
+    @Environment(\.colorScheme) var colorScheme
+
+    var body: some View {
+        VStack(spacing: 16) {
+            if let icon = appIcon {
+                Image(nsImage: icon)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 64, height: 64)
+            }
+
+            VStack(spacing: 4) {
+                Text(appName)
+                    .font(.title3)
+                    .fontWeight(.bold)
+                    .fontDesign(.rounded)
+
+                Text("Opening…")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.horizontal, 32)
+        .padding(.vertical, 24)
+        .background(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(colorScheme == .dark ? Color.black.opacity(0.3) : Color.white.opacity(0.3))
+                )
+                .shadow(color: .black.opacity(0.2), radius: 20, x: 0, y: 10)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .stroke(Color.primary.opacity(0.1), lineWidth: 1)
+        )
+        .padding(40)
+        .preferredColorScheme(appTheme.colorScheme)
     }
 }
 
@@ -537,7 +654,7 @@ class HUDManager: ObservableObject {
     
     private func scheduleAutoHide() {
         hideTimer?.invalidate()
-        hideTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: false) { [weak self] _ in
+        hideTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { [weak self] _ in
             Task { @MainActor in
                 self?.hide()
             }

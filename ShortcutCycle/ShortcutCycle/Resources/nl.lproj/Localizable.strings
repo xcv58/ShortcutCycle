@@ -98,5 +98,10 @@
 "Select a ShortcutCycle settings file" = "Selecteer een ShortcutCycle-instellingenbestand";
 
 /* Group Edit View */
-"Cycle through all apps (open if needed)" = "Door alle apps bladeren (openen indien nodig)";
+"Cycling Mode" = "Wisselmodus";
+"Running apps only" = "Alleen actieve apps";
+"All apps (open if needed)" = "Alle apps (openen indien nodig)";
 "Displays the keyboard shortcut used to trigger the switch." = "Toont de sneltoets die wordt gebruikt om te schakelen.";
+"Opening…" = "Openen…";
+"Cycle through all apps in the group. Non-running apps will be launched when selected." = "Alle apps in de groep doorlopen. Niet-actieve apps worden geopend bij selectie.";
+"Cycle through running apps only. If no app is running, the first app in the group will be launched." = "Alleen actieve apps doorlopen. Als geen app actief is, wordt de eerste app van de groep geopend.";
