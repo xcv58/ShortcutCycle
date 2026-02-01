@@ -3,7 +3,7 @@ import SwiftUI
 
 /// Observable store for managing app groups with persistence
 @MainActor
-public class GroupStore: ObservableObject {
+public class GroupStore: NSObject, ObservableObject {
     public static let shared = GroupStore()
     
     @Published public var groups: [AppGroup] = []
@@ -15,13 +15,17 @@ public class GroupStore: ObservableObject {
     // Debounce timer for auto-backup (60 seconds)
     private var backupTimer: Timer?
     private var backupPending = false
-    private let backupDebounceInterval: TimeInterval = 10.0
+    private let backupDebounceInterval: TimeInterval = 60.0
+    private var lastBackupTime: Date = .distantPast
+    private var lastBackupDataHash: Int?
     
     // Internal init for testing
     init(userDefaults: UserDefaults = .standard) {
         self.userDefaults = userDefaults
+        super.init()
         loadGroups()
         setupTerminationObserver()
+        setupSettingsObservers()
     }
     
     /// Setup observer to backup when app terminates
@@ -36,6 +40,41 @@ public class GroupStore: ObservableObject {
             MainActor.assumeIsolated {
                 self.flushPendingBackup()
             }
+        }
+    }
+
+    /// Setup observers for settings changes to trigger backup
+    private func setupSettingsObservers() {
+        let keys = ["showHUD", "showShortcutInHUD", "selectedLanguage", "appTheme"]
+        for key in keys {
+            userDefaults.addObserver(self, forKeyPath: key, options: [.new, .old], context: nil)
+        }
+    }
+    
+    public override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        if let key = keyPath, ["showHUD", "showShortcutInHUD", "selectedLanguage", "appTheme"].contains(key) {
+            // Check if value actually changed
+            if let change = change,
+               let oldValue = change[.oldKey],
+               let newValue = change[.newKey] {
+                // If values are equal, ignore this update
+                if (oldValue as? NSObject) == (newValue as? NSObject) {
+                    return
+                }
+            }
+            
+            Task { @MainActor in
+                scheduleAutoBackup()
+            }
+        } else {
+            super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
+        }
+    }
+    
+    deinit {
+        let keys = ["showHUD", "showShortcutInHUD", "selectedLanguage", "appTheme"]
+        for key in keys {
+            userDefaults.removeObserver(self, forKeyPath: key)
         }
     }
     
@@ -141,6 +180,14 @@ public class GroupStore: ObservableObject {
     private func scheduleAutoBackup() {
         backupPending = true
         
+        // Immediate save if enough time has passed since last backup and no debounce is active
+        // This ensures the first change saves immediately, but subsequent rapid changes are debounced
+        let timeSinceLastBackup = Date().timeIntervalSince(lastBackupTime)
+        if backupTimer == nil && timeSinceLastBackup > backupDebounceInterval {
+            performAutoBackup()
+            return
+        }
+        
         // Cancel any existing timer
         backupTimer?.invalidate()
         backupTimer = nil
@@ -149,6 +196,7 @@ public class GroupStore: ObservableObject {
         backupTimer = Timer(timeInterval: backupDebounceInterval, repeats: false) { [weak self] _ in
             Task { @MainActor in
                 self?.performAutoBackup()
+                self?.backupTimer = nil
             }
         }
         RunLoop.main.add(backupTimer!, forMode: .common)
@@ -157,27 +205,84 @@ public class GroupStore: ObservableObject {
     /// Actually write the backup file to disk
     private func performAutoBackup() {
         backupPending = false
+        lastBackupTime = Date()
         
         do {
             let data = try exportData()
-            let fileManager = FileManager.default
-            let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-            // Use separate directory for tests to avoid overwriting real backups
-            let dirName = userDefaults == .standard ? "ShortcutCycle" : "ShortcutCycle-Test"
-            let backupDir = appSupport.appendingPathComponent(dirName, isDirectory: true)
-            try fileManager.createDirectory(at: backupDir, withIntermediateDirectories: true)
+            
+            if shouldSkipBackup(newData: data) {
+                return
+            }
+
             let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = "yyyy-MM-dd HH-mm-ss"
             let timestamp = dateFormatter.string(from: Date())
-            let backupFile = backupDir.appendingPathComponent("backup \(timestamp).json")
+            let backupFile = backupDirectory.appendingPathComponent("backup \(timestamp).json")
             try data.write(to: backupFile, options: .atomic)
             
+            lastBackupDataHash = data.hashValue
+            
             // Cleanup: keep only the 100 most recent backups
-            cleanupOldBackups(in: backupDir, keeping: 100)
+            cleanupOldBackups(in: backupDirectory, keeping: 100)
         } catch {
             print("GroupStore: Auto-backup failed: \(error)")
         }
     }
+    
+    /// Directory where backups are stored
+    private var backupDirectory: URL {
+        let fileManager = FileManager.default
+        let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        let dirName = userDefaults == .standard ? "ShortcutCycle" : "ShortcutCycle-Test"
+        let url = appSupport.appendingPathComponent(dirName, isDirectory: true)
+        
+        // Ensure directory exists
+        try? fileManager.createDirectory(at: url, withIntermediateDirectories: true)
+        
+        return url
+    }
+    
+    /// Check if the new backup data is identical to previous backups
+    private func shouldSkipBackup(newData: Data) -> Bool {
+        // 1. Fast check: Hash comparison
+        if let lastHash = lastBackupDataHash, lastHash == newData.hashValue {
+             print("GroupStore: Skipping backup - Identical content (hash match)")
+             return true
+        }
+        
+        // 2. Robust check: Compare with latest file on disk (if no hash or hash mismatch but potential match)
+        // Only needed if we don't have a hash (e.g. first run)
+        if lastBackupDataHash == nil {
+            let fileManager = FileManager.default
+            let dir = backupDirectory
+            let existingFiles = try? fileManager.contentsOfDirectory(at: dir, includingPropertiesForKeys: [.creationDateKey])
+            
+            let backupFiles = existingFiles?.filter { $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json" } ?? []
+            
+            if let latest = backupFiles.sorted(by: { 
+                ((try? $0.resourceValues(forKeys: [.creationDateKey]))?.creationDate ?? .distantPast) >
+                ((try? $1.resourceValues(forKeys: [.creationDateKey]))?.creationDate ?? .distantPast)
+            }).first {
+                 if let existingData = try? Data(contentsOf: latest) {
+                     // Decode both to compare (ignoring exportDate)
+                     let decoder = JSONDecoder()
+                     decoder.dateDecodingStrategy = .iso8601
+                     
+                     if let existingExport = try? decoder.decode(SettingsExport.self, from: existingData),
+                        let currentExport = try? decoder.decode(SettingsExport.self, from: newData),
+                        currentExport.isContentEqual(to: existingExport) {
+                         
+                         lastBackupDataHash = newData.hashValue
+                         print("GroupStore: Skipping backup - Identical content (verified via decode)")
+                         return true
+                     }
+                 }
+            }
+        }
+        
+        return false
+    }
+
     
     /// Remove old backup files, keeping only the specified number of most recent ones
     private func cleanupOldBackups(in directory: URL, keeping maxCount: Int) {

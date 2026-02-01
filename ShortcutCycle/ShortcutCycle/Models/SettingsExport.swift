@@ -13,7 +13,7 @@ public struct ShortcutData: Codable, Equatable {
 }
 
 /// App preferences stored in @AppStorage
-public struct AppSettings: Codable {
+public struct AppSettings: Codable, Equatable {
     public var showHUD: Bool
     public var showShortcutInHUD: Bool
     public var selectedLanguage: String?
@@ -115,6 +115,16 @@ public struct SettingsExport: Codable {
         } catch {
             return .failure(.invalidFormat(error.localizedDescription))
         }
+    }
+
+
+    /// Check if two exports have the same content (ignoring exportDate)
+    public func isContentEqual(to other: SettingsExport) -> Bool {
+        // Compare groups, settings, and shortcuts
+        // Note: AppGroup is Equatable (includes lastModified so modifying group triggers save)
+        return self.groups == other.groups &&
+               self.settings == other.settings &&
+               self.shortcuts == other.shortcuts
     }
 }
 
