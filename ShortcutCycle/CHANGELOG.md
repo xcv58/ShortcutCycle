@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2] - 2026-02-01
+
+### Added
+- **macOS 14+ Support**: Bumped minimum requirement to macOS 14.0 for modern API usage.
+
+### Changed
+- **Refactoring**: Major code restructuring for better modularity and maintainability.
+- **CI/Build**: Fixed CI build process and improved test coverage.
+
 ## [1.1] - 2026-01-29
 
 ### Added
