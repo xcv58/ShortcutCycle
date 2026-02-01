@@ -298,9 +298,13 @@ struct GeneralSettingsView: View {
     // MARK: - Export/Import Actions
     
     private func exportSettings() {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd HH-mm-ss"
+        let timestamp = dateFormatter.string(from: Date())
+        
         let savePanel = NSSavePanel()
         savePanel.allowedContentTypes = [.json]
-        savePanel.nameFieldStringValue = "ShortcutCycle-Settings.json"
+        savePanel.nameFieldStringValue = "ShortcutCycle-Settings \(timestamp).json"
         savePanel.title = "Export Settings".localized(language: selectedLanguage)
         savePanel.message = "Choose where to save your settings".localized(language: selectedLanguage)
         

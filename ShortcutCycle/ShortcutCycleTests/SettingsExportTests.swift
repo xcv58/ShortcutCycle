@@ -153,18 +153,24 @@ final class SettingsExportTests: XCTestCase {
 
         // Trigger a save by adding a group
         _ = store.addGroup(name: "Backup Test")
+        
+        // Flush the debounced backup immediately (normally waits 60 seconds)
+        store.flushPendingBackup()
 
-        // Check backup file exists
+        // Check backup file exists in test directory
         let fileManager = FileManager.default
         let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        let backupFile = appSupport
-            .appendingPathComponent("ShortcutCycle", isDirectory: true)
-            .appendingPathComponent("backup.json")
-
-        XCTAssertTrue(fileManager.fileExists(atPath: backupFile.path))
-
-        // Verify it's valid JSON
-        let data = try Data(contentsOf: backupFile)
+        let backupDir = appSupport.appendingPathComponent("ShortcutCycle-Test", isDirectory: true)
+        
+        // Find the most recent backup file (has timestamp in name)
+        let files = try fileManager.contentsOfDirectory(at: backupDir, includingPropertiesForKeys: nil)
+        let backupFiles = files.filter { $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json" }
+        
+        XCTAssertFalse(backupFiles.isEmpty, "No backup files found")
+        
+        // Verify the most recent one is valid JSON
+        let latestBackup = backupFiles.sorted { $0.lastPathComponent > $1.lastPathComponent }.first!
+        let data = try Data(contentsOf: latestBackup)
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         let export = try decoder.decode(SettingsExport.self, from: data)

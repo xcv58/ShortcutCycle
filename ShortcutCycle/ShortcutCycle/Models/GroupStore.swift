@@ -12,10 +12,39 @@ public class GroupStore: ObservableObject {
     private let saveKey = "ShortcutCycle.Groups"
     private let userDefaults: UserDefaults
     
+    // Debounce timer for auto-backup (60 seconds)
+    private var backupTimer: Timer?
+    private var backupPending = false
+    private let backupDebounceInterval: TimeInterval = 10.0
+    
     // Internal init for testing
     init(userDefaults: UserDefaults = .standard) {
         self.userDefaults = userDefaults
         loadGroups()
+        setupTerminationObserver()
+    }
+    
+    /// Setup observer to backup when app terminates
+    private func setupTerminationObserver() {
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.willTerminateNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            // Must run synchronously on main thread before app exits
+            guard let self = self else { return }
+            MainActor.assumeIsolated {
+                self.flushPendingBackup()
+            }
+        }
+    }
+    
+    /// Force immediate backup if one is pending (public for testing)
+    public func flushPendingBackup() {
+        guard backupPending else { return }
+        backupTimer?.invalidate()
+        backupTimer = nil
+        performAutoBackup()
     }
     
     public var selectedGroup: AppGroup? {
@@ -102,24 +131,77 @@ public class GroupStore: ObservableObject {
         do {
             let data = try JSONEncoder().encode(groups)
             userDefaults.set(data, forKey: saveKey)
-            autoBackup()
+            scheduleAutoBackup()
         } catch {
             print("GroupStore: Failed to save groups: \(error)")
         }
     }
 
-    /// Write a full settings backup to Application Support
-    private func autoBackup() {
+    /// Schedule a debounced auto-backup (resets timer on each call)
+    private func scheduleAutoBackup() {
+        backupPending = true
+        
+        // Cancel any existing timer
+        backupTimer?.invalidate()
+        backupTimer = nil
+        
+        // Schedule new backup after debounce interval on main run loop
+        backupTimer = Timer(timeInterval: backupDebounceInterval, repeats: false) { [weak self] _ in
+            Task { @MainActor in
+                self?.performAutoBackup()
+            }
+        }
+        RunLoop.main.add(backupTimer!, forMode: .common)
+    }
+    
+    /// Actually write the backup file to disk
+    private func performAutoBackup() {
+        backupPending = false
+        
         do {
             let data = try exportData()
             let fileManager = FileManager.default
             let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-            let backupDir = appSupport.appendingPathComponent("ShortcutCycle", isDirectory: true)
+            // Use separate directory for tests to avoid overwriting real backups
+            let dirName = userDefaults == .standard ? "ShortcutCycle" : "ShortcutCycle-Test"
+            let backupDir = appSupport.appendingPathComponent(dirName, isDirectory: true)
             try fileManager.createDirectory(at: backupDir, withIntermediateDirectories: true)
-            let backupFile = backupDir.appendingPathComponent("backup.json")
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyy-MM-dd HH-mm-ss"
+            let timestamp = dateFormatter.string(from: Date())
+            let backupFile = backupDir.appendingPathComponent("backup \(timestamp).json")
             try data.write(to: backupFile, options: .atomic)
+            
+            // Cleanup: keep only the 100 most recent backups
+            cleanupOldBackups(in: backupDir, keeping: 100)
         } catch {
             print("GroupStore: Auto-backup failed: \(error)")
+        }
+    }
+    
+    /// Remove old backup files, keeping only the specified number of most recent ones
+    private func cleanupOldBackups(in directory: URL, keeping maxCount: Int) {
+        do {
+            let fileManager = FileManager.default
+            let files = try fileManager.contentsOfDirectory(at: directory, includingPropertiesForKeys: [.creationDateKey])
+            let backupFiles = files.filter { $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json" }
+            
+            guard backupFiles.count > maxCount else { return }
+            
+            // Sort by creation date in descending order (newest first)
+            let sortedFiles = backupFiles.sorted { file1, file2 in
+                let date1 = (try? file1.resourceValues(forKeys: [.creationDateKey]))?.creationDate ?? .distantPast
+                let date2 = (try? file2.resourceValues(forKeys: [.creationDateKey]))?.creationDate ?? .distantPast
+                return date1 > date2
+            }
+            
+            // Delete files beyond the max count
+            let filesToDelete = sortedFiles.dropFirst(maxCount)
+            for file in filesToDelete {
+                try fileManager.removeItem(at: file)
+            }
+        } catch {
+            print("GroupStore: Backup cleanup failed: \(error)")
         }
     }
     
