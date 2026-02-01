@@ -1,5 +1,9 @@
 import XCTest
+#if canImport(ShortcutCycleCore)
 @testable import ShortcutCycleCore
+#else
+@testable import ShortcutCycle
+#endif
 
 final class AppGroupTests: XCTestCase {
     

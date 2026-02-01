@@ -76,3 +76,27 @@
 
 /* Additional Settings */
 "May require restart to take effect fully." = "Tam olarak etkili olması için yeniden başlatma gerekebilir.";
+
+/* Clipboard-related strings */
+"Copy to Clipboard" = "Panoya Kopyala";
+"Paste from Clipboard" = "Panodan Yapıştır";
+"No text found on clipboard." = "Panoda metin bulunamadı.";
+"Clipboard content is not valid text." = "Pano içeriği geçerli bir metin değil.";
+"Clipboard Error" = "Pano Hatası";
+"Paste Settings?" = "Ayarlar Yapıştırılsın mı?";
+"Your settings have been imported from clipboard." = "Ayarlarınız panodan içe aktarıldı.";
+"This will import %d group(s) and replace all current settings. This action cannot be undone." = "Bu, %d grup içe aktaracak ve tüm mevcut ayarları değiştirecektir. Bu işlem geri alınamaz.";
+
+/* Backup section labels */
+"File Export/Import" = "Dosya Dışa/İçe Aktar";
+"Clipboard Sync" = "Pano Senkronizasyonu";
+"Save to or load from a JSON file." = "Bir JSON dosyasına kaydet veya yükle.";
+"Use Universal Clipboard to sync between Macs." = "Mac'ler arasında senkronize etmek için Evrensel Panoyu kullanın.";
+"Export Settings" = "Ayarları Dışa Aktar";
+"Import Settings" = "Ayarları İçe Aktar";
+"Choose where to save your settings" = "Ayarlarınızı nereye kaydedeceğinizi seçin";
+"Select a ShortcutCycle settings file" = "Bir ShortcutCycle ayar dosyası seçin";
+
+/* Group Edit View */
+"Cycle through all apps (open if needed)" = "Tüm uygulamalarda gezin (gerekirse aç)";
+"Displays the keyboard shortcut used to trigger the switch." = "Geçişi tetiklemek için kullanılan klavye kısayolunu gösterir.";

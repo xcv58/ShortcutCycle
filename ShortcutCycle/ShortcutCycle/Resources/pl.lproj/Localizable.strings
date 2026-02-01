@@ -76,3 +76,27 @@
 
 /* Additional Settings */
 "May require restart to take effect fully." = "Może wymagać ponownego uruchomienia.";
+
+/* Clipboard-related strings */
+"Copy to Clipboard" = "Kopiuj do schowka";
+"Paste from Clipboard" = "Wklej ze schowka";
+"No text found on clipboard." = "Nie znaleziono tekstu w schowku.";
+"Clipboard content is not valid text." = "Zawartość schowka nie jest prawidłowym tekstem.";
+"Clipboard Error" = "Błąd schowka";
+"Paste Settings?" = "Wkleić ustawienia?";
+"Your settings have been imported from clipboard." = "Twoje ustawienia zostały zaimportowane ze schowka.";
+"This will import %d group(s) and replace all current settings. This action cannot be undone." = "To zaimportuje %d grupę/-y i zastąpi wszystkie obecne ustawienia. Tej operacji nie można cofnąć.";
+
+/* Backup section labels */
+"File Export/Import" = "Eksport/Import pliku";
+"Clipboard Sync" = "Synchronizacja schowka";
+"Save to or load from a JSON file." = "Zapisz do lub wczytaj z pliku JSON.";
+"Use Universal Clipboard to sync between Macs." = "Użyj Uniwersalnego Schowka do synchronizacji między Makami.";
+"Export Settings" = "Eksportuj ustawienia";
+"Import Settings" = "Importuj ustawienia";
+"Choose where to save your settings" = "Wybierz, gdzie zapisać ustawienia";
+"Select a ShortcutCycle settings file" = "Wybierz plik ustawień ShortcutCycle";
+
+/* Group Edit View */
+"Cycle through all apps (open if needed)" = "Przełączaj wszystkie aplikacje (otwórz jeśli potrzeba)";
+"Displays the keyboard shortcut used to trigger the switch." = "Wyświetla skrót klawiszowy używany do przełączania.";

@@ -98,6 +98,14 @@ struct GeneralSettingsView: View {
     @State private var showImportSuccess = false
     @State private var errorMessage = ""
     @State private var pendingImportURL: URL?
+
+    // Clipboard state
+    @State private var showClipboardImportConfirmation = false
+    @State private var showClipboardImportSuccess = false
+    @State private var showClipboardError = false
+    @State private var clipboardErrorMessage = ""
+    @State private var clipboardImportSummary = ""
+    @State private var pendingClipboardExport: SettingsExport?
     
     var body: some View {
         Form {
@@ -196,19 +204,46 @@ struct GeneralSettingsView: View {
             }
             
             Section {
-                HStack {
-                    Button("Export Settings...".localized(language: selectedLanguage)) {
-                        exportSettings()
+                // Sub-section 1: File-based backup
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("File Export/Import".localized(language: selectedLanguage), systemImage: "doc.badge.gearshape")
+                        .font(.caption.weight(.medium))
+                        .foregroundColor(.secondary)
+                    HStack {
+                        Button("Export Settings...".localized(language: selectedLanguage)) {
+                            exportSettings()
+                        }
+
+                        Button("Import Settings...".localized(language: selectedLanguage)) {
+                            importSettings()
+                        }
                     }
-                    
-                    Button("Import Settings...".localized(language: selectedLanguage)) {
-                        importSettings()
+                    Text("Save to or load from a JSON file.".localized(language: selectedLanguage))
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+                
+                
+                // Sub-section 2: Clipboard-based sync
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("Clipboard Sync".localized(language: selectedLanguage), systemImage: "doc.on.clipboard")
+                        .font(.caption.weight(.medium))
+                        .foregroundColor(.secondary)
+                    HStack {
+                        Button("Copy to Clipboard".localized(language: selectedLanguage)) {
+                            copySettingsToClipboard()
+                        }
+
+                        Button("Paste from Clipboard".localized(language: selectedLanguage)) {
+                            pasteSettingsFromClipboard()
+                        }
                     }
+                    Text("Use Universal Clipboard to sync between Macs.".localized(language: selectedLanguage))
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
                 }
             } header: {
                 Text("Backup & Restore".localized(language: selectedLanguage))
-            } footer: {
-                Text("Export your groups and settings to a JSON file for backup or transfer to another Mac.".localized(language: selectedLanguage))
             }
         }
         .formStyle(.grouped)
@@ -238,14 +273,38 @@ struct GeneralSettingsView: View {
         } message: {
             Text("Your settings have been imported successfully.".localized(language: selectedLanguage))
         }
+        .alert("Clipboard Error".localized(language: selectedLanguage), isPresented: $showClipboardError) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(clipboardErrorMessage)
+        }
+        .alert("Paste Settings?".localized(language: selectedLanguage), isPresented: $showClipboardImportConfirmation) {
+            Button("Cancel".localized(language: selectedLanguage), role: .cancel) {
+                pendingClipboardExport = nil
+            }
+            Button("Import".localized(language: selectedLanguage), role: .destructive) {
+                performClipboardImport()
+            }
+        } message: {
+            Text(clipboardImportSummary)
+        }
+        .alert("Import Successful".localized(language: selectedLanguage), isPresented: $showClipboardImportSuccess) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Your settings have been imported from clipboard.".localized(language: selectedLanguage))
+        }
     }
     
     // MARK: - Export/Import Actions
     
     private func exportSettings() {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd HH-mm-ss"
+        let timestamp = dateFormatter.string(from: Date())
+        
         let savePanel = NSSavePanel()
         savePanel.allowedContentTypes = [.json]
-        savePanel.nameFieldStringValue = "ShortcutCycle-Settings.json"
+        savePanel.nameFieldStringValue = "ShortcutCycle-Settings \(timestamp).json"
         savePanel.title = "Export Settings".localized(language: selectedLanguage)
         savePanel.message = "Choose where to save your settings".localized(language: selectedLanguage)
         
@@ -279,7 +338,7 @@ struct GeneralSettingsView: View {
     
     private func performImport() {
         guard let url = pendingImportURL else { return }
-        
+
         do {
             let data = try Data(contentsOf: url)
             try store.importData(data)
@@ -288,8 +347,58 @@ struct GeneralSettingsView: View {
             errorMessage = error.localizedDescription
             showImportError = true
         }
-        
+
         pendingImportURL = nil
+    }
+
+    // MARK: - Clipboard Actions
+
+    private func copySettingsToClipboard() {
+        do {
+            let data = try store.exportData()
+            guard let jsonString = String(data: data, encoding: .utf8) else { return }
+            let pasteboard = NSPasteboard.general
+            pasteboard.clearContents()
+            pasteboard.setString(jsonString, forType: .string)
+        } catch {
+            clipboardErrorMessage = error.localizedDescription
+            showClipboardError = true
+        }
+    }
+
+    private func pasteSettingsFromClipboard() {
+        let pasteboard = NSPasteboard.general
+        guard let string = pasteboard.string(forType: .string), !string.isEmpty else {
+            clipboardErrorMessage = "No text found on clipboard.".localized(language: selectedLanguage)
+            showClipboardError = true
+            return
+        }
+
+        guard let data = string.data(using: .utf8) else {
+            clipboardErrorMessage = "Clipboard content is not valid text.".localized(language: selectedLanguage)
+            showClipboardError = true
+            return
+        }
+
+        switch SettingsExport.validate(data: data) {
+        case .success(let export):
+            pendingClipboardExport = export
+            clipboardImportSummary = String(
+                format: "This will import %d group(s) and replace all current settings. This action cannot be undone.".localized(language: selectedLanguage),
+                export.groups.count
+            )
+            showClipboardImportConfirmation = true
+        case .failure(let error):
+            clipboardErrorMessage = error.localizedDescription
+            showClipboardError = true
+        }
+    }
+
+    private func performClipboardImport() {
+        guard let export = pendingClipboardExport else { return }
+        store.applyImport(export)
+        showClipboardImportSuccess = true
+        pendingClipboardExport = nil
     }
 }
 

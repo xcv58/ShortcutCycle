@@ -76,3 +76,27 @@
 
 /* Additional Settings */
 "May require restart to take effect fully." = "완전히 적용하려면 재시작이 필요할 수 있습니다.";
+
+/* Clipboard-related strings */
+"Copy to Clipboard" = "클립보드에 복사";
+"Paste from Clipboard" = "클립보드에서 붙여넣기";
+"No text found on clipboard." = "클립보드에서 텍스트를 찾을 수 없습니다.";
+"Clipboard content is not valid text." = "클립보드 내용이 유효한 텍스트가 아닙니다.";
+"Clipboard Error" = "클립보드 오류";
+"Paste Settings?" = "설정을 붙여넣으시겠습니까?";
+"Your settings have been imported from clipboard." = "클립보드에서 설정을 가져왔습니다.";
+"This will import %d group(s) and replace all current settings. This action cannot be undone." = "%d개의 그룹을 가져오고 모든 현재 설정을 대체합니다. 이 작업은 되돌릴 수 없습니다.";
+
+/* Backup section labels */
+"File Export/Import" = "파일 내보내기/가져오기";
+"Clipboard Sync" = "클립보드 동기화";
+"Save to or load from a JSON file." = "JSON 파일에 저장하거나 불러옵니다.";
+"Use Universal Clipboard to sync between Macs." = "유니버설 클립보드를 사용하여 Mac 간에 동기화합니다.";
+"Export Settings" = "설정 내보내기";
+"Import Settings" = "설정 가져오기";
+"Choose where to save your settings" = "설정을 저장할 위치 선택";
+"Select a ShortcutCycle settings file" = "ShortcutCycle 설정 파일 선택";
+
+/* Group Edit View */
+"Cycle through all apps (open if needed)" = "모든 앱 순환 (필요시 열기)";
+"Displays the keyboard shortcut used to trigger the switch." = "전환을 트리거하는 데 사용되는 키보드 단축키를 표시합니다.";

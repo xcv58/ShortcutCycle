@@ -46,7 +46,7 @@ let package = Package(
         .testTarget(
             name: "ShortcutCycleTests",
             dependencies: ["ShortcutCycleCore"],
-            path: "Tests/ShortcutCycleTests"
+            path: "ShortcutCycleTests"
         )
     ]
 )

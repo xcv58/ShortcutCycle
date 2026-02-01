@@ -76,4 +76,29 @@
 
 
 /* Additional Settings */
+"Language" = "語言";
 "May require restart to take effect fully." = "可能需要重新啟動才能完全生效。";
+
+/* Clipboard-related strings */
+"Copy to Clipboard" = "複製到剪貼簿";
+"Paste from Clipboard" = "從剪貼簿貼上";
+"No text found on clipboard." = "剪貼簿中沒有找到文字。";
+"Clipboard content is not valid text." = "剪貼簿內容不是有效的文字。";
+"Clipboard Error" = "剪貼簿錯誤";
+"Paste Settings?" = "貼上設定？";
+"Your settings have been imported from clipboard." = "您的設定已從剪貼簿匯入。";
+"This will import %d group(s) and replace all current settings. This action cannot be undone." = "這將匯入 %d 個群組並替換所有目前設定。此操作無法復原。";
+
+/* Backup section labels */
+"File Export/Import" = "檔案匯出/匯入";
+"Clipboard Sync" = "剪貼簿同步";
+"Save to or load from a JSON file." = "儲存至或載入 JSON 檔案。";
+"Use Universal Clipboard to sync between Macs." = "使用通用剪貼簿在 Mac 之間同步。";
+"Export Settings" = "匯出設定";
+"Import Settings" = "匯入設定";
+"Choose where to save your settings" = "選擇儲存設定的位置";
+"Select a ShortcutCycle settings file" = "選擇 ShortcutCycle 設定檔案";
+
+/* Group Edit View */
+"Cycle through all apps (open if needed)" = "循環所有應用程式（必要時開啟）";
+"Displays the keyboard shortcut used to trigger the switch." = "顯示用於觸發切換的鍵盤快捷鍵。";

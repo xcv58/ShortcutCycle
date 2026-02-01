@@ -76,3 +76,27 @@
 
 /* Additional Settings */
 "May require restart to take effect fully." = "Может потребоваться перезапуск.";
+
+/* Clipboard-related strings */
+"Copy to Clipboard" = "Копировать в буфер обмена";
+"Paste from Clipboard" = "Вставить из буфера обмена";
+"No text found on clipboard." = "Текст в буфере обмена не найден.";
+"Clipboard content is not valid text." = "Содержимое буфера обмена не является текстом.";
+"Clipboard Error" = "Ошибка буфера обмена";
+"Paste Settings?" = "Вставить настройки?";
+"Your settings have been imported from clipboard." = "Ваши настройки были импортированы из буфера обмена.";
+"This will import %d group(s) and replace all current settings. This action cannot be undone." = "Будет импортировано %d группы и заменены все текущие настройки. Это действие нельзя отменить.";
+
+/* Backup section labels */
+"File Export/Import" = "Экспорт/Импорт файла";
+"Clipboard Sync" = "Синхронизация буфера обмена";
+"Save to or load from a JSON file." = "Сохранить в или загрузить из JSON-файла.";
+"Use Universal Clipboard to sync between Macs." = "Используйте Универсальный буфер обмена для синхронизации между Mac.";
+"Export Settings" = "Экспорт настроек";
+"Import Settings" = "Импорт настроек";
+"Choose where to save your settings" = "Выберите место для сохранения настроек";
+"Select a ShortcutCycle settings file" = "Выберите файл настроек ShortcutCycle";
+
+/* Group Edit View */
+"Cycle through all apps (open if needed)" = "Переключаться между всеми приложениями (открыть при необходимости)";
+"Displays the keyboard shortcut used to trigger the switch." = "Отображает сочетание клавиш для переключения.";

@@ -77,3 +77,27 @@
 
 /* Additional Settings */
 "May require restart to take effect fully." = "قد يتطلب إعادة التشغيل ليصبح ساري المفعول بالكامل.";
+
+/* Clipboard-related strings */
+"Copy to Clipboard" = "نسخ إلى الحافظة";
+"Paste from Clipboard" = "لصق من الحافظة";
+"No text found on clipboard." = "لم يتم العثور على نص في الحافظة.";
+"Clipboard content is not valid text." = "محتوى الحافظة ليس نصًا صالحًا.";
+"Clipboard Error" = "خطأ في الحافظة";
+"Paste Settings?" = "لصق الإعدادات؟";
+"Your settings have been imported from clipboard." = "تم استيراد إعداداتك من الحافظة.";
+"This will import %d group(s) and replace all current settings. This action cannot be undone." = "سيتم استيراد %d مجموعة/مجموعات واستبدال جميع الإعدادات الحالية. لا يمكن التراجع عن هذا الإجراء.";
+
+/* Backup section labels */
+"File Export/Import" = "تصدير/استيراد ملف";
+"Clipboard Sync" = "مزامنة الحافظة";
+"Save to or load from a JSON file." = "حفظ إلى أو تحميل من ملف JSON.";
+"Use Universal Clipboard to sync between Macs." = "استخدم الحافظة العامة للمزامنة بين أجهزة Mac.";
+"Export Settings" = "تصدير الإعدادات";
+"Import Settings" = "استيراد الإعدادات";
+"Choose where to save your settings" = "اختر مكان حفظ إعداداتك";
+"Select a ShortcutCycle settings file" = "اختر ملف إعدادات ShortcutCycle";
+
+/* Group Edit View */
+"Cycle through all apps (open if needed)" = "التنقل بين جميع التطبيقات (فتح إذا لزم الأمر)";
+"Displays the keyboard shortcut used to trigger the switch." = "يعرض اختصار لوحة المفاتيح المستخدم لتشغيل التبديل.";
