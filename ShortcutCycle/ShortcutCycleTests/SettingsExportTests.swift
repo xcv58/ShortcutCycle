@@ -182,6 +182,7 @@ final class SettingsExportTests: XCTestCase {
 
         // Cleanup
         userDefaults.removePersistentDomain(forName: "TestAutoBackup")
+        try? FileManager.default.removeItem(at: backupDir)
     }
 
 }

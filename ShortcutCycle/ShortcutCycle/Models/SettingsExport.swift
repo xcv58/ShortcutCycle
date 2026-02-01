@@ -117,15 +117,6 @@ public struct SettingsExport: Codable {
         }
     }
 
-
-    /// Check if two exports have the same content (ignoring exportDate)
-    public func isContentEqual(to other: SettingsExport) -> Bool {
-        // Compare groups, settings, and shortcuts
-        // Note: AppGroup is Equatable (includes lastModified so modifying group triggers save)
-        return self.groups == other.groups &&
-               self.settings == other.settings &&
-               self.shortcuts == other.shortcuts
-    }
 }
 
 public enum SettingsExportError: LocalizedError {

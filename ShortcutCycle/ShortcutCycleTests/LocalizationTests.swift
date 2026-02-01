@@ -27,13 +27,15 @@ final class LocalizationTests: XCTestCase {
             }
             
             // Match pattern: "key" = "value";
-            if let keyRange = trimmed.range(of: "^\"([^\"]+)\"\\s*=", options: .regularExpression) {
-                let keyWithQuotes = String(trimmed[keyRange])
-                // Extract just the key without quotes and =
-                if let start = keyWithQuotes.firstIndex(of: "\""),
-                   let end = keyWithQuotes.dropFirst().firstIndex(of: "\"") {
-                    let key = String(keyWithQuotes[keyWithQuotes.index(after: start)...keyWithQuotes.index(before: keyWithQuotes.index(after: end))])
-                    keys.insert(key)
+            if let match = trimmed.range(of: "^\"([^\"]+)\"\\s*=", options: .regularExpression) {
+                let matched = String(trimmed[match])
+                // Extract key between the first pair of quotes
+                if let openQuote = matched.firstIndex(of: "\"") {
+                    let afterOpen = matched.index(after: openQuote)
+                    if let closeQuote = matched[afterOpen...].firstIndex(of: "\"") {
+                        let key = String(matched[afterOpen..<closeQuote])
+                        keys.insert(key)
+                    }
                 }
             }
         }
@@ -43,40 +45,40 @@ final class LocalizationTests: XCTestCase {
     
     /// Find the Resources directory containing localization files
     private func findResourcesDirectory() -> URL? {
-        // Try to find the bundle's resources
+        // Try to find the bundle's resources (works in Xcode test runner)
         let bundle = Bundle(for: type(of: self))
-        
-        // Look for en.lproj to confirm we have the right directory
+
         if let enPath = bundle.path(forResource: "Localizable", ofType: "strings", inDirectory: nil, forLocalization: "en") {
             return URL(fileURLWithPath: enPath).deletingLastPathComponent().deletingLastPathComponent()
         }
-        
-        // Fallback: try to find it relative to the test bundle
-        let testBundleURL = bundle.bundleURL
+
+        // Fallback: try source-relative paths (works in SPM `swift test`)
+        // #file = .../ShortcutCycleTests/LocalizationTests.swift
+        // Go up to project root, then into ShortcutCycle/Resources
+        let testFileURL = URL(fileURLWithPath: #file)
+        let projectRoot = testFileURL.deletingLastPathComponent().deletingLastPathComponent()
+
         let possiblePaths = [
-            testBundleURL.deletingLastPathComponent().appendingPathComponent("ShortcutCycle.app/Contents/Resources"),
-            testBundleURL.appendingPathComponent("Contents/Resources"),
-            URL(fileURLWithPath: #file).deletingLastPathComponent().deletingLastPathComponent()
-                .appendingPathComponent("ShortcutCycle/ShortcutCycle/Resources")
+            // Xcode bundle-relative
+            bundle.bundleURL.deletingLastPathComponent().appendingPathComponent("ShortcutCycle.app/Contents/Resources"),
+            bundle.bundleURL.appendingPathComponent("Contents/Resources"),
+            // SPM source-relative: ShortcutCycleTests/ -> project root -> ShortcutCycle/Resources
+            projectRoot.appendingPathComponent("ShortcutCycle/Resources"),
         ]
-        
+
         for path in possiblePaths {
             let enLproj = path.appendingPathComponent("en.lproj/Localizable.strings")
             if FileManager.default.fileExists(atPath: enLproj.path) {
                 return path
             }
         }
-        
+
         return nil
     }
     
     /// Test that all localization keys in English exist in all other languages
     func testAllLocalizationKeysExistInAllLanguages() throws {
-        guard let resourcesDir = findResourcesDirectory() else {
-            // Skip test if we can't find resources (may happen in CI)
-            print("Warning: Could not find Resources directory, skipping localization test")
-            return
-        }
+        let resourcesDir = try XCTUnwrap(findResourcesDirectory(), "Could not find Resources directory containing localization files")
         
         // Get English keys as the baseline
         let enURL = resourcesDir.appendingPathComponent("en.lproj/Localizable.strings")
@@ -116,10 +118,7 @@ final class LocalizationTests: XCTestCase {
     
     /// Test that no language has extra keys not present in English (orphaned translations)
     func testNoOrphanedTranslationKeys() throws {
-        guard let resourcesDir = findResourcesDirectory() else {
-            print("Warning: Could not find Resources directory, skipping orphaned keys test")
-            return
-        }
+        let resourcesDir = try XCTUnwrap(findResourcesDirectory(), "Could not find Resources directory containing localization files")
         
         let enURL = resourcesDir.appendingPathComponent("en.lproj/Localizable.strings")
         let englishKeys = parseLocalizationKeys(from: enURL)
@@ -170,10 +169,7 @@ final class LocalizationTests: XCTestCase {
             "Import Settings..."
         ]
         
-        guard let resourcesDir = findResourcesDirectory() else {
-            print("Warning: Could not find Resources directory, skipping critical strings test")
-            return
-        }
+        let resourcesDir = try XCTUnwrap(findResourcesDirectory(), "Could not find Resources directory containing localization files")
         
         let enURL = resourcesDir.appendingPathComponent("en.lproj/Localizable.strings")
         let englishKeys = parseLocalizationKeys(from: enURL)

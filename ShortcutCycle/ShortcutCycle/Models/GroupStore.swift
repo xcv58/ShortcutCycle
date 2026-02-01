@@ -11,6 +11,12 @@ public class GroupStore: ObservableObject {
     
     private let saveKey = "ShortcutCycle.Groups"
     private let userDefaults: UserDefaults
+
+    private static let backupDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH-mm-ss"
+        return formatter
+    }()
     
     // Debounce timer for auto-backup (60 seconds)
     private var backupTimer: Timer?
@@ -40,8 +46,6 @@ public class GroupStore: ObservableObject {
         }
     }
 
-
-    
     /// Force immediate backup if one is pending (public for testing)
     public func flushPendingBackup() {
         guard backupPending else { return }
@@ -176,10 +180,8 @@ public class GroupStore: ObservableObject {
         
         do {
             let data = try exportData()
-            
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyy-MM-dd HH-mm-ss"
-            let timestamp = dateFormatter.string(from: Date())
+
+            let timestamp = Self.backupDateFormatter.string(from: Date())
             let backupFile = backupDirectory.appendingPathComponent("backup \(timestamp).json")
             try data.write(to: backupFile, options: .atomic)
             
@@ -202,10 +204,7 @@ public class GroupStore: ObservableObject {
         
         return url
     }
-    
 
-
-    
     /// Remove old backup files, keeping only the specified number of most recent ones
     private func cleanupOldBackups(in directory: URL, keeping maxCount: Int) {
         do {
@@ -273,19 +272,21 @@ public class GroupStore: ObservableObject {
     public func importData(_ data: Data) throws {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-
         let importPayload = try decoder.decode(SettingsExport.self, from: data)
+        applyImport(importPayload)
+    }
 
-        // Replace all groups with imported data
-        self.groups = importPayload.groups
+    /// Apply a decoded settings export directly
+    public func applyImport(_ payload: SettingsExport) {
+        self.groups = payload.groups
         self.selectedGroupId = groups.first?.id
         saveGroups()
 
         // Apply app settings if present (version 2+)
-        importPayload.settings?.apply()
+        payload.settings?.apply()
 
         // Apply keyboard shortcuts if present (version 3+)
-        importPayload.applyShortcuts()
+        payload.applyShortcuts()
 
         // Re-register shortcuts for new groups
         NotificationCenter.default.post(name: .shortcutsNeedUpdate, object: nil)

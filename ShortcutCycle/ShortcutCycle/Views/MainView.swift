@@ -396,18 +396,8 @@ struct GeneralSettingsView: View {
 
     private func performClipboardImport() {
         guard let export = pendingClipboardExport else { return }
-
-        do {
-            let encoder = JSONEncoder()
-            encoder.dateEncodingStrategy = .iso8601
-            let data = try encoder.encode(export)
-            try store.importData(data)
-            showClipboardImportSuccess = true
-        } catch {
-            clipboardErrorMessage = error.localizedDescription
-            showClipboardError = true
-        }
-
+        store.applyImport(export)
+        showClipboardImportSuccess = true
         pendingClipboardExport = nil
     }
 }
