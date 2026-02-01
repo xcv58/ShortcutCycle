@@ -2,6 +2,9 @@
 import SwiftUI
 import KeyboardShortcuts
 import UniformTypeIdentifiers
+#if canImport(ShortcutCycleCore)
+import ShortcutCycleCore
+#endif
 
 
 // MARK: - Main View

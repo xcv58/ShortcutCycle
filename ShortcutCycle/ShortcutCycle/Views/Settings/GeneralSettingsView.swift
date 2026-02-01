@@ -1,5 +1,8 @@
 import SwiftUI
 import KeyboardShortcuts
+#if canImport(ShortcutCycleCore)
+import ShortcutCycleCore
+#endif
 
 struct GeneralSettingsView: View {
     @EnvironmentObject var store: GroupStore

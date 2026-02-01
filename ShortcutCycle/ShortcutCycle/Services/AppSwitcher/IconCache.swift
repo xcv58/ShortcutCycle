@@ -1,5 +1,8 @@
 import AppKit
 import Foundation
+#if canImport(ShortcutCycleCore)
+import ShortcutCycleCore
+#endif
 
 class IconCache {
     static let shared = IconCache()

@@ -4,6 +4,9 @@ import AppKit
 import SwiftUI
 import Carbon
 import KeyboardShortcuts
+#if canImport(ShortcutCycleCore)
+import ShortcutCycleCore
+#endif
 
 // MARK: - AppSwitcher
 

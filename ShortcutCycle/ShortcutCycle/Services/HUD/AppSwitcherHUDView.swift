@@ -15,49 +15,9 @@ struct AppSwitcherHUDView: View {
         VStack(spacing: 20) {
             Group {
                 if apps.count > 5 {
-                    // Method 1: Grid Layout for many apps
-                    ScrollViewReader { proxy in
-                        ScrollView(.vertical, showsIndicators: false) {
-                            LazyVGrid(columns: Array(repeating: GridItem(.fixed(80), spacing: 30), count: 5), spacing: 30) {
-                                ForEach(apps) { app in
-                                    if let icon = app.icon {
-                                        HUDItemView(icon: icon, isActive: app.id == activeAppId, isRunning: app.isRunning, size: 72)
-                                            .id(app.id)
-                                            .onTapGesture {
-                                                onSelect?(app.id)
-                                            }
-                                    }
-                                }
-                            }
-                            .padding(.vertical, 40)
-                            .padding(.horizontal, 10)
-                        }
-                        .frame(maxHeight: 700) // Increased height to prevent clipping for larger grids
-                        .onAppear { scrollToActive(proxy: proxy, animated: false, anchor: .center) }
-                        .onChange(of: activeAppId) { _, _ in scrollToActive(proxy: proxy, animated: true, anchor: .center) }
-                    }
+                    gridLayout
                 } else {
-                    // Method 2: Horizontal List for few apps
-                    ScrollViewReader { proxy in
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 20) {
-                                ForEach(apps) { app in
-                                    if let icon = app.icon {
-                                        HUDItemView(icon: icon, isActive: app.id == activeAppId, isRunning: app.isRunning, size: 72)
-                                            .id(app.id)
-                                            .onTapGesture {
-                                                onSelect?(app.id)
-                                            }
-                                    }
-                                }
-                            }
-                            .padding(.horizontal, 32)
-                            .padding(.vertical, 24)
-                        }
-                        .frame(maxWidth: 700)
-                        .onAppear { scrollToActive(proxy: proxy, animated: false, anchor: nil) }
-                        .onChange(of: activeAppId) { _, _ in scrollToActive(proxy: proxy, animated: true, anchor: nil) }
-                    }
+                    horizontalListLayout
                 }
             }
             .background(
@@ -76,33 +36,83 @@ struct AppSwitcherHUDView: View {
             )
             
             // Active App Name
-            VStack(spacing: 4) {
-                if let activeApp = apps.first(where: { $0.id == activeAppId }) {
-                    Text(activeApp.name)
-                        .font(.title3)
-                        .fontWeight(.bold)
-                        .fontDesign(.rounded)
-                        .foregroundColor(.primary)
-                }
-                
-                if showShortcutInHUD, let shortcut = shortcutString {
-                    Text(shortcut)
-                        .font(.caption)
-                        .fontWeight(.medium)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 8)
-            .background(
-                Capsule()
-                .fill(.regularMaterial)
-                .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
-            )
+            activeAppNameView
         }
         .padding(40)
         .preferredColorScheme(appTheme.colorScheme)
         .background(WindowAppearanceApplier(colorScheme: appTheme.colorScheme))
+    }
+    
+    private var gridLayout: some View {
+        ScrollViewReader { proxy in
+            ScrollView(.vertical, showsIndicators: false) {
+                LazyVGrid(columns: Array(repeating: GridItem(.fixed(80), spacing: 30), count: 5), spacing: 30) {
+                    ForEach(apps) { app in
+                        if let icon = app.icon {
+                            HUDItemView(icon: icon, isActive: app.id == activeAppId, isRunning: app.isRunning, size: 72)
+                                .id(app.id)
+                                .onTapGesture {
+                                    onSelect?(app.id)
+                                }
+                        }
+                    }
+                }
+                .padding(.vertical, 40)
+                .padding(.horizontal, 10)
+            }
+            .frame(maxHeight: 700) // Increased height to prevent clipping for larger grids
+            .onAppear { scrollToActive(proxy: proxy, animated: false, anchor: .center) }
+            .onChange(of: activeAppId) { _, _ in scrollToActive(proxy: proxy, animated: true, anchor: .center) }
+        }
+    }
+    
+    private var horizontalListLayout: some View {
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 20) {
+                    ForEach(apps) { app in
+                        if let icon = app.icon {
+                            HUDItemView(icon: icon, isActive: app.id == activeAppId, isRunning: app.isRunning, size: 72)
+                                .id(app.id)
+                                .onTapGesture {
+                                    onSelect?(app.id)
+                                }
+                        }
+                    }
+                }
+                .padding(.horizontal, 32)
+                .padding(.vertical, 24)
+            }
+            .frame(maxWidth: 700)
+            .onAppear { scrollToActive(proxy: proxy, animated: false, anchor: nil) }
+            .onChange(of: activeAppId) { _, _ in scrollToActive(proxy: proxy, animated: true, anchor: nil) }
+        }
+    }
+    
+    private var activeAppNameView: some View {
+        VStack(spacing: 4) {
+            if let activeApp = apps.first(where: { $0.id == activeAppId }) {
+                Text(activeApp.name)
+                    .font(.title3)
+                    .fontWeight(.bold)
+                    .fontDesign(.rounded)
+                    .foregroundColor(.primary)
+            }
+            
+            if showShortcutInHUD, let shortcut = shortcutString {
+                Text(shortcut)
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 8)
+        .background(
+            Capsule()
+            .fill(.regularMaterial)
+            .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
+        )
     }
     
     private func scrollToActive(proxy: ScrollViewProxy, animated: Bool, anchor: UnitPoint?) {
