@@ -204,29 +204,46 @@ struct GeneralSettingsView: View {
             }
             
             Section {
-                HStack {
-                    Button("Export Settings...".localized(language: selectedLanguage)) {
-                        exportSettings()
-                    }
+                // Sub-section 1: File-based backup
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("File Export/Import".localized(language: selectedLanguage), systemImage: "doc.badge.gearshape")
+                        .font(.caption.weight(.medium))
+                        .foregroundColor(.secondary)
+                    HStack {
+                        Button("Export Settings...".localized(language: selectedLanguage)) {
+                            exportSettings()
+                        }
 
-                    Button("Import Settings...".localized(language: selectedLanguage)) {
-                        importSettings()
+                        Button("Import Settings...".localized(language: selectedLanguage)) {
+                            importSettings()
+                        }
                     }
+                    Text("Save to or load from a JSON file.".localized(language: selectedLanguage))
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
                 }
+                
+                
+                // Sub-section 2: Clipboard-based sync
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("Clipboard Sync".localized(language: selectedLanguage), systemImage: "doc.on.clipboard")
+                        .font(.caption.weight(.medium))
+                        .foregroundColor(.secondary)
+                    HStack {
+                        Button("Copy to Clipboard".localized(language: selectedLanguage)) {
+                            copySettingsToClipboard()
+                        }
 
-                HStack {
-                    Button("Copy to Clipboard".localized(language: selectedLanguage)) {
-                        copySettingsToClipboard()
+                        Button("Paste from Clipboard".localized(language: selectedLanguage)) {
+                            pasteSettingsFromClipboard()
+                        }
                     }
-
-                    Button("Paste from Clipboard".localized(language: selectedLanguage)) {
-                        pasteSettingsFromClipboard()
-                    }
+                    Text("Use Universal Clipboard to sync between Macs.".localized(language: selectedLanguage))
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
                 }
             } header: {
                 Text("Backup & Restore".localized(language: selectedLanguage))
-            } footer: {
-                Text("Export your groups and settings to a JSON file for backup or transfer to another Mac. Use clipboard to sync between Macs via Universal Clipboard.".localized(language: selectedLanguage))
             }
         }
         .formStyle(.grouped)

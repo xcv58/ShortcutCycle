@@ -78,3 +78,27 @@
 /* Additional Settings */
 "Language" = "Language";
 "May require restart to take effect fully." = "May require restart to take effect fully.";
+
+/* Clipboard-related strings */
+"Copy to Clipboard" = "Copy to Clipboard";
+"Paste from Clipboard" = "Paste from Clipboard";
+"No text found on clipboard." = "No text found on clipboard.";
+"Clipboard content is not valid text." = "Clipboard content is not valid text.";
+"Clipboard Error" = "Clipboard Error";
+"Paste Settings?" = "Paste Settings?";
+"Your settings have been imported from clipboard." = "Your settings have been imported from clipboard.";
+"This will import %d group(s) and replace all current settings. This action cannot be undone." = "This will import %d group(s) and replace all current settings. This action cannot be undone.";
+
+/* Backup section labels */
+"File Export/Import" = "File Export/Import";
+"Clipboard Sync" = "Clipboard Sync";
+"Save to or load from a JSON file." = "Save to or load from a JSON file.";
+"Use Universal Clipboard to sync between Macs." = "Use Universal Clipboard to sync between Macs.";
+"Export Settings" = "Export Settings";
+"Import Settings" = "Import Settings";
+"Choose where to save your settings" = "Choose where to save your settings";
+"Select a ShortcutCycle settings file" = "Select a ShortcutCycle settings file";
+
+/* Group Edit View */
+"Cycle through all apps (open if needed)" = "Cycle through all apps (open if needed)";
+"Displays the keyboard shortcut used to trigger the switch." = "Displays the keyboard shortcut used to trigger the switch.";

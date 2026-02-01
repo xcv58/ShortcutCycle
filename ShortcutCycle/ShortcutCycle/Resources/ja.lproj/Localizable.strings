@@ -76,3 +76,27 @@
 
 /* Additional Settings */
 "May require restart to take effect fully." = "完全に反映させるには再起動が必要な場合があります。";
+
+/* Clipboard-related strings */
+"Copy to Clipboard" = "クリップボードにコピー";
+"Paste from Clipboard" = "クリップボードから貼り付け";
+"No text found on clipboard." = "クリップボードにテキストが見つかりません。";
+"Clipboard content is not valid text." = "クリップボードの内容は有効なテキストではありません。";
+"Clipboard Error" = "クリップボードエラー";
+"Paste Settings?" = "設定を貼り付けますか？";
+"Your settings have been imported from clipboard." = "設定がクリップボードからインポートされました。";
+"This will import %d group(s) and replace all current settings. This action cannot be undone." = "%d個のグループをインポートし、すべての現在の設定を置き換えます。この操作は取り消せません。";
+
+/* Backup section labels */
+"File Export/Import" = "ファイルのエクスポート/インポート";
+"Clipboard Sync" = "クリップボード同期";
+"Save to or load from a JSON file." = "JSONファイルに保存または読み込み。";
+"Use Universal Clipboard to sync between Macs." = "ユニバーサルクリップボードでMac間を同期。";
+"Export Settings" = "設定をエクスポート";
+"Import Settings" = "設定をインポート";
+"Choose where to save your settings" = "設定の保存場所を選択";
+"Select a ShortcutCycle settings file" = "ShortcutCycle設定ファイルを選択";
+
+/* Group Edit View */
+"Cycle through all apps (open if needed)" = "すべてのアプリを循環（必要に応じて開く）";
+"Displays the keyboard shortcut used to trigger the switch." = "切り替えに使用するキーボードショートカットを表示します。";

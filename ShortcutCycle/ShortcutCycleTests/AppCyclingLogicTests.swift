@@ -1,6 +1,6 @@
 import XCTest
 import Foundation
-import ShortcutCycleCore
+@testable import ShortcutCycle
 
 // Assuming AppCyclingLogic.swift is included in the target sources
 // @testable import ShortcutCycle // Not needed if file included directly

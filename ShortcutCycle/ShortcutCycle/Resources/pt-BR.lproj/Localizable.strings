@@ -76,3 +76,27 @@
 
 /* Additional Settings */
 "May require restart to take effect fully." = "Pode ser necessário reiniciar para ter efeito total.";
+
+/* Clipboard-related strings */
+"Copy to Clipboard" = "Copiar para Área de Transferência";
+"Paste from Clipboard" = "Colar da Área de Transferência";
+"No text found on clipboard." = "Nenhum texto encontrado na área de transferência.";
+"Clipboard content is not valid text." = "O conteúdo da área de transferência não é um texto válido.";
+"Clipboard Error" = "Erro na Área de Transferência";
+"Paste Settings?" = "Colar Ajustes?";
+"Your settings have been imported from clipboard." = "Seus ajustes foram importados da área de transferência.";
+"This will import %d group(s) and replace all current settings. This action cannot be undone." = "Isso importará %d grupo(s) e substituirá todos os ajustes atuais. Esta ação não pode ser desfeita.";
+
+/* Backup section labels */
+"File Export/Import" = "Exportar/Importar Arquivo";
+"Clipboard Sync" = "Sincronização de Área de Transferência";
+"Save to or load from a JSON file." = "Salvar em ou carregar de um arquivo JSON.";
+"Use Universal Clipboard to sync between Macs." = "Use a Área de Transferência Universal para sincronizar entre Macs.";
+"Export Settings" = "Exportar Ajustes";
+"Import Settings" = "Importar Ajustes";
+"Choose where to save your settings" = "Escolha onde salvar seus ajustes";
+"Select a ShortcutCycle settings file" = "Selecione um arquivo de ajustes do ShortcutCycle";
+
+/* Group Edit View */
+"Cycle through all apps (open if needed)" = "Alternar entre todos os apps (abrir se necessário)";
+"Displays the keyboard shortcut used to trigger the switch." = "Exibe o atalho de teclado usado para acionar a troca.";

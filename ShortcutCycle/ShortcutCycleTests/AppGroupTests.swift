@@ -1,5 +1,5 @@
 import XCTest
-@testable import ShortcutCycleCore
+@testable import ShortcutCycle
 
 final class AppGroupTests: XCTestCase {
     

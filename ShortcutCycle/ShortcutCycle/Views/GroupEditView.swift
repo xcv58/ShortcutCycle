@@ -10,6 +10,7 @@ struct GroupEditView: View {
     @EnvironmentObject var store: GroupStore
     let groupId: UUID
     
+    @AppStorage("selectedLanguage") private var selectedLanguage = "system"
     @State private var groupName: String = ""
     @State private var draggingApp: AppItem?
     @State private var isHovering: Bool = false
@@ -24,7 +25,7 @@ struct GroupEditView: View {
                 if let group = group {
                 // Group Name
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Group Name")
+                    Text("Group Name".localized(language: selectedLanguage))
                         .font(.headline)
                     
                     TextField("Untitled Group", text: $groupName)
@@ -51,7 +52,7 @@ struct GroupEditView: View {
                 
                 // Shortcut
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Keyboard Shortcut")
+                    Text("Keyboard Shortcut".localized(language: selectedLanguage))
                         .font(.headline)
                     
                     HStack {
@@ -62,7 +63,7 @@ struct GroupEditView: View {
                             }
                     }
                     
-                    Toggle("Cycle through all apps (open if needed)", isOn: Binding(
+                    Toggle("Cycle through all apps (open if needed)".localized(language: selectedLanguage), isOn: Binding(
                         get: { group.shouldOpenAppIfNeeded },
                         set: { newValue in
                             var updatedGroup = group
@@ -79,18 +80,18 @@ struct GroupEditView: View {
                 // Apps Grid
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Text("Applications")
+                        Text("Applications".localized(language: selectedLanguage))
                             .font(.headline)
                         
                         Spacer()
                         
-                        Text("\(group.apps.count) \(group.apps.count == 1 ? "app" : "apps")")
+                        Text("\(group.apps.count) \(group.apps.count == 1 ? "app".localized(language: selectedLanguage) : "apps".localized(language: selectedLanguage))")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
                     
                     if group.apps.isEmpty {
-                        Text("No apps added yet. Drag apps here or click the drop zone below.")
+                        Text("No apps added yet. Drag apps here or click the drop zone below.".localized(language: selectedLanguage))
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .padding(.vertical, 8)
@@ -125,7 +126,7 @@ struct GroupEditView: View {
                 
                 Spacer()
             } else {
-                Text("Select a group to edit")
+                Text("Select a group to edit".localized(language: selectedLanguage))
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }

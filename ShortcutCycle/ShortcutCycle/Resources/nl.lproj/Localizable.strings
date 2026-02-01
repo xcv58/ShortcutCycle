@@ -76,3 +76,27 @@
 
 /* Additional Settings */
 "May require restart to take effect fully." = "Opnieuw opstarten is mogelijk vereist.";
+
+/* Clipboard-related strings */
+"Copy to Clipboard" = "Kopieer naar klembord";
+"Paste from Clipboard" = "Plak van klembord";
+"No text found on clipboard." = "Geen tekst gevonden op klembord.";
+"Clipboard content is not valid text." = "Klembordinhoud is geen geldige tekst.";
+"Clipboard Error" = "Klembord-fout";
+"Paste Settings?" = "Instellingen plakken?";
+"Your settings have been imported from clipboard." = "Uw instellingen zijn geïmporteerd van het klembord.";
+"This will import %d group(s) and replace all current settings. This action cannot be undone." = "Dit importeert %d groep(en) en vervangt alle huidige instellingen. Deze actie kan niet ongedaan worden gemaakt.";
+
+/* Backup section labels */
+"File Export/Import" = "Bestand exporteren/importeren";
+"Clipboard Sync" = "Klembord-synchronisatie";
+"Save to or load from a JSON file." = "Opslaan naar of laden van een JSON-bestand.";
+"Use Universal Clipboard to sync between Macs." = "Gebruik Universeel Klembord om te synchroniseren tussen Macs.";
+"Export Settings" = "Instellingen exporteren";
+"Import Settings" = "Instellingen importeren";
+"Choose where to save your settings" = "Kies waar u uw instellingen wilt opslaan";
+"Select a ShortcutCycle settings file" = "Selecteer een ShortcutCycle-instellingenbestand";
+
+/* Group Edit View */
+"Cycle through all apps (open if needed)" = "Door alle apps bladeren (openen indien nodig)";
+"Displays the keyboard shortcut used to trigger the switch." = "Toont de sneltoets die wordt gebruikt om te schakelen.";

@@ -76,3 +76,27 @@
 
 /* Additional Settings */
 "May require restart to take effect fully." = "Puede requerir reinicio para surtir efecto.";
+
+/* Clipboard-related strings */
+"Copy to Clipboard" = "Copiar al portapapeles";
+"Paste from Clipboard" = "Pegar desde el portapapeles";
+"No text found on clipboard." = "No se encontró texto en el portapapeles.";
+"Clipboard content is not valid text." = "El contenido del portapapeles no es texto válido.";
+"Clipboard Error" = "Error del portapapeles";
+"Paste Settings?" = "¿Pegar ajustes?";
+"Your settings have been imported from clipboard." = "Tus ajustes han sido importados desde el portapapeles.";
+"This will import %d group(s) and replace all current settings. This action cannot be undone." = "Esto importará %d grupo(s) y reemplazará todos los ajustes actuales. Esta acción no se puede deshacer.";
+
+/* Backup section labels */
+"File Export/Import" = "Exportar/Importar archivo";
+"Clipboard Sync" = "Sincronización de portapapeles";
+"Save to or load from a JSON file." = "Guardar en o cargar desde un archivo JSON.";
+"Use Universal Clipboard to sync between Macs." = "Usa el portapapeles universal para sincronizar entre Macs.";
+"Export Settings" = "Exportar ajustes";
+"Import Settings" = "Importar ajustes";
+"Choose where to save your settings" = "Elige dónde guardar tus ajustes";
+"Select a ShortcutCycle settings file" = "Selecciona un archivo de ajustes de ShortcutCycle";
+
+/* Group Edit View */
+"Cycle through all apps (open if needed)" = "Alternar entre todas las apps (abrir si es necesario)";
+"Displays the keyboard shortcut used to trigger the switch." = "Muestra el atajo de teclado usado para activar el cambio.";
