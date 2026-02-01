@@ -42,11 +42,14 @@ class AppSwitcher: ObservableObject {
     private func cycleAllApps(hudItems: [HUDAppItem], group: AppGroup, store: GroupStore, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?) {
         // Determine the next app to activate
         var nextAppId: String
-        
+
+        // Check if any app from the group is currently running
+        let hasRunningApp = hudItems.contains { $0.isRunning }
+
         // Use shared logic
         let cycleItems = hudItems.map { CyclingAppItem(id: $0.id) }
         let frontmostApp = NSWorkspace.shared.frontmostApplication
-        
+
         nextAppId = AppCyclingLogic.nextAppId(
             items: cycleItems,
             currentFrontmostAppId: frontmostApp?.bundleIdentifier,
@@ -54,15 +57,21 @@ class AppSwitcher: ObservableObject {
             lastActiveAppId: group.lastActiveAppBundleId,
             isHUDVisible: HUDManager.shared.isVisible
         )
-        
+
+        // If no app from the group is running, always select the first app
+        if !hasRunningApp {
+            nextAppId = hudItems[0].id
+        }
+
         // Perform Switch
         store.updateLastActiveApp(bundleId: nextAppId, for: group.id)
-        
+
         // We always want to activate the selected app eventually.
         // If HUD is shown, it will handle activation lazily (on key release).
         // If HUD is disabled, we activate immediately.
-        let hudShown = showHUD(items: hudItems, activeAppId: nextAppId, modifierFlags: modifierFlags, shortcut: shortcut, shouldActivate: true)
-        
+        // Show HUD immediately (skip delay) when no app from the group is running.
+        let hudShown = showHUD(items: hudItems, activeAppId: nextAppId, modifierFlags: modifierFlags, shortcut: shortcut, shouldActivate: true, immediate: !hasRunningApp)
+
         if !hudShown {
              activateOrLaunch(bundleId: nextAppId)
         }
@@ -74,10 +83,17 @@ class AppSwitcher: ObservableObject {
         let runningItems = hudItems.filter { $0.isRunning }
         
         if runningItems.isEmpty {
-            // No apps running - fallback to launching the first app
+            // No apps running - launch the first app and show HUD immediately
             if let firstApp = group.apps.first {
                 launchApp(bundleIdentifier: firstApp.bundleIdentifier)
                 store.updateLastActiveApp(bundleId: firstApp.bundleIdentifier, for: group.id)
+                let firstItem = HUDAppItem(
+                    id: firstApp.bundleIdentifier,
+                    name: firstApp.name,
+                    icon: getIcon(for: firstApp),
+                    isRunning: false
+                )
+                showHUD(items: [firstItem], activeAppId: firstApp.bundleIdentifier, modifierFlags: modifierFlags, shortcut: shortcut, shouldActivate: false, immediate: true)
             }
             return
         }
@@ -208,9 +224,9 @@ class AppSwitcher: ObservableObject {
     }
     
     @discardableResult
-    private func showHUD(items: [HUDAppItem], activeAppId: String, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, shouldActivate: Bool = true) -> Bool {
+    private func showHUD(items: [HUDAppItem], activeAppId: String, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, shouldActivate: Bool = true, immediate: Bool = false) -> Bool {
         if UserDefaults.standard.bool(forKey: "showHUD") {
-            HUDManager.shared.scheduleShow(items: items, activeAppId: activeAppId, modifierFlags: modifierFlags, shortcut: shortcut, shouldActivate: shouldActivate)
+            HUDManager.shared.scheduleShow(items: items, activeAppId: activeAppId, modifierFlags: modifierFlags, shortcut: shortcut, shouldActivate: shouldActivate, immediate: immediate)
             return true
         }
         return false
@@ -289,7 +305,7 @@ class HUDManager: ObservableObject {
     private init() {}
     
     /// Schedule showing the HUD with macOS Command+Tab logic
-    func scheduleShow(items: [HUDAppItem], activeAppId: String, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, shouldActivate: Bool = true) {
+    func scheduleShow(items: [HUDAppItem], activeAppId: String, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, shouldActivate: Bool = true, immediate: Bool = false) {
         // Cancel existing hide timer
         hideTimer?.invalidate()
         hideTimer = nil // Ensure we don't auto-hide while interacting
@@ -320,8 +336,8 @@ class HUDManager: ObservableObject {
             }
         }
         
-        // If HUD is already visible or this is a repeated hit (cycling), show/update immediately
-        if (window?.isVisible == true) || isRepeated {
+        // If HUD is already visible, this is a repeated hit (cycling), or immediate is requested, show/update immediately
+        if (window?.isVisible == true) || isRepeated || immediate {
             showTimer?.invalidate()
             showTimer = nil
             presentHUD(items: items, activeAppId: activeAppId, shortcut: shortcut)
