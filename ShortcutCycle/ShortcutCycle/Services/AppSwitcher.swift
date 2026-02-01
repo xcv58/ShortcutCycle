@@ -333,6 +333,7 @@ struct LaunchOverlayView: View {
     let appName: String
     let appIcon: NSImage?
     @AppStorage("appTheme") private var appTheme: AppTheme = .system
+    @AppStorage("selectedLanguage") private var selectedLanguage = "system"
     @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
@@ -350,7 +351,7 @@ struct LaunchOverlayView: View {
                     .fontWeight(.bold)
                     .fontDesign(.rounded)
 
-                Text("Opening…")
+                Text("Opening…".localized(language: selectedLanguage))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
