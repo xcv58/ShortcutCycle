@@ -102,9 +102,24 @@ public class GroupStore: ObservableObject {
         do {
             let data = try JSONEncoder().encode(groups)
             userDefaults.set(data, forKey: saveKey)
-            // notifyCloudSync() // Temporarily disabled
+            autoBackup()
         } catch {
             print("GroupStore: Failed to save groups: \(error)")
+        }
+    }
+
+    /// Write a full settings backup to Application Support
+    private func autoBackup() {
+        do {
+            let data = try exportData()
+            let fileManager = FileManager.default
+            let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+            let backupDir = appSupport.appendingPathComponent("ShortcutCycle", isDirectory: true)
+            try fileManager.createDirectory(at: backupDir, withIntermediateDirectories: true)
+            let backupFile = backupDir.appendingPathComponent("backup.json")
+            try data.write(to: backupFile, options: .atomic)
+        } catch {
+            print("GroupStore: Auto-backup failed: \(error)")
         }
     }
     
@@ -140,26 +155,29 @@ public class GroupStore: ObservableObject {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        
-        let exportPayload = SettingsExport(groups: groups, settings: AppSettings.current())
+
+        let exportPayload = SettingsExport.fullSnapshot(groups: groups)
         return try encoder.encode(exportPayload)
     }
-    
+
     /// Import settings from exported JSON data
     public func importData(_ data: Data) throws {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        
+
         let importPayload = try decoder.decode(SettingsExport.self, from: data)
-        
+
         // Replace all groups with imported data
         self.groups = importPayload.groups
         self.selectedGroupId = groups.first?.id
         saveGroups()
-        
+
         // Apply app settings if present (version 2+)
         importPayload.settings?.apply()
-        
+
+        // Apply keyboard shortcuts if present (version 3+)
+        importPayload.applyShortcuts()
+
         // Re-register shortcuts for new groups
         NotificationCenter.default.post(name: .shortcutsNeedUpdate, object: nil)
     }
@@ -182,25 +200,4 @@ public class GroupStore: ObservableObject {
         }
     }
     
-    // MARK: - Cloud Sync Support
-    
-    /// Replace all groups with synced data (used by CloudSyncManager)
-    public func replaceAllGroups(_ newGroups: [AppGroup]) {
-        self.groups = newGroups
-        self.selectedGroupId = groups.first?.id
-        saveGroups()
-        NotificationCenter.default.post(name: .shortcutsNeedUpdate, object: nil)
-    }
-    
-    /* Temporarily disabled - iCloud sync
-    /// Notify cloud sync of local changes
-    func notifyCloudSync() {
-        if CloudSyncManager.shared.isSyncEnabled {
-            CloudSyncManager.shared.pushToCloud()
-        }
-    }
-    */
-    
-    // Stub for when iCloud is disabled
-    func notifyCloudSync() { }
 }
