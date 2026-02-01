@@ -166,7 +166,18 @@ final class LocalizationTests: XCTestCase {
             // General UI
             "Backup & Restore",
             "Export Settings...",
-            "Import Settings..."
+            "Import Settings...",
+            "Settings...",
+            "Quit",
+            "Groups",
+            "General",
+            "Cancel",
+            "Import",
+            "Add",
+            "Rename",
+            "Delete",
+            "Appearance",
+            "Language"
         ]
         
         let resourcesDir = try XCTUnwrap(findResourcesDirectory(), "Could not find Resources directory containing localization files")
