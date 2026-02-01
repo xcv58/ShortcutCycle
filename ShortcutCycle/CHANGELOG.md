@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [1.2] - 2026-02-01
 
 ### Added
+- **Cycling Modes**: Added ability to choose between "Running apps only" or "All apps (open if needed)" for each group.
 - **macOS 14+ Support**: Bumped minimum requirement to macOS 14.0 for modern API usage.
 
 ### Changed
