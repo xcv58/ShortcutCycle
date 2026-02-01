@@ -161,7 +161,7 @@ final class LocalizationTests: XCTestCase {
             "Clipboard Sync",
             
             // Group Edit View
-            "Cycle through all apps (open if needed)",
+            "All apps (open if needed)",
             
             // General UI
             "Backup & Restore",
