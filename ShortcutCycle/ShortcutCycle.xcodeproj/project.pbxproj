@@ -7,23 +7,58 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		001 /* ShortcutCycleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101 /* ShortcutCycleApp.swift */; };
-		002 /* AppItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 102 /* AppItem.swift */; };
-		003 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 103 /* AppGroup.swift */; };
-		004 /* GroupStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 104 /* GroupStore.swift */; };
-		006 /* AppSwitcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 106 /* AppSwitcher.swift */; };
-		007 /* ShortcutManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 107 /* ShortcutManager.swift */; };
-		008 /* KeyboardShortcutsNames.swift in Sources */ = {isa = PBXBuildFile; fileRef = 108 /* KeyboardShortcutsNames.swift */; };
-		009 /* AppDropZoneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 109 /* AppDropZoneView.swift */; };
-		010 /* GroupEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110 /* GroupEditView.swift */; };
-		011 /* GroupListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111 /* GroupListView.swift */; };
-		012 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 112 /* MainView.swift */; };
-		013 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113 /* MenuBarView.swift */; };
-		014 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 114 /* Assets.xcassets */; };
-		015 /* LaunchAtLoginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 116 /* LaunchAtLoginManager.swift */; };
-		016 /* SettingsExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 117 /* SettingsExport.swift */; };
 		017 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 901 /* KeyboardShortcuts */; };
-		DFD9E1762F26F9B500609463 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = DFD9E1742F26F9B500609463 /* Localizable.strings */; };
+		DF88A3762F300B110042E749 /* HUDManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3542F300B110042E749 /* HUDManager.swift */; };
+		DF88A3772F300B110042E749 /* ShortcutCycleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3742F300B110042E749 /* ShortcutCycleApp.swift */; };
+		DF88A3782F300B110042E749 /* GroupEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A36D2F300B110042E749 /* GroupEditView.swift */; };
+		DF88A3792F300B110042E749 /* GeneralSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3682F300B110042E749 /* GeneralSettingsView.swift */; };
+		DF88A37A2F300B110042E749 /* GroupListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A36E2F300B110042E749 /* GroupListView.swift */; };
+		DF88A37B2F300B110042E749 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3392F300B110042E749 /* AppGroup.swift */; };
+		DF88A37C2F300B110042E749 /* LanguageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3562F300B110042E749 /* LanguageManager.swift */; };
+		DF88A37D2F300B110042E749 /* GroupStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A33B2F300B110042E749 /* GroupStore.swift */; };
+		DF88A37E2F300B110042E749 /* HUDPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A36A2F300B110042E749 /* HUDPreviewView.swift */; };
+		DF88A37F2F300B110042E749 /* GroupSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3692F300B110042E749 /* GroupSettingsView.swift */; };
+		DF88A3802F300B110042E749 /* AppSwitcherHUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3532F300B110042E749 /* AppSwitcherHUDView.swift */; };
+		DF88A3812F300B110042E749 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A36F2F300B110042E749 /* MainView.swift */; };
+		DF88A3822F300B110042E749 /* AppSwitcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A35A2F300B110042E749 /* AppSwitcher.swift */; };
+		DF88A3832F300B110042E749 /* HUDAppItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A33C2F300B110042E749 /* HUDAppItem.swift */; };
+		DF88A3842F300B110042E749 /* AppItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A33A2F300B110042E749 /* AppItem.swift */; };
+		DF88A3852F300B110042E749 /* LaunchAtLoginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A35B2F300B110042E749 /* LaunchAtLoginManager.swift */; };
+		DF88A3862F300B110042E749 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3702F300B110042E749 /* MenuBarView.swift */; };
+		DF88A3872F300B110042E749 /* IconCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3512F300B110042E749 /* IconCache.swift */; };
+		DF88A3882F300B110042E749 /* LaunchOverlayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3582F300B110042E749 /* LaunchOverlayManager.swift */; };
+		DF88A3892F300B110042E749 /* String+Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3372F300B110042E749 /* String+Localization.swift */; };
+		DF88A38A2F300B110042E749 /* AppDropZoneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A36C2F300B110042E749 /* AppDropZoneView.swift */; };
+		DF88A38B2F300B110042E749 /* KeyboardShortcutsNames.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A33D2F300B110042E749 /* KeyboardShortcutsNames.swift */; };
+		DF88A38C2F300B110042E749 /* ShortcutManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A35C2F300B110042E749 /* ShortcutManager.swift */; };
+		DF88A38D2F300B110042E749 /* SettingsExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A33E2F300B110042E749 /* SettingsExport.swift */; };
+		DF88A38E2F300B110042E749 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = DF88A34F2F300B110042E749 /* Localizable.strings */; };
+		DF88A38F2F300B110042E749 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DF88A3722F300B110042E749 /* Assets.xcassets */; };
+		DF88A3902F300C3B0042E749 /* ShortcutCycleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3742F300B110042E749 /* ShortcutCycleApp.swift */; };
+		DF88A3912F300C640042E749 /* HUDPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A36A2F300B110042E749 /* HUDPreviewView.swift */; };
+		DF88A3922F300C640042E749 /* GroupSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3692F300B110042E749 /* GroupSettingsView.swift */; };
+		DF88A3932F300C640042E749 /* GeneralSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3682F300B110042E749 /* GeneralSettingsView.swift */; };
+		DF88A3942F300C6A0042E749 /* GroupEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A36D2F300B110042E749 /* GroupEditView.swift */; };
+		DF88A3952F300C6A0042E749 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A36F2F300B110042E749 /* MainView.swift */; };
+		DF88A3962F300C6A0042E749 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3702F300B110042E749 /* MenuBarView.swift */; };
+		DF88A3972F300C6A0042E749 /* AppDropZoneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A36C2F300B110042E749 /* AppDropZoneView.swift */; };
+		DF88A3982F300C6A0042E749 /* GroupListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A36E2F300B110042E749 /* GroupListView.swift */; };
+		DF88A3992F300C7A0042E749 /* String+Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3372F300B110042E749 /* String+Localization.swift */; };
+		DF88A39A2F300C800042E749 /* HUDAppItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A33C2F300B110042E749 /* HUDAppItem.swift */; };
+		DF88A39B2F300C800042E749 /* SettingsExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A33E2F300B110042E749 /* SettingsExport.swift */; };
+		DF88A39C2F300C800042E749 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3392F300B110042E749 /* AppGroup.swift */; };
+		DF88A39D2F300C800042E749 /* KeyboardShortcutsNames.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A33D2F300B110042E749 /* KeyboardShortcutsNames.swift */; };
+		DF88A39E2F300C800042E749 /* AppItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A33A2F300B110042E749 /* AppItem.swift */; };
+		DF88A39F2F300C800042E749 /* GroupStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A33B2F300B110042E749 /* GroupStore.swift */; };
+		DF88A3A02F300C860042E749 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = DF88A34F2F300B110042E749 /* Localizable.strings */; };
+		DF88A3A12F300C8C0042E749 /* IconCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3512F300B110042E749 /* IconCache.swift */; };
+		DF88A3A22F300C910042E749 /* AppSwitcherHUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3532F300B110042E749 /* AppSwitcherHUDView.swift */; };
+		DF88A3A32F300C910042E749 /* HUDManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3542F300B110042E749 /* HUDManager.swift */; };
+		DF88A3A42F300C960042E749 /* LanguageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3562F300B110042E749 /* LanguageManager.swift */; };
+		DF88A3A52F300C9B0042E749 /* LaunchOverlayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3582F300B110042E749 /* LaunchOverlayManager.swift */; };
+		DF88A3A62F300CA00042E749 /* LaunchAtLoginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A35B2F300B110042E749 /* LaunchAtLoginManager.swift */; };
+		DF88A3A72F300CA00042E749 /* ShortcutManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A35C2F300B110042E749 /* ShortcutManager.swift */; };
+		DF88A3A82F300CA00042E749 /* AppSwitcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A35A2F300B110042E749 /* AppSwitcher.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -38,38 +73,48 @@
 
 /* Begin PBXFileReference section */
 		100 /* ShortcutCycle.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ShortcutCycle.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		101 /* ShortcutCycleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutCycleApp.swift; sourceTree = "<group>"; };
-		102 /* AppItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppItem.swift; sourceTree = "<group>"; };
-		103 /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
-		104 /* GroupStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupStore.swift; sourceTree = "<group>"; };
-		106 /* AppSwitcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSwitcher.swift; sourceTree = "<group>"; };
-		107 /* ShortcutManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutManager.swift; sourceTree = "<group>"; };
-		108 /* KeyboardShortcutsNames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcutsNames.swift; sourceTree = "<group>"; };
-		109 /* AppDropZoneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDropZoneView.swift; sourceTree = "<group>"; };
-		110 /* GroupEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupEditView.swift; sourceTree = "<group>"; };
-		111 /* GroupListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupListView.swift; sourceTree = "<group>"; };
-		112 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
-		113 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
-		114 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		115 /* ShortcutCycle.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ShortcutCycle.entitlements; sourceTree = "<group>"; };
-		116 /* LaunchAtLoginManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginManager.swift; sourceTree = "<group>"; };
-		117 /* SettingsExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsExport.swift; sourceTree = "<group>"; };
+		DF88A3372F300B110042E749 /* String+Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Localization.swift"; sourceTree = "<group>"; };
+		DF88A3392F300B110042E749 /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
+		DF88A33A2F300B110042E749 /* AppItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppItem.swift; sourceTree = "<group>"; };
+		DF88A33B2F300B110042E749 /* GroupStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupStore.swift; sourceTree = "<group>"; };
+		DF88A33C2F300B110042E749 /* HUDAppItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDAppItem.swift; sourceTree = "<group>"; };
+		DF88A33D2F300B110042E749 /* KeyboardShortcutsNames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcutsNames.swift; sourceTree = "<group>"; };
+		DF88A33E2F300B110042E749 /* SettingsExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsExport.swift; sourceTree = "<group>"; };
+		DF88A3402F300B110042E749 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		DF88A3412F300B110042E749 /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ar.lproj/Localizable.strings; sourceTree = "<group>"; };
+		DF88A3422F300B110042E749 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
+		DF88A3432F300B110042E749 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
+		DF88A3442F300B110042E749 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Localizable.strings; sourceTree = "<group>"; };
+		DF88A3452F300B110042E749 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/Localizable.strings; sourceTree = "<group>"; };
+		DF88A3462F300B110042E749 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
+		DF88A3472F300B110042E749 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/Localizable.strings; sourceTree = "<group>"; };
+		DF88A3482F300B110042E749 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/Localizable.strings; sourceTree = "<group>"; };
+		DF88A3492F300B110042E749 /* pl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pl; path = pl.lproj/Localizable.strings; sourceTree = "<group>"; };
+		DF88A34A2F300B110042E749 /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		DF88A34B2F300B110042E749 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
+		DF88A34C2F300B110042E749 /* tr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = tr; path = tr.lproj/Localizable.strings; sourceTree = "<group>"; };
+		DF88A34D2F300B110042E749 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		DF88A34E2F300B110042E749 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		DF88A3512F300B110042E749 /* IconCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconCache.swift; sourceTree = "<group>"; };
+		DF88A3532F300B110042E749 /* AppSwitcherHUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSwitcherHUDView.swift; sourceTree = "<group>"; };
+		DF88A3542F300B110042E749 /* HUDManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDManager.swift; sourceTree = "<group>"; };
+		DF88A3562F300B110042E749 /* LanguageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageManager.swift; sourceTree = "<group>"; };
+		DF88A3582F300B110042E749 /* LaunchOverlayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchOverlayManager.swift; sourceTree = "<group>"; };
+		DF88A35A2F300B110042E749 /* AppSwitcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSwitcher.swift; sourceTree = "<group>"; };
+		DF88A35B2F300B110042E749 /* LaunchAtLoginManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginManager.swift; sourceTree = "<group>"; };
+		DF88A35C2F300B110042E749 /* ShortcutManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutManager.swift; sourceTree = "<group>"; };
+		DF88A3682F300B110042E749 /* GeneralSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralSettingsView.swift; sourceTree = "<group>"; };
+		DF88A3692F300B110042E749 /* GroupSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupSettingsView.swift; sourceTree = "<group>"; };
+		DF88A36A2F300B110042E749 /* HUDPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDPreviewView.swift; sourceTree = "<group>"; };
+		DF88A36C2F300B110042E749 /* AppDropZoneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDropZoneView.swift; sourceTree = "<group>"; };
+		DF88A36D2F300B110042E749 /* GroupEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupEditView.swift; sourceTree = "<group>"; };
+		DF88A36E2F300B110042E749 /* GroupListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupListView.swift; sourceTree = "<group>"; };
+		DF88A36F2F300B110042E749 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
+		DF88A3702F300B110042E749 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
+		DF88A3722F300B110042E749 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		DF88A3732F300B110042E749 /* ShortcutCycle.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ShortcutCycle.entitlements; sourceTree = "<group>"; };
+		DF88A3742F300B110042E749 /* ShortcutCycleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutCycleApp.swift; sourceTree = "<group>"; };
 		DF8B47D72F2F090100C473F8 /* ShortcutCycleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ShortcutCycleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		DFD9E1652F26F9B500609463 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
-		DFD9E1662F26F9B500609463 /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ar.lproj/Localizable.strings; sourceTree = "<group>"; };
-		DFD9E1672F26F9B500609463 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
-		DFD9E1682F26F9B500609463 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
-		DFD9E1692F26F9B500609463 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Localizable.strings; sourceTree = "<group>"; };
-		DFD9E16A2F26F9B500609463 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/Localizable.strings; sourceTree = "<group>"; };
-		DFD9E16B2F26F9B500609463 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
-		DFD9E16C2F26F9B500609463 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/Localizable.strings; sourceTree = "<group>"; };
-		DFD9E16D2F26F9B500609463 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/Localizable.strings; sourceTree = "<group>"; };
-		DFD9E16E2F26F9B500609463 /* pl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pl; path = pl.lproj/Localizable.strings; sourceTree = "<group>"; };
-		DFD9E16F2F26F9B500609463 /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/Localizable.strings"; sourceTree = "<group>"; };
-		DFD9E1702F26F9B500609463 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
-		DFD9E1712F26F9B500609463 /* tr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = tr; path = tr.lproj/Localizable.strings; sourceTree = "<group>"; };
-		DFD9E1722F26F9B500609463 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
-		DFD9E1732F26F9B500609463 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/Localizable.strings"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -98,24 +143,10 @@
 		300 = {
 			isa = PBXGroup;
 			children = (
-				301 /* ShortcutCycle */,
+				DF88A3752F300B110042E749 /* ShortcutCycle */,
 				DF8B47D82F2F090100C473F8 /* ShortcutCycleTests */,
 				302 /* Products */,
 			);
-			sourceTree = "<group>";
-		};
-		301 /* ShortcutCycle */ = {
-			isa = PBXGroup;
-			children = (
-				DFD9E1752F26F9B500609463 /* Resources */,
-				101 /* ShortcutCycleApp.swift */,
-				303 /* Models */,
-				304 /* Services */,
-				305 /* Views */,
-				114 /* Assets.xcassets */,
-				115 /* ShortcutCycle.entitlements */,
-			);
-			path = ShortcutCycle;
 			sourceTree = "<group>";
 		};
 		302 /* Products */ = {
@@ -127,46 +158,198 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		303 /* Models */ = {
+		DF88A3382F300B110042E749 /* Extensions */ = {
 			isa = PBXGroup;
 			children = (
-				102 /* AppItem.swift */,
-				103 /* AppGroup.swift */,
-				104 /* GroupStore.swift */,
-				108 /* KeyboardShortcutsNames.swift */,
-				117 /* SettingsExport.swift */,
+				DF88A3372F300B110042E749 /* String+Localization.swift */,
+			);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
+		DF88A33F2F300B110042E749 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				DF88A3392F300B110042E749 /* AppGroup.swift */,
+				DF88A33A2F300B110042E749 /* AppItem.swift */,
+				DF88A33B2F300B110042E749 /* GroupStore.swift */,
+				DF88A33C2F300B110042E749 /* HUDAppItem.swift */,
+				DF88A33D2F300B110042E749 /* KeyboardShortcutsNames.swift */,
+				DF88A33E2F300B110042E749 /* SettingsExport.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
 		};
-		304 /* Services */ = {
+		DF88A3502F300B110042E749 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				106 /* AppSwitcher.swift */,
-				116 /* LaunchAtLoginManager.swift */,
-				107 /* ShortcutManager.swift */,
+				DF88A34F2F300B110042E749 /* Localizable.strings */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		DF88A3522F300B110042E749 /* AppSwitcher */ = {
+			isa = PBXGroup;
+			children = (
+				DF88A3512F300B110042E749 /* IconCache.swift */,
+			);
+			path = AppSwitcher;
+			sourceTree = "<group>";
+		};
+		DF88A3552F300B110042E749 /* HUD */ = {
+			isa = PBXGroup;
+			children = (
+				DF88A3532F300B110042E749 /* AppSwitcherHUDView.swift */,
+				DF88A3542F300B110042E749 /* HUDManager.swift */,
+			);
+			path = HUD;
+			sourceTree = "<group>";
+		};
+		DF88A3572F300B110042E749 /* Managers */ = {
+			isa = PBXGroup;
+			children = (
+				DF88A3562F300B110042E749 /* LanguageManager.swift */,
+			);
+			path = Managers;
+			sourceTree = "<group>";
+		};
+		DF88A3592F300B110042E749 /* Overlay */ = {
+			isa = PBXGroup;
+			children = (
+				DF88A3582F300B110042E749 /* LaunchOverlayManager.swift */,
+			);
+			path = Overlay;
+			sourceTree = "<group>";
+		};
+		DF88A35D2F300B110042E749 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				DF88A3522F300B110042E749 /* AppSwitcher */,
+				DF88A3552F300B110042E749 /* HUD */,
+				DF88A3572F300B110042E749 /* Managers */,
+				DF88A3592F300B110042E749 /* Overlay */,
+				DF88A35A2F300B110042E749 /* AppSwitcher.swift */,
+				DF88A35B2F300B110042E749 /* LaunchAtLoginManager.swift */,
+				DF88A35C2F300B110042E749 /* ShortcutManager.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
 		};
-		305 /* Views */ = {
+		DF88A35E2F300B110042E749 /* Extensions */ = {
 			isa = PBXGroup;
 			children = (
-				109 /* AppDropZoneView.swift */,
-				110 /* GroupEditView.swift */,
-				111 /* GroupListView.swift */,
-				112 /* MainView.swift */,
-				113 /* MenuBarView.swift */,
+			);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
+		DF88A35F2F300B110042E749 /* AppSwitcher */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = AppSwitcher;
+			sourceTree = "<group>";
+		};
+		DF88A3602F300B110042E749 /* Managers */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Managers;
+			sourceTree = "<group>";
+		};
+		DF88A3612F300B110042E749 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				DF88A35F2F300B110042E749 /* AppSwitcher */,
+				DF88A3602F300B110042E749 /* Managers */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		DF88A3622F300B110042E749 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		DF88A3632F300B110042E749 /* HUD */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = HUD;
+			sourceTree = "<group>";
+		};
+		DF88A3642F300B110042E749 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		DF88A3652F300B110042E749 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				DF88A3622F300B110042E749 /* Components */,
+				DF88A3632F300B110042E749 /* HUD */,
+				DF88A3642F300B110042E749 /* Settings */,
 			);
 			path = Views;
 			sourceTree = "<group>";
 		};
-		DFD9E1752F26F9B500609463 /* Resources */ = {
+		DF88A3662F300B110042E749 /* ShortcutCycle */ = {
 			isa = PBXGroup;
 			children = (
-				DFD9E1742F26F9B500609463 /* Localizable.strings */,
+				DF88A35E2F300B110042E749 /* Extensions */,
+				DF88A3612F300B110042E749 /* Services */,
+				DF88A3652F300B110042E749 /* Views */,
 			);
-			path = Resources;
+			path = ShortcutCycle;
+			sourceTree = "<group>";
+		};
+		DF88A3672F300B110042E749 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		DF88A36B2F300B110042E749 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				DF88A3682F300B110042E749 /* GeneralSettingsView.swift */,
+				DF88A3692F300B110042E749 /* GroupSettingsView.swift */,
+				DF88A36A2F300B110042E749 /* HUDPreviewView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		DF88A3712F300B110042E749 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				DF88A3672F300B110042E749 /* Components */,
+				DF88A36B2F300B110042E749 /* Settings */,
+				DF88A36C2F300B110042E749 /* AppDropZoneView.swift */,
+				DF88A36D2F300B110042E749 /* GroupEditView.swift */,
+				DF88A36E2F300B110042E749 /* GroupListView.swift */,
+				DF88A36F2F300B110042E749 /* MainView.swift */,
+				DF88A3702F300B110042E749 /* MenuBarView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		DF88A3752F300B110042E749 /* ShortcutCycle */ = {
+			isa = PBXGroup;
+			children = (
+				DF88A3382F300B110042E749 /* Extensions */,
+				DF88A33F2F300B110042E749 /* Models */,
+				DF88A3502F300B110042E749 /* Resources */,
+				DF88A35D2F300B110042E749 /* Services */,
+				DF88A3662F300B110042E749 /* ShortcutCycle */,
+				DF88A3712F300B110042E749 /* Views */,
+				DF88A3722F300B110042E749 /* Assets.xcassets */,
+				DF88A3732F300B110042E749 /* ShortcutCycle.entitlements */,
+				DF88A3742F300B110042E749 /* ShortcutCycleApp.swift */,
+			);
+			path = ShortcutCycle;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -275,8 +458,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				014 /* Assets.xcassets in Resources */,
-				DFD9E1762F26F9B500609463 /* Localizable.strings in Resources */,
+				DF88A3A02F300C860042E749 /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -284,6 +466,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DF88A38E2F300B110042E749 /* Localizable.strings in Resources */,
+				DF88A38F2F300B110042E749 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -294,20 +478,30 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				001 /* ShortcutCycleApp.swift in Sources */,
-				002 /* AppItem.swift in Sources */,
-				003 /* AppGroup.swift in Sources */,
-				004 /* GroupStore.swift in Sources */,
-				006 /* AppSwitcher.swift in Sources */,
-				007 /* ShortcutManager.swift in Sources */,
-				008 /* KeyboardShortcutsNames.swift in Sources */,
-				009 /* AppDropZoneView.swift in Sources */,
-				010 /* GroupEditView.swift in Sources */,
-				011 /* GroupListView.swift in Sources */,
-				012 /* MainView.swift in Sources */,
-				013 /* MenuBarView.swift in Sources */,
-				015 /* LaunchAtLoginManager.swift in Sources */,
-				016 /* SettingsExport.swift in Sources */,
+				DF88A3912F300C640042E749 /* HUDPreviewView.swift in Sources */,
+				DF88A39A2F300C800042E749 /* HUDAppItem.swift in Sources */,
+				DF88A39B2F300C800042E749 /* SettingsExport.swift in Sources */,
+				DF88A39C2F300C800042E749 /* AppGroup.swift in Sources */,
+				DF88A3A62F300CA00042E749 /* LaunchAtLoginManager.swift in Sources */,
+				DF88A3A72F300CA00042E749 /* ShortcutManager.swift in Sources */,
+				DF88A3A82F300CA00042E749 /* AppSwitcher.swift in Sources */,
+				DF88A39D2F300C800042E749 /* KeyboardShortcutsNames.swift in Sources */,
+				DF88A39E2F300C800042E749 /* AppItem.swift in Sources */,
+				DF88A39F2F300C800042E749 /* GroupStore.swift in Sources */,
+				DF88A3A12F300C8C0042E749 /* IconCache.swift in Sources */,
+				DF88A3922F300C640042E749 /* GroupSettingsView.swift in Sources */,
+				DF88A3932F300C640042E749 /* GeneralSettingsView.swift in Sources */,
+				DF88A3942F300C6A0042E749 /* GroupEditView.swift in Sources */,
+				DF88A3952F300C6A0042E749 /* MainView.swift in Sources */,
+				DF88A3962F300C6A0042E749 /* MenuBarView.swift in Sources */,
+				DF88A3972F300C6A0042E749 /* AppDropZoneView.swift in Sources */,
+				DF88A3A52F300C9B0042E749 /* LaunchOverlayManager.swift in Sources */,
+				DF88A3A22F300C910042E749 /* AppSwitcherHUDView.swift in Sources */,
+				DF88A3A32F300C910042E749 /* HUDManager.swift in Sources */,
+				DF88A3982F300C6A0042E749 /* GroupListView.swift in Sources */,
+				DF88A3902F300C3B0042E749 /* ShortcutCycleApp.swift in Sources */,
+				DF88A3992F300C7A0042E749 /* String+Localization.swift in Sources */,
+				DF88A3A42F300C960042E749 /* LanguageManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -315,6 +509,30 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DF88A3762F300B110042E749 /* HUDManager.swift in Sources */,
+				DF88A3772F300B110042E749 /* ShortcutCycleApp.swift in Sources */,
+				DF88A3782F300B110042E749 /* GroupEditView.swift in Sources */,
+				DF88A3792F300B110042E749 /* GeneralSettingsView.swift in Sources */,
+				DF88A37A2F300B110042E749 /* GroupListView.swift in Sources */,
+				DF88A37B2F300B110042E749 /* AppGroup.swift in Sources */,
+				DF88A37C2F300B110042E749 /* LanguageManager.swift in Sources */,
+				DF88A37D2F300B110042E749 /* GroupStore.swift in Sources */,
+				DF88A37E2F300B110042E749 /* HUDPreviewView.swift in Sources */,
+				DF88A37F2F300B110042E749 /* GroupSettingsView.swift in Sources */,
+				DF88A3802F300B110042E749 /* AppSwitcherHUDView.swift in Sources */,
+				DF88A3812F300B110042E749 /* MainView.swift in Sources */,
+				DF88A3822F300B110042E749 /* AppSwitcher.swift in Sources */,
+				DF88A3832F300B110042E749 /* HUDAppItem.swift in Sources */,
+				DF88A3842F300B110042E749 /* AppItem.swift in Sources */,
+				DF88A3852F300B110042E749 /* LaunchAtLoginManager.swift in Sources */,
+				DF88A3862F300B110042E749 /* MenuBarView.swift in Sources */,
+				DF88A3872F300B110042E749 /* IconCache.swift in Sources */,
+				DF88A3882F300B110042E749 /* LaunchOverlayManager.swift in Sources */,
+				DF88A3892F300B110042E749 /* String+Localization.swift in Sources */,
+				DF88A38A2F300B110042E749 /* AppDropZoneView.swift in Sources */,
+				DF88A38B2F300B110042E749 /* KeyboardShortcutsNames.swift in Sources */,
+				DF88A38C2F300B110042E749 /* ShortcutManager.swift in Sources */,
+				DF88A38D2F300B110042E749 /* SettingsExport.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -329,24 +547,24 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
-		DFD9E1742F26F9B500609463 /* Localizable.strings */ = {
+		DF88A34F2F300B110042E749 /* Localizable.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
-				DFD9E1652F26F9B500609463 /* en */,
-				DFD9E1662F26F9B500609463 /* ar */,
-				DFD9E1672F26F9B500609463 /* de */,
-				DFD9E1682F26F9B500609463 /* es */,
-				DFD9E1692F26F9B500609463 /* fr */,
-				DFD9E16A2F26F9B500609463 /* it */,
-				DFD9E16B2F26F9B500609463 /* ja */,
-				DFD9E16C2F26F9B500609463 /* ko */,
-				DFD9E16D2F26F9B500609463 /* nl */,
-				DFD9E16E2F26F9B500609463 /* pl */,
-				DFD9E16F2F26F9B500609463 /* pt-BR */,
-				DFD9E1702F26F9B500609463 /* ru */,
-				DFD9E1712F26F9B500609463 /* tr */,
-				DFD9E1722F26F9B500609463 /* zh-Hans */,
-				DFD9E1732F26F9B500609463 /* zh-Hant */,
+				DF88A3402F300B110042E749 /* en */,
+				DF88A3412F300B110042E749 /* ar */,
+				DF88A3422F300B110042E749 /* de */,
+				DF88A3432F300B110042E749 /* es */,
+				DF88A3442F300B110042E749 /* fr */,
+				DF88A3452F300B110042E749 /* it */,
+				DF88A3462F300B110042E749 /* ja */,
+				DF88A3472F300B110042E749 /* ko */,
+				DF88A3482F300B110042E749 /* nl */,
+				DF88A3492F300B110042E749 /* pl */,
+				DF88A34A2F300B110042E749 /* pt-BR */,
+				DF88A34B2F300B110042E749 /* ru */,
+				DF88A34C2F300B110042E749 /* tr */,
+				DF88A34D2F300B110042E749 /* zh-Hans */,
+				DF88A34E2F300B110042E749 /* zh-Hant */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";

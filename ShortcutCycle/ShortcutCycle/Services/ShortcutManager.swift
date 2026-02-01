@@ -20,7 +20,9 @@ class ShortcutManager: ObservableObject {
     private init() {
         // Observers
         NotificationCenter.default.addObserver(forName: .shortcutsNeedUpdate, object: nil, queue: .main) { [weak self] _ in
-            self?.registerAllShortcuts()
+            Task { @MainActor in
+                self?.registerAllShortcuts()
+            }
         }
     }
     
