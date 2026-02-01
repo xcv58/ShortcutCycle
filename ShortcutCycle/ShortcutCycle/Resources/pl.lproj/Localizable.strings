@@ -98,5 +98,10 @@
 "Select a ShortcutCycle settings file" = "Wybierz plik ustawień ShortcutCycle";
 
 /* Group Edit View */
-"Cycle through all apps (open if needed)" = "Przełączaj wszystkie aplikacje (otwórz jeśli potrzeba)";
+"Cycling Mode" = "Tryb przełączania";
+"Running apps only" = "Tylko uruchomione aplikacje";
+"All apps (open if needed)" = "Wszystkie aplikacje (otwórz jeśli potrzeba)";
 "Displays the keyboard shortcut used to trigger the switch." = "Wyświetla skrót klawiszowy używany do przełączania.";
+"Opening…" = "Otwieranie…";
+"Cycle through all apps in the group. Non-running apps will be launched when selected." = "Przełączaj wszystkie aplikacje w grupie. Nieuruchomione aplikacje zostaną otwarte po wybraniu.";
+"Cycle through running apps only. If no app is running, the first app in the group will be launched." = "Przełączaj tylko uruchomione aplikacje. Jeśli żadna aplikacja nie jest uruchomiona, pierwsza aplikacja z grupy zostanie otwarta.";

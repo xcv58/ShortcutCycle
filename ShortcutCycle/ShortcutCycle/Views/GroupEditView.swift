@@ -41,7 +41,7 @@ struct GroupEditView: View {
                         .onHover { hovering in
                             isHovering = hovering
                         }
-                        .onChange(of: groupName) { newValue in
+                        .onChange(of: groupName) { _, newValue in
                             var updatedGroup = group
                             updatedGroup.name = newValue
                             store.updateGroup(updatedGroup)
@@ -57,22 +57,36 @@ struct GroupEditView: View {
                     
                     HStack {
                         KeyboardShortcuts.Recorder(for: .forGroup(groupId))
-                            .onChange(of: KeyboardShortcuts.getShortcut(for: .forGroup(groupId))) { _ in
+                        .onChange(of: KeyboardShortcuts.getShortcut(for: .forGroup(groupId))) { _, _ in
                                 // Re-register shortcuts when changed
                                 ShortcutManager.shared.registerAllShortcuts()
                             }
                     }
                     
-                    Toggle("Cycle through all apps (open if needed)".localized(language: selectedLanguage), isOn: Binding(
+                    Picker("Cycling Mode".localized(language: selectedLanguage), selection: Binding(
                         get: { group.shouldOpenAppIfNeeded },
                         set: { newValue in
-                            var updatedGroup = group
-                            updatedGroup.openAppIfNeeded = newValue
-                            store.updateGroup(updatedGroup)
+                            DispatchQueue.main.async {
+                                var updatedGroup = group
+                                updatedGroup.openAppIfNeeded = newValue
+                                store.updateGroup(updatedGroup)
+                            }
                         }
-                    ))
+                    )) {
+                        Text("Running apps only".localized(language: selectedLanguage)).tag(false)
+                        Text("All apps (open if needed)".localized(language: selectedLanguage)).tag(true)
+                    }
+                    .pickerStyle(.segmented)
                     .font(.caption)
                     .padding(.top, 4)
+
+                    Text(group.shouldOpenAppIfNeeded
+                        ? "Cycle through all apps in the group. Non-running apps will be launched when selected.".localized(language: selectedLanguage)
+                        : "Cycle through running apps only. If no app is running, the first app in the group will be launched.".localized(language: selectedLanguage)
+                    )
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.top, 2)
                 }
                 
                 Divider()
@@ -136,7 +150,7 @@ struct GroupEditView: View {
     .onAppear {
         loadGroupData()
     }
-    .onChange(of: groupId) { _ in
+    .onChange(of: groupId) { _, _ in
         loadGroupData()
     }
 }

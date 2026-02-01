@@ -161,12 +161,23 @@ final class LocalizationTests: XCTestCase {
             "Clipboard Sync",
             
             // Group Edit View
-            "Cycle through all apps (open if needed)",
+            "All apps (open if needed)",
             
             // General UI
             "Backup & Restore",
             "Export Settings...",
-            "Import Settings..."
+            "Import Settings...",
+            "Settings...",
+            "Quit",
+            "Groups",
+            "General",
+            "Cancel",
+            "Import",
+            "Add",
+            "Rename",
+            "Delete",
+            "Appearance",
+            "Language"
         ]
         
         let resourcesDir = try XCTUnwrap(findResourcesDirectory(), "Could not find Resources directory containing localization files")

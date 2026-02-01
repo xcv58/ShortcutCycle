@@ -98,5 +98,10 @@
 "Select a ShortcutCycle settings file" = "Sélectionnez un fichier de réglages ShortcutCycle";
 
 /* Group Edit View */
-"Cycle through all apps (open if needed)" = "Parcourir toutes les apps (ouvrir si nécessaire)";
+"Cycling Mode" = "Mode de cycle";
+"Running apps only" = "Apps en cours uniquement";
+"All apps (open if needed)" = "Toutes les apps (ouvrir si nécessaire)";
 "Displays the keyboard shortcut used to trigger the switch." = "Affiche le raccourci clavier utilisé pour déclencher le changement.";
+"Opening…" = "Ouverture…";
+"Cycle through all apps in the group. Non-running apps will be launched when selected." = "Parcourir toutes les apps du groupe. Les apps non lancées seront ouvertes lors de la sélection.";
+"Cycle through running apps only. If no app is running, the first app in the group will be launched." = "Parcourir uniquement les apps en cours. Si aucune app n'est ouverte, la première app du groupe sera lancée.";

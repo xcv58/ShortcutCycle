@@ -98,5 +98,10 @@
 "Select a ShortcutCycle settings file" = "Выберите файл настроек ShortcutCycle";
 
 /* Group Edit View */
-"Cycle through all apps (open if needed)" = "Переключаться между всеми приложениями (открыть при необходимости)";
+"Cycling Mode" = "Режим переключения";
+"Running apps only" = "Только запущенные приложения";
+"All apps (open if needed)" = "Все приложения (открыть при необходимости)";
 "Displays the keyboard shortcut used to trigger the switch." = "Отображает сочетание клавиш для переключения.";
+"Opening…" = "Открытие…";
+"Cycle through all apps in the group. Non-running apps will be launched when selected." = "Переключаться между всеми приложениями группы. Незапущенные приложения будут открыты при выборе.";
+"Cycle through running apps only. If no app is running, the first app in the group will be launched." = "Переключаться только между запущенными приложениями. Если ни одно приложение не запущено, будет открыто первое приложение группы.";
