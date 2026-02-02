@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(ShortcutCycleCore)
+import ShortcutCycleCore
+#endif
 
 /// A file entry representing a backup on disk
 struct BackupFile: Identifiable, Equatable {
