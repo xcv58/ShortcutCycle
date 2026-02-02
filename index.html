@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="system">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShortcutCycle - Cycle apps by group. Instantly.</title>
+    <meta name="description"
+        content="Stop endlessly tabbing. Group your apps by context—Web, Code, Social—and cycle through them with dedicated hotkeys.">
+
+    <style>
+        /* --- THEME VARIABLES --- */
+        :root {
+            /* Light Theme Defaults */
+            --bg-color: #ffffff;
+            --surface: #f5f5f7;
+            --surface-hover: #e5e5e7;
+            --text-primary: #1d1d1f;
+            --text-secondary: #86868b;
+            --border: #d2d2d7;
+            --accent: #007AFF;
+            --accent-hover: #0062cc;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --toggle-bg: #e5e5ea;
+            --toggle-active: #ffffff;
+        }
+
+        /* Dark Theme Overrides */
+        [data-theme="dark"] {
+            --bg-color: #0f0f12;
+            --surface: #1c1c1e;
+            --surface-hover: #2c2c2e;
+            --text-primary: #f5f5f7;
+            --text-secondary: #a1a1aa;
+            --border: #2c2c2e;
+            --shadow: rgba(0, 0, 0, 0.5);
+            --toggle-bg: #1c1c1e;
+            --toggle-active: #636366;
+            /* Lighter gray for active state in dark mode */
+        }
+
+        /* System Preference (Auto) */
+        @media (prefers-color-scheme: dark) {
+            [data-theme="system"] {
+                --bg-color: #0f0f12;
+                --surface: #1c1c1e;
+                --surface-hover: #2c2c2e;
+                --text-primary: #f5f5f7;
+                --text-secondary: #a1a1aa;
+                --border: #2c2c2e;
+                --shadow: rgba(0, 0, 0, 0.5);
+                --toggle-bg: #1c1c1e;
+                --toggle-active: #636366;
+            }
+        }
+
+        /* --- GLOBAL STYLES --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+            transition: 0.2s;
+        }
+
+        img {
+            display: block;
+            max-width: 100%;
+        }
+
+        /* --- LAYOUT --- */
+        .container {
+            max-width: 1024px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        .section {
+            padding: 80px 0;
+        }
+
+        /* --- HEADER & NAV --- */
+        header {
+            padding: 24px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-weight: 700;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo img {
+            width: 40px;
+            height: 40px;
+            border-radius: 9px;
+            box-shadow: 0 2px 5px var(--shadow);
+        }
+
+        .nav-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 500;
+            display: none;
+            /* Hidden on very small screens */
+        }
+
+        @media(min-width: 600px) {
+            .nav-links a {
+                display: inline-block;
+            }
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        /* --- NEW THEME SWITCHER (Segmented Control) --- */
+        .theme-switch {
+            background-color: var(--toggle-bg);
+            border-radius: 99px;
+            padding: 2px;
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--border);
+        }
+
+        .theme-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 99px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .theme-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        /* Active State */
+        .theme-btn.active {
+            background-color: var(--toggle-active);
+            color: var(--text-primary);
+            box-shadow: 0 2px 4px var(--shadow);
+        }
+
+        .theme-btn:hover:not(.active) {
+            color: var(--text-primary);
+        }
+
+        /* --- HERO --- */
+        .hero {
+            text-align: center;
+            padding: 100px 0 40px 0;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 24px;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 40px auto;
+        }
+
+        .cta-button {
+            background-color: var(--accent);
+            color: #fff;
+            padding: 14px 36px;
+            border-radius: 99px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.1rem;
+        }
+
+        .cta-button:hover {
+            background-color: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+
+        /* --- GALLERY (SCREENSHOTS) --- */
+        .gallery-scroller {
+            margin-top: 60px;
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+            padding-bottom: 20px;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .gallery-scroller::-webkit-scrollbar {
+            display: none;
+        }
+
+        .gallery-scroller {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .screenshot-frame {
+            flex: 0 0 85%;
+            max-width: 900px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 40px var(--shadow);
+            scroll-snap-align: center;
+            position: relative;
+        }
+
+        @media(min-width: 768px) {
+            .screenshot-frame {
+                flex: 0 0 auto;
+                width: 900px;
+            }
+        }
+
+        /* --- FEATURES --- */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .feature-card {
+            background: var(--surface);
+            padding: 32px;
+            border-radius: 16px;
+            border: 1px solid transparent;
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .feature-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 12px;
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 40px 0;
+            margin-top: 80px;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .footer-links a {
+            margin: 0 12px;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <div class="logo">
+                <img src="ShortcutCycle/ShortcutCycle/Assets.xcassets/AppIcon.appiconset/1024.png"
+                    alt="ShortcutCycle Icon">
+                ShortcutCycle
+            </div>
+
+            <div class="nav-wrapper">
+                <nav class="nav-links">
+                    <a href="https://github.com/xcv58/ShortcutCycle/blob/master/PRIVACY_POLICY.md"
+                        target="_blank">Privacy</a>
+                    <a href="https://github.com/xcv58/ShortcutCycle/issues" target="_blank">Support</a>
+                    <a href="https://github.com/xcv58/ShortcutCycle" target="_blank">GitHub</a>
+                </nav>
+
+                <div class="theme-switch" role="group" aria-label="Theme Toggle">
+
+                    <button class="theme-btn" onclick="setTheme('system')" id="btn-system" aria-label="System Theme"
+                        title="Match System">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                    </button>
+
+                    <button class="theme-btn" onclick="setTheme('light')" id="btn-light" aria-label="Light Theme"
+                        title="Light Mode">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="5"></circle>
+                            <line x1="12" y1="1" x2="12" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="23"></line>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                            <line x1="1" y1="12" x2="3" y2="12"></line>
+                            <line x1="21" y1="12" x2="23" y2="12"></line>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                        </svg>
+                    </button>
+
+                    <button class="theme-btn" onclick="setTheme('dark')" id="btn-dark" aria-label="Dark Theme"
+                        title="Dark Mode">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <section class="hero">
+            <h1>Cycle apps by group.<br>Instantly.</h1>
+            <p>Stop endlessly tabbing. Group your apps by context—Web, Code, Social—and cycle through them with
+                dedicated hotkeys.</p>
+
+            <a href="https://apps.apple.com/us/app/shortcutcycle/id6758281578?mt=12" class="cta-button">
+                Download on App Store
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+            </a>
+
+            <div class="gallery-scroller">
+                <div class="screenshot-frame">
+                    <img src="ShortcutCycle/App%20Store%20Connect%20Assets/Screenshots/HUD%20Light.png"
+                        alt="HUD Overlay Light">
+                </div>
+                <div class="screenshot-frame">
+                    <img src="ShortcutCycle/App%20Store%20Connect%20Assets/Screenshots/HUD-Grid%20Dark.png"
+                        alt="Grid View Dark">
+                </div>
+                <div class="screenshot-frame">
+                    <img src="ShortcutCycle/App%20Store%20Connect%20Assets/Screenshots/General%20Light.png"
+                        alt="General Settings Light">
+                </div>
+                <div class="screenshot-frame">
+                    <img src="ShortcutCycle/App%20Store%20Connect%20Assets/Screenshots/General%20Dark.png"
+                        alt="General Settings Dark">
+                </div>
+                <div class="screenshot-frame">
+                    <img src="ShortcutCycle/App%20Store%20Connect%20Assets/Screenshots/Group%20Dark.png"
+                        alt="Group Settings Dark">
+                </div>
+                <div class="screenshot-frame">
+                    <img src="ShortcutCycle/App%20Store%20Connect%20Assets/Screenshots/Menubar%20and%20languages.png"
+                        alt="Menu Bar and Localization">
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="features-grid">
+                <div class="feature-card">
+                    <span class="feature-icon">🎯</span>
+                    <h3>Context-Aware</h3>
+                    <p>Don't cycle through 20 windows. Group "Browsers" separately from "Terminals" and switch only
+                        between what you need.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">⚡️</span>
+                    <h3>One-Key Magic</h3>
+                    <p>Press <code>Option+1</code> to open your browser. Press it again to cycle to the next one. Build
+                        instant muscle memory.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🚀</span>
+                    <h3>Smart Launching</h3>
+                    <p>ShortcutCycle is also a launcher. If you try to cycle to an app that isn't running, we open it
+                        for you automatically.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">👀</span>
+                    <h3>Visual HUD</h3>
+                    <p>A beautiful native overlay shows you exactly what you are switching to. Or turn it off for
+                        invisible switching.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🌍</span>
+                    <h3>Native & Global</h3>
+                    <p>Localized in 15 languages. Fully accessible with VoiceOver support. Optimized for Apple Silicon.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🔒</span>
+                    <h3>Private by Design</h3>
+                    <p>No analytics. No tracking. Your configuration stays on your Mac. Export to JSON to backup your
+                        settings.</p>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <div class="footer-links">
+                <a href="https://apps.apple.com/us/app/shortcutcycle/id6758281578?mt=12">App Store</a>
+                <a href="https://github.com/xcv58/ShortcutCycle">GitHub</a>
+                <a href="https://github.com/xcv58/ShortcutCycle/blob/master/PRIVACY_POLICY.md">Privacy Policy</a>
+            </div>
+            <br>
+            <p>&copy; 2026 ShortcutCycle. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        const html = document.documentElement;
+        const btns = {
+            system: document.getElementById('btn-system'),
+            light: document.getElementById('btn-light'),
+            dark: document.getElementById('btn-dark')
+        };
+
+        function getStoredTheme() {
+            return localStorage.getItem('theme') || 'system';
+        }
+
+        function setTheme(theme) {
+            html.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            updateControls(theme);
+        }
+
+        function updateControls(activeTheme) {
+            // Remove active class from all
+            Object.values(btns).forEach(btn => btn.classList.remove('active'));
+            // Add to current
+            if (btns[activeTheme]) btns[activeTheme].classList.add('active');
+        }
+
+        // Initialize
+        const initialTheme = getStoredTheme();
+        setTheme(initialTheme);
+    </script>
+</body>
+
+</html>
