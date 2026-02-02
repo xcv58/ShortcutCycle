@@ -32,7 +32,7 @@ Selected price point for launch. One-time purchase.
 `CURRENT_PROJECT_VERSION` (build number) must be unique for each TestFlight/App Store upload.
 
 ### Xcode Cloud
-Build numbers are set automatically by `ci_scripts/ci_post_clone.sh` using `$CI_BUILD_NUMBER + 100` offset. No manual action needed.
+Build numbers are set automatically by `<repo-root>/ci_scripts/ci_post_clone.sh` using `$CI_BUILD_NUMBER + 100` offset. No manual action needed.
 
 ### Local Builds
 Before archiving locally, bump the build number from the terminal:
