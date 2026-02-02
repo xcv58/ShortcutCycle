@@ -51,6 +51,7 @@
 		DF88A39E2F300C800042E749 /* AppItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A33A2F300B110042E749 /* AppItem.swift */; };
 		DF88A39F2F300C800042E749 /* GroupStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A33B2F300B110042E749 /* GroupStore.swift */; };
 		DF88A3A02F300C860042E749 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = DF88A34F2F300B110042E749 /* Localizable.strings */; };
+		DF88A3A92F300CA10042E749 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DF88A3722F300B110042E749 /* Assets.xcassets */; };
 		DF88A3A12F300C8C0042E749 /* IconCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3512F300B110042E749 /* IconCache.swift */; };
 		DF88A3A22F300C910042E749 /* AppSwitcherHUDView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3532F300B110042E749 /* AppSwitcherHUDView.swift */; };
 		DF88A3A32F300C910042E749 /* HUDManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3542F300B110042E749 /* HUDManager.swift */; };
@@ -459,6 +460,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DF88A3A02F300C860042E749 /* Localizable.strings in Resources */,
+				DF88A3A92F300CA10042E749 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
