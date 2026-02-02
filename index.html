@@ -120,8 +120,14 @@
             gap: 24px;
         }
 
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+
         .nav-links a {
-            color: var(--text-secondary);
+            color: var(--text-primary);
             font-size: 0.95rem;
             font-weight: 500;
             display: none;
@@ -135,7 +141,7 @@
         }
 
         .nav-links a:hover {
-            color: var(--text-primary);
+            color: var(--accent);
         }
 
         /* --- NEW THEME SWITCHER (Segmented Control) --- */
@@ -235,6 +241,51 @@
             scrollbar-width: none;
         }
 
+        .gallery-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .scroll-btn {
+            background-color: var(--surface);
+            border: 1px solid transparent;
+            color: var(--text-primary);
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: absolute;
+            z-index: 10;
+            box-shadow: 0 4px 12px var(--shadow);
+            transition: all 0.3s ease;
+            opacity: 0.5;
+        }
+
+        .scroll-btn:hover {
+            background-color: var(--surface);
+            opacity: 1;
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px var(--shadow);
+        }
+
+        .scroll-btn.prev {
+            left: -64px;
+        }
+
+        .scroll-btn.next {
+            right: -64px;
+        }
+
+        @media(max-width: 800px) {
+            .scroll-btn {
+                display: none;
+            }
+        }
+
         .screenshot-frame {
             flex: 0 0 85%;
             max-width: 900px;
@@ -313,11 +364,11 @@
 
     <div class="container">
         <header>
-            <div class="logo">
+            <a href="index.html" class="logo">
                 <img src="ShortcutCycle/ShortcutCycle/Assets.xcassets/AppIcon.appiconset/1024.png"
                     alt="ShortcutCycle Icon">
                 ShortcutCycle
-            </div>
+            </a>
 
             <div class="nav-wrapper">
                 <nav class="nav-links">
@@ -378,31 +429,43 @@
                 </svg>
             </a>
 
-            <div class="gallery-scroller">
-                <div class="screenshot-frame">
-                    <img src="ShortcutCycle/App%20Store%20Connect%20Assets/Screenshots/HUD%20Light.png"
-                        alt="HUD Overlay Light">
+            <div class="gallery-wrapper">
+                <button class="scroll-btn prev" id="gallery-prev" aria-label="Previous">
+                    <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <div class="gallery-scroller">
+                    <div class="screenshot-frame">
+                        <img src="ShortcutCycle/App%20Store%20Connect%20Assets/Screenshots/HUD%20Light.png"
+                            alt="HUD Overlay Light">
+                    </div>
+                    <div class="screenshot-frame">
+                        <img src="ShortcutCycle/App%20Store%20Connect%20Assets/Screenshots/HUD-Grid%20Dark.png"
+                            alt="Grid View Dark">
+                    </div>
+                    <div class="screenshot-frame">
+                        <img src="ShortcutCycle/App%20Store%20Connect%20Assets/Screenshots/General%20Light.png"
+                            alt="General Settings Light">
+                    </div>
+                    <div class="screenshot-frame">
+                        <img src="ShortcutCycle/App%20Store%20Connect%20Assets/Screenshots/General%20Dark.png"
+                            alt="General Settings Dark">
+                    </div>
+                    <div class="screenshot-frame">
+                        <img src="ShortcutCycle/App%20Store%20Connect%20Assets/Screenshots/Group%20Dark.png"
+                            alt="Group Settings Dark">
+                    </div>
+                    <div class="screenshot-frame">
+                        <img src="ShortcutCycle/App%20Store%20Connect%20Assets/Screenshots/Menubar%20and%20languages.png"
+                            alt="Menu Bar and Localization">
+                    </div>
                 </div>
-                <div class="screenshot-frame">
-                    <img src="ShortcutCycle/App%20Store%20Connect%20Assets/Screenshots/HUD-Grid%20Dark.png"
-                        alt="Grid View Dark">
-                </div>
-                <div class="screenshot-frame">
-                    <img src="ShortcutCycle/App%20Store%20Connect%20Assets/Screenshots/General%20Light.png"
-                        alt="General Settings Light">
-                </div>
-                <div class="screenshot-frame">
-                    <img src="ShortcutCycle/App%20Store%20Connect%20Assets/Screenshots/General%20Dark.png"
-                        alt="General Settings Dark">
-                </div>
-                <div class="screenshot-frame">
-                    <img src="ShortcutCycle/App%20Store%20Connect%20Assets/Screenshots/Group%20Dark.png"
-                        alt="Group Settings Dark">
-                </div>
-                <div class="screenshot-frame">
-                    <img src="ShortcutCycle/App%20Store%20Connect%20Assets/Screenshots/Menubar%20and%20languages.png"
-                        alt="Menu Bar and Localization">
-                </div>
+                <button class="scroll-btn next" id="gallery-next" aria-label="Next">
+                    <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
             </div>
         </section>
 
@@ -486,6 +549,41 @@
         // Initialize
         const initialTheme = getStoredTheme();
         setTheme(initialTheme);
+
+        // --- Gallery Buttons Interaction ---
+        const galleryScroller = document.querySelector('.gallery-scroller');
+        const prevBtn = document.getElementById('gallery-prev');
+        const nextBtn = document.getElementById('gallery-next');
+
+        if (galleryScroller && prevBtn && nextBtn) {
+            prevBtn.addEventListener('click', () => {
+                const tolerance = 5; // buffer for float point errors
+                if (galleryScroller.scrollLeft <= tolerance) {
+                    // Loop to end
+                    galleryScroller.scrollTo({
+                        left: galleryScroller.scrollWidth,
+                        behavior: 'smooth'
+                    });
+                } else {
+                    galleryScroller.scrollBy({ left: -400, behavior: 'smooth' });
+                }
+            });
+
+            nextBtn.addEventListener('click', () => {
+                const tolerance = 5;
+                const maxScroll = galleryScroller.scrollWidth - galleryScroller.clientWidth;
+
+                if (galleryScroller.scrollLeft >= maxScroll - tolerance) {
+                    // Loop to start
+                    galleryScroller.scrollTo({
+                        left: 0,
+                        behavior: 'smooth'
+                    });
+                } else {
+                    galleryScroller.scrollBy({ left: 400, behavior: 'smooth' });
+                }
+            });
+        }
     </script>
 </body>
 
