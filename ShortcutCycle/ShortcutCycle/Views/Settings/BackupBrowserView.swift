@@ -46,6 +46,7 @@ struct BackupBrowserView: View {
     @EnvironmentObject var store: GroupStore
     @Environment(\.dismiss) private var dismiss
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
+    @FocusState private var isSidebarFocused: Bool
 
     @State private var backupFiles: [BackupFile] = []
     @State private var invalidSelection = false
@@ -114,7 +115,19 @@ struct BackupBrowserView: View {
         }
         .frame(minWidth: 650, minHeight: 450)
         .frame(idealWidth: 700, idealHeight: 500)
-        .onAppear { loadBackupFiles() }
+        .onAppear {
+            loadBackupFiles()
+            isSidebarFocused = true
+        }
+        .onChange(of: selectedID) { _, newID in
+            if let newID, let idx = backupFiles.firstIndex(where: { $0.id == newID }) {
+                updateSelectionState(at: idx)
+            } else {
+                selectedExport = nil
+                compareID = nil
+                diff = nil
+            }
+        }
         .alert("Restore Backup?".localized(language: selectedLanguage), isPresented: $showRestoreConfirmation) {
             Button("Cancel".localized(language: selectedLanguage), role: .cancel) {}
             Button("Restore".localized(language: selectedLanguage), role: .destructive) { performRestore() }
@@ -131,19 +144,7 @@ struct BackupBrowserView: View {
 
     // MARK: - Sidebar
 
-    private var sidebarSelection: Binding<URL?> {
-        Binding<URL?>(
-            get: { selectedID },
-            set: { newID in
-                guard let newID, let idx = backupFiles.firstIndex(where: { $0.id == newID }) else { return }
-                if NSEvent.modifierFlags.contains(.option), newID != selectedID {
-                    setCompareBackup(at: idx)
-                } else {
-                    selectBackup(at: idx)
-                }
-            }
-        )
-    }
+
 
     @ViewBuilder
     private func sidebarRow(for file: BackupFile) -> some View {
@@ -165,7 +166,22 @@ struct BackupBrowserView: View {
                 }
                 .opacity(file.isValid ? 1.0 : 0.5)
             }
+            Spacer()
         }
+        .contentShape(Rectangle())
+        .highPriorityGesture(TapGesture().onEnded {
+            isSidebarFocused = true
+            guard let idx = backupFiles.firstIndex(where: { $0.id == file.id }) else { return }
+            if NSEvent.modifierFlags.contains(.option) {
+                setCompareBackup(at: idx)
+            } else {
+                if selectedID == file.id {
+                    updateSelectionState(at: idx)
+                } else {
+                    selectedID = file.id
+                }
+            }
+        })
         .tag(file.id)
         .listRowBackground(
             file.id == compareID ? Color.orange.opacity(0.15) : Color.clear
@@ -176,12 +192,13 @@ struct BackupBrowserView: View {
 
     private var sidebarView: some View {
         VStack(spacing: 0) {
-            List(selection: sidebarSelection) {
+            List(selection: $selectedID) {
                 ForEach(backupFiles) { file in
                     sidebarRow(for: file)
                 }
             }
             .listStyle(.sidebar)
+            .focused($isSidebarFocused)
 
             Text("⌥-click to compare with a different backup".localized(language: selectedLanguage))
                 .font(.caption2)
@@ -420,12 +437,11 @@ struct BackupBrowserView: View {
 
         // Auto-select latest
         if !backupFiles.isEmpty {
-            selectBackup(at: 0)
+            selectedID = backupFiles[0].id
         }
     }
 
-    private func selectBackup(at index: Int) {
-        selectedID = backupFiles[index].id
+    private func updateSelectionState(at index: Int) {
         compareID = index + 1 < backupFiles.count ? backupFiles[index + 1].id : nil
 
         // Load selected export
@@ -479,7 +495,7 @@ struct BackupBrowserView: View {
     }
 
     private func performDelete() {
-        guard let sid = selectedID, let idx = selectedIndex else { return }
+        guard let idx = selectedIndex else { return }
         let file = backupFiles[idx]
         try? FileManager.default.removeItem(at: file.url)
         backupFiles.remove(at: idx)
@@ -491,7 +507,7 @@ struct BackupBrowserView: View {
 
         // Re-select if possible
         if !backupFiles.isEmpty {
-            selectBackup(at: min(idx, backupFiles.count - 1))
+            selectedID = backupFiles[min(idx, backupFiles.count - 1)].id
         }
     }
 }
