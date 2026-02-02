@@ -23,6 +23,7 @@ let package = Package(
             sources: [
                 "Models/AppGroup.swift",
                 "Models/AppItem.swift",
+                "Models/BackupRetention.swift",
                 "Models/GroupStore.swift",
                 "Models/SettingsExport.swift",
                 "Models/KeyboardShortcutsNames.swift"
@@ -38,6 +39,7 @@ let package = Package(
             exclude: [
                 "Models/AppGroup.swift",
                 "Models/AppItem.swift",
+                "Models/BackupRetention.swift",
                 "Models/GroupStore.swift",
                 "Models/SettingsExport.swift",
                 "Models/KeyboardShortcutsNames.swift"

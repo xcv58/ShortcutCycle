@@ -185,8 +185,7 @@ public class GroupStore: ObservableObject {
             let backupFile = backupDirectory.appendingPathComponent("backup \(timestamp).json")
             try data.write(to: backupFile, options: .atomic)
             
-            // Cleanup: keep only the 100 most recent backups
-            cleanupOldBackups(in: backupDirectory, keeping: 100)
+            cleanupOldBackups(in: backupDirectory)
         } catch {
             print("GroupStore: Auto-backup failed: \(error)")
         }
@@ -205,26 +204,22 @@ public class GroupStore: ObservableObject {
         return url
     }
 
-    /// Remove old backup files, keeping only the specified number of most recent ones
-    private func cleanupOldBackups(in directory: URL, keeping maxCount: Int) {
+    /// Thin old backups using GFS (Grandfather-Father-Son) retention policy.
+    /// Keeps more granularity for recent backups, progressively fewer for older ones.
+    private func cleanupOldBackups(in directory: URL) {
         do {
             let fileManager = FileManager.default
             let files = try fileManager.contentsOfDirectory(at: directory, includingPropertiesForKeys: [.creationDateKey])
-            let backupFiles = files.filter { $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json" }
-            
-            guard backupFiles.count > maxCount else { return }
-            
-            // Sort by creation date in descending order (newest first)
-            let sortedFiles = backupFiles.sorted { file1, file2 in
-                let date1 = (try? file1.resourceValues(forKeys: [.creationDateKey]))?.creationDate ?? .distantPast
-                let date2 = (try? file2.resourceValues(forKeys: [.creationDateKey]))?.creationDate ?? .distantPast
-                return date1 > date2
-            }
-            
-            // Delete files beyond the max count
-            let filesToDelete = sortedFiles.dropFirst(maxCount)
-            for file in filesToDelete {
-                try fileManager.removeItem(at: file)
+            let backupFiles = files
+                .filter { $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json" }
+                .map { url -> BackupRetention.TimedFile in
+                    let date = (try? url.resourceValues(forKeys: [.creationDateKey]))?.creationDate ?? .distantPast
+                    return BackupRetention.TimedFile(url: url, date: date)
+                }
+
+            let toDelete = BackupRetention.filesToDelete(from: backupFiles)
+            for url in toDelete {
+                try fileManager.removeItem(at: url)
             }
         } catch {
             print("GroupStore: Backup cleanup failed: \(error)")
