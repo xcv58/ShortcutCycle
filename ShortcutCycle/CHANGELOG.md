@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - **Cycling Modes**: Added ability to choose between "Running apps only" or "All apps (open if needed)" for each group.
 - **macOS 14+ Support**: Bumped minimum requirement to macOS 14.0 for modern API usage.
+- **Automatic Backups**: Added automatic backups for groups and settings, with a visual browser to preview, compare, and restore previous configurations.
 
 ### Changed
 - **Refactoring**: Major code restructuring for better modularity and maintainability.
