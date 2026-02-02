@@ -105,3 +105,39 @@
 "Opening…" = "Otwieranie…";
 "Cycle through all apps in the group. Non-running apps will be launched when selected." = "Przełączaj wszystkie aplikacje w grupie. Nieuruchomione aplikacje zostaną otwarte po wybraniu.";
 "Cycle through running apps only. If no app is running, the first app in the group will be launched." = "Przełączaj tylko uruchomione aplikacje. Jeśli żadna aplikacja nie jest uruchomiona, pierwsza aplikacja z grupy zostanie otwarta.";
+
+/* Backup Browser */
+"View Automatic Backups..." = "Pokaż automatyczne kopie zapasowe...";
+"Back Up Now" = "Utwórz kopię teraz";
+"Backed up successfully" = "Kopia zapasowa utworzona";
+"No changes to save" = "Brak zmian do zapisania";
+"Backup failed: %@" = "Tworzenie kopii nie powiodło się: %@";
+"Automatic Backups" = "Automatyczne kopie zapasowe";
+"Changes from" = "Zmiany od";
+"No changes" = "Brak zmian";
+"(invalid)" = "(nieprawidłowy)";
+"This backup file is invalid or corrupted." = "Ten plik kopii zapasowej jest nieprawidłowy lub uszkodzony.";
+"⌥-click to compare with a different backup" = "⌥-kliknij, aby porównać z inną kopią zapasową";
+"No Backup Selected" = "Nie wybrano kopii zapasowej";
+"Select a backup from the sidebar to preview its contents." = "Wybierz kopię zapasową z paska bocznego, aby wyświetlić podgląd zawartości.";
+"selected" = "wybrano";
+"comparing" = "porównywanie";
+"Restore" = "Przywróć";
+"Done" = "Gotowe";
+"Open Backup Folder" = "Otwórz folder kopii zapasowych";
+"Preview:" = "Podgląd:";
+"Restore Backup?" = "Przywrócić kopię zapasową?";
+"This will replace all current groups and settings with the selected backup. This action cannot be undone." = "Wszystkie bieżące grupy i ustawienia zostaną zastąpione wybraną kopią zapasową. Tej operacji nie można cofnąć.";
+"Delete Backup?" = "Usunąć kopię zapasową?";
+"This backup file will be permanently deleted." = "Ten plik kopii zapasowej zostanie trwale usunięty.";
+"View and restore from automatic backups." = "Wyświetl i przywróć z automatycznych kopii zapasowych.";
+"View Backups..." = "Pokaż kopie zapasowe...";
+
+/* Diff status labels */
+"added" = "dodano";
+"removed" = "usunięto";
+"modified" = "zmieniono";
+"unchanged" = "bez zmian";
+
+/* Share */
+"Share" = "Udostępnij";

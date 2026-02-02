@@ -105,3 +105,39 @@
 "Opening…" = "Abrindo…";
 "Cycle through all apps in the group. Non-running apps will be launched when selected." = "Alternar entre todos os apps do grupo. Apps não abertos serão iniciados ao selecionar.";
 "Cycle through running apps only. If no app is running, the first app in the group will be launched." = "Alternar apenas entre apps em execução. Se nenhum app estiver aberto, o primeiro app do grupo será iniciado.";
+
+/* Backup Browser */
+"View Automatic Backups..." = "Ver backups automáticos...";
+"Back Up Now" = "Fazer backup agora";
+"Backed up successfully" = "Backup realizado com sucesso";
+"No changes to save" = "Sem alterações para salvar";
+"Backup failed: %@" = "Falha no backup: %@";
+"Automatic Backups" = "Backups automáticos";
+"Changes from" = "Alterações de";
+"No changes" = "Sem alterações";
+"(invalid)" = "(inválido)";
+"This backup file is invalid or corrupted." = "Este arquivo de backup é inválido ou está corrompido.";
+"⌥-click to compare with a different backup" = "⌥-clique para comparar com outro backup";
+"No Backup Selected" = "Nenhum backup selecionado";
+"Select a backup from the sidebar to preview its contents." = "Selecione um backup na barra lateral para visualizar seu conteúdo.";
+"selected" = "selecionado";
+"comparing" = "comparando";
+"Restore" = "Restaurar";
+"Done" = "Concluído";
+"Open Backup Folder" = "Abrir pasta de backups";
+"Preview:" = "Pré-visualização:";
+"Restore Backup?" = "Restaurar backup?";
+"This will replace all current groups and settings with the selected backup. This action cannot be undone." = "Isso substituirá todos os grupos e configurações atuais pelo backup selecionado. Esta ação não pode ser desfeita.";
+"Delete Backup?" = "Excluir backup?";
+"This backup file will be permanently deleted." = "Este arquivo de backup será excluído permanentemente.";
+"View and restore from automatic backups." = "Ver e restaurar backups automáticos.";
+"View Backups..." = "Ver backups...";
+
+/* Diff status labels */
+"added" = "adicionado";
+"removed" = "removido";
+"modified" = "modificado";
+"unchanged" = "inalterado";
+
+/* Share */
+"Share" = "Compartilhar";

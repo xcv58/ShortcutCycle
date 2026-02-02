@@ -105,3 +105,39 @@
 "Opening…" = "Openen…";
 "Cycle through all apps in the group. Non-running apps will be launched when selected." = "Alle apps in de groep doorlopen. Niet-actieve apps worden geopend bij selectie.";
 "Cycle through running apps only. If no app is running, the first app in the group will be launched." = "Alleen actieve apps doorlopen. Als geen app actief is, wordt de eerste app van de groep geopend.";
+
+/* Backup Browser */
+"View Automatic Backups..." = "Automatische back-ups bekijken...";
+"Back Up Now" = "Nu back-up maken";
+"Backed up successfully" = "Back-up geslaagd";
+"No changes to save" = "Geen wijzigingen om op te slaan";
+"Backup failed: %@" = "Back-up mislukt: %@";
+"Automatic Backups" = "Automatische back-ups";
+"Changes from" = "Wijzigingen van";
+"No changes" = "Geen wijzigingen";
+"(invalid)" = "(ongeldig)";
+"This backup file is invalid or corrupted." = "Dit back-upbestand is ongeldig of beschadigd.";
+"⌥-click to compare with a different backup" = "⌥-klik om te vergelijken met een andere back-up";
+"No Backup Selected" = "Geen back-up geselecteerd";
+"Select a backup from the sidebar to preview its contents." = "Selecteer een back-up in de zijbalk om de inhoud te bekijken.";
+"selected" = "geselecteerd";
+"comparing" = "vergelijkend";
+"Restore" = "Herstellen";
+"Done" = "Gereed";
+"Open Backup Folder" = "Back-upmap openen";
+"Preview:" = "Voorbeeld:";
+"Restore Backup?" = "Back-up herstellen?";
+"This will replace all current groups and settings with the selected backup. This action cannot be undone." = "Alle huidige groepen en instellingen worden vervangen door de geselecteerde back-up. Deze actie kan niet ongedaan worden gemaakt.";
+"Delete Backup?" = "Back-up verwijderen?";
+"This backup file will be permanently deleted." = "Dit back-upbestand wordt permanent verwijderd.";
+"View and restore from automatic backups." = "Automatische back-ups bekijken en herstellen.";
+"View Backups..." = "Back-ups bekijken...";
+
+/* Diff status labels */
+"added" = "toegevoegd";
+"removed" = "verwijderd";
+"modified" = "gewijzigd";
+"unchanged" = "ongewijzigd";
+
+/* Share */
+"Share" = "Deel";

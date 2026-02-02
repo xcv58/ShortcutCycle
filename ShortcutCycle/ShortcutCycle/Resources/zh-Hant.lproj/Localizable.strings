@@ -107,3 +107,39 @@
 "Opening…" = "正在開啟…";
 "Cycle through all apps in the group. Non-running apps will be launched when selected." = "循環群組內所有應用程式。未執行的應用程式在選取時將被啟動。";
 "Cycle through running apps only. If no app is running, the first app in the group will be launched." = "僅循環執行中的應用程式。如果沒有應用程式在執行，將啟動群組內的第一個應用程式。";
+
+/* Backup Browser */
+"View Automatic Backups..." = "檢視自動備份...";
+"Back Up Now" = "立即備份";
+"Backed up successfully" = "備份成功";
+"No changes to save" = "沒有需要儲存的變更";
+"Backup failed: %@" = "備份失敗：%@";
+"Automatic Backups" = "自動備份";
+"Changes from" = "變更來源";
+"No changes" = "無變更";
+"(invalid)" = "（無效）";
+"This backup file is invalid or corrupted." = "此備份檔案無效或已損壞。";
+"⌥-click to compare with a different backup" = "⌥-點按以與其他備份進行比較";
+"No Backup Selected" = "未選擇備份";
+"Select a backup from the sidebar to preview its contents." = "從側邊欄選擇備份以預覽其內容。";
+"selected" = "已選擇";
+"comparing" = "比較中";
+"Restore" = "回復";
+"Done" = "完成";
+"Open Backup Folder" = "打開備份資料夾";
+"Preview:" = "預覽：";
+"Restore Backup?" = "回復備份？";
+"This will replace all current groups and settings with the selected backup. This action cannot be undone." = "這將用所選備份替換所有目前群組和設定。此操作無法撤銷。";
+"Delete Backup?" = "刪除備份？";
+"This backup file will be permanently deleted." = "此備份檔案將被永久刪除。";
+"View and restore from automatic backups." = "檢視和回復自動備份。";
+"View Backups..." = "檢視備份...";
+
+/* Diff status labels */
+"added" = "已新增";
+"removed" = "已移除";
+"modified" = "已修改";
+"unchanged" = "未變更";
+
+/* Share */
+"Share" = "分享";

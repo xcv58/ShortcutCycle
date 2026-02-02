@@ -105,3 +105,39 @@
 "Opening…" = "여는 중…";
 "Cycle through all apps in the group. Non-running apps will be launched when selected." = "그룹의 모든 앱을 순환합니다. 실행 중이 아닌 앱은 선택 시 실행됩니다.";
 "Cycle through running apps only. If no app is running, the first app in the group will be launched." = "실행 중인 앱만 순환합니다. 실행 중인 앱이 없으면 그룹의 첫 번째 앱이 실행됩니다.";
+
+/* Backup Browser */
+"View Automatic Backups..." = "자동 백업 보기...";
+"Back Up Now" = "지금 백업";
+"Backed up successfully" = "백업 완료";
+"No changes to save" = "저장할 변경 사항 없음";
+"Backup failed: %@" = "백업 실패: %@";
+"Automatic Backups" = "자동 백업";
+"Changes from" = "변경 사항";
+"No changes" = "변경 없음";
+"(invalid)" = "(유효하지 않음)";
+"This backup file is invalid or corrupted." = "이 백업 파일이 유효하지 않거나 손상되었습니다.";
+"⌥-click to compare with a different backup" = "⌥-클릭으로 다른 백업과 비교";
+"No Backup Selected" = "선택된 백업 없음";
+"Select a backup from the sidebar to preview its contents." = "사이드바에서 백업을 선택하여 내용을 미리 봅니다.";
+"selected" = "선택됨";
+"comparing" = "비교 중";
+"Restore" = "복원";
+"Done" = "완료";
+"Open Backup Folder" = "백업 폴더 열기";
+"Preview:" = "미리보기:";
+"Restore Backup?" = "백업을 복원하시겠습니까?";
+"This will replace all current groups and settings with the selected backup. This action cannot be undone." = "선택한 백업으로 현재 모든 그룹과 설정이 대체됩니다. 이 작업은 되돌릴 수 없습니다.";
+"Delete Backup?" = "백업을 삭제하시겠습니까?";
+"This backup file will be permanently deleted." = "이 백업 파일이 영구적으로 삭제됩니다.";
+"View and restore from automatic backups." = "자동 백업 보기 및 복원.";
+"View Backups..." = "백업 보기...";
+
+/* Diff status labels */
+"added" = "추가됨";
+"removed" = "삭제됨";
+"modified" = "수정됨";
+"unchanged" = "변경 없음";
+
+/* Share */
+"Share" = "공유";

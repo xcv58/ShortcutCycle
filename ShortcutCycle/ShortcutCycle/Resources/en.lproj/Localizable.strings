@@ -107,3 +107,39 @@
 "Opening…" = "Opening…";
 "Cycle through all apps in the group. Non-running apps will be launched when selected." = "Cycle through all apps in the group. Non-running apps will be launched when selected.";
 "Cycle through running apps only. If no app is running, the first app in the group will be launched." = "Cycle through running apps only. If no app is running, the first app in the group will be launched.";
+
+/* Backup Browser */
+"View Automatic Backups..." = "View Automatic Backups...";
+"Back Up Now" = "Back Up Now";
+"Backed up successfully" = "Backed up successfully";
+"No changes to save" = "No changes to save";
+"Backup failed: %@" = "Backup failed: %@";
+"Automatic Backups" = "Automatic Backups";
+"Changes from" = "Changes from";
+"No changes" = "No changes";
+"(invalid)" = "(invalid)";
+"This backup file is invalid or corrupted." = "This backup file is invalid or corrupted.";
+"⌥-click to compare with a different backup" = "⌥-click to compare with a different backup";
+"No Backup Selected" = "No Backup Selected";
+"Select a backup from the sidebar to preview its contents." = "Select a backup from the sidebar to preview its contents.";
+"selected" = "selected";
+"comparing" = "comparing";
+"Restore" = "Restore";
+"Done" = "Done";
+"Open Backup Folder" = "Open Backup Folder";
+"Preview:" = "Preview:";
+"Restore Backup?" = "Restore Backup?";
+"This will replace all current groups and settings with the selected backup. This action cannot be undone." = "This will replace all current groups and settings with the selected backup. This action cannot be undone.";
+"Delete Backup?" = "Delete Backup?";
+"This backup file will be permanently deleted." = "This backup file will be permanently deleted.";
+"View and restore from automatic backups." = "View and restore from automatic backups.";
+"View Backups..." = "View Backups...";
+
+/* Diff status labels */
+"added" = "added";
+"removed" = "removed";
+"modified" = "modified";
+"unchanged" = "unchanged";
+
+/* Share */
+"Share" = "Share";

@@ -105,3 +105,39 @@
 "Opening…" = "Открытие…";
 "Cycle through all apps in the group. Non-running apps will be launched when selected." = "Переключаться между всеми приложениями группы. Незапущенные приложения будут открыты при выборе.";
 "Cycle through running apps only. If no app is running, the first app in the group will be launched." = "Переключаться только между запущенными приложениями. Если ни одно приложение не запущено, будет открыто первое приложение группы.";
+
+/* Backup Browser */
+"View Automatic Backups..." = "Просмотр автоматических резервных копий...";
+"Back Up Now" = "Создать копию сейчас";
+"Backed up successfully" = "Резервная копия создана";
+"No changes to save" = "Нет изменений для сохранения";
+"Backup failed: %@" = "Ошибка резервного копирования: %@";
+"Automatic Backups" = "Автоматические резервные копии";
+"Changes from" = "Изменения с";
+"No changes" = "Нет изменений";
+"(invalid)" = "(недействительный)";
+"This backup file is invalid or corrupted." = "Этот файл резервной копии недействителен или повреждён.";
+"⌥-click to compare with a different backup" = "⌥-нажмите для сравнения с другой резервной копией";
+"No Backup Selected" = "Резервная копия не выбрана";
+"Select a backup from the sidebar to preview its contents." = "Выберите резервную копию на боковой панели для предварительного просмотра содержимого.";
+"selected" = "выбрано";
+"comparing" = "сравнение";
+"Restore" = "Восстановить";
+"Done" = "Готово";
+"Open Backup Folder" = "Открыть папку резервных копий";
+"Preview:" = "Предпросмотр:";
+"Restore Backup?" = "Восстановить резервную копию?";
+"This will replace all current groups and settings with the selected backup. This action cannot be undone." = "Все текущие группы и настройки будут заменены выбранной резервной копией. Это действие нельзя отменить.";
+"Delete Backup?" = "Удалить резервную копию?";
+"This backup file will be permanently deleted." = "Этот файл резервной копии будет безвозвратно удалён.";
+"View and restore from automatic backups." = "Просмотр и восстановление из автоматических резервных копий.";
+"View Backups..." = "Просмотр копий...";
+
+/* Diff status labels */
+"added" = "добавлено";
+"removed" = "удалено";
+"modified" = "изменено";
+"unchanged" = "без изменений";
+
+/* Share */
+"Share" = "Поделиться";

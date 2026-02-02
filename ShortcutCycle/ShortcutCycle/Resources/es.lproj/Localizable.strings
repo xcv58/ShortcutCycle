@@ -105,3 +105,39 @@
 "Opening…" = "Abriendo…";
 "Cycle through all apps in the group. Non-running apps will be launched when selected." = "Alternar entre todas las apps del grupo. Las apps que no estén en ejecución se abrirán al seleccionarlas.";
 "Cycle through running apps only. If no app is running, the first app in the group will be launched." = "Alternar solo entre apps en ejecución. Si ninguna app está abierta, se abrirá la primera app del grupo.";
+
+/* Backup Browser */
+"View Automatic Backups..." = "Ver copias de seguridad automáticas...";
+"Back Up Now" = "Hacer copia ahora";
+"Backed up successfully" = "Copia de seguridad completada";
+"No changes to save" = "Sin cambios que guardar";
+"Backup failed: %@" = "Error en la copia de seguridad: %@";
+"Automatic Backups" = "Copias de seguridad automáticas";
+"Changes from" = "Cambios desde";
+"No changes" = "Sin cambios";
+"(invalid)" = "(inválido)";
+"This backup file is invalid or corrupted." = "Este archivo de copia de seguridad es inválido o está dañado.";
+"⌥-click to compare with a different backup" = "⌥-clic para comparar con otra copia de seguridad";
+"No Backup Selected" = "Ninguna copia seleccionada";
+"Select a backup from the sidebar to preview its contents." = "Selecciona una copia de seguridad de la barra lateral para previsualizar su contenido.";
+"selected" = "seleccionado";
+"comparing" = "comparando";
+"Restore" = "Restaurar";
+"Done" = "Listo";
+"Open Backup Folder" = "Abrir carpeta de copias";
+"Preview:" = "Vista previa:";
+"Restore Backup?" = "¿Restaurar copia de seguridad?";
+"This will replace all current groups and settings with the selected backup. This action cannot be undone." = "Esto reemplazará todos los grupos y ajustes actuales con la copia seleccionada. Esta acción no se puede deshacer.";
+"Delete Backup?" = "¿Eliminar copia de seguridad?";
+"This backup file will be permanently deleted." = "Este archivo de copia de seguridad se eliminará permanentemente.";
+"View and restore from automatic backups." = "Ver y restaurar desde copias de seguridad automáticas.";
+"View Backups..." = "Ver copias de seguridad...";
+
+/* Diff status labels */
+"added" = "añadido";
+"removed" = "eliminado";
+"modified" = "modificado";
+"unchanged" = "sin cambios";
+
+/* Share */
+"Share" = "Compartir";

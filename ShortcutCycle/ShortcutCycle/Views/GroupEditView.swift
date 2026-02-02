@@ -14,6 +14,7 @@ struct GroupEditView: View {
     @State private var groupName: String = ""
     @State private var draggingApp: AppItem?
     @State private var isHovering: Bool = false
+    @FocusState private var isNameFocused: Bool
     
     private var group: AppGroup? {
         store.groups.first { $0.id == groupId }
@@ -29,6 +30,7 @@ struct GroupEditView: View {
                         .font(.headline)
                     
                     TextField("Untitled Group", text: $groupName)
+                        .focused($isNameFocused)
                         .font(.title2)
                         .fontWeight(.medium)
                         .textFieldStyle(.plain)

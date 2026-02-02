@@ -1,6 +1,10 @@
 import Foundation
 import SwiftUI
 
+public enum ManualBackupResult {
+    case saved, noChange, error(String)
+}
+
 /// Observable store for managing app groups with persistence
 @MainActor
 public class GroupStore: ObservableObject {
@@ -177,22 +181,42 @@ public class GroupStore: ObservableObject {
     private func performAutoBackup() {
         backupPending = false
         lastBackupTime = Date()
-        
+
         do {
             let data = try exportData()
+
+            // Skip backup if content is identical to the most recent backup
+            if let latestBackup = mostRecentBackupData(), contentEqual(data, latestBackup) {
+                return
+            }
 
             let timestamp = Self.backupDateFormatter.string(from: Date())
             let backupFile = backupDirectory.appendingPathComponent("backup \(timestamp).json")
             try data.write(to: backupFile, options: .atomic)
-            
+
             cleanupOldBackups(in: backupDirectory)
         } catch {
             print("GroupStore: Auto-backup failed: \(error)")
         }
     }
+
+    /// Returns the Data contents of the most recent backup file, if any
+    private func mostRecentBackupData() -> Data? {
+        let fm = FileManager.default
+        guard let files = try? fm.contentsOfDirectory(at: backupDirectory, includingPropertiesForKeys: [.creationDateKey]) else { return nil }
+        let latest = files
+            .filter { $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json" }
+            .compactMap { url -> (URL, Date)? in
+                guard let date = (try? url.resourceValues(forKeys: [.creationDateKey]))?.creationDate else { return nil }
+                return (url, date)
+            }
+            .max(by: { $0.1 < $1.1 })
+        guard let latestURL = latest?.0 else { return nil }
+        return try? Data(contentsOf: latestURL)
+    }
     
     /// Directory where backups are stored
-    private var backupDirectory: URL {
+    public var backupDirectory: URL {
         let fileManager = FileManager.default
         let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         let dirName = userDefaults == .standard ? "ShortcutCycle" : "ShortcutCycle-Test"
@@ -251,6 +275,40 @@ public class GroupStore: ObservableObject {
         saveGroups()
     }
     
+    // MARK: - Manual Backup
+
+    public func manualBackup() -> ManualBackupResult {
+        do {
+            let data = try exportData()
+
+            if let latestBackup = mostRecentBackupData(),
+               contentEqual(data, latestBackup) {
+                return .noChange
+            }
+
+            let timestamp = Self.backupDateFormatter.string(from: Date())
+            let backupFile = backupDirectory.appendingPathComponent("backup \(timestamp).json")
+            try data.write(to: backupFile, options: .atomic)
+            cleanupOldBackups(in: backupDirectory)
+            return .saved
+        } catch {
+            return .error(error.localizedDescription)
+        }
+    }
+
+    /// Compare two export payloads ignoring the exportDate field
+    private func contentEqual(_ a: Data, _ b: Data) -> Bool {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        guard let ea = try? decoder.decode(SettingsExport.self, from: a),
+              let eb = try? decoder.decode(SettingsExport.self, from: b) else {
+            return a == b
+        }
+        return ea.groups == eb.groups &&
+               ea.settings == eb.settings &&
+               ea.shortcuts == eb.shortcuts
+    }
+
     // MARK: - Export/Import
     
     /// Export all settings as JSON data

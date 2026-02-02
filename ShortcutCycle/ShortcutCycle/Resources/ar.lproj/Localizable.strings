@@ -106,3 +106,39 @@
 "Opening…" = "جارٍ الفتح…";
 "Cycle through all apps in the group. Non-running apps will be launched when selected." = "التنقل بين جميع التطبيقات في المجموعة. سيتم فتح التطبيقات غير المشغلة عند اختيارها.";
 "Cycle through running apps only. If no app is running, the first app in the group will be launched." = "التنقل بين التطبيقات المشغلة فقط. إذا لم يكن أي تطبيق مشغلاً، سيتم فتح أول تطبيق في المجموعة.";
+
+/* Backup Browser */
+"View Automatic Backups..." = "عرض النسخ الاحتياطية التلقائية...";
+"Back Up Now" = "نسخ احتياطي الآن";
+"Backed up successfully" = "تم النسخ الاحتياطي بنجاح";
+"No changes to save" = "لا توجد تغييرات للحفظ";
+"Backup failed: %@" = "فشل النسخ الاحتياطي: %@";
+"Automatic Backups" = "النسخ الاحتياطية التلقائية";
+"Changes from" = "التغييرات من";
+"No changes" = "لا توجد تغييرات";
+"(invalid)" = "(غير صالح)";
+"This backup file is invalid or corrupted." = "ملف النسخة الاحتياطية غير صالح أو تالف.";
+"⌥-click to compare with a different backup" = "⌥-انقر للمقارنة مع نسخة احتياطية مختلفة";
+"No Backup Selected" = "لم يتم اختيار نسخة احتياطية";
+"Select a backup from the sidebar to preview its contents." = "اختر نسخة احتياطية من الشريط الجانبي لمعاينة محتوياتها.";
+"selected" = "محدد";
+"comparing" = "مقارنة";
+"Restore" = "استعادة";
+"Done" = "تم";
+"Open Backup Folder" = "فتح مجلد النسخ الاحتياطي";
+"Preview:" = "معاينة:";
+"Restore Backup?" = "استعادة النسخة الاحتياطية؟";
+"This will replace all current groups and settings with the selected backup. This action cannot be undone." = "سيؤدي هذا إلى استبدال جميع المجموعات والإعدادات الحالية بالنسخة الاحتياطية المحددة. لا يمكن التراجع عن هذا الإجراء.";
+"Delete Backup?" = "حذف النسخة الاحتياطية؟";
+"This backup file will be permanently deleted." = "سيتم حذف ملف النسخة الاحتياطية نهائياً.";
+"View and restore from automatic backups." = "عرض واستعادة النسخ الاحتياطية التلقائية.";
+"View Backups..." = "عرض النسخ الاحتياطية...";
+
+/* Diff status labels */
+"added" = "مضاف";
+"removed" = "محذوف";
+"modified" = "معدّل";
+"unchanged" = "بدون تغيير";
+
+/* Share */
+"Share" = "مشاركة";
