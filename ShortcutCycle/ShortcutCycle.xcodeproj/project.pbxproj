@@ -62,6 +62,10 @@
 		DF88A3A92F300CA10042E749 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DF88A3722F300B110042E749 /* Assets.xcassets */; };
 		DF88A3AA2F300CA20042E749 /* BackupRetention.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3AB2F300CA20042E749 /* BackupRetention.swift */; };
 		DF88A3AC2F300CA30042E749 /* BackupRetention.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3AB2F300CA20042E749 /* BackupRetention.swift */; };
+		DF88A3B02F300CB00042E749 /* BackupDiff.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3AE2F300CB00042E749 /* BackupDiff.swift */; };
+		DF88A3B12F300CB00042E749 /* BackupDiff.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3AE2F300CB00042E749 /* BackupDiff.swift */; };
+		DF88A3B22F300CB10042E749 /* BackupBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3AF2F300CB10042E749 /* BackupBrowserView.swift */; };
+		DF88A3B32F300CB10042E749 /* BackupBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3AF2F300CB10042E749 /* BackupBrowserView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -118,6 +122,8 @@
 		DF88A3732F300B110042E749 /* ShortcutCycle.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ShortcutCycle.entitlements; sourceTree = "<group>"; };
 		DF88A3742F300B110042E749 /* ShortcutCycleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutCycleApp.swift; sourceTree = "<group>"; };
 		DF88A3AB2F300CA20042E749 /* BackupRetention.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupRetention.swift; sourceTree = "<group>"; };
+		DF88A3AE2F300CB00042E749 /* BackupDiff.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupDiff.swift; sourceTree = "<group>"; };
+		DF88A3AF2F300CB10042E749 /* BackupBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupBrowserView.swift; sourceTree = "<group>"; };
 		DF8B47D72F2F090100C473F8 /* ShortcutCycleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ShortcutCycleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -175,6 +181,7 @@
 			children = (
 				DF88A3392F300B110042E749 /* AppGroup.swift */,
 				DF88A33A2F300B110042E749 /* AppItem.swift */,
+				DF88A3AE2F300CB00042E749 /* BackupDiff.swift */,
 				DF88A3AB2F300CA20042E749 /* BackupRetention.swift */,
 				DF88A33B2F300B110042E749 /* GroupStore.swift */,
 				DF88A33C2F300B110042E749 /* HUDAppItem.swift */,
@@ -320,6 +327,7 @@
 		DF88A36B2F300B110042E749 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				DF88A3AF2F300CB10042E749 /* BackupBrowserView.swift */,
 				DF88A3682F300B110042E749 /* GeneralSettingsView.swift */,
 				DF88A3692F300B110042E749 /* GroupSettingsView.swift */,
 				DF88A36A2F300B110042E749 /* HUDPreviewView.swift */,
@@ -495,6 +503,8 @@
 				DF88A39E2F300C800042E749 /* AppItem.swift in Sources */,
 				DF88A39F2F300C800042E749 /* GroupStore.swift in Sources */,
 				DF88A3AA2F300CA20042E749 /* BackupRetention.swift in Sources */,
+				DF88A3B02F300CB00042E749 /* BackupDiff.swift in Sources */,
+				DF88A3B22F300CB10042E749 /* BackupBrowserView.swift in Sources */,
 				DF88A3A12F300C8C0042E749 /* IconCache.swift in Sources */,
 				DF88A3922F300C640042E749 /* GroupSettingsView.swift in Sources */,
 				DF88A3932F300C640042E749 /* GeneralSettingsView.swift in Sources */,
@@ -525,6 +535,8 @@
 				DF88A37C2F300B110042E749 /* LanguageManager.swift in Sources */,
 				DF88A37D2F300B110042E749 /* GroupStore.swift in Sources */,
 				DF88A3AC2F300CA30042E749 /* BackupRetention.swift in Sources */,
+				DF88A3B12F300CB00042E749 /* BackupDiff.swift in Sources */,
+				DF88A3B32F300CB10042E749 /* BackupBrowserView.swift in Sources */,
 				DF88A37E2F300B110042E749 /* HUDPreviewView.swift in Sources */,
 				DF88A37F2F300B110042E749 /* GroupSettingsView.swift in Sources */,
 				DF88A3802F300B110042E749 /* AppSwitcherHUDView.swift in Sources */,

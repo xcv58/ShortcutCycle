@@ -105,3 +105,39 @@
 "Opening…" = "Açılıyor…";
 "Cycle through all apps in the group. Non-running apps will be launched when selected." = "Gruptaki tüm uygulamalarda gezin. Çalışmayan uygulamalar seçildiğinde açılır.";
 "Cycle through running apps only. If no app is running, the first app in the group will be launched." = "Yalnızca çalışan uygulamalarda gezin. Hiçbir uygulama çalışmıyorsa gruptaki ilk uygulama açılır.";
+
+/* Backup Browser */
+"View Automatic Backups..." = "Otomatik Yedekleri Görüntüle...";
+"Back Up Now" = "Şimdi Yedekle";
+"Backed up successfully" = "Yedekleme başarılı";
+"No changes to save" = "Kaydedilecek değişiklik yok";
+"Backup failed: %@" = "Yedekleme başarısız: %@";
+"Automatic Backups" = "Otomatik Yedekler";
+"Changes from" = "Değişiklikler";
+"No changes" = "Değişiklik yok";
+"(invalid)" = "(geçersiz)";
+"This backup file is invalid or corrupted." = "Bu yedek dosyası geçersiz veya bozuk.";
+"⌥-click to compare with a different backup" = "⌥-tıklayarak başka bir yedekle karşılaştırın";
+"No Backup Selected" = "Yedek Seçilmedi";
+"Select a backup from the sidebar to preview its contents." = "İçeriğini önizlemek için kenar çubuğundan bir yedek seçin.";
+"selected" = "seçili";
+"comparing" = "karşılaştırılıyor";
+"Restore" = "Geri Yükle";
+"Done" = "Bitti";
+"Open Backup Folder" = "Yedek Klasörünü Aç";
+"Preview:" = "Önizleme:";
+"Restore Backup?" = "Yedek Geri Yüklensin mi?";
+"This will replace all current groups and settings with the selected backup. This action cannot be undone." = "Tüm mevcut gruplar ve ayarlar seçilen yedekle değiştirilecektir. Bu işlem geri alınamaz.";
+"Delete Backup?" = "Yedek Silinsin mi?";
+"This backup file will be permanently deleted." = "Bu yedek dosyası kalıcı olarak silinecektir.";
+"View and restore from automatic backups." = "Otomatik yedekleri görüntüle ve geri yükle.";
+"View Backups..." = "Yedekleri Görüntüle...";
+
+/* Diff status labels */
+"added" = "eklendi";
+"removed" = "kaldırıldı";
+"modified" = "değiştirildi";
+"unchanged" = "değişiklik yok";
+
+/* Share */
+"Share" = "Paylaş";

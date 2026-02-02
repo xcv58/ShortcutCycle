@@ -105,3 +105,39 @@
 "Opening…" = "Wird geöffnet…";
 "Cycle through all apps in the group. Non-running apps will be launched when selected." = "Alle Apps in der Gruppe durchlaufen. Nicht laufende Apps werden beim Auswählen geöffnet.";
 "Cycle through running apps only. If no app is running, the first app in the group will be launched." = "Nur laufende Apps durchlaufen. Wenn keine App läuft, wird die erste App der Gruppe geöffnet.";
+
+/* Backup Browser */
+"View Automatic Backups..." = "Automatische Backups anzeigen...";
+"Back Up Now" = "Jetzt sichern";
+"Backed up successfully" = "Erfolgreich gesichert";
+"No changes to save" = "Keine Änderungen zu speichern";
+"Backup failed: %@" = "Sicherung fehlgeschlagen: %@";
+"Automatic Backups" = "Automatische Backups";
+"Changes from" = "Änderungen von";
+"No changes" = "Keine Änderungen";
+"(invalid)" = "(ungültig)";
+"This backup file is invalid or corrupted." = "Diese Sicherungsdatei ist ungültig oder beschädigt.";
+"⌥-click to compare with a different backup" = "⌥-Klick zum Vergleichen mit einer anderen Sicherung";
+"No Backup Selected" = "Kein Backup ausgewählt";
+"Select a backup from the sidebar to preview its contents." = "Wähle ein Backup aus der Seitenleiste, um den Inhalt anzuzeigen.";
+"selected" = "ausgewählt";
+"comparing" = "vergleichend";
+"Restore" = "Wiederherstellen";
+"Done" = "Fertig";
+"Open Backup Folder" = "Backup-Ordner öffnen";
+"Preview:" = "Vorschau:";
+"Restore Backup?" = "Backup wiederherstellen?";
+"This will replace all current groups and settings with the selected backup. This action cannot be undone." = "Alle aktuellen Gruppen und Einstellungen werden durch das ausgewählte Backup ersetzt. Diese Aktion kann nicht rückgängig gemacht werden.";
+"Delete Backup?" = "Backup löschen?";
+"This backup file will be permanently deleted." = "Diese Sicherungsdatei wird dauerhaft gelöscht.";
+"View and restore from automatic backups." = "Automatische Backups anzeigen und wiederherstellen.";
+"View Backups..." = "Backups anzeigen...";
+
+/* Diff status labels */
+"added" = "hinzugefügt";
+"removed" = "entfernt";
+"modified" = "geändert";
+"unchanged" = "unverändert";
+
+/* Share */
+"Share" = "Teilen";

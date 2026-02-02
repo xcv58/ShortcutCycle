@@ -105,3 +105,39 @@
 "Opening…" = "起動中…";
 "Cycle through all apps in the group. Non-running apps will be launched when selected." = "グループ内のすべてのアプリを循環します。実行中でないアプリは選択時に起動されます。";
 "Cycle through running apps only. If no app is running, the first app in the group will be launched." = "実行中のアプリのみを循環します。アプリが起動していない場合、グループの最初のアプリが起動されます。";
+
+/* Backup Browser */
+"View Automatic Backups..." = "自動バックアップを表示...";
+"Back Up Now" = "今すぐバックアップ";
+"Backed up successfully" = "バックアップ完了";
+"No changes to save" = "保存する変更はありません";
+"Backup failed: %@" = "バックアップ失敗: %@";
+"Automatic Backups" = "自動バックアップ";
+"Changes from" = "変更元";
+"No changes" = "変更なし";
+"(invalid)" = "(無効)";
+"This backup file is invalid or corrupted." = "このバックアップファイルは無効または破損しています。";
+"⌥-click to compare with a different backup" = "⌥-クリックで別のバックアップと比較";
+"No Backup Selected" = "バックアップ未選択";
+"Select a backup from the sidebar to preview its contents." = "サイドバーからバックアップを選択して内容をプレビューします。";
+"selected" = "選択中";
+"comparing" = "比較中";
+"Restore" = "復元";
+"Done" = "完了";
+"Open Backup Folder" = "バックアップフォルダを開く";
+"Preview:" = "プレビュー:";
+"Restore Backup?" = "バックアップを復元しますか？";
+"This will replace all current groups and settings with the selected backup. This action cannot be undone." = "選択したバックアップで現在のすべてのグループと設定が置き換えられます。この操作は取り消せません。";
+"Delete Backup?" = "バックアップを削除しますか？";
+"This backup file will be permanently deleted." = "このバックアップファイルは完全に削除されます。";
+"View and restore from automatic backups." = "自動バックアップの表示と復元。";
+"View Backups..." = "バックアップを表示...";
+
+/* Diff status labels */
+"added" = "追加";
+"removed" = "削除";
+"modified" = "変更";
+"unchanged" = "変更なし";
+
+/* Share */
+"Share" = "共有";

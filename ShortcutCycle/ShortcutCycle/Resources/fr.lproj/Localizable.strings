@@ -105,3 +105,39 @@
 "Opening…" = "Ouverture…";
 "Cycle through all apps in the group. Non-running apps will be launched when selected." = "Parcourir toutes les apps du groupe. Les apps non lancées seront ouvertes lors de la sélection.";
 "Cycle through running apps only. If no app is running, the first app in the group will be launched." = "Parcourir uniquement les apps en cours. Si aucune app n'est ouverte, la première app du groupe sera lancée.";
+
+/* Backup Browser */
+"View Automatic Backups..." = "Voir les sauvegardes automatiques...";
+"Back Up Now" = "Sauvegarder maintenant";
+"Backed up successfully" = "Sauvegarde réussie";
+"No changes to save" = "Aucune modification à sauvegarder";
+"Backup failed: %@" = "Échec de la sauvegarde : %@";
+"Automatic Backups" = "Sauvegardes automatiques";
+"Changes from" = "Modifications depuis";
+"No changes" = "Aucune modification";
+"(invalid)" = "(invalide)";
+"This backup file is invalid or corrupted." = "Ce fichier de sauvegarde est invalide ou corrompu.";
+"⌥-click to compare with a different backup" = "⌥-clic pour comparer avec une autre sauvegarde";
+"No Backup Selected" = "Aucune sauvegarde sélectionnée";
+"Select a backup from the sidebar to preview its contents." = "Sélectionnez une sauvegarde dans la barre latérale pour en afficher le contenu.";
+"selected" = "sélectionné";
+"comparing" = "en comparaison";
+"Restore" = "Restaurer";
+"Done" = "Terminé";
+"Open Backup Folder" = "Ouvrir le dossier de sauvegarde";
+"Preview:" = "Aperçu :";
+"Restore Backup?" = "Restaurer la sauvegarde ?";
+"This will replace all current groups and settings with the selected backup. This action cannot be undone." = "Tous les groupes et réglages actuels seront remplacés par la sauvegarde sélectionnée. Cette action est irréversible.";
+"Delete Backup?" = "Supprimer la sauvegarde ?";
+"This backup file will be permanently deleted." = "Ce fichier de sauvegarde sera définitivement supprimé.";
+"View and restore from automatic backups." = "Afficher et restaurer les sauvegardes automatiques.";
+"View Backups..." = "Voir les sauvegardes...";
+
+/* Diff status labels */
+"added" = "ajouté";
+"removed" = "supprimé";
+"modified" = "modifié";
+"unchanged" = "inchangé";
+
+/* Share */
+"Share" = "Partager";

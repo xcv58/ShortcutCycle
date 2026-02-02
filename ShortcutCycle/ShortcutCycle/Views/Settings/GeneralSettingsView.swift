@@ -22,6 +22,10 @@ struct GeneralSettingsView: View {
     @State private var errorMessage = ""
     @State private var pendingImportURL: URL?
 
+    // Backup browser state
+    @State private var showBackupBrowser = false
+    @State private var manualBackupFeedback: String?
+
     // Clipboard state
     @State private var showClipboardImportConfirmation = false
     @State private var showClipboardImportSuccess = false
@@ -165,6 +169,31 @@ struct GeneralSettingsView: View {
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
+
+                // Sub-section 3: Automatic Backups
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("Automatic Backups".localized(language: selectedLanguage), systemImage: "clock.arrow.circlepath")
+                        .font(.caption.weight(.medium))
+                        .foregroundColor(.secondary)
+                    HStack {
+                        Button("View Automatic Backups...".localized(language: selectedLanguage)) {
+                            showBackupBrowser = true
+                        }
+                        Button("Back Up Now".localized(language: selectedLanguage)) {
+                            performManualBackup()
+                        }
+                    }
+                    if let feedback = manualBackupFeedback {
+                        Text(feedback)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .transition(.opacity)
+                            .animation(.easeInOut(duration: 0.3), value: manualBackupFeedback)
+                    }
+                    Text("View and restore from automatic backups.".localized(language: selectedLanguage))
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
             } header: {
                 Text("Backup & Restore".localized(language: selectedLanguage))
             }
@@ -210,6 +239,10 @@ struct GeneralSettingsView: View {
             }
         } message: {
             Text(clipboardImportSummary)
+        }
+        .sheet(isPresented: $showBackupBrowser) {
+            BackupBrowserView()
+                .environmentObject(store)
         }
         .alert("Import Successful".localized(language: selectedLanguage), isPresented: $showClipboardImportSuccess) {
             Button("OK", role: .cancel) {}
@@ -314,6 +347,22 @@ struct GeneralSettingsView: View {
         case .failure(let error):
             clipboardErrorMessage = error.localizedDescription
             showClipboardError = true
+        }
+    }
+
+    private func performManualBackup() {
+        let result = store.manualBackup()
+        switch result {
+        case .saved:
+            manualBackupFeedback = "Backed up successfully".localized(language: selectedLanguage)
+        case .noChange:
+            manualBackupFeedback = "No changes to save".localized(language: selectedLanguage)
+        case .error(let msg):
+            manualBackupFeedback = String(format: "Backup failed: %@".localized(language: selectedLanguage), msg)
+        }
+        Task {
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            manualBackupFeedback = nil
         }
     }
 
