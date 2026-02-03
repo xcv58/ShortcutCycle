@@ -16,7 +16,7 @@
             --surface: #f5f5f7;
             --surface-hover: #e5e5e7;
             --text-primary: #1d1d1f;
-            --text-secondary: #86868b;
+            --text-secondary: #6e6e73;
             --border: #d2d2d7;
             --accent: #007AFF;
             --accent-hover: #0062cc;
@@ -324,7 +324,7 @@
             display: block;
         }
 
-        .feature-card h3 {
+        .feature-card h2 {
             font-size: 1.25rem;
             margin-bottom: 12px;
         }
@@ -416,110 +416,119 @@
             </div>
         </header>
 
-        <section class="hero">
-            <h1>Cycle apps by group.<br>Instantly.</h1>
-            <p>Stop endlessly tabbing. Group your apps by context—Web, Code, Social—and cycle through them with
-                dedicated hotkeys.</p>
+        <main>
 
-            <a href="https://apps.apple.com/us/app/shortcutcycle/id6758281578?mt=12" class="cta-button">
-                Download on App Store
-                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                    <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-            </a>
+            <section class="hero">
+                <h1>Cycle apps by group.<br>Instantly.</h1>
+                <p>Stop endlessly tabbing. Group your apps by context—Web, Code, Social—and cycle through them with
+                    dedicated hotkeys.</p>
 
-            <div class="gallery-wrapper">
-                <button class="scroll-btn prev" id="gallery-prev" aria-label="Previous">
-                    <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M15 19l-7-7 7-7" />
+                <a href="https://apps.apple.com/us/app/shortcutcycle/id6758281578?mt=12" class="cta-button">
+                    Download on App Store
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"
+                        viewBox="0 0 24 24">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
                     </svg>
-                </button>
-                <div class="gallery-scroller">
-                    <div class="screenshot-frame">
-                        <img src="assets/images/hud-light.webp" width="900" height="562" alt="HUD Overlay Light"
-                            fetchpriority="high">
-                    </div>
-                    <div class="screenshot-frame">
-                        <img src="assets/images/hud-grid-light.webp" loading="lazy" width="900" height="562"
-                            alt="Grid View Light">
-                    </div>
-                    <div class="screenshot-frame">
-                        <img src="assets/images/hud-dark.webp" loading="lazy" width="900" height="562"
-                            alt="HUD Overlay Dark">
-                    </div>
-                    <div class="screenshot-frame">
-                        <img src="assets/images/hud-grid-dark.webp" loading="lazy" width="900" height="562"
-                            alt="Grid View Dark">
-                    </div>
-                    <div class="screenshot-frame">
-                        <img src="assets/images/general-light.webp" loading="lazy" width="900" height="562"
-                            alt="General Settings Light">
-                    </div>
-                    <div class="screenshot-frame">
-                        <img src="assets/images/general-dark.webp" loading="lazy" width="900" height="562"
-                            alt="General Settings Dark">
-                    </div>
-                    <div class="screenshot-frame">
-                        <img src="assets/images/group-dark.webp" loading="lazy" width="900" height="562"
-                            alt="Group Settings Dark">
-                    </div>
-                    <div class="screenshot-frame">
-                        <img src="assets/images/menubar-languages.webp" loading="lazy" width="900" height="562"
-                            alt="Menu Bar and Localization">
-                    </div>
-                    <div class="screenshot-frame">
-                        <img src="assets/images/automatic-backups.webp" loading="lazy" width="900" height="562"
-                            alt="Automatic Backups">
-                    </div>
-                </div>
-                <button class="scroll-btn next" id="gallery-next" aria-label="Next">
-                    <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M9 5l7 7-7 7" />
-                    </svg>
-                </button>
-            </div>
-        </section>
+                </a>
 
-        <section class="section">
-            <div class="features-grid">
-                <div class="feature-card">
-                    <span class="feature-icon">🎯</span>
-                    <h3>Context-Aware</h3>
-                    <p>Don't cycle through 20 windows. Group "Browsers" separately from "Terminals" and switch only
-                        between what you need.</p>
+                <div class="gallery-wrapper">
+                    <button class="scroll-btn prev" id="gallery-prev" aria-label="Previous">
+                        <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                    <div class="gallery-scroller">
+                        <div class="screenshot-frame">
+                            <img src="assets/images/hud-light.webp" width="900" height="562" alt="HUD Overlay Light"
+                                fetchpriority="high">
+                        </div>
+                        <div class="screenshot-frame">
+                            <img src="assets/images/hud-grid-light.webp" loading="lazy" width="900" height="562"
+                                alt="Grid View Light">
+                        </div>
+                        <div class="screenshot-frame">
+                            <img src="assets/images/hud-dark.webp" loading="lazy" width="900" height="562"
+                                alt="HUD Overlay Dark">
+                        </div>
+                        <div class="screenshot-frame">
+                            <img src="assets/images/hud-grid-dark.webp" loading="lazy" width="900" height="562"
+                                alt="Grid View Dark">
+                        </div>
+                        <div class="screenshot-frame">
+                            <img src="assets/images/general-light.webp" loading="lazy" width="900" height="562"
+                                alt="General Settings Light">
+                        </div>
+                        <div class="screenshot-frame">
+                            <img src="assets/images/general-dark.webp" loading="lazy" width="900" height="562"
+                                alt="General Settings Dark">
+                        </div>
+                        <div class="screenshot-frame">
+                            <img src="assets/images/group-dark.webp" loading="lazy" width="900" height="562"
+                                alt="Group Settings Dark">
+                        </div>
+                        <div class="screenshot-frame">
+                            <img src="assets/images/menubar-languages.webp" loading="lazy" width="900" height="562"
+                                alt="Menu Bar and Localization">
+                        </div>
+                        <div class="screenshot-frame">
+                            <img src="assets/images/automatic-backups.webp" loading="lazy" width="900" height="562"
+                                alt="Automatic Backups">
+                        </div>
+                    </div>
+                    <button class="scroll-btn next" id="gallery-next" aria-label="Next">
+                        <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
                 </div>
-                <div class="feature-card">
-                    <span class="feature-icon">⚡️</span>
-                    <h3>One-Key Magic</h3>
-                    <p>Press <code>Option+1</code> to open your browser. Press it again to cycle to the next one. Build
-                        instant muscle memory.</p>
+            </section>
+
+            <section class="section">
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <span class="feature-icon">🎯</span>
+                        <h2>Context-Aware</h2>
+                        <p>Don't cycle through 20 windows. Group "Browsers" separately from "Terminals" and switch only
+                            between what you need.</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">⚡️</span>
+                        <h2>One-Key Magic</h2>
+                        <p>Press <code>Option+1</code> to open your browser. Press it again to cycle to the next one.
+                            Build
+                            instant muscle memory.</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">🚀</span>
+                        <h2>Smart Launching</h2>
+                        <p>ShortcutCycle is also a launcher. If you try to cycle to an app that isn't running, we open
+                            it
+                            for you automatically.</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">👀</span>
+                        <h2>Visual HUD</h2>
+                        <p>A beautiful native overlay shows you exactly what you are switching to. Or turn it off for
+                            invisible switching.</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">🌍</span>
+                        <h2>Native & Global</h2>
+                        <p>Localized in 15 languages. Fully accessible with VoiceOver support. Optimized for Apple
+                            Silicon.
+                        </p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">🔒</span>
+                        <h2>Private by Design</h2>
+                        <p>No analytics. No tracking. Your configuration stays on your Mac. Export to JSON to backup
+                            your
+                            settings.</p>
+                    </div>
                 </div>
-                <div class="feature-card">
-                    <span class="feature-icon">🚀</span>
-                    <h3>Smart Launching</h3>
-                    <p>ShortcutCycle is also a launcher. If you try to cycle to an app that isn't running, we open it
-                        for you automatically.</p>
-                </div>
-                <div class="feature-card">
-                    <span class="feature-icon">👀</span>
-                    <h3>Visual HUD</h3>
-                    <p>A beautiful native overlay shows you exactly what you are switching to. Or turn it off for
-                        invisible switching.</p>
-                </div>
-                <div class="feature-card">
-                    <span class="feature-icon">🌍</span>
-                    <h3>Native & Global</h3>
-                    <p>Localized in 15 languages. Fully accessible with VoiceOver support. Optimized for Apple Silicon.
-                    </p>
-                </div>
-                <div class="feature-card">
-                    <span class="feature-icon">🔒</span>
-                    <h3>Private by Design</h3>
-                    <p>No analytics. No tracking. Your configuration stays on your Mac. Export to JSON to backup your
-                        settings.</p>
-                </div>
-            </div>
-        </section>
+        </main>
 
         <footer>
             <div class="footer-links">
