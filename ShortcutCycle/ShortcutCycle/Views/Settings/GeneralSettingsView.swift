@@ -121,11 +121,6 @@ struct GeneralSettingsView: View {
                 }
                 .pickerStyle(.menu)
                 
-                if selectedLanguage != "system" && selectedLanguage != Locale.current.language.languageCode?.identifier {
-                    Text("May require restart to take effect fully.".localized(language: selectedLanguage))
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
             } header: {
                 Text("Application".localized(language: selectedLanguage))
             }
