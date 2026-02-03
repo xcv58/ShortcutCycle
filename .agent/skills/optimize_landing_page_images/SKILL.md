@@ -32,9 +32,15 @@ Execute the script from the project root:
 python3 scripts/optimize_images.py
 ```
 
+**Note**: The script automatically generates two versions for each screenshot:
+- `filename.webp` (1800px width)
+- `filename-small.webp` (900px width)
+
 ### 4. Verify Output
-1.  Check that new `.webp` files exist in `docs/assets/images/`.
-2.  If the user requested to show these images on the site, you will also need to edit `docs/index.html` to add `<img>` tags referencing the new assets.
+1.  Check that new `.webp` and `-small.webp` files exist in `docs/assets/images/`.
+2.  If the user requested to show these images on the site, edit `docs/index.html`. 
+    - Use the `<img srcset="..." sizes="...">` pattern for responsive loading.
+    - Reference existing images in `docs/index.html` as examples.
 
 ## Dependencies
 - Python 3
