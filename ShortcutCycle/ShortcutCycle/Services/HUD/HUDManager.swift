@@ -60,6 +60,9 @@ class HUDManager: ObservableObject {
         // Store pending active app for fast switching
         self.pendingActiveAppId = shouldActivate ? activeAppId : nil
         
+        // Store items immediately so fast switch path can look up PID
+        self.currentItems = items
+        
         // Capture the previous frontmost app if we aren't already visible
         // We do this BEFORE we activate ourselves
         if window?.isVisible != true {
