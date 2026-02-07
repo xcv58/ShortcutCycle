@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3] - 2026-02-06
+
+### Added
+- **Multi-Profile Support**: Apps with multiple instances (like Firefox profiles) are now shown separately in the HUD and can be cycled through individually.
+
 ## [1.2] - 2026-02-01
 
 ### Added

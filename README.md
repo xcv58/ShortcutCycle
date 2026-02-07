@@ -8,8 +8,9 @@ ShortcutCycle helps you switch between your favorite apps with just one keyboard
 
 ## Features
 
-- **Group Apps**: Put related apps together (e.g., "Browsers" for Chrome, Safari, Edge; or "Messaging" for Slack, Discord, Messages).
+- **Group Apps**: Put related apps together (e.g., \"Browsers\" for Chrome, Safari, Edge; or \"Messaging\" for Slack, Discord, Messages).
 - **One Key Magic**: Press your global shortcut to cycle through apps in the group. Press it again to switch to the next one.
+- **Multi-Profile Support**: Apps with multiple instances (like Firefox profiles) are shown separately and can be cycled through individually.
 - **See What's Happening**: A beautiful, native-looking HUD overlay shows you which app is active and what's coming up next.
 - **Instant Access**: Automatically launches apps if they aren't running when you switch to them.
 - **Multi-language**: Fully localized in 15 languages including English, Japanese, Chinese, German, Spanish, French, and many more.
