@@ -60,6 +60,9 @@ class HUDManager: ObservableObject {
         // Store pending active app for fast switching
         self.pendingActiveAppId = shouldActivate ? activeAppId : nil
         
+        // Store items immediately so fast switch path can look up PID
+        self.currentItems = items
+        
         // Capture the previous frontmost app if we aren't already visible
         // We do this BEFORE we activate ourselves
         if window?.isVisible != true {
@@ -275,11 +278,23 @@ class HUDManager: ObservableObject {
     }
     
     private func activateOrLaunch(bundleId: String) {
+        // Try to find the item in currentItems to get PID
+        if let item = currentItems.first(where: { $0.id == bundleId || $0.bundleId == bundleId }) {
+            if let pid = item.pid {
+                // Activate specific instance by PID
+                let runningApps = NSRunningApplication.runningApplications(withBundleIdentifier: item.bundleId)
+                if let app = runningApps.first(where: { $0.processIdentifier == pid }) {
+                    app.unhide()
+                    app.activate(options: .activateAllWindows)
+                    return
+                }
+            }
+        }
+        // Fallback: activate by bundle ID (first match) or launch
         if let app = NSRunningApplication.runningApplications(withBundleIdentifier: bundleId).first {
-             app.activate(options: NSApplication.ActivationOptions.activateAllWindows)
+             app.unhide()
+             app.activate(options: .activateAllWindows)
         } else {
-             // We can't use AppSwitcher.shared.launchApp here if AppSwitcher is refactored to depend on HUDManager
-             // Use NSWorkspace directly or call a launch service
              launchApp(bundleIdentifier: bundleId)
         }
     }

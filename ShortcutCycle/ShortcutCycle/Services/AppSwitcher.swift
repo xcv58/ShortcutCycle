@@ -48,10 +48,16 @@ class AppSwitcher: ObservableObject {
         // Use shared logic
         let cycleItems = hudItems.map { CyclingAppItem(id: $0.id) }
         let frontmostApp = NSWorkspace.shared.frontmostApplication
+        
+        // Build unique ID for frontmost app (bundleId-pid format)
+        let frontmostAppUniqueId: String? = {
+            guard let app = frontmostApp, let bundleId = app.bundleIdentifier else { return nil }
+            return "\(bundleId)-\(app.processIdentifier)"
+        }()
 
         nextAppId = AppCyclingLogic.nextAppId(
             items: cycleItems,
-            currentFrontmostAppId: frontmostApp?.bundleIdentifier,
+            currentFrontmostAppId: frontmostAppUniqueId,
             currentHUDSelectionId: HUDManager.shared.currentSelectedAppId,
             lastActiveAppId: group.lastActiveAppBundleId,
             isHUDVisible: HUDManager.shared.isVisible
@@ -61,12 +67,15 @@ class AppSwitcher: ObservableObject {
         if !hasRunningApp {
             nextAppId = hudItems[0].id
             store.updateLastActiveApp(bundleId: nextAppId, for: group.id)
-            activateOrLaunch(bundleId: nextAppId)
             if let item = hudItems.first {
+                activateOrLaunch(bundleId: item.bundleId, pid: item.pid)
                 LaunchOverlayManager.shared.show(appName: item.name, appIcon: item.icon)
             }
             return
         }
+
+        // Find the HUDAppItem for the next app
+        let nextItem = hudItems.first { $0.id == nextAppId }
 
         // Perform Switch
         store.updateLastActiveApp(bundleId: nextAppId, for: group.id)
@@ -74,7 +83,7 @@ class AppSwitcher: ObservableObject {
         let hudShown = showHUD(items: hudItems, activeAppId: nextAppId, modifierFlags: modifierFlags, shortcut: shortcut, shouldActivate: true)
 
         if !hudShown {
-             activateOrLaunch(bundleId: nextAppId)
+             activateOrLaunch(bundleId: nextItem?.bundleId ?? nextAppId, pid: nextItem?.pid)
         }
     }
     
@@ -99,7 +108,14 @@ class AppSwitcher: ObservableObject {
         if runningItems.count == 1 {
             // Toggle behavior
             let item = runningItems[0]
-            let app = NSRunningApplication.runningApplications(withBundleIdentifier: item.id).first
+            // Find the specific app by PID if available
+            let app: NSRunningApplication? = {
+                if let pid = item.pid {
+                    return NSRunningApplication.runningApplications(withBundleIdentifier: item.bundleId)
+                        .first { $0.processIdentifier == pid }
+                }
+                return NSRunningApplication.runningApplications(withBundleIdentifier: item.bundleId).first
+            }()
             
             if app?.isActive == true {
                 app?.hide()
@@ -108,7 +124,8 @@ class AppSwitcher: ObservableObject {
                 store.updateLastActiveApp(bundleId: item.id, for: group.id)
                 let hudShown = showHUD(items: runningItems, activeAppId: item.id, modifierFlags: modifierFlags, shortcut: shortcut)
                 if !hudShown {
-                    app?.activate(options: NSApplication.ActivationOptions.activateAllWindows)
+                    app?.unhide()
+                    app?.activate(options: .activateAllWindows)
                 }
             }
             return
@@ -121,20 +138,29 @@ class AppSwitcher: ObservableObject {
         let cycleItems = runningItems.map { CyclingAppItem(id: $0.id) }
         let frontmostApp = NSWorkspace.shared.frontmostApplication
         
+        // Build unique ID for frontmost app (bundleId-pid format)
+        let frontmostAppUniqueId: String? = {
+            guard let app = frontmostApp, let bundleId = app.bundleIdentifier else { return nil }
+            return "\(bundleId)-\(app.processIdentifier)"
+        }()
+        
         nextAppId = AppCyclingLogic.nextAppId(
             items: cycleItems,
-            currentFrontmostAppId: frontmostApp?.bundleIdentifier,
+            currentFrontmostAppId: frontmostAppUniqueId,
             currentHUDSelectionId: HUDManager.shared.currentSelectedAppId,
             lastActiveAppId: group.lastActiveAppBundleId,
             isHUDVisible: HUDManager.shared.isVisible
         )
+        
+        // Find the HUDAppItem for the next app
+        let nextItem = runningItems.first { $0.id == nextAppId }
         
         store.updateLastActiveApp(bundleId: nextAppId, for: group.id)
         
         let hudShown = showHUD(items: runningItems, activeAppId: nextAppId, modifierFlags: modifierFlags, shortcut: shortcut)
         
         if !hudShown {
-             activateOrLaunch(bundleId: nextAppId)
+             activateOrLaunch(bundleId: nextItem?.bundleId ?? nextAppId, pid: nextItem?.pid)
         }
     }
     
@@ -142,28 +168,36 @@ class AppSwitcher: ObservableObject {
     
     private func getHUDItems(for group: AppGroup) -> [HUDAppItem] {
         if group.shouldOpenAppIfNeeded {
-            return group.apps.map { appItem in
+            // Create items for all apps in group, with separate entries for each running instance
+            var items: [HUDAppItem] = []
+            for appItem in group.apps {
                 let runningApps = NSRunningApplication.runningApplications(withBundleIdentifier: appItem.bundleIdentifier)
-                let isRunning = !runningApps.isEmpty
+                    .filter { $0.activationPolicy == .regular }
                 
-                return HUDAppItem(
-                    id: appItem.bundleIdentifier,
-                    name: appItem.name,
-                    icon: getIcon(for: appItem),
-                    isRunning: isRunning
-                )
+                if runningApps.isEmpty {
+                    // App not running - add a single non-running item
+                    items.append(HUDAppItem(
+                        bundleId: appItem.bundleIdentifier,
+                        name: appItem.name,
+                        icon: getIcon(for: appItem)
+                    ))
+                } else {
+                    // App has one or more running instances - add each one
+                    for runningApp in runningApps {
+                        items.append(HUDAppItem(
+                            runningApp: runningApp,
+                            name: appItem.name,
+                            icon: getIcon(for: appItem)
+                        ))
+                    }
+                }
             }
+            return items
         } else {
-            // Original logic: only running apps, sorted by group order
+            // Original logic: only running apps, sorted by group order, with separate entries for each instance
             let runningApps = getRunningApps(in: group)
             return runningApps.map { app in
-                HUDAppItem(
-                    id: app.bundleIdentifier ?? "",
-                    name: app.localizedName ?? "App",
-                    icon: app.icon, // NSRunningApplication doesn't behave like AppItem fully here?
-                    // NSRunningApplication has .icon
-                    isRunning: true
-                )
+                HUDAppItem(runningApp: app)
             }
         }
     }
@@ -178,10 +212,15 @@ class AppSwitcher: ObservableObject {
             return groupBundleIds.contains(bundleId) && app.activationPolicy == .regular
         }
         
+        // Sort by group order (bundle ID order), then by PID for stable ordering of instances
         return filteredApps.sorted { app1, app2 in
             let index1 = group.apps.firstIndex { $0.bundleIdentifier == app1.bundleIdentifier } ?? Int.max
             let index2 = group.apps.firstIndex { $0.bundleIdentifier == app2.bundleIdentifier } ?? Int.max
-            return index1 < index2
+            if index1 != index2 {
+                return index1 < index2
+            }
+            // Same bundle ID - sort by PID for stable ordering of instances
+            return app1.processIdentifier < app2.processIdentifier
         }
     }
     
@@ -210,9 +249,20 @@ class AppSwitcher: ObservableObject {
         return false
     }
     
-    private func activateOrLaunch(bundleId: String) {
+    private func activateOrLaunch(bundleId: String, pid: pid_t? = nil) {
+        if let pid = pid {
+            // Activate specific instance by PID
+            let runningApps = NSRunningApplication.runningApplications(withBundleIdentifier: bundleId)
+            if let app = runningApps.first(where: { $0.processIdentifier == pid }) {
+                app.unhide()
+                app.activate(options: .activateAllWindows)
+                return
+            }
+        }
+        // Fallback: activate by bundle ID (first match) or launch
         if let app = NSRunningApplication.runningApplications(withBundleIdentifier: bundleId).first {
-             app.activate(options: NSApplication.ActivationOptions.activateAllWindows)
+             app.unhide()
+             app.activate(options: .activateAllWindows)
         } else {
              launchApp(bundleIdentifier: bundleId)
         }
