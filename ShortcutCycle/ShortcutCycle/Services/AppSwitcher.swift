@@ -48,18 +48,24 @@ class AppSwitcher: ObservableObject {
         // Use shared logic
         let cycleItems = hudItems.map { CyclingAppItem(id: $0.id) }
         let frontmostApp = NSWorkspace.shared.frontmostApplication
-        
+
         // Build unique ID for frontmost app (bundleId-pid format)
         let frontmostAppUniqueId: String? = {
             guard let app = frontmostApp, let bundleId = app.bundleIdentifier else { return nil }
             return "\(bundleId)-\(app.processIdentifier)"
         }()
 
+        // Resolve stored lastActiveAppBundleId (plain bundle ID) to a current
+        // item's composite ID so AppCyclingLogic can match it in the items list
+        let resolvedLastActiveId = hudItems.first(where: {
+            $0.id == group.lastActiveAppBundleId || $0.bundleId == group.lastActiveAppBundleId
+        })?.id
+
         nextAppId = AppCyclingLogic.nextAppId(
             items: cycleItems,
             currentFrontmostAppId: frontmostAppUniqueId,
             currentHUDSelectionId: HUDManager.shared.currentSelectedAppId,
-            lastActiveAppId: group.lastActiveAppBundleId,
+            lastActiveAppId: resolvedLastActiveId,
             isHUDVisible: HUDManager.shared.isVisible
         )
 
@@ -77,8 +83,9 @@ class AppSwitcher: ObservableObject {
         // Find the HUDAppItem for the next app
         let nextItem = hudItems.first { $0.id == nextAppId }
 
-        // Perform Switch
-        store.updateLastActiveApp(bundleId: nextAppId, for: group.id)
+        // Perform Switch — store plain bundle ID (not composite "bundleId-pid")
+        // so the value remains valid across process restarts
+        store.updateLastActiveApp(bundleId: nextItem?.bundleId ?? nextAppId, for: group.id)
 
         let hudShown = showHUD(items: hudItems, activeAppId: nextAppId, modifierFlags: modifierFlags, shortcut: shortcut, shouldActivate: true)
 
@@ -121,7 +128,7 @@ class AppSwitcher: ObservableObject {
                 app?.hide()
                 showHUD(items: runningItems, activeAppId: item.id, modifierFlags: modifierFlags, shortcut: shortcut, shouldActivate: false)
             } else {
-                store.updateLastActiveApp(bundleId: item.id, for: group.id)
+                store.updateLastActiveApp(bundleId: item.bundleId, for: group.id)
                 let hudShown = showHUD(items: runningItems, activeAppId: item.id, modifierFlags: modifierFlags, shortcut: shortcut)
                 if !hudShown {
                     app?.unhide()
@@ -137,26 +144,32 @@ class AppSwitcher: ObservableObject {
         // Use shared logic
         let cycleItems = runningItems.map { CyclingAppItem(id: $0.id) }
         let frontmostApp = NSWorkspace.shared.frontmostApplication
-        
+
         // Build unique ID for frontmost app (bundleId-pid format)
         let frontmostAppUniqueId: String? = {
             guard let app = frontmostApp, let bundleId = app.bundleIdentifier else { return nil }
             return "\(bundleId)-\(app.processIdentifier)"
         }()
-        
+
+        // Resolve stored lastActiveAppBundleId (plain bundle ID) to a current
+        // item's composite ID so AppCyclingLogic can match it in the items list
+        let resolvedLastActiveId = runningItems.first(where: {
+            $0.id == group.lastActiveAppBundleId || $0.bundleId == group.lastActiveAppBundleId
+        })?.id
+
         nextAppId = AppCyclingLogic.nextAppId(
             items: cycleItems,
             currentFrontmostAppId: frontmostAppUniqueId,
             currentHUDSelectionId: HUDManager.shared.currentSelectedAppId,
-            lastActiveAppId: group.lastActiveAppBundleId,
+            lastActiveAppId: resolvedLastActiveId,
             isHUDVisible: HUDManager.shared.isVisible
         )
         
         // Find the HUDAppItem for the next app
         let nextItem = runningItems.first { $0.id == nextAppId }
         
-        store.updateLastActiveApp(bundleId: nextAppId, for: group.id)
-        
+        store.updateLastActiveApp(bundleId: nextItem?.bundleId ?? nextAppId, for: group.id)
+
         let hudShown = showHUD(items: runningItems, activeAppId: nextAppId, modifierFlags: modifierFlags, shortcut: shortcut)
         
         if !hudShown {
