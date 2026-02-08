@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4] - 2026-02-08
+
+### Fixed
+- **Multi-Profile Session Resume**: Fixed cycling not resuming to the correct app after a profile/process restarts. The last active app was stored with an ephemeral process ID that became invalid across restarts — now stores the stable bundle identifier instead.
+- **App Activation Fallback**: Fixed a bug where the HUD's fallback activation path could silently fail for multi-instance apps by passing an internal composite ID to macOS APIs instead of the real bundle identifier.
+- **Last Active Resolution**: Fixed the "resume to last active app" feature not working with multi-instance apps. The stored bundle identifier is now correctly resolved to the current running instance before cycling.
+
 ## [1.3] - 2026-02-06
 
 ### Added
