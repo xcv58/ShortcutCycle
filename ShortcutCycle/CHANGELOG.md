@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4] - 2026-02-08
+
+### Fixed
+- **Multi-Profile Reliability**: Fixed issues where cycling and app activation could fail for multi-instance apps (e.g. Firefox/Chrome profiles) after a process restart or when the HUD fallback path was triggered.
+
 ## [1.3] - 2026-02-06
 
 ### Added
