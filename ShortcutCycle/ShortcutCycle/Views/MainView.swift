@@ -13,6 +13,7 @@ struct MainView: View {
     @EnvironmentObject var store: GroupStore
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
     @AppStorage("appTheme") private var appTheme: AppTheme = .system
+    @EnvironmentObject var localeObserver: LocaleObserver
     @State private var selectedTab = "groups"
     
     var body: some View {
@@ -32,11 +33,12 @@ struct MainView: View {
         .preferredColorScheme(appTheme.colorScheme)
         .frame(minWidth: 600, minHeight: 400)
         .environment(\.locale, LanguageManager.shared.locale)
-        .id(selectedLanguage) // Force full redraw when language changes
+        .id("\(selectedLanguage)-\(localeObserver.id)") // Force full redraw when language or system locale changes
     }
 }
 
 #Preview {
     MainView()
         .environmentObject(GroupStore.shared)
+        .environmentObject(LocaleObserver())
 }

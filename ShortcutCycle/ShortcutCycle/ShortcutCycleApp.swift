@@ -10,6 +10,7 @@ struct ShortcutCycleApp: App {
     @StateObject private var store = GroupStore.shared
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
     @AppStorage("appTheme") private var appTheme: AppTheme = .system
+    @StateObject private var localeObserver = LocaleObserver()
     
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     
@@ -25,7 +26,7 @@ struct ShortcutCycleApp: App {
         MenuBarExtra("Shortcut Cycle", systemImage: "command.square.fill") {
             MenuBarView(selectedLanguage: selectedLanguage)
                 .environmentObject(store)
-                .id(selectedLanguage) // Force redraw on language change
+                .id("\(selectedLanguage)-\(localeObserver.id)") // Force redraw on language or system locale change
         }
         .menuBarExtraStyle(.window)
         
@@ -33,6 +34,7 @@ struct ShortcutCycleApp: App {
         Window("Shortcut Cycle", id: "settings") {
             MainView()
                 .environmentObject(store)
+                .environmentObject(localeObserver)
                 .onAppear {
                     // setupShortcutManager() called in init
                 }

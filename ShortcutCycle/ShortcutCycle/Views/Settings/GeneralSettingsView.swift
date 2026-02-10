@@ -114,7 +114,7 @@ struct GeneralSettingsView: View {
                         UserDefaults.standard.set(newValue, forKey: "selectedLanguage")
                     }
                 )) {
-                    Text("\("System Default".localized(language: "system")) (\(Locale.current.localizedString(forLanguageCode: Locale.current.language.languageCode?.identifier ?? "en") ?? "English"))").tag("system")
+                    Text("\("System Default".localized(language: "system")) (\(LanguageManager.shared.supportedLanguages.first { $0.code == LanguageManager.shared.systemLanguageCode }?.name ?? "English"))").tag("system")
                     ForEach(LanguageManager.shared.supportedLanguages, id: \.code) { language in
                         Text(language.displayName()).tag(language.code)
                     }
