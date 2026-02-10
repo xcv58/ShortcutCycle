@@ -114,9 +114,9 @@ struct GeneralSettingsView: View {
                         UserDefaults.standard.set(newValue, forKey: "selectedLanguage")
                     }
                 )) {
-                    Text("\("System Default".localized(language: "system")) (\(Locale.current.language.languageCode?.identifier ?? "en"))").tag("system")
+                    Text("\("System Default".localized(language: "system")) (\(Locale.current.localizedString(forLanguageCode: Locale.current.language.languageCode?.identifier ?? "en") ?? "English"))").tag("system")
                     ForEach(LanguageManager.shared.supportedLanguages, id: \.code) { language in
-                        Text(language.name).tag(language.code)
+                        Text(language.displayName()).tag(language.code)
                     }
                 }
                 .pickerStyle(.menu)
@@ -245,7 +245,7 @@ struct GeneralSettingsView: View {
             Text("Your settings have been imported from clipboard.".localized(language: selectedLanguage))
         }
     }
-    
+
     // MARK: - Export/Import Actions
     
     private func exportSettings() {

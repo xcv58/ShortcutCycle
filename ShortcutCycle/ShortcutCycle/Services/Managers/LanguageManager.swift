@@ -6,6 +6,17 @@ class LanguageManager {
     struct Language {
         let code: String
         let name: String
+
+        /// Returns a display string showing both the system-localized name and the native name.
+        /// e.g. "German / Deutsch" when the system language is English.
+        /// If both names are the same, returns just the native name.
+        func displayName(in locale: Locale = .current) -> String {
+            let localizedName = locale.localizedString(forIdentifier: code)?.localizedCapitalized ?? name
+            if localizedName.caseInsensitiveCompare(name) == .orderedSame {
+                return name
+            }
+            return "\(localizedName) / \(name)"
+        }
     }
     
     let supportedLanguages = [
