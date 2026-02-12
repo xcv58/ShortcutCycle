@@ -14,6 +14,7 @@ ShortcutCycle helps you switch between your favorite apps with just one keyboard
 - **See What's Happening**: A beautiful, native-looking HUD overlay shows you which app is active and what's coming up next.
 - **Instant Access**: Automatically launches apps if they aren't running when you switch to them.
 - **Multi-language**: Fully localized in 15 languages including English, Japanese, Chinese, German, Spanish, French, and many more.
+- **Keyboard Shortcuts**: Navigate the settings window with standard macOS keyboard shortcuts — switch tabs, add/delete groups, cycle through groups, and toggle the sidebar.
 - **Import/Export**: Save your groups and settings to a JSON file to keep them safe or share with others.
 - **Light & Dark**: Looks great in both Light and Dark modes.
 

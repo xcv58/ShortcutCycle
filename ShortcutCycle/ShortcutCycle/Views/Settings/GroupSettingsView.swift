@@ -6,9 +6,9 @@ import ShortcutCycleCore
 struct GroupSettingsView: View {
     @EnvironmentObject var store: GroupStore
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
-    
+
     var body: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: $store.columnVisibility) {
             GroupListView()
                 .frame(minWidth: 220)
         } detail: {

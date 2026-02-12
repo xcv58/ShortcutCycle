@@ -99,6 +99,7 @@ struct MenuBarView: View {
             
             // Settings button
             MenuBarButton(title: "Settings...".localized(language: selectedLanguage), icon: "gear") {
+                NSApp.setActivationPolicy(.regular)
                 NSApp.activate(ignoringOtherApps: true)
                 openWindow(id: "settings")
             }
@@ -111,8 +112,9 @@ struct MenuBarView: View {
         .background(VisualEffectView(material: .popover, blendingMode: .behindWindow))
         .background(WindowAppearanceApplier(colorScheme: appTheme.colorScheme))
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("ToggleSettingsWindow"))) { _ in
-             NSApp.activate(ignoringOtherApps: true)
-             openWindow(id: "settings")
+            NSApp.setActivationPolicy(.regular)
+            NSApp.activate(ignoringOtherApps: true)
+            openWindow(id: "settings")
         }
         .preferredColorScheme(appTheme.colorScheme)
     }

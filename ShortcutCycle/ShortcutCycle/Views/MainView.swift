@@ -15,7 +15,8 @@ struct MainView: View {
     @AppStorage("appTheme") private var appTheme: AppTheme = .system
     @EnvironmentObject var localeObserver: LocaleObserver
     @State private var selectedTab = "groups"
-    
+    @State private var showDeleteConfirmation = false
+
     var body: some View {
         TabView(selection: $selectedTab) {
             GroupSettingsView()
@@ -29,6 +30,28 @@ struct MainView: View {
                     Label("General".localized(language: selectedLanguage), systemImage: "gear")
                 }
                 .tag("general")
+        }
+        .focusedSceneValue(\.selectedTab, $selectedTab)
+        .background(SettingsWindowObserver())
+        .onAppear {
+            NSApp.setActivationPolicy(.regular)
+            NSApp.activate(ignoringOtherApps: true)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .deleteGroupRequested)) { _ in
+            showDeleteConfirmation = true
+        }
+        .confirmationDialog(
+            "Delete '\(store.selectedGroup?.name ?? "")'?",
+            isPresented: $showDeleteConfirmation
+        ) {
+            Button("Delete".localized(language: selectedLanguage), role: .destructive) {
+                if let group = store.selectedGroup {
+                    store.deleteGroup(group)
+                }
+            }
+            Button("Cancel".localized(language: selectedLanguage), role: .cancel) {}
+        } message: {
+            Text("This action cannot be undone.".localized(language: selectedLanguage))
         }
         .preferredColorScheme(appTheme.colorScheme)
         .frame(minWidth: 600, minHeight: 400)

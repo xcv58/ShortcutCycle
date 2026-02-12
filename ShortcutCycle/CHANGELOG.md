@@ -2,10 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.4] - 2026-02-08
+## [1.4] - 2026-02-12
+
+### Added
+- **In-App Keyboard Shortcuts**: Added macOS menu bar commands with keyboard shortcuts when the settings window is open. Includes tab switching (Cmd+1/2), add/delete group (Cmd+N, Cmd+Delete with confirmation), group navigation (Cmd+Up/Down, Cmd+[/], Cmd+K/J), and sidebar toggle (Cmd+Ctrl+S).
+- **Language Picker**: Language picker now shows both the system-language name and the native name (e.g. "German / Deutsch") for easier identification.
 
 ### Fixed
 - **Multi-Profile Reliability**: Fixed issues where cycling and app activation could fail for multi-instance apps (e.g. Firefox/Chrome profiles) after a process restart or when the HUD fallback path was triggered.
+- **System Language Detection**: Fixed detection of system language for non-English locales.
 
 ## [1.3] - 2026-02-06
 

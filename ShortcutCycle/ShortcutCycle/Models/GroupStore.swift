@@ -12,6 +12,8 @@ public class GroupStore: ObservableObject {
     
     @Published public var groups: [AppGroup] = []
     @Published public var selectedGroupId: UUID?
+    @Published public var isAddingGroup = false
+    @Published public var columnVisibility: NavigationSplitViewVisibility = .all
     
     private let saveKey = "ShortcutCycle.Groups"
     private let userDefaults: UserDefaults

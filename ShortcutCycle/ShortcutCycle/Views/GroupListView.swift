@@ -7,13 +7,12 @@ import KeyboardShortcuts
 /// Sidebar view showing the list of all groups
 struct GroupListView: View {
     @EnvironmentObject var store: GroupStore
-    @State private var isAddingGroup = false
     @State private var newGroupName = ""
     @State private var groupToRename: AppGroup?
     @State private var renameText = ""
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
     @FocusState private var isInputFocused: Bool
-    
+
     var body: some View {
         VStack(spacing: 0) {
             // Groups list
@@ -26,7 +25,7 @@ struct GroupListView: View {
                                 groupToRename = group
                                 renameText = group.name
                             }
-                            
+
                             Button("Delete".localized(language: selectedLanguage), role: .destructive) {
                                 store.deleteGroup(group)
                             }
@@ -38,11 +37,11 @@ struct GroupListView: View {
             }
             .listStyle(.sidebar)
             .id(selectedLanguage) // Force redraw of list and context menus when language changes
-            
+
             Divider()
-            
+
             // Add group button
-            if isAddingGroup {
+            if store.isAddingGroup {
                 HStack {
                     TextField("Enter group name".localized(language: selectedLanguage), text: $newGroupName)
                         .textFieldStyle(.roundedBorder)
@@ -51,21 +50,25 @@ struct GroupListView: View {
                             addGroup()
                         }
                         .onAppear {
-                            isInputFocused = true
+                            // Delay focus to ensure sidebar layout completes first
+                            // (prevents sidebar close button from stealing focus on tab switch)
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                                isInputFocused = true
+                            }
                         }
-                    
+
                     Button(action: addGroup) {
                         Image(systemName: "checkmark")
                     }
                     .disabled(newGroupName.isEmpty)
-                    
+
                     Button(action: cancelAdd) {
                         Image(systemName: "xmark")
                     }
                 }
                 .padding(8)
             } else {
-                Button(action: { isAddingGroup = true }) {
+                Button(action: { store.isAddingGroup = true }) {
                     HStack {
                         Label("Add Group".localized(language: selectedLanguage), systemImage: "plus")
                         Spacer()
@@ -98,12 +101,12 @@ struct GroupListView: View {
         guard !newGroupName.isEmpty else { return }
         _ = store.addGroup(name: newGroupName)
         newGroupName = ""
-        isAddingGroup = false
+        store.isAddingGroup = false
     }
-    
+
     private func cancelAdd() {
         newGroupName = ""
-        isAddingGroup = false
+        store.isAddingGroup = false
     }
 }
 
