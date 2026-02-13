@@ -55,11 +55,11 @@ class AppSwitcher: ObservableObject {
             return "\(bundleId)-\(app.processIdentifier)"
         }()
 
-        // Resolve stored lastActiveAppBundleId (plain bundle ID) to a current
-        // item's composite ID so AppCyclingLogic can match it in the items list
-        let resolvedLastActiveId = hudItems.first(where: {
-            $0.id == group.lastActiveAppBundleId || $0.bundleId == group.lastActiveAppBundleId
-        })?.id
+        let resolvableItems = hudItems.map { ResolvableAppItem(id: $0.id, bundleId: $0.bundleId) }
+        let resolvedLastActiveId = AppCyclingLogic.resolveLastActiveId(
+            storedId: group.lastActiveAppBundleId,
+            items: resolvableItems
+        )
 
         nextAppId = AppCyclingLogic.nextAppId(
             items: cycleItems,
@@ -83,9 +83,9 @@ class AppSwitcher: ObservableObject {
         // Find the HUDAppItem for the next app
         let nextItem = hudItems.first { $0.id == nextAppId }
 
-        // Perform Switch — store plain bundle ID (not composite "bundleId-pid")
-        // so the value remains valid across process restarts
-        store.updateLastActiveApp(bundleId: nextItem?.bundleId ?? nextAppId, for: group.id)
+        // Store composite ID (e.g. "bundleId-pid") so we can identify the exact
+        // instance next time. Falls back gracefully if the PID changes on restart.
+        store.updateLastActiveApp(bundleId: nextItem?.id ?? nextAppId, for: group.id)
 
         let hudShown = showHUD(items: hudItems, activeAppId: nextAppId, modifierFlags: modifierFlags, shortcut: shortcut, shouldActivate: true)
 
@@ -128,7 +128,7 @@ class AppSwitcher: ObservableObject {
                 app?.hide()
                 showHUD(items: runningItems, activeAppId: item.id, modifierFlags: modifierFlags, shortcut: shortcut, shouldActivate: false)
             } else {
-                store.updateLastActiveApp(bundleId: item.bundleId, for: group.id)
+                store.updateLastActiveApp(bundleId: item.id, for: group.id)
                 let hudShown = showHUD(items: runningItems, activeAppId: item.id, modifierFlags: modifierFlags, shortcut: shortcut)
                 if !hudShown {
                     app?.unhide()
@@ -151,11 +151,11 @@ class AppSwitcher: ObservableObject {
             return "\(bundleId)-\(app.processIdentifier)"
         }()
 
-        // Resolve stored lastActiveAppBundleId (plain bundle ID) to a current
-        // item's composite ID so AppCyclingLogic can match it in the items list
-        let resolvedLastActiveId = runningItems.first(where: {
-            $0.id == group.lastActiveAppBundleId || $0.bundleId == group.lastActiveAppBundleId
-        })?.id
+        let resolvableItems = runningItems.map { ResolvableAppItem(id: $0.id, bundleId: $0.bundleId) }
+        let resolvedLastActiveId = AppCyclingLogic.resolveLastActiveId(
+            storedId: group.lastActiveAppBundleId,
+            items: resolvableItems
+        )
 
         nextAppId = AppCyclingLogic.nextAppId(
             items: cycleItems,
@@ -168,7 +168,8 @@ class AppSwitcher: ObservableObject {
         // Find the HUDAppItem for the next app
         let nextItem = runningItems.first { $0.id == nextAppId }
         
-        store.updateLastActiveApp(bundleId: nextItem?.bundleId ?? nextAppId, for: group.id)
+        // Store composite ID so we can identify the exact instance next time
+        store.updateLastActiveApp(bundleId: nextItem?.id ?? nextAppId, for: group.id)
 
         let hudShown = showHUD(items: runningItems, activeAppId: nextAppId, modifierFlags: modifierFlags, shortcut: shortcut)
         
