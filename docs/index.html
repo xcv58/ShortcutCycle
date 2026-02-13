@@ -1022,32 +1022,50 @@
         const nextBtn = document.getElementById('gallery-next');
 
         if (galleryScroller && prevBtn && nextBtn) {
+            const screenshots = Array.from(galleryScroller.querySelectorAll('.screenshot-frame'));
+
+            function getCurrentIndex() {
+                const scrollLeft = galleryScroller.scrollLeft;
+                const scrollerRect = galleryScroller.getBoundingClientRect();
+                const scrollerCenter = scrollerRect.left + scrollerRect.width / 2;
+
+                let closestIndex = 0;
+                let minDistance = Infinity;
+
+                screenshots.forEach((screenshot, index) => {
+                    const rect = screenshot.getBoundingClientRect();
+                    const center = rect.left + rect.width / 2;
+                    const distance = Math.abs(center - scrollerCenter);
+
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        closestIndex = index;
+                    }
+                });
+
+                return closestIndex;
+            }
+
             prevBtn.addEventListener('click', () => {
-                const tolerance = 5; // buffer for float point errors
-                if (galleryScroller.scrollLeft <= tolerance) {
-                    // Loop to end
-                    galleryScroller.scrollTo({
-                        left: galleryScroller.scrollWidth,
-                        behavior: 'smooth'
-                    });
-                } else {
-                    galleryScroller.scrollBy({ left: -400, behavior: 'smooth' });
-                }
+                const currentIndex = getCurrentIndex();
+                const prevIndex = currentIndex === 0 ? screenshots.length - 1 : currentIndex - 1;
+
+                screenshots[prevIndex].scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                    inline: 'center'
+                });
             });
 
             nextBtn.addEventListener('click', () => {
-                const tolerance = 5;
-                const maxScroll = galleryScroller.scrollWidth - galleryScroller.clientWidth;
+                const currentIndex = getCurrentIndex();
+                const nextIndex = currentIndex === screenshots.length - 1 ? 0 : currentIndex + 1;
 
-                if (galleryScroller.scrollLeft >= maxScroll - tolerance) {
-                    // Loop to start
-                    galleryScroller.scrollTo({
-                        left: 0,
-                        behavior: 'smooth'
-                    });
-                } else {
-                    galleryScroller.scrollBy({ left: 400, behavior: 'smooth' });
-                }
+                screenshots[nextIndex].scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                    inline: 'center'
+                });
             });
         }
     </script>
