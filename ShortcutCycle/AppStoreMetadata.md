@@ -35,7 +35,7 @@ Don't cycle through 20 open windows to find the one you need.
 * **Social Group:** Toggle instantly between Slack, Discord, and Messages.
 * **Creative Group:** Move fluently between Figma, Sketch, and Photoshop.
 
-**⚡️ One-Key Magic**
+**⚡️ One-Shortcut Switching**
 Press your shortcut to focus the first app in the group. Press it again to cycle to the next. This builds instant muscle memory—you always know exactly which key brings up your work.
 
 **🚀 Smart Launching**
