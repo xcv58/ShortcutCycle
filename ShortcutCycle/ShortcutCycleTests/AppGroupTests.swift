@@ -1,4 +1,5 @@
 import XCTest
+import KeyboardShortcuts
 #if canImport(ShortcutCycleCore)
 @testable import ShortcutCycleCore
 #else
@@ -396,5 +397,37 @@ final class AppGroupTests: XCTestCase {
 
         // Should decode without error, ignoring the legacy shortcut field
         XCTAssertEqual(decoded.name, "Legacy With Shortcut")
+    }
+
+    func testShouldOpenAppIfNeededDefaultsToFalse() {
+        let group = AppGroup(name: "Test Group", openAppIfNeeded: nil)
+        XCTAssertFalse(group.shouldOpenAppIfNeeded)
+
+        let enabled = AppGroup(name: "Enabled Group", openAppIfNeeded: true)
+        XCTAssertTrue(enabled.shouldOpenAppIfNeeded)
+    }
+
+    func testShortcutNameAndNotificationName() {
+        let group = AppGroup(name: "Shortcut Group")
+        XCTAssertEqual(group.shortcutName, .forGroup(group.id))
+        XCTAssertEqual(Notification.Name.shortcutsNeedUpdate.rawValue, "ShortcutsNeedUpdate")
+    }
+
+    @MainActor
+    func testShortcutHelpersReflectKeyboardShortcuts() {
+        let group = AppGroup(name: "Shortcut Group")
+        let name = group.shortcutName
+
+        KeyboardShortcuts.setShortcut(nil, for: name)
+        XCTAssertFalse(group.hasShortcut)
+        XCTAssertNil(group.shortcutDisplayString)
+
+        let shortcut = KeyboardShortcuts.Shortcut(carbonKeyCode: 0, carbonModifiers: 256)
+        KeyboardShortcuts.setShortcut(shortcut, for: name)
+
+        XCTAssertTrue(group.hasShortcut)
+        XCTAssertEqual(group.shortcutDisplayString, shortcut.description)
+
+        KeyboardShortcuts.setShortcut(nil, for: name)
     }
 }

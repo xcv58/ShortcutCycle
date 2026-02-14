@@ -300,4 +300,26 @@ final class BackupRetentionTests: XCTestCase {
         XCTAssertTrue(deletedURLs.contains(files[2].url))
         XCTAssertFalse(deletedURLs.contains(files[1].url))
     }
+
+    // MARK: - Bucket selection
+
+    func testNewestPerBucketPrefersNewestEvenIfUnsorted() {
+        let older = BackupRetention.TimedFile(
+            url: URL(fileURLWithPath: "/backups/old.json"),
+            date: now.addingTimeInterval(-3600)
+        )
+        let newer = BackupRetention.TimedFile(
+            url: URL(fileURLWithPath: "/backups/new.json"),
+            date: now.addingTimeInterval(-1800)
+        )
+
+        let kept = BackupRetention.newestPerBucket(
+            [older, newer],
+            interval: 3600,
+            referenceDate: now
+        )
+
+        XCTAssertEqual(kept.count, 1)
+        XCTAssertEqual(kept.first?.url, newer.url)
+    }
 }

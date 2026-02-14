@@ -1,4 +1,5 @@
 import XCTest
+import AppKit
 #if canImport(ShortcutCycleCore)
 @testable import ShortcutCycleCore
 #else
@@ -27,6 +28,13 @@ final class GroupStoreTests: XCTestCase {
         store = nil
         userDefaults = nil
         super.tearDown()
+    }
+
+    private func backupFiles() -> [URL] {
+        let fm = FileManager.default
+        return (try? fm.contentsOfDirectory(at: store.backupDirectory, includingPropertiesForKeys: nil))?.filter {
+            $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json"
+        } ?? []
     }
 
     // MARK: - Initial State
@@ -249,6 +257,14 @@ final class GroupStoreTests: XCTestCase {
         XCTAssertTrue(updated?.isEnabled ?? false)
     }
 
+    func testToggleGroupEnabledPostsNotification() {
+        let group = store.groups.first!
+        let expectation = XCTNSNotificationExpectation(name: .shortcutsNeedUpdate)
+
+        store.toggleGroupEnabled(group)
+        wait(for: [expectation], timeout: 1.0)
+    }
+
     // MARK: - Rename Group
 
     func testRenameGroup() {
@@ -325,6 +341,23 @@ final class GroupStoreTests: XCTestCase {
         XCTAssertEqual(store.groups.first?.name, "Imported")
     }
 
+    func testImportDataReplacesGroupsAndPostsNotification() throws {
+        let importedGroup = AppGroup(name: "Imported Group", apps: [])
+        let payload = SettingsExport(groups: [importedGroup], settings: nil, shortcuts: nil)
+
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let data = try encoder.encode(payload)
+
+        let expectation = XCTNSNotificationExpectation(name: .shortcutsNeedUpdate)
+        try store.importData(data)
+        wait(for: [expectation], timeout: 1.0)
+
+        XCTAssertEqual(store.groups.count, 1)
+        XCTAssertEqual(store.groups.first?.id, importedGroup.id)
+        XCTAssertEqual(store.selectedGroupId, importedGroup.id)
+    }
+
     // MARK: - Persistence
 
     func testGroupsPersistAcrossStoreInstances() {
@@ -333,6 +366,21 @@ final class GroupStoreTests: XCTestCase {
         // Create new store with same defaults
         let store2 = GroupStore(userDefaults: userDefaults)
         XCTAssertTrue(store2.groups.contains(where: { $0.name == "Persistent" }))
+    }
+
+    func testLoadGroupsWithValidData() throws {
+        let validDefaults = UserDefaults(suiteName: "ValidDefaults")!
+        validDefaults.removePersistentDomain(forName: "ValidDefaults")
+        defer { validDefaults.removePersistentDomain(forName: "ValidDefaults") }
+
+        let group = AppGroup(name: "Loaded Group", apps: [])
+        let data = try JSONEncoder().encode([group])
+        validDefaults.set(data, forKey: "ShortcutCycle.Groups")
+
+        let tempStore = GroupStore(userDefaults: validDefaults)
+        XCTAssertEqual(tempStore.groups.count, 1)
+        XCTAssertEqual(tempStore.groups.first?.id, group.id)
+        XCTAssertEqual(tempStore.selectedGroupId, group.id)
     }
 
     // MARK: - Manual Backup Tests
@@ -356,6 +404,32 @@ final class GroupStoreTests: XCTestCase {
 
         let second = store.manualBackup()
         XCTAssertEqual(second, .noChange)
+    }
+
+    func testManualBackupWithCorruptLatestBackupStillSaves() throws {
+        _ = store.addGroup(name: "Corrupt Backup")
+        let corrupt = store.backupDirectory.appendingPathComponent("backup 2099-01-01 00-00-00.json")
+        try Data("not json".utf8).write(to: corrupt)
+        defer { try? FileManager.default.removeItem(at: corrupt) }
+
+        let result = store.manualBackup()
+        XCTAssertEqual(result, .saved)
+    }
+
+    func testManualBackupReturnsErrorWhenBackupDirectoryIsFile() throws {
+        let fm = FileManager.default
+        let dir = store.backupDirectory
+        try? fm.removeItem(at: dir)
+        try Data("blocking".utf8).write(to: dir)
+        defer { try? fm.removeItem(at: dir) }
+
+        let result = store.manualBackup()
+        switch result {
+        case .error:
+            break
+        default:
+            XCTFail("Expected manualBackup to return .error")
+        }
     }
 
     func testPerformAutoBackupSkipsDuplicate() {
@@ -390,6 +464,67 @@ final class GroupStoreTests: XCTestCase {
 
         let second = store.manualBackup()
         XCTAssertEqual(second, .saved)
+    }
+
+    // MARK: - Backup Cleanup
+
+    func testCleanupOldBackupsDeletesOlderFilesInSameBucket() throws {
+        let fm = FileManager.default
+        let tempDir = fm.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try fm.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? fm.removeItem(at: tempDir) }
+
+        let older = tempDir.appendingPathComponent("backup 2000-01-01 01-50-00.json")
+        let newer = tempDir.appendingPathComponent("backup 2000-01-01 02-00-00.json")
+        try Data("{}".utf8).write(to: older)
+        try Data("{}".utf8).write(to: newer)
+
+        let now = Date()
+        try fm.setAttributes([.creationDate: now.addingTimeInterval(-2 * 3600 - 600)], ofItemAtPath: older.path)
+        try fm.setAttributes([.creationDate: now.addingTimeInterval(-2 * 3600)], ofItemAtPath: newer.path)
+
+        store.cleanupOldBackups(in: tempDir)
+
+        XCTAssertFalse(fm.fileExists(atPath: older.path))
+        XCTAssertTrue(fm.fileExists(atPath: newer.path))
+    }
+
+    func testCleanupOldBackupsHandlesInvalidDirectory() throws {
+        let fm = FileManager.default
+        let tempFile = fm.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try Data("not a directory".utf8).write(to: tempFile)
+        defer { try? fm.removeItem(at: tempFile) }
+
+        store.cleanupOldBackups(in: tempFile)
+    }
+
+    // MARK: - Error Handling
+
+    func testSaveGroupsHandlesEncodingError() {
+        let badDefaults = UserDefaults(suiteName: "BadSaveDefaults")!
+        badDefaults.removePersistentDomain(forName: "BadSaveDefaults")
+        defer { badDefaults.removePersistentDomain(forName: "BadSaveDefaults") }
+
+        let badStore = GroupStore(userDefaults: badDefaults)
+        let badDate = Date(timeIntervalSince1970: .nan)
+        var badGroup = AppGroup(name: "Bad Group", apps: [], lastModified: badDate)
+        badStore.groups = [badGroup]
+
+        badGroup.name = "Bad Group Updated"
+        badStore.updateGroup(badGroup)
+    }
+
+    func testPerformAutoBackupHandlesEncodingError() {
+        let badDefaults = UserDefaults(suiteName: "BadAutoDefaults")!
+        badDefaults.removePersistentDomain(forName: "BadAutoDefaults")
+        defer { badDefaults.removePersistentDomain(forName: "BadAutoDefaults") }
+
+        let badStore = GroupStore(userDefaults: badDefaults)
+        _ = badStore.addGroup(name: "First")
+        _ = badStore.addGroup(name: "Second")
+
+        badStore.groups[0].lastModified = Date(timeIntervalSince1970: .nan)
+        badStore.flushPendingBackup()
     }
 
     // MARK: - Corrupt Data Recovery
@@ -540,6 +675,29 @@ final class GroupStoreTests: XCTestCase {
         } ?? []).count
 
         XCTAssertGreaterThanOrEqual(countAfterFlush, countAfterFirst)
+    }
+
+    func testDebouncedAutoBackupIsFlushed() {
+        _ = store.addGroup(name: "First Change")
+        let baseline = backupFiles().count
+
+        _ = store.addGroup(name: "Second Change")
+        store.flushPendingBackup()
+
+        let after = backupFiles().count
+        XCTAssertGreaterThan(after, baseline)
+    }
+
+    func testTerminationObserverFlushesPendingBackup() {
+        _ = store.addGroup(name: "Observer First")
+        let baseline = backupFiles().count
+
+        _ = store.addGroup(name: "Observer Second")
+        NotificationCenter.default.post(name: NSApplication.willTerminateNotification, object: nil)
+        RunLoop.main.run(until: Date().addingTimeInterval(0.1))
+
+        let after = backupFiles().count
+        XCTAssertGreaterThan(after, baseline)
     }
 
     func testFlushWithNoPendingBackupIsNoOp() {

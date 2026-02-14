@@ -93,7 +93,7 @@ struct BackupRetention {
     }
 
     /// Groups files into time buckets and returns the newest file from each bucket.
-    private static func newestPerBucket(
+    static func newestPerBucket(
         _ files: [TimedFile],
         interval: TimeInterval,
         referenceDate: Date

@@ -232,7 +232,7 @@ public class GroupStore: ObservableObject {
 
     /// Thin old backups using GFS (Grandfather-Father-Son) retention policy.
     /// Keeps more granularity for recent backups, progressively fewer for older ones.
-    private func cleanupOldBackups(in directory: URL) {
+    func cleanupOldBackups(in directory: URL) {
         do {
             let fileManager = FileManager.default
             let files = try fileManager.contentsOfDirectory(at: directory, includingPropertiesForKeys: [.creationDateKey])
