@@ -52,7 +52,7 @@ final class SettingsExportTests: XCTestCase {
                     "name": "Old Group",
                     "apps": [],
                     "isEnabled": true,
-                    "lastModified": 1000000
+                    "lastModified": "2024-01-01T00:00:00Z"
                 }
             ]
         }
