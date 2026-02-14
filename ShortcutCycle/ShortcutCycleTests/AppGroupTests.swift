@@ -345,4 +345,56 @@ final class AppGroupTests: XCTestCase {
 
         XCTAssertNotEqual(group1, group2)
     }
+
+    // MARK: - Shortcut Properties
+
+    func testShortcutNameIsConsistent() {
+        let id = UUID()
+        let group = AppGroup(id: id, name: "Test")
+
+        // shortcutName should be deterministic based on group ID
+        let name1 = group.shortcutName
+        let name2 = group.shortcutName
+        XCTAssertEqual(name1, name2)
+    }
+
+    @MainActor
+    func testHasShortcutDefaultsFalse() {
+        let group = AppGroup(name: "No Shortcut")
+
+        // No shortcut registered in test environment
+        XCTAssertFalse(group.hasShortcut)
+    }
+
+    @MainActor
+    func testShortcutDisplayStringDefaultsNil() {
+        let group = AppGroup(name: "No Shortcut")
+
+        // No shortcut registered in test environment
+        XCTAssertNil(group.shortcutDisplayString)
+    }
+
+    // MARK: - Legacy Shortcut Decoding
+
+    func testDecodingWithLegacyShortcutField() throws {
+        // Legacy data that includes the old 'shortcut' field
+        let json = """
+        {
+            "id": "\(UUID().uuidString)",
+            "name": "Legacy With Shortcut",
+            "apps": [],
+            "isEnabled": true,
+            "lastModified": 1000000,
+            "shortcut": {
+                "keyCode": 0,
+                "modifiers": 256
+            }
+        }
+        """
+        let data = json.data(using: .utf8)!
+        let decoded = try JSONDecoder().decode(AppGroup.self, from: data)
+
+        // Should decode without error, ignoring the legacy shortcut field
+        XCTAssertEqual(decoded.name, "Legacy With Shortcut")
+    }
 }

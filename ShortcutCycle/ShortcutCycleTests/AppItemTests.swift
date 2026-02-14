@@ -122,4 +122,46 @@ final class AppItemTests: XCTestCase {
         // Not a valid .app bundle, so should return nil (no bundle ID)
         XCTAssertNil(item)
     }
+
+    func testFromValidAppBundle() throws {
+        // Create a minimal .app bundle with Info.plist containing a bundle identifier
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let appDir = tempDir.appendingPathComponent("TestApp.app")
+        let contentsDir = appDir.appendingPathComponent("Contents")
+        try FileManager.default.createDirectory(at: contentsDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let plist: [String: Any] = [
+            "CFBundleIdentifier": "com.test.testapp",
+            "CFBundleName": "TestApp"
+        ]
+        let plistData = try PropertyListSerialization.data(fromPropertyList: plist, format: .xml, options: 0)
+        try plistData.write(to: contentsDir.appendingPathComponent("Info.plist"))
+
+        let item = AppItem.from(appURL: appDir)
+
+        XCTAssertNotNil(item)
+        XCTAssertEqual(item?.bundleIdentifier, "com.test.testapp")
+        XCTAssertEqual(item?.name, "TestApp")
+        XCTAssertEqual(item?.iconPath, appDir.path)
+    }
+
+    func testFromAppBundleWithoutIdentifier() throws {
+        // Create a .app bundle with Info.plist but NO CFBundleIdentifier
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let appDir = tempDir.appendingPathComponent("NoBundleId.app")
+        let contentsDir = appDir.appendingPathComponent("Contents")
+        try FileManager.default.createDirectory(at: contentsDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let plist: [String: Any] = [
+            "CFBundleName": "NoBundleId"
+        ]
+        let plistData = try PropertyListSerialization.data(fromPropertyList: plist, format: .xml, options: 0)
+        try plistData.write(to: contentsDir.appendingPathComponent("Info.plist"))
+
+        let item = AppItem.from(appURL: appDir)
+
+        XCTAssertNil(item)
+    }
 }

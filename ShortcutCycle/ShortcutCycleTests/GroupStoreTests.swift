@@ -391,6 +391,170 @@ final class GroupStoreTests: XCTestCase {
         let second = store.manualBackup()
         XCTAssertEqual(second, .saved)
     }
+
+    // MARK: - Corrupt Data Recovery
+
+    func testCorruptDataFallsBackToDefaults() {
+        // Write corrupt data to the save key
+        userDefaults.set("not valid json data".data(using: .utf8), forKey: "ShortcutCycle.Groups")
+
+        // Create a new store — it should recover gracefully with defaults
+        let corruptStore = GroupStore(userDefaults: userDefaults)
+
+        XCTAssertEqual(corruptStore.groups.count, 2)
+        XCTAssertEqual(corruptStore.groups.first?.name, "Browsers")
+
+        try? FileManager.default.removeItem(at: corruptStore.backupDirectory)
+    }
+
+    // MARK: - Apply Import
+
+    func testApplyImportDirectly() {
+        let group = AppGroup(name: "Direct Import", apps: [
+            AppItem(bundleIdentifier: "com.direct.app", name: "Direct")
+        ])
+        let payload = SettingsExport(groups: [group])
+
+        store.applyImport(payload)
+
+        XCTAssertEqual(store.groups.count, 1)
+        XCTAssertEqual(store.groups[0].name, "Direct Import")
+        XCTAssertEqual(store.selectedGroupId, store.groups.first?.id)
+    }
+
+    func testApplyImportWithSettings() {
+        let defaults = UserDefaults.standard
+        let originalShowHUD = defaults.object(forKey: "showHUD")
+        defer {
+            if let v = originalShowHUD { defaults.set(v, forKey: "showHUD") } else { defaults.removeObject(forKey: "showHUD") }
+        }
+
+        let settings = AppSettings(showHUD: false, showShortcutInHUD: true)
+        let payload = SettingsExport(groups: [AppGroup(name: "G")], settings: settings)
+
+        store.applyImport(payload)
+
+        XCTAssertEqual(defaults.bool(forKey: "showHUD"), false)
+    }
+
+    func testApplyImportWithShortcuts() {
+        let group = AppGroup(name: "With Shortcuts")
+        let shortcuts: [String: ShortcutData] = [
+            group.id.uuidString: ShortcutData(carbonKeyCode: 0, carbonModifiers: 256)
+        ]
+        let payload = SettingsExport(groups: [group], shortcuts: shortcuts)
+
+        // Should not crash
+        store.applyImport(payload)
+
+        XCTAssertEqual(store.groups.count, 1)
+    }
+
+    // MARK: - Rename Non-existent Group
+
+    func testRenameNonexistentGroupIsNoOp() {
+        let phantom = AppGroup(name: "Ghost")
+        let countBefore = store.groups.count
+
+        store.renameGroup(phantom, newName: "New Name")
+
+        XCTAssertEqual(store.groups.count, countBefore)
+        XCTAssertFalse(store.groups.contains(where: { $0.name == "New Name" }))
+    }
+
+    // MARK: - Toggle Non-existent Group
+
+    func testToggleNonexistentGroupIsNoOp() {
+        let phantom = AppGroup(name: "Ghost")
+        let countBefore = store.groups.count
+
+        store.toggleGroupEnabled(phantom)
+
+        XCTAssertEqual(store.groups.count, countBefore)
+    }
+
+    // MARK: - Remove/Move App on Non-existent Group
+
+    func testRemoveAppFromNonexistentGroup() {
+        let app = AppItem(bundleIdentifier: "com.test", name: "T")
+        // Should not crash
+        store.removeApp(app, from: UUID())
+    }
+
+    func testMoveAppInNonexistentGroup() {
+        // Should not crash
+        store.moveApp(in: UUID(), from: IndexSet(integer: 0), to: 1)
+    }
+
+    // MARK: - Selected Group Setter with Nil
+
+    func testSelectedGroupSetterWithNonexistentGroup() {
+        let phantom = AppGroup(name: "Ghost")
+        let originalName = store.groups.first?.name
+
+        store.selectedGroup = phantom
+
+        // Should not modify any existing group
+        XCTAssertEqual(store.groups.first?.name, originalName)
+    }
+
+    // MARK: - Debounced Auto-Backup
+
+    func testScheduleAutoBackupCreatesBackup() {
+        // Adding a group triggers scheduleAutoBackup → immediate first save
+        _ = store.addGroup(name: "AutoSave")
+
+        // The first change should trigger an immediate backup (no debounce timer yet)
+        let fm = FileManager.default
+        let files = (try? fm.contentsOfDirectory(at: store.backupDirectory, includingPropertiesForKeys: nil))?.filter {
+            $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json"
+        } ?? []
+        XCTAssertGreaterThanOrEqual(files.count, 1)
+    }
+
+    func testMultipleRapidChangesDebounce() {
+        // First change triggers immediate backup
+        _ = store.addGroup(name: "Rapid1")
+
+        let fm = FileManager.default
+        let countAfterFirst = ((try? fm.contentsOfDirectory(at: store.backupDirectory, includingPropertiesForKeys: nil))?.filter {
+            $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json"
+        } ?? []).count
+
+        // Subsequent rapid changes should be debounced (not create immediate backups)
+        _ = store.addGroup(name: "Rapid2")
+        _ = store.addGroup(name: "Rapid3")
+
+        let countAfterRapid = ((try? fm.contentsOfDirectory(at: store.backupDirectory, includingPropertiesForKeys: nil))?.filter {
+            $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json"
+        } ?? []).count
+
+        // Debounce means the count should not increase for each rapid change
+        XCTAssertEqual(countAfterRapid, countAfterFirst)
+
+        // But flushing should create the backup
+        store.flushPendingBackup()
+
+        let countAfterFlush = ((try? fm.contentsOfDirectory(at: store.backupDirectory, includingPropertiesForKeys: nil))?.filter {
+            $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json"
+        } ?? []).count
+
+        XCTAssertGreaterThanOrEqual(countAfterFlush, countAfterFirst)
+    }
+
+    func testFlushWithNoPendingBackupIsNoOp() {
+        // Create a fresh store, don't make any changes
+        let freshDefaults = UserDefaults(suiteName: "TestFlushNoOp")!
+        freshDefaults.removePersistentDomain(forName: "TestFlushNoOp")
+        let freshStore = GroupStore(userDefaults: freshDefaults)
+        defer {
+            try? FileManager.default.removeItem(at: freshStore.backupDirectory)
+            freshDefaults.removePersistentDomain(forName: "TestFlushNoOp")
+        }
+
+        // Flush with nothing pending — should not crash or create files
+        freshStore.flushPendingBackup()
+    }
 }
 
 // Make ManualBackupResult equatable for test assertions

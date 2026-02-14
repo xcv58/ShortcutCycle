@@ -394,4 +394,150 @@ final class SettingsExportTests: XCTestCase {
         try? FileManager.default.removeItem(at: backupDir)
     }
 
+    // MARK: - AppSettings.current() and apply()
+
+    func testAppSettingsCurrentReadsFromUserDefaults() {
+        // Save known values to UserDefaults.standard
+        let defaults = UserDefaults.standard
+        let originalShowHUD = defaults.object(forKey: "showHUD")
+        let originalShowShortcut = defaults.object(forKey: "showShortcutInHUD")
+        let originalLanguage = defaults.string(forKey: "selectedLanguage")
+        let originalTheme = defaults.string(forKey: "appTheme")
+        defer {
+            // Restore original values
+            if let v = originalShowHUD { defaults.set(v, forKey: "showHUD") } else { defaults.removeObject(forKey: "showHUD") }
+            if let v = originalShowShortcut { defaults.set(v, forKey: "showShortcutInHUD") } else { defaults.removeObject(forKey: "showShortcutInHUD") }
+            if let v = originalLanguage { defaults.set(v, forKey: "selectedLanguage") } else { defaults.removeObject(forKey: "selectedLanguage") }
+            if let v = originalTheme { defaults.set(v, forKey: "appTheme") } else { defaults.removeObject(forKey: "appTheme") }
+        }
+
+        defaults.set(false, forKey: "showHUD")
+        defaults.set(false, forKey: "showShortcutInHUD")
+        defaults.set("fr", forKey: "selectedLanguage")
+        defaults.set("dark", forKey: "appTheme")
+
+        let current = AppSettings.current()
+        XCTAssertEqual(current.showHUD, false)
+        XCTAssertEqual(current.showShortcutInHUD, false)
+        XCTAssertEqual(current.selectedLanguage, "fr")
+        XCTAssertEqual(current.appTheme, "dark")
+    }
+
+    func testAppSettingsCurrentDefaultValues() {
+        // When keys are not set, defaults should apply
+        let defaults = UserDefaults.standard
+        let originalShowHUD = defaults.object(forKey: "showHUD")
+        let originalShowShortcut = defaults.object(forKey: "showShortcutInHUD")
+        defer {
+            if let v = originalShowHUD { defaults.set(v, forKey: "showHUD") } else { defaults.removeObject(forKey: "showHUD") }
+            if let v = originalShowShortcut { defaults.set(v, forKey: "showShortcutInHUD") } else { defaults.removeObject(forKey: "showShortcutInHUD") }
+        }
+
+        defaults.removeObject(forKey: "showHUD")
+        defaults.removeObject(forKey: "showShortcutInHUD")
+
+        let current = AppSettings.current()
+        XCTAssertEqual(current.showHUD, true)
+        XCTAssertEqual(current.showShortcutInHUD, true)
+    }
+
+    func testAppSettingsApply() {
+        let defaults = UserDefaults.standard
+        let originalShowHUD = defaults.object(forKey: "showHUD")
+        let originalShowShortcut = defaults.object(forKey: "showShortcutInHUD")
+        let originalLanguage = defaults.string(forKey: "selectedLanguage")
+        let originalTheme = defaults.string(forKey: "appTheme")
+        defer {
+            if let v = originalShowHUD { defaults.set(v, forKey: "showHUD") } else { defaults.removeObject(forKey: "showHUD") }
+            if let v = originalShowShortcut { defaults.set(v, forKey: "showShortcutInHUD") } else { defaults.removeObject(forKey: "showShortcutInHUD") }
+            if let v = originalLanguage { defaults.set(v, forKey: "selectedLanguage") } else { defaults.removeObject(forKey: "selectedLanguage") }
+            if let v = originalTheme { defaults.set(v, forKey: "appTheme") } else { defaults.removeObject(forKey: "appTheme") }
+        }
+
+        let settings = AppSettings(showHUD: false, showShortcutInHUD: true, selectedLanguage: "ko", appTheme: "light")
+        settings.apply()
+
+        XCTAssertEqual(defaults.bool(forKey: "showHUD"), false)
+        XCTAssertEqual(defaults.bool(forKey: "showShortcutInHUD"), true)
+        XCTAssertEqual(defaults.string(forKey: "selectedLanguage"), "ko")
+        XCTAssertEqual(defaults.string(forKey: "appTheme"), "light")
+    }
+
+    func testAppSettingsApplyWithNilThemeDoesNotWrite() {
+        let defaults = UserDefaults.standard
+        let originalTheme = defaults.string(forKey: "appTheme")
+        defer {
+            if let v = originalTheme { defaults.set(v, forKey: "appTheme") } else { defaults.removeObject(forKey: "appTheme") }
+        }
+
+        defaults.set("existing", forKey: "appTheme")
+
+        let settings = AppSettings(showHUD: true, showShortcutInHUD: true, selectedLanguage: nil, appTheme: nil)
+        settings.apply()
+
+        // nil appTheme should NOT overwrite existing value
+        XCTAssertEqual(defaults.string(forKey: "appTheme"), "existing")
+        // nil selectedLanguage should write "system"
+        XCTAssertEqual(defaults.string(forKey: "selectedLanguage"), "system")
+    }
+
+    // MARK: - fullSnapshot
+
+    func testFullSnapshotCapturesGroups() {
+        let groups = [AppGroup(name: "Snap"), AppGroup(name: "Shot")]
+        let snapshot = SettingsExport.fullSnapshot(groups: groups)
+
+        XCTAssertEqual(snapshot.groups.count, 2)
+        XCTAssertEqual(snapshot.groups[0].name, "Snap")
+        XCTAssertEqual(snapshot.groups[1].name, "Shot")
+        XCTAssertEqual(snapshot.version, 3)
+        XCTAssertNotNil(snapshot.settings)
+    }
+
+    func testFullSnapshotWithNoShortcutsRegistered() {
+        let groups = [AppGroup(name: "NoShortcut")]
+        let snapshot = SettingsExport.fullSnapshot(groups: groups)
+
+        // In test environment, no shortcuts are registered
+        XCTAssertNil(snapshot.shortcuts)
+    }
+
+    func testFullSnapshotWithEmptyGroups() {
+        let snapshot = SettingsExport.fullSnapshot(groups: [])
+
+        XCTAssertTrue(snapshot.groups.isEmpty)
+        XCTAssertNil(snapshot.shortcuts)
+    }
+
+    // MARK: - applyShortcuts
+
+    func testApplyShortcutsWithNilShortcuts() {
+        let export = SettingsExport(groups: [AppGroup(name: "G")])
+
+        // Should not crash when shortcuts is nil (early return)
+        export.applyShortcuts()
+    }
+
+    func testApplyShortcutsWithShortcutData() {
+        let group = AppGroup(name: "WithShortcut")
+        let shortcuts: [String: ShortcutData] = [
+            group.id.uuidString: ShortcutData(carbonKeyCode: 0, carbonModifiers: 256)
+        ]
+        let export = SettingsExport(groups: [group], shortcuts: shortcuts)
+
+        // Should apply without crashing
+        export.applyShortcuts()
+    }
+
+    func testApplyShortcutsIgnoresUnmatchedKeys() {
+        let group = AppGroup(name: "G")
+        let shortcuts: [String: ShortcutData] = [
+            UUID().uuidString: ShortcutData(carbonKeyCode: 42, carbonModifiers: 512)
+        ]
+        let export = SettingsExport(groups: [group], shortcuts: shortcuts)
+
+        // Shortcut key doesn't match any group — should not crash
+        export.applyShortcuts()
+    }
+
 }

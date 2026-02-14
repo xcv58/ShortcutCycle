@@ -390,4 +390,82 @@ final class BackupDiffTests: XCTestCase {
         XCTAssertEqual(added.count, 2)
         XCTAssertEqual(removed.count, 2)
     }
+
+    // MARK: - AppChange and GroupDiff Properties
+
+    func testAppChangePropertiesArePopulated() {
+        let groupId = UUID()
+        let before = makeExport(groups: [makeGroup(id: groupId, name: "G", apps: [makeApp("com.old", name: "Old App")])])
+        let after = makeExport(groups: [makeGroup(id: groupId, name: "G", apps: [makeApp("com.new", name: "New App")])])
+
+        let diff = BackupDiff.compute(before: before, after: after)
+
+        let added = diff.groupDiffs[0].appChanges.first(where: { $0.status == .added })
+        XCTAssertEqual(added?.appName, "New App")
+        XCTAssertEqual(added?.bundleIdentifier, "com.new")
+        XCTAssertNotNil(added?.id)
+
+        let removed = diff.groupDiffs[0].appChanges.first(where: { $0.status == .removed })
+        XCTAssertEqual(removed?.appName, "Old App")
+        XCTAssertEqual(removed?.bundleIdentifier, "com.old")
+    }
+
+    func testGroupDiffPropertiesArePopulated() {
+        let groupId = UUID()
+        let before = makeExport(groups: [makeGroup(id: groupId, name: "Group Name", apps: [])])
+        let after = makeExport(groups: [makeGroup(id: groupId, name: "Group Name", apps: [])])
+
+        let diff = BackupDiff.compute(before: before, after: after)
+
+        XCTAssertEqual(diff.groupDiffs[0].id, groupId)
+        XCTAssertEqual(diff.groupDiffs[0].groupName, "Group Name")
+        XCTAssertEqual(diff.groupDiffs[0].status, .unchanged)
+        XCTAssertEqual(diff.groupDiffs[0].appChanges.count, 0)
+    }
+
+    func testSettingChangePropertiesArePopulated() {
+        let before = makeExport(groups: [], settings: AppSettings(showHUD: true, showShortcutInHUD: true))
+        let after = makeExport(groups: [], settings: AppSettings(showHUD: false, showShortcutInHUD: true))
+
+        let diff = BackupDiff.compute(before: before, after: after)
+
+        let change = diff.settingChanges[0]
+        XCTAssertNotNil(change.id)
+        XCTAssertEqual(change.key, "Show HUD")
+        XCTAssertEqual(change.oldValue, "true")
+        XCTAssertEqual(change.newValue, "false")
+    }
+
+    func testAddedGroupWithEmptyApps() {
+        let before = makeExport(groups: [])
+        let after = makeExport(groups: [makeGroup(name: "Empty New")])
+
+        let diff = BackupDiff.compute(before: before, after: after)
+
+        XCTAssertEqual(diff.groupDiffs[0].status, .added)
+        XCTAssertEqual(diff.groupDiffs[0].appChanges.count, 0)
+    }
+
+    func testRemovedGroupWithEmptyApps() {
+        let before = makeExport(groups: [makeGroup(name: "Empty Old")])
+        let after = makeExport(groups: [])
+
+        let diff = BackupDiff.compute(before: before, after: after)
+
+        XCTAssertEqual(diff.groupDiffs[0].status, .removed)
+        XCTAssertEqual(diff.groupDiffs[0].appChanges.count, 0)
+    }
+
+    // MARK: - hasChanges with unchanged groups but no settings
+
+    func testHasChangesNoSettingsNoGroupChanges() {
+        let groupId = UUID()
+        let diff = BackupDiff.compute(
+            before: makeExport(groups: [makeGroup(id: groupId, name: "G")]),
+            after: makeExport(groups: [makeGroup(id: groupId, name: "G")])
+        )
+
+        XCTAssertFalse(diff.hasChanges)
+        XCTAssertTrue(diff.settingChanges.isEmpty)
+    }
 }
