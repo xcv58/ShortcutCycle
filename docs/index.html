@@ -99,9 +99,10 @@
 
         /* --- ACCESSIBILITY --- */
         /* Skip Navigation Link */
+
         .skip-link {
             position: absolute;
-            top: -40px;
+            top: 0;
             left: 0;
             background: var(--accent);
             color: white;
@@ -109,10 +110,12 @@
             z-index: 100;
             text-decoration: none;
             border-radius: 0 0 4px 0;
+            transform: translateY(-100%);
+            transition: transform 0.3s ease;
         }
 
         .skip-link:focus {
-            top: 0;
+            transform: translateY(0);
         }
 
         /* Screen Reader Only */
