@@ -11,6 +11,47 @@ jobs:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v4
-    - name: Run tests
-      run: swift test
+    - name: Run tests with coverage
+      run: swift test --enable-code-coverage
       working-directory: ShortcutCycle
+    - name: Generate coverage report
+      if: always()
+      working-directory: ShortcutCycle
+      run: |
+        CODECOV_PATH=$(swift test --show-codecov-path 2>/dev/null || true)
+        if [ -f "$CODECOV_PATH" ]; then
+          echo "## Test Coverage" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| File | Coverage |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|------|----------|" >> "$GITHUB_STEP_SUMMARY"
+          python3 -c "
+        import json, sys, os
+        data = json.load(open('$CODECOV_PATH'))
+        files = data['data'][0]['files']
+        # Only include ShortcutCycleCore source files (Models/)
+        source_files = [
+            'AppGroup.swift', 'AppItem.swift', 'BackupDiff.swift',
+            'BackupRetention.swift', 'GroupStore.swift',
+            'KeyboardShortcutsNames.swift', 'SettingsExport.swift',
+            'HUDAppItem.swift'
+        ]
+        total_covered = 0
+        total_count = 0
+        for f in sorted(files, key=lambda x: x['filename']):
+            name = f['filename'].split('/')[-1]
+            if name not in source_files:
+                continue
+            pct = f['summary']['lines']['percent']
+            covered = f['summary']['lines']['covered']
+            count = f['summary']['lines']['count']
+            total_covered += covered
+            total_count += count
+            emoji = ':white_check_mark:' if pct == 100 else ':yellow_circle:' if pct >= 90 else ':red_circle:'
+            print(f'| {emoji} {name} | {pct:.1f}% ({covered}/{count}) |')
+        if total_count > 0:
+            total_pct = 100.0 * total_covered / total_count
+            print(f'| **Total** | **{total_pct:.1f}%** ({total_covered}/{total_count} lines) |')
+          " >> "$GITHUB_STEP_SUMMARY"
+        else
+          echo "Coverage data not found" >> "$GITHUB_STEP_SUMMARY"
+        fi

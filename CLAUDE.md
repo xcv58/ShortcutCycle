@@ -59,12 +59,14 @@ ShortcutCycle/
 │   │   └── Resources/                  # 15 language .lproj directories
 │   └── ShortcutCycleTests/            # XCTest test suites
 │       ├── AppCyclingLogicTests.swift
-│       ├── GroupStoreTests.swift
 │       ├── AppGroupTests.swift
-│       ├── SettingsExportTests.swift
-│       ├── LocalizationTests.swift
-│       ├── BackupRetentionTests.swift
+│       ├── AppItemTests.swift
 │       ├── BackupBrowserTests.swift
+│       ├── BackupDiffTests.swift
+│       ├── BackupRetentionTests.swift
+│       ├── GroupStoreTests.swift
+│       ├── LocalizationTests.swift
+│       ├── SettingsExportTests.swift
 │       └── ShortcutCycleTests.swift
 ├── .github/workflows/
 │   ├── test.yml                        # CI: swift test on push/PR to master
@@ -95,7 +97,9 @@ All SPM commands must be run from the `ShortcutCycle/` subdirectory (where `Pack
 
 GitHub Actions runs on every push to `master` and on all pull requests targeting `master`:
 - **Runner:** `macos-latest`
-- **Command:** `swift test` in the `ShortcutCycle/` directory
+- **Command:** `swift test --enable-code-coverage` in the `ShortcutCycle/` directory
+- **Coverage report:** Filtered to `ShortcutCycleCore` source files only (excludes third-party dependencies, test files, and SPM boilerplate). Posted to the GitHub Actions job summary with per-file and total line coverage.
+- **Coverage goal:** Maintain 100% line coverage on all `ShortcutCycleCore` source files. When adding new code to `Models/`, add corresponding tests to keep coverage at 100%.
 
 Xcode Cloud uses `ci_scripts/ci_post_clone.sh` to set build numbers (`CI_BUILD_NUMBER + 100`).
 

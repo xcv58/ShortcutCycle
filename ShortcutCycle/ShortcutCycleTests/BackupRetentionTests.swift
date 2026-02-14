@@ -41,6 +41,12 @@ final class BackupRetentionTests: XCTestCase {
         XCTAssertFalse(deleted.contains(files[0].url))
     }
 
+    func testTwoFilesNeitherDeleted() {
+        let files = [file(minutesAgo: 0), file(minutesAgo: 30)]
+        let result = BackupRetention.filesToDelete(from: files, now: now)
+        XCTAssertEqual(result.count, 0)
+    }
+
     // MARK: - Recent tier (< 1 hour): keep all
 
     func testAllRecentFilesKept() {
@@ -121,6 +127,88 @@ final class BackupRetentionTests: XCTestCase {
         }
     }
 
+    func testMaxCountOfOne() {
+        let files = (0..<10).map { file(minutesAgo: Double($0) * 5) }
+        let deleted = BackupRetention.filesToDelete(from: files, now: now, maxCount: 1)
+        let kept = files.count - deleted.count
+        XCTAssertEqual(kept, 1)
+
+        // Only the newest should survive
+        let deletedURLs = Set(deleted)
+        XCTAssertFalse(deletedURLs.contains(files[0].url))
+    }
+
+    func testMaxCountEqualToFileCount() {
+        let files = (0..<5).map { file(minutesAgo: Double($0) * 10) }
+        let deleted = BackupRetention.filesToDelete(from: files, now: now, maxCount: 5)
+        // All are recent (< 1h), tier keeps all, max count matches => no deletions
+        XCTAssertEqual(deleted.count, 0)
+    }
+
+    func testMaxCountGreaterThanFileCount() {
+        let files = (0..<3).map { file(minutesAgo: Double($0) * 10) }
+        let deleted = BackupRetention.filesToDelete(from: files, now: now, maxCount: 100)
+        XCTAssertEqual(deleted.count, 0)
+    }
+
+    // MARK: - Tier boundary edge cases
+
+    func testFileAtExactlyOneHourBoundary() {
+        // A file aged exactly 60 minutes (1 hour) is at the boundary between recent and hourly
+        var files = [file(minutesAgo: 0)]
+        files.append(file(minutesAgo: 60.0)) // exactly 1 hour
+
+        let deleted = BackupRetention.filesToDelete(from: files, now: now)
+        // Two files, boundary file enters hourly tier, but it's the only one in its bucket
+        XCTAssertEqual(deleted.count, 0)
+    }
+
+    func testFileAtExactly24HourBoundary() {
+        // File aged exactly 24 hours is at boundary between hourly and daily tiers
+        var files = [file(minutesAgo: 0)]
+        files.append(file(hoursAgo: 24.0)) // exactly 24 hours
+
+        let deleted = BackupRetention.filesToDelete(from: files, now: now)
+        XCTAssertEqual(deleted.count, 0)
+    }
+
+    func testFileAtExactly30DayBoundary() {
+        // File aged exactly 30 days is at boundary between daily and weekly tiers
+        var files = [file(minutesAgo: 0)]
+        files.append(file(daysAgo: 30.0)) // exactly 30 days
+
+        let deleted = BackupRetention.filesToDelete(from: files, now: now)
+        XCTAssertEqual(deleted.count, 0)
+    }
+
+    func testTwoFilesInSameHourBucketKeepsNewest() {
+        // Two files in the same 1-hour bucket during hourly tier
+        var files = [file(minutesAgo: 0)] // recent
+        files.append(file(minutesAgo: 65))  // 1h5m ago (bucket 1)
+        files.append(file(minutesAgo: 110)) // 1h50m ago (bucket 1)
+
+        let deleted = BackupRetention.filesToDelete(from: files, now: now)
+        let deletedURLs = Set(deleted)
+
+        // Should keep the newer one in the bucket (65 min ago)
+        XCTAssertFalse(deletedURLs.contains(files[1].url), "Newer file in bucket should be kept")
+        XCTAssertTrue(deletedURLs.contains(files[2].url), "Older file in bucket should be deleted")
+    }
+
+    func testTwoFilesInSameDayBucketKeepsNewest() {
+        // Two files in the same daily bucket
+        var files = [file(minutesAgo: 0)]
+        files.append(file(daysAgo: 3.0))   // 3 days ago
+        files.append(file(daysAgo: 3.5))   // 3.5 days ago (same day bucket)
+
+        let deleted = BackupRetention.filesToDelete(from: files, now: now)
+        let deletedURLs = Set(deleted)
+
+        // Should keep the newer one
+        XCTAssertFalse(deletedURLs.contains(files[1].url))
+        XCTAssertTrue(deletedURLs.contains(files[2].url))
+    }
+
     // MARK: - Mixed tiers
 
     func testMixedTiersRetainCorrectly() {
@@ -144,5 +232,72 @@ final class BackupRetentionTests: XCTestCase {
 
         // 5 recent + 5 hourly + 3 daily = 13
         XCTAssertEqual(kept, 13)
+    }
+
+    // MARK: - Very old files
+
+    func testVeryOldFilesInWeeklyTier() {
+        var files = [file(minutesAgo: 0)]
+        // Files from 100-200 days ago (3+ months)
+        for day in stride(from: 100, through: 200, by: 1) {
+            files.append(file(daysAgo: Double(day)))
+        }
+        let deleted = BackupRetention.filesToDelete(from: files, now: now)
+        let kept = files.count - deleted.count
+
+        // All should be thinned to ~1 per week in the weekly tier + the 1 newest
+        // ~100 days / 7 ≈ ~14 weekly buckets + 1 newest
+        XCTAssertLessThanOrEqual(kept, 16)
+        XCTAssertGreaterThanOrEqual(kept, 14)
+    }
+
+    func testDefaultMaxCount() {
+        XCTAssertEqual(BackupRetention.defaultMaxCount, 100)
+    }
+
+    // MARK: - All tiers exercised
+
+    func testFilesSpanningAllFourTiers() {
+        var files: [BackupRetention.TimedFile] = []
+
+        // Recent tier (< 1h): 3 files
+        for i in 0..<3 { files.append(file(minutesAgo: Double(i * 15))) }
+        // Hourly tier (1h-24h): 6 files, 2 per hour in hours 2-4
+        for h in 2...4 {
+            files.append(file(hoursAgo: Double(h)))
+            files.append(file(hoursAgo: Double(h) + 0.3))
+        }
+        // Daily tier (1d-30d): 6 files, 2 per day in days 3-5
+        for d in 3...5 {
+            files.append(file(daysAgo: Double(d)))
+            files.append(file(daysAgo: Double(d) + 0.4))
+        }
+        // Weekly tier (30d+): 6 files, 2 per week in weeks 5-7
+        for w in 5...7 {
+            files.append(file(daysAgo: Double(w * 7)))
+            files.append(file(daysAgo: Double(w * 7 + 3)))
+        }
+
+        let deleted = BackupRetention.filesToDelete(from: files, now: now)
+        let kept = files.count - deleted.count
+
+        // 3 recent + 3 hourly + 3 daily + 3 weekly = 12
+        XCTAssertEqual(kept, 12)
+    }
+
+    func testOlderFileInBucketIsNotKept() {
+        // Specifically test that when two files are in the same bucket,
+        // the older one (with larger age) is deleted
+        var files = [file(minutesAgo: 0)]
+        // Two files in hour-3 bucket: one at 3h, one at 3h40m
+        files.append(file(hoursAgo: 3.0))
+        files.append(file(hoursAgo: 3.67)) // 3h40m
+
+        let deleted = BackupRetention.filesToDelete(from: files, now: now)
+        let deletedURLs = Set(deleted)
+
+        // The 3h40m file should be deleted (it's older in the same bucket)
+        XCTAssertTrue(deletedURLs.contains(files[2].url))
+        XCTAssertFalse(deletedURLs.contains(files[1].url))
     }
 }
