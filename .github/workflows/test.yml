@@ -11,6 +11,30 @@ jobs:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v4
-    - name: Run tests
-      run: swift test
+    - name: Run tests with coverage
+      run: swift test --enable-code-coverage
       working-directory: ShortcutCycle
+    - name: Generate coverage report
+      if: always()
+      working-directory: ShortcutCycle
+      run: |
+        CODECOV_PATH=$(swift test --show-codecov-path 2>/dev/null || true)
+        if [ -f "$CODECOV_PATH" ]; then
+          echo "## Test Coverage" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| File | Coverage |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|------|----------|" >> "$GITHUB_STEP_SUMMARY"
+          python3 -c "
+        import json, sys
+        data = json.load(open('$CODECOV_PATH'))
+        files = data['data'][0]['files']
+        for f in sorted(files, key=lambda x: x['filename']):
+            name = f['filename'].split('/')[-1]
+            pct = f['summary']['lines']['percent']
+            print(f'| {name} | {pct:.1f}% |')
+        totals = data['data'][0]['totals']['lines']
+        print(f'| **Total** | **{totals[\"percent\"]:.1f}%** ({totals[\"covered\"]}/{totals[\"count\"]} lines) |')
+          " >> "$GITHUB_STEP_SUMMARY"
+        else
+          echo "Coverage data not found" >> "$GITHUB_STEP_SUMMARY"
+        fi
