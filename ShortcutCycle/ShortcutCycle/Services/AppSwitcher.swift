@@ -230,11 +230,6 @@ class AppSwitcher: @preconcurrency ObservableObject {
             activeKey: activeKey,
             onSelect: { [weak store] selectedId in
                 Task { @MainActor in
-                    print("[AppSwitcher] HUD selection changed to \(selectedId). Updating Store.")
-                    // When HUD selection changes (loop or arrow keys), update the store!
-                    // Note: We need to map the selected ID (which might be a composite) back to what the store expects.
-                    // But store.updateLastActiveApp handles bundleId logic internally? No, it takes a raw string.
-                    // Ideally we should find the item again to get the "correct" id if needed, but the ID passed from HUD IS the correct ID.
                     store?.updateLastActiveApp(bundleId: selectedId, for: group.id)
                 }
             }

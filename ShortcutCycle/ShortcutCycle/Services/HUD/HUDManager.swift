@@ -140,7 +140,6 @@ class HUDManager: @preconcurrency ObservableObject {
         
         // If HUD is already visible, this is a repeated hit (cycling), or immediate is requested, show/update immediately
         if (window?.isVisible == true) || isRepeated || immediate {
-            print("[HUDManager] scheduleShow: Immediate/Repeated path")
             showTimer?.invalidate()
             showTimer = nil
             presentHUD(items: items, activeAppId: activeAppId, shortcut: shortcut)
@@ -153,10 +152,8 @@ class HUDManager: @preconcurrency ObservableObject {
         }
 
         // Otherwise, schedule show after a short delay (mimic "hold" to show)
-        print("[HUDManager] scheduleShow: Scheduling delayed show (not visible/repeated)")
         showTimer?.invalidate()
         showTimer = timerScheduler.schedule(timeInterval: 0.2, repeats: false) { [weak self] _ in // 200ms delay
-            print("[HUDManager] showTimer fired")
             Task { @MainActor in
                 self?.presentHUD(items: items, activeAppId: activeAppId, shortcut: shortcut)
                 self?.startMonitoringModifiers(requiredModifiers: modifierFlags, activeKey: activeKey)
@@ -168,7 +165,6 @@ class HUDManager: @preconcurrency ObservableObject {
         }
 
         // Start monitoring immediately to cancel if released early
-        print("[HUDManager] scheduleShow: Calling startMonitoringModifiers immediately")
         startMonitoringModifiers(requiredModifiers: modifierFlags, activeKey: activeKey)
     }
     
@@ -218,15 +214,12 @@ class HUDManager: @preconcurrency ObservableObject {
     
     private func scheduleLoopStart() {
         guard isLoopKeyHeld else {
-            print("[HUDManager] scheduleLoopStart: Key not held, aborting loop start.")
             return
         }
 
-        print("[HUDManager] scheduleLoopStart: Scheduling loop timer (delayed).")
         loopTimer?.invalidate()
         // Wait 0.2s after HUD appears before starting the auto-cycle
-        loopTimer = timerScheduler.schedule(timeInterval: 0.2, repeats: false) { [weak self] _ in 
-             print("[HUDManager] Loop delay finished. Starting repeating loop.")
+        loopTimer = timerScheduler.schedule(timeInterval: 0.2, repeats: false) { [weak self] _ in
              Task { @MainActor in
                  self?.startRepeatingLoop()
              }
@@ -242,11 +235,8 @@ class HUDManager: @preconcurrency ObservableObject {
         
         // Check if we are already looping for this key. If so, DO NOT reset monitors.
         if let active = activeKey, let current = currentLoopKey, active.rawValue == current, loopTimer != nil {
-            print("[HUDManager] Already looping for key \(active.rawValue). Ignoring restart request.")
             return
         }
-        
-        print("[HUDManager] startMonitoringModifiers called. activeKey=\(activeKey?.rawValue ?? -1)")
         
         // Stop existing monitors
         for monitor in eventMonitors {
@@ -279,17 +269,12 @@ class HUDManager: @preconcurrency ObservableObject {
         // Check if ANY of the required modifiers are currently held.
         let currentFlags = NSEvent.modifierFlags
         if !checkModifiersHeld(currentFlags: currentFlags, required: required) {
-             print("[HUDManager] Modifiers NOT held initially. Scheduling re-check in 50ms (Grace Period). Current=\(currentFlags.rawValue)")
-             // Do NOT finalize immediately. Give it a tiny grace period for state to settle or for fast release.
-             // If user really isn't holding them, the re-check will kill it.
+             // Give a tiny grace period for state to settle or for fast release.
              DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
                  guard let self = self else { return }
                  let flags = NSEvent.modifierFlags
                  if !self.checkModifiersHeld(currentFlags: flags, required: required) {
-                     print("[HUDManager] Grace Period Re-Check: Modifiers STILL not held. Finalizing. Flags=\(flags.rawValue)")
                      self.finalizeSwitchAndHide()
-                 } else {
-                     print("[HUDManager] Grace Period Re-Check: Modifiers detected! Continuing.")
                  }
              }
         }
@@ -307,16 +292,13 @@ class HUDManager: @preconcurrency ObservableObject {
         
         // 2. Loop Logic (Hyper Key / Hold Key)
         if let activeKey = activeKey {
-            print("[HUDManager] Setting up loop logic for key: \(activeKey.rawValue)")
             currentLoopKey = activeKey.rawValue
             isLoopKeyHeld = true
             
             // Start listening for Key Up of this specific key
             keyUpMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyUp) { [weak self] event in
                 let keyCode = Int(event.keyCode)
-                 print("[HUDManager] KeyUp detected: \(keyCode)")
                 if keyCode == activeKey.rawValue {
-                    print("[HUDManager] Target key released.")
                     Task { @MainActor in
                         guard let self = self else { return }
                         self.isLoopKeyHeld = false
@@ -328,12 +310,10 @@ class HUDManager: @preconcurrency ObservableObject {
                             if self.checkModifiersHeld(currentFlags: currentFlags, required: required) {
                                 // Modifiers HELD -> PEEK Mode!
                                 // Show HUD immediately, but DO NOT start looping (since key is up).
-                                print("[HUDManager] Key released (Peek Mode). Showing HUD immediately.")
                                 self.showTimer?.fire() // Trigger manual fire to show HUD
                             } else {
                                 // Modifiers RELEASED -> Quick Tap!
                                 // Cancel HUD.
-                                print("[HUDManager] Key released (Quick Tap). Cancelling HUD.")
                                 self.showTimer?.invalidate()
                                 self.showTimer = nil
                             }
@@ -346,8 +326,6 @@ class HUDManager: @preconcurrency ObservableObject {
             }
             // Note: Loop timer is NOT started here anymore. It's started by presentHUD -> scheduleLoopStart.
             
-        } else {
-             print("[HUDManager] No active key provided for looping.")
         }
         
         // Monitor Arrow Keys AND Loop Key for "Heartbeat"
@@ -355,7 +333,6 @@ class HUDManager: @preconcurrency ObservableObject {
             
             // Heartbeat: If this is the active loop key, update the timestamp
             if let active = activeKey, Int(event.keyCode) == active.rawValue {
-                // print("[HUDManager] Local KeyDown heartbeat for \(active.rawValue)")
                 self?.lastLocalKeyDownTime = self?.timeProvider.now
                 return nil // Consume the event so it doesn't beep or do other things
             }
@@ -385,19 +362,16 @@ class HUDManager: @preconcurrency ObservableObject {
     private func startRepeatingLoop() {
         // Don't start if the loop was already cancelled or key was released
         guard currentLoopKey != nil, isLoopKeyHeld else {
-            print("[HUDManager] startRepeatingLoop: Aborted (key released or loop cancelled)")
             loopTimer?.invalidate()
             loopTimer = nil
             return
         }
         // Hardware double-check: verify key is still physically held
         if let key = currentLoopKey, !CGEventSource.keyState(.hidSystemState, key: CGKeyCode(key)) {
-            print("[HUDManager] startRepeatingLoop: Key not held (hardware check). Aborting.")
             loopTimer?.invalidate()
             loopTimer = nil
             return
         }
-        print("[HUDManager] startRepeatingLoop called")
         loopTimer?.invalidate()
         isRepeatingLoopActive = true
         // Repeat every 125ms
@@ -409,7 +383,6 @@ class HUDManager: @preconcurrency ObservableObject {
     }
     
     private func stopLooping() {
-        print("[HUDManager] Stopping loop.")
         loopTimer?.invalidate()
         loopTimer = nil
         isRepeatingLoopActive = false
@@ -421,11 +394,8 @@ class HUDManager: @preconcurrency ObservableObject {
     }
     
     private func selectNextApp() {
-        print("[HUDManager] selectNextApp triggered")
-
         // If the loop was cancelled (stopLooping cleared currentLoopKey), stop immediately
         guard currentLoopKey != nil else {
-            print("[HUDManager] selectNextApp: Loop was cancelled (no currentLoopKey). Stopping.")
             stopLooping()
             return
         }
@@ -443,11 +413,8 @@ class HUDManager: @preconcurrency ObservableObject {
             
             // If ANY is true, we consider the loop valid.
             if !isDown && !isGlobalRepeat && !isLocalRepeat {
-                print("[HUDManager] Key \(key) not held (HID=\(isDown)) AND no repeats (Global=\(isGlobalRepeat), Local=\(isLocalRepeat)). Stopping loop.")
                 stopLooping()
                 return
-            } else if !isDown {
-                 // print("[HUDManager] HID says UP, but Repeat is ACTIVE. Continuing loop.")
             }
         }
 
@@ -519,8 +486,6 @@ class HUDManager: @preconcurrency ObservableObject {
     }
 
     private func checkModifiersHeld(currentFlags: NSEvent.ModifierFlags, required: NSEvent.ModifierFlags) -> Bool {
-        print("[HUDManager] checkModifiersHeld (Hardware Check)")
-        
         // Command (55, 54)
         if required.contains(.command) {
             if isKeyDown(55) || isKeyDown(54) { return true }
@@ -552,16 +517,13 @@ class HUDManager: @preconcurrency ObservableObject {
     
     private func handleFlagsChanged(event: NSEvent, required: NSEvent.ModifierFlags) {
         let currentFlags = event.modifierFlags
-        print("[HUDManager] handleFlagsChanged: Flags=\(currentFlags.rawValue)")
-        
+
         if !checkModifiersHeld(currentFlags: currentFlags, required: required) {
-             print("[HUDManager] handleFlagsChanged: Modifiers released. Finalizing.")
              finalizeSwitchAndHide()
         }
     }
     
     private func finalizeSwitchAndHide() {
-        print("[HUDManager] finalizeSwitchAndHide called")
         // Modifiers released
         showTimer?.invalidate() // Cancel pending show
         showTimer = nil
