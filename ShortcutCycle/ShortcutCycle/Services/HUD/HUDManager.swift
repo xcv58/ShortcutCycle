@@ -400,8 +400,8 @@ class HUDManager: @preconcurrency ObservableObject {
         print("[HUDManager] startRepeatingLoop called")
         loopTimer?.invalidate()
         isRepeatingLoopActive = true
-        // Repeat every 0.2s
-        loopTimer = timerScheduler.schedule(timeInterval: 0.2, repeats: true) { [weak self] _ in
+        // Repeat every 125ms
+        loopTimer = timerScheduler.schedule(timeInterval: 0.125, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.selectNextApp()
             }
