@@ -1,6 +1,7 @@
 import XCTest
 
 import Combine
+@testable import ShortcutCycle
 
 @MainActor
 final class PressAndHoldTests: XCTestCase {

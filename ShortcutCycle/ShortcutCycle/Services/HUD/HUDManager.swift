@@ -211,7 +211,20 @@ class HUDManager: @preconcurrency ObservableObject {
             print("[HUDManager] scheduleLoopStart: Key not held, aborting loop start.")
             return
         }
-        
+
+        // Verify key is actually held via hardware check to prevent stale isLoopKeyHeld.
+        // After peek mode, startMonitoringModifiers sets isLoopKeyHeld=true even though
+        // the key was already released (its Task runs after the keyUp handler). Without
+        // this check, the next tap starts a phantom loop that causes an extra advance.
+        if let key = currentLoopKey {
+            let isDown = CGEventSource.keyState(.hidSystemState, key: CGKeyCode(key))
+            if !isDown {
+                print("[HUDManager] scheduleLoopStart: Hardware check - key not actually held. Resetting stale state.")
+                isLoopKeyHeld = false
+                return
+            }
+        }
+
         print("[HUDManager] scheduleLoopStart: Scheduling loop timer (delayed).")
         loopTimer?.invalidate()
         // Wait 0.2s after HUD appears before starting the auto-cycle
