@@ -8,7 +8,7 @@ import ShortcutCycleCore
 
 /// Manages global keyboard shortcuts using the KeyboardShortcuts library
 @MainActor
-class ShortcutManager: ObservableObject {
+class ShortcutManager: @preconcurrency ObservableObject {
     static let shared = ShortcutManager()
     
     // Explicitly satisfiy ObservableObject requirements since automatic synthesis failed

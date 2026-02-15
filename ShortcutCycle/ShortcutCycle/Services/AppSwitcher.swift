@@ -14,7 +14,7 @@ import ShortcutCycleCore
 
 /// Handles the core app switching logic for groups
 @MainActor
-class AppSwitcher: ObservableObject {
+class AppSwitcher: @preconcurrency ObservableObject {
     static let shared = AppSwitcher()
     
     let objectWillChange = ObservableObjectPublisher()

@@ -49,7 +49,7 @@ class HUDWindow: NSPanel {
 // MARK: - HUD Manager
 
 @MainActor
-class HUDManager: ObservableObject {
+class HUDManager: @preconcurrency ObservableObject {
     static let shared = HUDManager()
     
     let objectWillChange = ObservableObjectPublisher()
