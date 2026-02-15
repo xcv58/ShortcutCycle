@@ -98,7 +98,19 @@ class AppSwitcher: @preconcurrency ObservableObject {
         // instance next time. Falls back gracefully if the PID changes on restart.
         store.updateLastActiveApp(bundleId: nextItem?.id ?? nextAppId, for: group.id)
 
-        let hudShown = showHUD(items: hudItems, activeAppId: nextAppId, modifierFlags: modifierFlags, shortcut: shortcut, activeKey: activeKey, shouldActivate: true)
+        let hudShown = showHUD(
+            items: hudItems,
+            activeAppId: nextAppId,
+            modifierFlags: modifierFlags,
+            shortcut: shortcut,
+            activeKey: activeKey,
+            shouldActivate: true,
+            onSelect: { [weak store] selectedId in
+                Task { @MainActor in
+                    store?.updateLastActiveApp(bundleId: selectedId, for: group.id)
+                }
+            }
+        )
 
         if !hudShown {
              activateOrLaunch(bundleId: nextItem?.bundleId ?? nextAppId, pid: nextItem?.pid)

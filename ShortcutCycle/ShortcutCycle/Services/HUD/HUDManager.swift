@@ -567,8 +567,9 @@ class HUDManager: @preconcurrency ObservableObject {
         showTimer = nil
         
         // KEY CHANGE: Session has ended.
-        // Clear the lastRequestTime tracking so the next interaction is fresh.
+        // Clear the lastRequestTime and lastLocalKeyDownTime tracking so the next interaction is fresh.
         lastRequestTime = nil
+        lastLocalKeyDownTime = nil
 
         stopLooping() // Ensure loop timer and monitor are cleaned up
         
@@ -666,6 +667,7 @@ class HUDManager: @preconcurrency ObservableObject {
         hideTimer = nil
         showTimer?.invalidate()
         showTimer = nil
+        lastLocalKeyDownTime = nil
         stopLooping()
         
         for monitor in eventMonitors {

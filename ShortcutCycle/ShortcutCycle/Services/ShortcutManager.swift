@@ -11,7 +11,7 @@ import ShortcutCycleCore
 class ShortcutManager: @preconcurrency ObservableObject {
     static let shared = ShortcutManager()
     
-    // Explicitly satisfiy ObservableObject requirements since automatic synthesis failed
+    // Explicitly satisfy ObservableObject requirements since automatic synthesis failed
     let objectWillChange = ObservableObjectPublisher()
     
     
