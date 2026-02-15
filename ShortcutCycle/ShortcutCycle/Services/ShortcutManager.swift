@@ -29,7 +29,7 @@ class ShortcutManager: ObservableObject {
     /// Register all shortcuts from the group store
     func registerAllShortcuts() {
         // Register the settings toggle shortcut
-        KeyboardShortcuts.onKeyUp(for: .toggleSettings) { [weak self] in
+        KeyboardShortcuts.onKeyDown(for: .toggleSettings) { [weak self] in
             Task { @MainActor in
                 self?.handleToggleSettings()
             }
@@ -61,7 +61,7 @@ class ShortcutManager: ObservableObject {
         // Smart Registration: Only add the listener closure ONCE per group ID
         if !observedGroupIds.contains(groupId) {
             // Register the callback for when the shortcut is pressed
-            KeyboardShortcuts.onKeyUp(for: shortcutName) { [weak self] in
+            KeyboardShortcuts.onKeyDown(for: shortcutName) { [weak self] in
                 Task { @MainActor in
                     self?.handleShortcut(for: groupId)
                 }

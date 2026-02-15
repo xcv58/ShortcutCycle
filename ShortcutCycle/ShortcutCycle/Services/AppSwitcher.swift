@@ -2,7 +2,8 @@
 import Foundation
 import AppKit
 import SwiftUI
-import Carbon
+import Carbon // For kVK constants if needed
+import CoreGraphics // For CGEventSource
 import KeyboardShortcuts
 #if canImport(ShortcutCycleCore)
 import ShortcutCycleCore
@@ -23,22 +24,29 @@ class AppSwitcher: ObservableObject {
     func handleShortcut(for group: AppGroup, store: GroupStore) {
         let modifierFlags = getModifierFlags(for: group)
         let shortcutString = group.shortcutDisplayString
+        let activeKey = getShortcutKey(for: group)
         
         let hudItems = getHUDItems(for: group)
 
         // If "Open App If Needed" is enabled, we cycle through ALL apps
         if group.shouldOpenAppIfNeeded {
              if hudItems.isEmpty { return }
-             cycleAllApps(hudItems: hudItems, group: group, store: store, modifierFlags: modifierFlags, shortcut: shortcutString)
+             cycleAllApps(hudItems: hudItems, group: group, store: store, modifierFlags: modifierFlags, shortcut: shortcutString, activeKey: activeKey)
         } else {
              // Legacy behavior: Only cycle running apps
-             cycleRunningAppsOnly(hudItems: hudItems, group: group, store: store, modifierFlags: modifierFlags, shortcut: shortcutString)
+             cycleRunningAppsOnly(hudItems: hudItems, group: group, store: store, modifierFlags: modifierFlags, shortcut: shortcutString, activeKey: activeKey)
         }
     }
     
     // MARK: - Logic for "Open App If Needed" (New Feature)
     
-    private func cycleAllApps(hudItems: [HUDAppItem], group: AppGroup, store: GroupStore, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?) {
+    private func cycleAllApps(hudItems: [HUDAppItem], group: AppGroup, store: GroupStore, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key?) {
+        // If the HUD is currently self-driving (looping via timer), ignore external shortcut requests (Key Repeats)
+        // This prevents double-incrementing when holding the key.
+        if HUDManager.shared.isLooping {
+            return
+        }
+
         // Determine the next app to activate
         var nextAppId: String
 
@@ -87,7 +95,7 @@ class AppSwitcher: ObservableObject {
         // instance next time. Falls back gracefully if the PID changes on restart.
         store.updateLastActiveApp(bundleId: nextItem?.id ?? nextAppId, for: group.id)
 
-        let hudShown = showHUD(items: hudItems, activeAppId: nextAppId, modifierFlags: modifierFlags, shortcut: shortcut, shouldActivate: true)
+        let hudShown = showHUD(items: hudItems, activeAppId: nextAppId, modifierFlags: modifierFlags, shortcut: shortcut, activeKey: activeKey, shouldActivate: true)
 
         if !hudShown {
              activateOrLaunch(bundleId: nextItem?.bundleId ?? nextAppId, pid: nextItem?.pid)
@@ -96,7 +104,12 @@ class AppSwitcher: ObservableObject {
     
     // MARK: - Legacy Logic (Only Running Apps)
     
-    private func cycleRunningAppsOnly(hudItems: [HUDAppItem], group: AppGroup, store: GroupStore, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?) {
+    private func cycleRunningAppsOnly(hudItems: [HUDAppItem], group: AppGroup, store: GroupStore, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key?) {
+        // If the HUD is currently self-driving (looping via timer), ignore external shortcut requests (Key Repeats)
+        if HUDManager.shared.isLooping {
+            return
+        }
+
         let runningItems = hudItems.filter { $0.isRunning }
         
         if runningItems.isEmpty {
@@ -126,10 +139,33 @@ class AppSwitcher: ObservableObject {
             
             if app?.isActive == true {
                 app?.hide()
-                showHUD(items: runningItems, activeAppId: item.id, modifierFlags: modifierFlags, shortcut: shortcut, shouldActivate: false)
+                showHUD(
+                    items: runningItems,
+                    activeAppId: item.id,
+                    modifierFlags: modifierFlags,
+                    shortcut: shortcut,
+                    activeKey: activeKey,
+                    shouldActivate: false,
+                    onSelect: { [weak store] selectedId in
+                        Task { @MainActor in
+                             store?.updateLastActiveApp(bundleId: selectedId, for: group.id)
+                        }
+                    }
+                )
             } else {
                 store.updateLastActiveApp(bundleId: item.id, for: group.id)
-                let hudShown = showHUD(items: runningItems, activeAppId: item.id, modifierFlags: modifierFlags, shortcut: shortcut)
+                let hudShown = showHUD(
+                    items: runningItems,
+                    activeAppId: item.id,
+                    modifierFlags: modifierFlags,
+                    shortcut: shortcut,
+                    activeKey: activeKey,
+                    onSelect: { [weak store] selectedId in
+                        Task { @MainActor in
+                             store?.updateLastActiveApp(bundleId: selectedId, for: group.id)
+                        }
+                    }
+                )
                 if !hudShown {
                     app?.unhide()
                     app?.activate(options: .activateAllWindows)
@@ -171,7 +207,23 @@ class AppSwitcher: ObservableObject {
         // Store composite ID so we can identify the exact instance next time
         store.updateLastActiveApp(bundleId: nextItem?.id ?? nextAppId, for: group.id)
 
-        let hudShown = showHUD(items: runningItems, activeAppId: nextAppId, modifierFlags: modifierFlags, shortcut: shortcut)
+        let hudShown = showHUD(
+            items: runningItems,
+            activeAppId: nextAppId,
+            modifierFlags: modifierFlags,
+            shortcut: shortcut,
+            activeKey: activeKey,
+            onSelect: { [weak store] selectedId in
+                Task { @MainActor in
+                    print("[AppSwitcher] HUD selection changed to \(selectedId). Updating Store.")
+                    // When HUD selection changes (loop or arrow keys), update the store!
+                    // Note: We need to map the selected ID (which might be a composite) back to what the store expects.
+                    // But store.updateLastActiveApp handles bundleId logic internally? No, it takes a raw string.
+                    // Ideally we should find the item again to get the "correct" id if needed, but the ID passed from HUD IS the correct ID.
+                    store?.updateLastActiveApp(bundleId: selectedId, for: group.id)
+                }
+            }
+        )
         
         if !hudShown {
              activateOrLaunch(bundleId: nextItem?.bundleId ?? nextAppId, pid: nextItem?.pid)
@@ -246,6 +298,14 @@ class AppSwitcher: ObservableObject {
     // The previous getIcon was for AppItem.
     // getHUDItems uses getIcon(for: appItem).
     
+    /// Get the KeyboardShortcuts.Key from the shortcut
+    private func getShortcutKey(for group: AppGroup) -> KeyboardShortcuts.Key? {
+        guard let shortcut = KeyboardShortcuts.getShortcut(for: group.shortcutName) else {
+            return nil
+        }
+        return shortcut.key
+    }
+
     /// Get the NSEvent.ModifierFlags from the KeyboardShortcuts shortcut
     private func getModifierFlags(for group: AppGroup) -> NSEvent.ModifierFlags? {
         guard let shortcut = KeyboardShortcuts.getShortcut(for: group.shortcutName) else {
@@ -255,9 +315,18 @@ class AppSwitcher: ObservableObject {
     }
     
     @discardableResult
-    private func showHUD(items: [HUDAppItem], activeAppId: String, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, shouldActivate: Bool = true, immediate: Bool = false) -> Bool {
+    private func showHUD(items: [HUDAppItem], activeAppId: String, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key? = nil, shouldActivate: Bool = true, immediate: Bool = false, onSelect: ((String) -> Void)? = nil) -> Bool {
         if UserDefaults.standard.bool(forKey: "showHUD") {
-            HUDManager.shared.scheduleShow(items: items, activeAppId: activeAppId, modifierFlags: modifierFlags, shortcut: shortcut, shouldActivate: shouldActivate, immediate: immediate)
+            HUDManager.shared.scheduleShow(
+                items: items,
+                activeAppId: activeAppId, 
+                modifierFlags: modifierFlags, 
+                shortcut: shortcut, 
+                activeKey: activeKey, 
+                shouldActivate: shouldActivate, 
+                immediate: immediate, 
+                onSelect: onSelect
+            )
             return true
         }
         return false
