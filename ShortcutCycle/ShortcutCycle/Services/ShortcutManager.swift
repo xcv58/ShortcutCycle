@@ -1,14 +1,19 @@
 import Foundation
 import KeyboardShortcuts
 import AppKit
+import Combine
 #if canImport(ShortcutCycleCore)
 import ShortcutCycleCore
 #endif
 
 /// Manages global keyboard shortcuts using the KeyboardShortcuts library
 @MainActor
-class ShortcutManager: ObservableObject {
+class ShortcutManager: @preconcurrency ObservableObject {
     static let shared = ShortcutManager()
+    
+    // Explicitly satisfy ObservableObject requirements since automatic synthesis failed
+    let objectWillChange = ObservableObjectPublisher()
+    
     
     private var groupStore: GroupStore {
         GroupStore.shared
@@ -29,7 +34,7 @@ class ShortcutManager: ObservableObject {
     /// Register all shortcuts from the group store
     func registerAllShortcuts() {
         // Register the settings toggle shortcut
-        KeyboardShortcuts.onKeyUp(for: .toggleSettings) { [weak self] in
+        KeyboardShortcuts.onKeyDown(for: .toggleSettings) { [weak self] in
             Task { @MainActor in
                 self?.handleToggleSettings()
             }
@@ -61,7 +66,7 @@ class ShortcutManager: ObservableObject {
         // Smart Registration: Only add the listener closure ONCE per group ID
         if !observedGroupIds.contains(groupId) {
             // Register the callback for when the shortcut is pressed
-            KeyboardShortcuts.onKeyUp(for: shortcutName) { [weak self] in
+            KeyboardShortcuts.onKeyDown(for: shortcutName) { [weak self] in
                 Task { @MainActor in
                     self?.handleShortcut(for: groupId)
                 }
@@ -91,25 +96,24 @@ class ShortcutManager: ObservableObject {
     }
     
     /// Handle a shortcut press for a given group ID
-    private var shortcutTask: Task<Void, Never>?
-    
+    private var lastShortcutTime: Date?
+
     private func handleShortcut(for groupId: UUID) {
-        // Debounce: Cancel previous pending task if within a very short window (e.g. 50ms)
-        // This helps prevent accidental double-triggers from mechanical switches or system repeats
-        shortcutTask?.cancel()
-        
-        shortcutTask = Task { @MainActor in
-            // Wait a tiny bit to see if another event comes in
-            try? await Task.sleep(nanoseconds: 50 * 1_000_000) // 50ms
-            if Task.isCancelled { return }
-            
-            let store = groupStore
-            guard let group = store.groups.first(where: { $0.id == groupId }) else {
-                return
-            }
-            
-            AppSwitcher.shared.handleShortcut(for: group, store: store)
+        // Throttle: process the first event immediately, block duplicates within 50ms.
+        // This prevents double-triggers (especially with multi-modifier shortcuts) while
+        // keeping cycling responsive (no delay on the first event).
+        let now = Date()
+        if let last = lastShortcutTime, now.timeIntervalSince(last) < 0.05 {
+            return
         }
+        lastShortcutTime = now
+
+        let store = groupStore
+        guard let group = store.groups.first(where: { $0.id == groupId }) else {
+            return
+        }
+
+        AppSwitcher.shared.handleShortcut(for: group, store: store)
     }
     
     /// Handle the settings toggle shortcut

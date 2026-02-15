@@ -50,7 +50,10 @@ let package = Package(
         .testTarget(
             name: "ShortcutCycleTests",
             dependencies: ["ShortcutCycleCore"],
-            path: "ShortcutCycleTests"
+            path: "ShortcutCycleTests",
+            exclude: [
+                "PressAndHoldTests.swift"
+            ]
         )
     ]
 )

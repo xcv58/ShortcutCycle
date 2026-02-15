@@ -558,7 +558,7 @@ final class GroupStoreTests: XCTestCase {
 }
 
 // Make ManualBackupResult equatable for test assertions
-extension ManualBackupResult: @retroactive Equatable {
+extension ManualBackupResult: Equatable {
     public static func == (lhs: ManualBackupResult, rhs: ManualBackupResult) -> Bool {
         switch (lhs, rhs) {
         case (.saved, .saved): return true

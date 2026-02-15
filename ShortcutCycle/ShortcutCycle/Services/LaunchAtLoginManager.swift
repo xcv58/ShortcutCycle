@@ -1,5 +1,6 @@
 import Foundation
 import ServiceManagement
+import Combine
 #if canImport(ShortcutCycleCore)
 import ShortcutCycleCore
 #endif
