@@ -83,8 +83,14 @@ class HUDManager: @preconcurrency ObservableObject {
         window?.isVisible == true
     }
     
+    /// True only when the repeating auto-cycle loop is active (not during the initial delay phase).
+    /// During the 200ms delay before auto-cycling starts, this remains false so that
+    /// manual taps are still processed by AppSwitcher.
+    // Internal for @testable import access in PressAndHoldTests
+    internal var isRepeatingLoopActive: Bool = false
+
     var isLooping: Bool {
-        return loopTimer != nil
+        return isRepeatingLoopActive
     }
     
     // Singleton extraction for testing? 
@@ -227,9 +233,10 @@ class HUDManager: @preconcurrency ObservableObject {
          }
     }
     
-    private var currentLoopKey: Int? // Trace which key is currently driving the loop
-    
-    private var isLoopKeyHeld: Bool = false
+    // Internal for @testable import access in PressAndHoldTests
+    internal var currentLoopKey: Int? // Trace which key is currently driving the loop
+
+    internal var isLoopKeyHeld: Bool = false
     
     private func startMonitoringModifiers(requiredModifiers: NSEvent.ModifierFlags?, activeKey: KeyboardShortcuts.Key? = nil) {
         
@@ -253,6 +260,7 @@ class HUDManager: @preconcurrency ObservableObject {
         }
         loopTimer?.invalidate()
         loopTimer = nil
+        isRepeatingLoopActive = false
         currentLoopKey = nil
         isLoopKeyHeld = false
         
@@ -375,8 +383,23 @@ class HUDManager: @preconcurrency ObservableObject {
     }
     
     private func startRepeatingLoop() {
+        // Don't start if the loop was already cancelled or key was released
+        guard currentLoopKey != nil, isLoopKeyHeld else {
+            print("[HUDManager] startRepeatingLoop: Aborted (key released or loop cancelled)")
+            loopTimer?.invalidate()
+            loopTimer = nil
+            return
+        }
+        // Hardware double-check: verify key is still physically held
+        if let key = currentLoopKey, !CGEventSource.keyState(.hidSystemState, key: CGKeyCode(key)) {
+            print("[HUDManager] startRepeatingLoop: Key not held (hardware check). Aborting.")
+            loopTimer?.invalidate()
+            loopTimer = nil
+            return
+        }
         print("[HUDManager] startRepeatingLoop called")
         loopTimer?.invalidate()
+        isRepeatingLoopActive = true
         // Repeat every 0.2s
         loopTimer = timerScheduler.schedule(timeInterval: 0.2, repeats: true) { [weak self] _ in
             Task { @MainActor in
@@ -389,6 +412,7 @@ class HUDManager: @preconcurrency ObservableObject {
         print("[HUDManager] Stopping loop.")
         loopTimer?.invalidate()
         loopTimer = nil
+        isRepeatingLoopActive = false
         currentLoopKey = nil // Reset so we accept new requests
         if let monitor = keyUpMonitor {
             NSEvent.removeMonitor(monitor)
@@ -398,7 +422,14 @@ class HUDManager: @preconcurrency ObservableObject {
     
     private func selectNextApp() {
         print("[HUDManager] selectNextApp triggered")
-        
+
+        // If the loop was cancelled (stopLooping cleared currentLoopKey), stop immediately
+        guard currentLoopKey != nil else {
+            print("[HUDManager] selectNextApp: Loop was cancelled (no currentLoopKey). Stopping.")
+            stopLooping()
+            return
+        }
+
         // Safety Check: Is the key still held?
         if let key = currentLoopKey {
             // Check 1: Hardware State (HID)
