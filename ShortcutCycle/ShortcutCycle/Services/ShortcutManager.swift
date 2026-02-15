@@ -96,25 +96,24 @@ class ShortcutManager: @preconcurrency ObservableObject {
     }
     
     /// Handle a shortcut press for a given group ID
-    private var shortcutTask: Task<Void, Never>?
-    
+    private var lastShortcutTime: Date?
+
     private func handleShortcut(for groupId: UUID) {
-        // Debounce: Cancel previous pending task if within a very short window (e.g. 50ms)
-        // This helps prevent accidental double-triggers from mechanical switches or system repeats
-        shortcutTask?.cancel()
-        
-        shortcutTask = Task { @MainActor in
-            // Wait a tiny bit to see if another event comes in
-            try? await Task.sleep(nanoseconds: 50 * 1_000_000) // 50ms
-            if Task.isCancelled { return }
-            
-            let store = groupStore
-            guard let group = store.groups.first(where: { $0.id == groupId }) else {
-                return
-            }
-            
-            AppSwitcher.shared.handleShortcut(for: group, store: store)
+        // Throttle: process the first event immediately, block duplicates within 50ms.
+        // This prevents double-triggers (especially with multi-modifier shortcuts) while
+        // keeping cycling responsive (no delay on the first event).
+        let now = Date()
+        if let last = lastShortcutTime, now.timeIntervalSince(last) < 0.05 {
+            return
         }
+        lastShortcutTime = now
+
+        let store = groupStore
+        guard let group = store.groups.first(where: { $0.id == groupId }) else {
+            return
+        }
+
+        AppSwitcher.shared.handleShortcut(for: group, store: store)
     }
     
     /// Handle the settings toggle shortcut
