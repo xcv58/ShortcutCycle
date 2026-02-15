@@ -137,45 +137,53 @@ class HUDManager: @preconcurrency ObservableObject {
             print("[HUDManager] scheduleShow: Immediate/Repeated path")
             showTimer?.invalidate()
             showTimer = nil
-            presentHUD(items: items, activeAppId: activeAppId, shortcut: shortcut, activeKey: activeKey)
+            presentHUD(items: items, activeAppId: activeAppId, shortcut: shortcut)
             startMonitoringModifiers(requiredModifiers: modifierFlags, activeKey: activeKey)
+            // Start loop AFTER monitoring is set up so isLoopKeyHeld is fresh
+            if activeKey != nil {
+                scheduleLoopStart()
+            }
             return
         }
-        
+
         // Otherwise, schedule show after a short delay (mimic "hold" to show)
         print("[HUDManager] scheduleShow: Scheduling delayed show (not visible/repeated)")
         showTimer?.invalidate()
         showTimer = timerScheduler.schedule(timeInterval: 0.2, repeats: false) { [weak self] _ in // 200ms delay
             print("[HUDManager] showTimer fired")
             Task { @MainActor in
-                self?.presentHUD(items: items, activeAppId: activeAppId, shortcut: shortcut, activeKey: activeKey)
+                self?.presentHUD(items: items, activeAppId: activeAppId, shortcut: shortcut)
                 self?.startMonitoringModifiers(requiredModifiers: modifierFlags, activeKey: activeKey)
+                // Start loop AFTER monitoring is set up so isLoopKeyHeld is fresh
+                if activeKey != nil {
+                    self?.scheduleLoopStart()
+                }
             }
         }
-        
+
         // Start monitoring immediately to cancel if released early
         print("[HUDManager] scheduleShow: Calling startMonitoringModifiers immediately")
         startMonitoringModifiers(requiredModifiers: modifierFlags, activeKey: activeKey)
     }
     
-    private func presentHUD(items: [HUDAppItem], activeAppId: String, shortcut: String?, activeKey: KeyboardShortcuts.Key?) {
+    private func presentHUD(items: [HUDAppItem], activeAppId: String, shortcut: String?) {
         // Prepare Window if needed
         if window == nil {
             window = HUDWindow()
         }
-        
+
         self.currentItems = items
         currentSelectedAppId = activeAppId
-        
+
         if let shortcut = shortcut {
             self.currentShortcut = shortcut
         }
-        
+
         guard let window = window else { return }
-        
+
         // Update content
         var hudView = AppSwitcherHUDView(apps: items, activeAppId: activeAppId, shortcutString: self.currentShortcut)
-        
+
         // Handle selection from UI (click)
         hudView.onSelect = { [weak self] selectedId in
             Task { @MainActor in
@@ -184,45 +192,28 @@ class HUDManager: @preconcurrency ObservableObject {
                 self?.hide()
             }
         }
-        
+
         window.contentView = NSHostingView(rootView: hudView)
-        
+
         // Resize and center
         if let screen = NSScreen.main {
             let viewSize = window.contentView?.fittingSize ?? CGSize(width: 400, height: 150)
-            
+
             // Always force center on screen to prevent drift/bumps
             let x = screen.visibleFrame.midX - viewSize.width / 2
             let y = screen.visibleFrame.midY - viewSize.height / 2
             window.setFrame(NSRect(x: x, y: y, width: viewSize.width, height: viewSize.height), display: true)
         }
-        
+
         window.orderFront(nil)
-        
-        // If we have an active key loop AND the key is still held, schedule the loop timer NOW.
-        // This ensures the loop "follows" the HUD visibility.
-        if activeKey != nil {
-             scheduleLoopStart()
-        }
+        // Note: Loop scheduling is handled by scheduleShow() AFTER startMonitoringModifiers(),
+        // not here, to ensure isLoopKeyHeld is freshly set before the loop decision.
     }
     
     private func scheduleLoopStart() {
         guard isLoopKeyHeld else {
             print("[HUDManager] scheduleLoopStart: Key not held, aborting loop start.")
             return
-        }
-
-        // Verify key is actually held via hardware check to prevent stale isLoopKeyHeld.
-        // After peek mode, startMonitoringModifiers sets isLoopKeyHeld=true even though
-        // the key was already released (its Task runs after the keyUp handler). Without
-        // this check, the next tap starts a phantom loop that causes an extra advance.
-        if let key = currentLoopKey {
-            let isDown = CGEventSource.keyState(.hidSystemState, key: CGKeyCode(key))
-            if !isDown {
-                print("[HUDManager] scheduleLoopStart: Hardware check - key not actually held. Resetting stale state.")
-                isLoopKeyHeld = false
-                return
-            }
         }
 
         print("[HUDManager] scheduleLoopStart: Scheduling loop timer (delayed).")
@@ -440,7 +431,7 @@ class HUDManager: @preconcurrency ObservableObject {
         let nextIndex = (currentIndex + 1) % count
         let newId = currentItems[nextIndex].id
         
-        presentHUD(items: currentItems, activeAppId: newId, shortcut: nil, activeKey: nil) // activeKey nil to avoid restarting loop logic recursion?
+        presentHUD(items: currentItems, activeAppId: newId, shortcut: nil)
         
         // Update pending ID and notify listener
         self.pendingActiveAppId = newId
@@ -483,7 +474,7 @@ class HUDManager: @preconcurrency ObservableObject {
         
         if nextIndex != currentIndex {
             let newId = currentItems[nextIndex].id
-            presentHUD(items: currentItems, activeAppId: newId, shortcut: nil, activeKey: nil)
+            presentHUD(items: currentItems, activeAppId: newId, shortcut: nil)
             self.pendingActiveAppId = newId
             self.onSelectCallback?(newId)
             return nil // Consume event
