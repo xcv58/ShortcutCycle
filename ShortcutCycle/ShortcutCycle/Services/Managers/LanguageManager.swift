@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 
 /// Publishes changes when the system locale changes, so SwiftUI views can re-render.
 class LocaleObserver: ObservableObject {

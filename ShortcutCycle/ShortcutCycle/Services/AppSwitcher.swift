@@ -5,6 +5,7 @@ import SwiftUI
 import Carbon // For kVK constants if needed
 import CoreGraphics // For CGEventSource
 import KeyboardShortcuts
+import Combine
 #if canImport(ShortcutCycleCore)
 import ShortcutCycleCore
 #endif
@@ -15,6 +16,8 @@ import ShortcutCycleCore
 @MainActor
 class AppSwitcher: ObservableObject {
     static let shared = AppSwitcher()
+    
+    let objectWillChange = ObservableObjectPublisher()
     
     private init() {
         UserDefaults.standard.register(defaults: ["showHUD": true, "showShortcutInHUD": true])

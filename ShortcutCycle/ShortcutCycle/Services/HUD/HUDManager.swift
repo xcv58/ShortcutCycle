@@ -3,6 +3,29 @@ import AppKit
 import SwiftUI
 import CoreGraphics
 import KeyboardShortcuts
+import Combine
+
+// MARK: - Dependency Injection Protocols
+
+protocol TimeProvider {
+    var now: Date { get }
+}
+
+class SystemTimeProvider: TimeProvider {
+    var now: Date { Date() }
+}
+
+protocol TimerScheduler {
+    func schedule(timeInterval: TimeInterval, repeats: Bool, block: @escaping (Timer) -> Void) -> Timer
+}
+
+class SystemTimerScheduler: TimerScheduler {
+    func schedule(timeInterval: TimeInterval, repeats: Bool, block: @escaping (Timer) -> Void) -> Timer {
+        return Timer.scheduledTimer(withTimeInterval: timeInterval, repeats: repeats, block: block)
+    }
+}
+
+// MARK: - HUD Window
 
 class HUDWindow: NSPanel {
     init() {
@@ -23,9 +46,17 @@ class HUDWindow: NSPanel {
     }
 }
 
+// MARK: - HUD Manager
+
 @MainActor
 class HUDManager: ObservableObject {
     static let shared = HUDManager()
+    
+    let objectWillChange = ObservableObjectPublisher()
+    
+    // Dependencies
+    var timeProvider: TimeProvider = SystemTimeProvider()
+    var timerScheduler: TimerScheduler = SystemTimerScheduler()
     
     private var window: HUDWindow?
     private var hideTimer: Timer?
@@ -34,7 +65,9 @@ class HUDManager: ObservableObject {
     private var keyUpMonitor: Any?
     private var eventMonitors: [Any] = []
     private var appResignObserver: NSObjectProtocol?
-    private var lastRequestTime: Date?
+    
+    // Internal state for testing
+    internal var lastRequestTime: Date?
     private var lastLocalKeyDownTime: Date?
     
     private var currentItems: [HUDAppItem] = []
@@ -54,6 +87,9 @@ class HUDManager: ObservableObject {
         return loopTimer != nil
     }
     
+    // Singleton extraction for testing? 
+    // Ideally we should make the constructor accessible for tests, 
+    // but for now we'll stick to shared instance or property injection.
     private init() {}
     
     private var onSelectCallback: ((String) -> Void)?
@@ -67,7 +103,7 @@ class HUDManager: ObservableObject {
         // Update callback
         self.onSelectCallback = onSelect
         
-        let now = Date()
+        let now = timeProvider.now
         let isRepeated = lastRequestTime != nil && now.timeIntervalSince(lastRequestTime!) < 0.5
 
         lastRequestTime = now
@@ -109,7 +145,7 @@ class HUDManager: ObservableObject {
         // Otherwise, schedule show after a short delay (mimic "hold" to show)
         print("[HUDManager] scheduleShow: Scheduling delayed show (not visible/repeated)")
         showTimer?.invalidate()
-        showTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: false) { [weak self] _ in // 200ms delay
+        showTimer = timerScheduler.schedule(timeInterval: 0.2, repeats: false) { [weak self] _ in // 200ms delay
             print("[HUDManager] showTimer fired")
             Task { @MainActor in
                 self?.presentHUD(items: items, activeAppId: activeAppId, shortcut: shortcut, activeKey: activeKey)
@@ -123,7 +159,7 @@ class HUDManager: ObservableObject {
     }
     
     private func presentHUD(items: [HUDAppItem], activeAppId: String, shortcut: String?, activeKey: KeyboardShortcuts.Key?) {
-        // ... (lines omitted) ...
+        // Prepare Window if needed
         if window == nil {
             window = HUDWindow()
         }
@@ -179,7 +215,7 @@ class HUDManager: ObservableObject {
         print("[HUDManager] scheduleLoopStart: Scheduling loop timer (delayed).")
         loopTimer?.invalidate()
         // Wait 0.2s after HUD appears before starting the auto-cycle
-        loopTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: false) { [weak self] _ in 
+        loopTimer = timerScheduler.schedule(timeInterval: 0.2, repeats: false) { [weak self] _ in 
              print("[HUDManager] Loop delay finished. Starting repeating loop.")
              Task { @MainActor in
                  self?.startRepeatingLoop()
@@ -308,7 +344,7 @@ class HUDManager: ObservableObject {
             // Heartbeat: If this is the active loop key, update the timestamp
             if let active = activeKey, Int(event.keyCode) == active.rawValue {
                 // print("[HUDManager] Local KeyDown heartbeat for \(active.rawValue)")
-                self?.lastLocalKeyDownTime = Date()
+                self?.lastLocalKeyDownTime = self?.timeProvider.now
                 return nil // Consume the event so it doesn't beep or do other things
             }
             
@@ -338,7 +374,7 @@ class HUDManager: ObservableObject {
         print("[HUDManager] startRepeatingLoop called")
         loopTimer?.invalidate()
         // Repeat every 0.2s
-        loopTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { [weak self] _ in
+        loopTimer = timerScheduler.schedule(timeInterval: 0.2, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.selectNextApp()
             }
@@ -365,10 +401,10 @@ class HUDManager: ObservableObject {
             let isDown = CGEventSource.keyState(.hidSystemState, key: CGKeyCode(key))
             
             // Check 2: Global Shortcut "Heartbeat" (if system repeats shortcuts)
-            let isGlobalRepeat = lastRequestTime != nil && Date().timeIntervalSince(lastRequestTime!) < 0.5
+            let isGlobalRepeat = lastRequestTime != nil && timeProvider.now.timeIntervalSince(lastRequestTime!) < 0.5
             
             // Check 3: Local KeyDown "Heartbeat" (if HUD receives key events)
-            let isLocalRepeat = lastLocalKeyDownTime != nil && Date().timeIntervalSince(lastLocalKeyDownTime!) < 0.5
+            let isLocalRepeat = lastLocalKeyDownTime != nil && timeProvider.now.timeIntervalSince(lastLocalKeyDownTime!) < 0.5
             
             // If ANY is true, we consider the loop valid.
             if !isDown && !isGlobalRepeat && !isLocalRepeat {
@@ -495,6 +531,10 @@ class HUDManager: ObservableObject {
         showTimer?.invalidate() // Cancel pending show
         showTimer = nil
         
+        // KEY CHANGE: Session has ended.
+        // Clear the lastRequestTime tracking so the next interaction is fresh.
+        lastRequestTime = nil
+
         stopLooping() // Ensure loop timer and monitor are cleaned up
         
         // Fast switch: user released keys before HUD appeared or while it was visible
@@ -563,7 +603,7 @@ class HUDManager: ObservableObject {
     
     private func scheduleAutoHide() {
         hideTimer?.invalidate()
-        hideTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { [weak self] _ in
+        hideTimer = timerScheduler.schedule(timeInterval: 1.0, repeats: false) { [weak self] _ in
             Task { @MainActor in
                 self?.hide()
             }

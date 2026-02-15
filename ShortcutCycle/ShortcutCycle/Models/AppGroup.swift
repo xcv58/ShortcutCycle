@@ -1,5 +1,7 @@
 import Foundation
 import KeyboardShortcuts
+import SwiftUI
+import UniformTypeIdentifiers
 
 /// Represents a group of applications with a shared keyboard shortcut
 public struct AppGroup: Identifiable, Codable, Equatable {

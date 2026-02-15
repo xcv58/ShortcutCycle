@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import Combine
 
 public enum ManualBackupResult {
     case saved, noChange, error(String)

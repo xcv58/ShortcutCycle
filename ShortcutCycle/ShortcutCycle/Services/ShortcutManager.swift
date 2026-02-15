@@ -1,6 +1,7 @@
 import Foundation
 import KeyboardShortcuts
 import AppKit
+import Combine
 #if canImport(ShortcutCycleCore)
 import ShortcutCycleCore
 #endif
@@ -9,6 +10,10 @@ import ShortcutCycleCore
 @MainActor
 class ShortcutManager: ObservableObject {
     static let shared = ShortcutManager()
+    
+    // Explicitly satisfiy ObservableObject requirements since automatic synthesis failed
+    let objectWillChange = ObservableObjectPublisher()
+    
     
     private var groupStore: GroupStore {
         GroupStore.shared
