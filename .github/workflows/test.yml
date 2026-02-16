@@ -31,15 +31,23 @@ jobs:
              TEST_BINARY=$(find "$BIN_PATH" -name "ShortcutCyclePackageTests" -type f | head -n 1)
           fi
           
-          if [ -f "$TEST_BINARY" ]; then
+          # Find profile data
+          # CODECOV_PATH is usually .../codecov/ShortcutCycle.json
+          # We expect .../codecov/default.profdata
+          PROFDATA_PATH="$(dirname "$CODECOV_PATH")/default.profdata"
+          
+          if [ -f "$TEST_BINARY" ] && [ -f "$PROFDATA_PATH" ]; then
               echo "Found test binary at $TEST_BINARY"
+              echo "Found profile data at $PROFDATA_PATH"
               xcrun llvm-cov export -format="lcov" \
                 "$TEST_BINARY" \
-                -instr-profile="$CODECOV_PATH" \
+                -instr-profile="$PROFDATA_PATH" \
                 -ignore-filename-regex=".build|Tests" \
                 > coverage.lcov
           else
-              echo "Could not find test binary"
+              echo "Could not find test binary or profile data"
+              echo "Binary: $TEST_BINARY"
+              echo "Profile: $PROFDATA_PATH"
           fi
 
           echo "## Test Coverage" >> "$GITHUB_STEP_SUMMARY"
