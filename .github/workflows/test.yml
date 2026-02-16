@@ -15,12 +15,18 @@ jobs:
       run: swift test --enable-code-coverage
       working-directory: ShortcutCycle
 
+    - name: Get Coverage Path
+      id: get-coverage
+      working-directory: ShortcutCycle
+      run: echo "CODECOV_PATH=$(swift test --show-codecov-path)" >> $GITHUB_ENV
+
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v5
       if: always()
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         slug: xcv58/ShortcutCycle
+        files: ${{ env.CODECOV_PATH }}
 
     - name: Generate coverage report
       if: always()
