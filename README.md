@@ -10,6 +10,7 @@ ShortcutCycle helps you switch between your favorite apps with just one keyboard
 
 - **Group Apps**: Put related apps together (e.g., \"Browsers\" for Chrome, Safari, Edge; or \"Messaging\" for Slack, Discord, Messages).
 - **One Key Magic**: Press your global shortcut to cycle through apps in the group. Press it again to switch to the next one.
+- **Smart Order**: Apps are automatically ordered by most recently used — the app you want is always one tap away, just like macOS's Command+Tab.
 - **Press and Hold**: Hold the shortcut to see the HUD without switching immediately, just like macOS's native Command+Tab behavior.
 - **Multi-Profile Support**: Apps with multiple instances (like Firefox profiles) are shown separately and can be cycled through individually.
 - **See What's Happening**: A beautiful, native-looking HUD overlay shows you which app is active and what's coming up next.

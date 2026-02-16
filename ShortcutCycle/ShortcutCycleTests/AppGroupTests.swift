@@ -302,7 +302,7 @@ final class AppGroupTests: XCTestCase {
     }
 
     func testDecodingWithoutOptionalFields() throws {
-        // Simulate legacy data without openAppIfNeeded
+        // Simulate legacy data without openAppIfNeeded or mruOrder
         let json = """
         {
             "id": "\(UUID().uuidString)",
@@ -319,6 +319,20 @@ final class AppGroupTests: XCTestCase {
         XCTAssertNil(decoded.openAppIfNeeded)
         XCTAssertFalse(decoded.shouldOpenAppIfNeeded)
         XCTAssertNil(decoded.lastActiveAppBundleId)
+        XCTAssertNil(decoded.mruOrder)
+    }
+
+    func testCodableRoundTripWithMRUOrder() throws {
+        let group = AppGroup(
+            name: "MRU Test",
+            apps: [AppItem(bundleIdentifier: "com.a", name: "A")],
+            mruOrder: ["com.a", "com.b"]
+        )
+
+        let data = try JSONEncoder().encode(group)
+        let decoded = try JSONDecoder().decode(AppGroup.self, from: data)
+
+        XCTAssertEqual(decoded.mruOrder, ["com.a", "com.b"])
     }
 
     // MARK: - Equatable

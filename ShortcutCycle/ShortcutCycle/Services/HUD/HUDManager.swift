@@ -99,15 +99,17 @@ class HUDManager: @preconcurrency ObservableObject {
     private init() {}
     
     private var onSelectCallback: ((String) -> Void)?
-    
+    private var onFinalizeCallback: ((String) -> Void)?
+
     /// Schedule showing the HUD with macOS Command+Tab logic
-    func scheduleShow(items: [HUDAppItem], activeAppId: String, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key? = nil, shouldActivate: Bool = true, immediate: Bool = false, onSelect: ((String) -> Void)? = nil) {
+    func scheduleShow(items: [HUDAppItem], activeAppId: String, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key? = nil, shouldActivate: Bool = true, immediate: Bool = false, onSelect: ((String) -> Void)? = nil, onFinalize: ((String) -> Void)? = nil) {
         // Cancel existing hide timer
         hideTimer?.invalidate()
         hideTimer = nil // Ensure we don't auto-hide while interacting
         
-        // Update callback
+        // Update callbacks
         self.onSelectCallback = onSelect
+        self.onFinalizeCallback = onFinalize
         
         let now = timeProvider.now
         let isRepeated = lastRequestTime != nil && now.timeIntervalSince(lastRequestTime!) < 0.5
@@ -523,18 +525,28 @@ class HUDManager: @preconcurrency ObservableObject {
         }
     }
     
+    private func fireOnFinalizeIfNeeded() {
+        guard let callback = onFinalizeCallback else { return }
+        onFinalizeCallback = nil
+        if let appId = pendingActiveAppId ?? currentSelectedAppId {
+            callback(appId)
+        }
+    }
+
     private func finalizeSwitchAndHide() {
         // Modifiers released
         showTimer?.invalidate() // Cancel pending show
         showTimer = nil
-        
+
         // KEY CHANGE: Session has ended.
         // Clear the lastRequestTime and lastLocalKeyDownTime tracking so the next interaction is fresh.
         lastRequestTime = nil
         lastLocalKeyDownTime = nil
 
         stopLooping() // Ensure loop timer and monitor are cleaned up
-        
+
+        fireOnFinalizeIfNeeded()
+
         // Fast switch: user released keys before HUD appeared or while it was visible
         if let pendingId = pendingActiveAppId {
             activateOrLaunch(bundleId: pendingId)
@@ -610,6 +622,7 @@ class HUDManager: @preconcurrency ObservableObject {
     
     /// Hide the HUD
     func hide() {
+        fireOnFinalizeIfNeeded()
         window?.orderOut(nil)
         window = nil
         currentSelectedAppId = nil

@@ -420,6 +420,121 @@ final class AppCyclingLogicTests: XCTestCase {
         XCTAssertEqual(next, "org.mozilla.firefox-400")
     }
 
+    // MARK: - MRU Sorting Tests
+
+    func testSortedByMRU_NilOrder() {
+        let indices = AppCyclingLogic.sortedByMRU(
+            itemBundleIds: ["com.a", "com.b", "com.c"],
+            mruOrder: nil,
+            groupBundleIds: ["com.a", "com.b", "com.c"]
+        )
+        XCTAssertEqual(indices, [0, 1, 2])
+    }
+
+    func testSortedByMRU_EmptyOrder() {
+        let indices = AppCyclingLogic.sortedByMRU(
+            itemBundleIds: ["com.a", "com.b", "com.c"],
+            mruOrder: [],
+            groupBundleIds: ["com.a", "com.b", "com.c"]
+        )
+        XCTAssertEqual(indices, [0, 1, 2])
+    }
+
+    func testSortedByMRU_FullOrder() {
+        let indices = AppCyclingLogic.sortedByMRU(
+            itemBundleIds: ["com.a", "com.b", "com.c"],
+            mruOrder: ["com.c", "com.a", "com.b"],
+            groupBundleIds: ["com.a", "com.b", "com.c"]
+        )
+        XCTAssertEqual(indices, [2, 0, 1])
+    }
+
+    func testSortedByMRU_PartialOrder() {
+        let indices = AppCyclingLogic.sortedByMRU(
+            itemBundleIds: ["com.a", "com.b", "com.c", "com.d"],
+            mruOrder: ["com.c"],
+            groupBundleIds: ["com.a", "com.b", "com.c", "com.d"]
+        )
+        // C first (MRU rank 0), then A, B, D in group order
+        XCTAssertEqual(indices, [2, 0, 1, 3])
+    }
+
+    func testSortedByMRU_StaleEntries() {
+        let indices = AppCyclingLogic.sortedByMRU(
+            itemBundleIds: ["com.a", "com.b"],
+            mruOrder: ["com.x", "com.b", "com.a"],
+            groupBundleIds: ["com.a", "com.b"]
+        )
+        // com.x ignored, B(rank 1), A(rank 2)
+        XCTAssertEqual(indices, [1, 0])
+    }
+
+    func testSortedByMRU_MultiInstance() {
+        let indices = AppCyclingLogic.sortedByMRU(
+            itemBundleIds: ["com.a", "com.b", "com.b", "com.c"],
+            mruOrder: ["com.b", "com.c", "com.a"],
+            groupBundleIds: ["com.a", "com.b", "com.c"]
+        )
+        // B instances at indices 1,2 (rank 0), C at 3 (rank 1), A at 0 (rank 2)
+        XCTAssertEqual(indices, [1, 2, 3, 0])
+    }
+
+    func testSortedByMRU_SingleItem() {
+        let indices = AppCyclingLogic.sortedByMRU(
+            itemBundleIds: ["com.a"],
+            mruOrder: ["com.a"],
+            groupBundleIds: ["com.a"]
+        )
+        XCTAssertEqual(indices, [0])
+    }
+
+    // MARK: - MRU Update Tests
+
+    func testUpdatedMRUOrder_FirstUse() {
+        let order = AppCyclingLogic.updatedMRUOrder(
+            currentOrder: nil,
+            activatedBundleId: "com.a",
+            validBundleIds: Set(["com.a", "com.b", "com.c"])
+        )
+        XCTAssertEqual(order, ["com.a"])
+    }
+
+    func testUpdatedMRUOrder_MoveToFront() {
+        let order = AppCyclingLogic.updatedMRUOrder(
+            currentOrder: ["com.a", "com.b", "com.c"],
+            activatedBundleId: "com.c",
+            validBundleIds: Set(["com.a", "com.b", "com.c"])
+        )
+        XCTAssertEqual(order, ["com.c", "com.a", "com.b"])
+    }
+
+    func testUpdatedMRUOrder_AlreadyFirst() {
+        let order = AppCyclingLogic.updatedMRUOrder(
+            currentOrder: ["com.a", "com.b", "com.c"],
+            activatedBundleId: "com.a",
+            validBundleIds: Set(["com.a", "com.b", "com.c"])
+        )
+        XCTAssertEqual(order, ["com.a", "com.b", "com.c"])
+    }
+
+    func testUpdatedMRUOrder_FiltersStale() {
+        let order = AppCyclingLogic.updatedMRUOrder(
+            currentOrder: ["com.x", "com.a", "com.b"],
+            activatedBundleId: "com.b",
+            validBundleIds: Set(["com.a", "com.b"])
+        )
+        XCTAssertEqual(order, ["com.b", "com.a"])
+    }
+
+    func testUpdatedMRUOrder_NewApp() {
+        let order = AppCyclingLogic.updatedMRUOrder(
+            currentOrder: ["com.a", "com.b"],
+            activatedBundleId: "com.d",
+            validBundleIds: Set(["com.a", "com.b", "com.d"])
+        )
+        XCTAssertEqual(order, ["com.d", "com.a", "com.b"])
+    }
+
     func testEndToEndAllFirefoxClosedFallsToNextApp() {
         // Firefox completely gone, only Chrome running
         let resolvable = makeResolvable([
