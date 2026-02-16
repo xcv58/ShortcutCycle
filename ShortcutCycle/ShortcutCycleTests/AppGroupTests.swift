@@ -340,8 +340,9 @@ final class AppGroupTests: XCTestCase {
 
     func testEquatable() {
         let id = UUID()
-        let group1 = AppGroup(id: id, name: "Same")
-        let group2 = AppGroup(id: id, name: "Same")
+        let date = Date()
+        let group1 = AppGroup(id: id, name: "Same", lastModified: date)
+        let group2 = AppGroup(id: id, name: "Same", lastModified: date)
 
         XCTAssertEqual(group1, group2)
     }
