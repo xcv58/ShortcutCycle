@@ -6,12 +6,24 @@
 
 ShortcutCycle helps you switch between your favorite apps with just one keyboard shortcut. Instead of remembering many shortcuts, just group your apps (like "Chat Apps" or "Work Apps") and use one key to cycle through them. Simplify your workflow and save time every day!
 
+[Official Website](https://xcv58.github.io/ShortcutCycle/)
+
+## Comparison
+
+| Feature | ShortcutCycle | Command+Tab | Stage Manager |
+| :--- | :---: | :---: | :---: |
+| **Context Switching** | ✅ (Group based) | ❌ (All apps) | ⚠️ (Manual groups) |
+| **One-Key Cycle** | ✅ | ❌ | ❌ |
+| **Visual HUD** | ✅ (Customizable) | ✅ | ✅ |
+| **Launch Apps** | ✅ | ❌ | ❌ |
+| **Window Restoration** | ✅ | ⚠️ | ✅ |
+
 ## Features
 
 - **Group Apps**: Put related apps together (e.g., \"Browsers\" for Chrome, Safari, Edge; or \"Messaging\" for Slack, Discord, Messages).
 - **One Key Magic**: Press your global shortcut to cycle through apps in the group. Press it again to switch to the next one.
-- **Smart Order**: Apps are automatically ordered by most recently used — the app you want is always one tap away, just like macOS's Command+Tab.
-- **Press and Hold**: Hold the shortcut to see the HUD without switching immediately, just like macOS's native Command+Tab behavior.
+- **Smart Order**: Apps are automatically ordered by most recently used — the app you want is always available, just like macOS's Command+Tab.
+- **Press and Hold**: Hold the shortcut to peek at the HUD without switching immediately, just like macOS's native Command+Tab behavior.
 - **Multi-Profile Support**: Apps with multiple instances (like Firefox profiles) are shown separately and can be cycled through individually.
 - **See What's Happening**: A beautiful, native-looking HUD overlay shows you which app is active and what's coming up next.
 - **Instant Access**: Automatically launches apps if they aren't running when you switch to them.
@@ -50,6 +62,12 @@ We believe tools should be for everyone. ShortcutCycle is built with accessibili
 3. Create a group (click `+`) and drag apps into it.
 4. Record a global shortcut (e.g., `Option + 1`).
 5. Press the shortcut to open the first app or cycle between them!
+
+> **Tip:** Hold the shortcut key to peek at the HUD without switching!
+
+## Support
+
+Found a bug or have a feature request? Please [open an issue](https://github.com/xcv58/ShortcutCycle/issues) on GitHub.
 
 ## Privacy Policy
 
