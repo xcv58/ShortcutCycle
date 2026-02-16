@@ -26,6 +26,7 @@ let package = Package(
                 "Models/BackupDiff.swift",
                 "Models/BackupRetention.swift",
                 "Models/GroupStore.swift",
+                "Models/HUDAppItem.swift",
                 "Models/SettingsExport.swift",
                 "Models/KeyboardShortcutsNames.swift"
             ]
@@ -43,6 +44,7 @@ let package = Package(
                 "Models/BackupDiff.swift",
                 "Models/BackupRetention.swift",
                 "Models/GroupStore.swift",
+                "Models/HUDAppItem.swift",
                 "Models/SettingsExport.swift",
                 "Models/KeyboardShortcutsNames.swift"
             ]

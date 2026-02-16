@@ -377,6 +377,31 @@ final class GroupStoreTests: XCTestCase {
         XCTAssertEqual(countBefore, countAfter)
     }
 
+    func testPerformAutoBackupSkipsDuplicateContent() {
+        // This test exercises the contentEqual path inside performAutoBackup.
+        // 1. Ensure a backup exists that matches current state via manual backup
+        let result = store.manualBackup()
+        XCTAssertTrue(result == .saved || result == .noChange)
+
+        // 2. A no-op move triggers saveGroups/scheduleAutoBackup without changing content
+        //    Since lastBackupTime was just set (by setUp's init), it schedules a timer.
+        store.moveGroups(from: IndexSet(integer: 0), to: 0)
+
+        let fm = FileManager.default
+        let countBefore = ((try? fm.contentsOfDirectory(at: store.backupDirectory, includingPropertiesForKeys: nil))?.filter {
+            $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json"
+        } ?? []).count
+
+        // 3. Flush → performAutoBackup runs, content matches existing backup → no new file
+        store.flushPendingBackup()
+
+        let countAfter = ((try? fm.contentsOfDirectory(at: store.backupDirectory, includingPropertiesForKeys: nil))?.filter {
+            $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json"
+        } ?? []).count
+
+        XCTAssertEqual(countBefore, countAfter)
+    }
+
     func testManualBackupAfterChangeCreatesNewFile() {
         _ = store.addGroup(name: "Initial")
         let first = store.manualBackup()
@@ -649,6 +674,133 @@ final class GroupStoreTests: XCTestCase {
 
         // Flush with nothing pending — should not crash or create files
         freshStore.flushPendingBackup()
+    }
+
+    // MARK: - Termination Observer
+
+    func testTerminationObserverFlushesBackup() {
+        let freshDefaults = UserDefaults(suiteName: "TestTermination")!
+        freshDefaults.removePersistentDomain(forName: "TestTermination")
+        let freshStore = GroupStore(userDefaults: freshDefaults)
+        defer {
+            try? FileManager.default.removeItem(at: freshStore.backupDirectory)
+            freshDefaults.removePersistentDomain(forName: "TestTermination")
+        }
+
+        // First change triggers immediate backup
+        _ = freshStore.addGroup(name: "First")
+
+        // Wait to ensure different backup timestamp (filenames use second precision)
+        Thread.sleep(forTimeInterval: 1.1)
+
+        // Second change within debounce window leaves backup pending
+        _ = freshStore.addGroup(name: "Second")
+
+        let fm = FileManager.default
+        let countBefore = ((try? fm.contentsOfDirectory(at: freshStore.backupDirectory, includingPropertiesForKeys: nil))?.filter {
+            $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json"
+        } ?? []).count
+
+        // Post will-terminate to trigger the observer callback
+        NotificationCenter.default.post(name: NSApplication.willTerminateNotification, object: nil)
+
+        let countAfter = ((try? fm.contentsOfDirectory(at: freshStore.backupDirectory, includingPropertiesForKeys: nil))?.filter {
+            $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json"
+        } ?? []).count
+
+        XCTAssertGreaterThan(countAfter, countBefore)
+    }
+
+    // MARK: - contentEqual decode-failure fallback
+
+    func testContentEqualFallbackOnInvalidJSON() {
+        let freshDefaults = UserDefaults(suiteName: "TestContentEqual")!
+        freshDefaults.removePersistentDomain(forName: "TestContentEqual")
+        let freshStore = GroupStore(userDefaults: freshDefaults)
+        defer {
+            try? FileManager.default.removeItem(at: freshStore.backupDirectory)
+            freshDefaults.removePersistentDomain(forName: "TestContentEqual")
+        }
+
+        // Write a non-JSON file that looks like a backup
+        let fakeBackup = freshStore.backupDirectory.appendingPathComponent("backup 9999-12-31 23-59-59.json")
+        try? "not json".data(using: .utf8)!.write(to: fakeBackup)
+
+        // manualBackup calls contentEqual which will fail to decode the fake file
+        // and fall back to raw data comparison (a != b), so it should save a new backup
+        _ = freshStore.addGroup(name: "Test")
+        let result = freshStore.manualBackup()
+        XCTAssertEqual(result, .saved)
+    }
+
+    // MARK: - Cleanup old backups
+
+    func testCleanupOldBackupsEnforcesRetention() {
+        let freshDefaults = UserDefaults(suiteName: "TestCleanup")!
+        freshDefaults.removePersistentDomain(forName: "TestCleanup")
+        let freshStore = GroupStore(userDefaults: freshDefaults)
+        defer {
+            try? FileManager.default.removeItem(at: freshStore.backupDirectory)
+            freshDefaults.removePersistentDomain(forName: "TestCleanup")
+        }
+
+        // Create 150 fake backup files with staggered timestamps
+        let fm = FileManager.default
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH-mm-ss"
+
+        for i in 0..<150 {
+            let date = Date().addingTimeInterval(Double(-i * 10))
+            let name = "backup \(formatter.string(from: date)).json"
+            let url = freshStore.backupDirectory.appendingPathComponent(name)
+            try? "{}".data(using: .utf8)!.write(to: url)
+        }
+
+        // Trigger a real backup which also runs cleanupOldBackups
+        _ = freshStore.addGroup(name: "Trigger Cleanup")
+        freshStore.flushPendingBackup()
+
+        let files = (try? fm.contentsOfDirectory(at: freshStore.backupDirectory, includingPropertiesForKeys: nil))?.filter {
+            $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json"
+        } ?? []
+
+        // After cleanup, file count should be capped at ~100
+        XCTAssertLessThanOrEqual(files.count, 101)
+    }
+
+    // MARK: - Timer debounce callback
+
+    func testTimerDebounceCallbackFires() {
+        let freshDefaults = UserDefaults(suiteName: "TestTimerDebounce")!
+        freshDefaults.removePersistentDomain(forName: "TestTimerDebounce")
+        let freshStore = GroupStore(userDefaults: freshDefaults, backupDebounceInterval: 0.05)
+        defer {
+            try? FileManager.default.removeItem(at: freshStore.backupDirectory)
+            freshDefaults.removePersistentDomain(forName: "TestTimerDebounce")
+        }
+
+        // First change triggers immediate backup
+        _ = freshStore.addGroup(name: "First")
+
+        // Wait to ensure different backup timestamp (filenames use second precision)
+        Thread.sleep(forTimeInterval: 1.1)
+
+        let fm = FileManager.default
+        let countAfterFirst = ((try? fm.contentsOfDirectory(at: freshStore.backupDirectory, includingPropertiesForKeys: nil))?.filter {
+            $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json"
+        } ?? []).count
+
+        // Second change within debounce → pending, timer started
+        _ = freshStore.addGroup(name: "Second")
+
+        // Let the timer fire
+        RunLoop.main.run(until: Date().addingTimeInterval(0.2))
+
+        let countAfterTimer = ((try? fm.contentsOfDirectory(at: freshStore.backupDirectory, includingPropertiesForKeys: nil))?.filter {
+            $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json"
+        } ?? []).count
+
+        XCTAssertGreaterThan(countAfterTimer, countAfterFirst)
     }
 }
 

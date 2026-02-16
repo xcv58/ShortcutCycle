@@ -221,12 +221,11 @@ public enum AppCyclingLogic {
         }
 
         let fallback = offset + groupBundleIds.count
+        let ranks = itemBundleIds.map { rank[$0, default: fallback] }
 
         return itemBundleIds.indices.sorted { a, b in
-            let rankA = rank[itemBundleIds[a]] ?? fallback
-            let rankB = rank[itemBundleIds[b]] ?? fallback
-            if rankA != rankB {
-                return rankA < rankB
+            if ranks[a] != ranks[b] {
+                return ranks[a] < ranks[b]
             }
             // Same rank (multi-instance same bundleId) — preserve original order
             return a < b

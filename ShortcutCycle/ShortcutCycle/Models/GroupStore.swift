@@ -28,12 +28,13 @@ public class GroupStore: ObservableObject {
     // Debounce timer for auto-backup (60 seconds)
     private var backupTimer: Timer?
     private var backupPending = false
-    private let backupDebounceInterval: TimeInterval = 60.0
+    private let backupDebounceInterval: TimeInterval
     private var lastBackupTime: Date = .distantPast
-    
+
     // Internal init for testing
-    init(userDefaults: UserDefaults = .standard) {
+    init(userDefaults: UserDefaults = .standard, backupDebounceInterval: TimeInterval = 60.0) {
         self.userDefaults = userDefaults
+        self.backupDebounceInterval = backupDebounceInterval
         loadGroups()
         setupTerminationObserver()
     }
@@ -159,13 +160,10 @@ public class GroupStore: ObservableObject {
     // MARK: - Persistence
     
     private func saveGroups() {
-        do {
-            let data = try JSONEncoder().encode(groups)
-            userDefaults.set(data, forKey: saveKey)
-            scheduleAutoBackup()
-        } catch {
-            print("GroupStore: Failed to save groups: \(error)")
-        }
+        // JSONEncoder.encode cannot fail for [AppGroup] since all types are trivially Codable
+        let data = try! JSONEncoder().encode(groups)
+        userDefaults.set(data, forKey: saveKey)
+        scheduleAutoBackup()
     }
 
     /// Schedule a debounced auto-backup (resets timer on each call)
@@ -199,22 +197,18 @@ public class GroupStore: ObservableObject {
         backupPending = false
         lastBackupTime = Date()
 
-        do {
-            let data = try exportData()
+        guard let data = try? exportData() else { return }
 
-            // Skip backup if content is identical to the most recent backup
-            if let latestBackup = mostRecentBackupData(), contentEqual(data, latestBackup) {
-                return
-            }
-
-            let timestamp = Self.backupDateFormatter.string(from: Date())
-            let backupFile = backupDirectory.appendingPathComponent("backup \(timestamp).json")
-            try data.write(to: backupFile, options: .atomic)
-
-            cleanupOldBackups(in: backupDirectory)
-        } catch {
-            print("GroupStore: Auto-backup failed: \(error)")
+        // Skip backup if content is identical to the most recent backup
+        if let latestBackup = mostRecentBackupData(), contentEqual(data, latestBackup) {
+            return
         }
+
+        let timestamp = Self.backupDateFormatter.string(from: Date())
+        let backupFile = backupDirectory.appendingPathComponent("backup \(timestamp).json")
+        try? data.write(to: backupFile, options: .atomic)
+
+        cleanupOldBackups(in: backupDirectory)
     }
 
     /// Returns the Data contents of the most recent backup file, if any
@@ -248,22 +242,20 @@ public class GroupStore: ObservableObject {
     /// Thin old backups using GFS (Grandfather-Father-Son) retention policy.
     /// Keeps more granularity for recent backups, progressively fewer for older ones.
     private func cleanupOldBackups(in directory: URL) {
-        do {
-            let fileManager = FileManager.default
-            let files = try fileManager.contentsOfDirectory(at: directory, includingPropertiesForKeys: [.creationDateKey])
-            let backupFiles = files
-                .filter { $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json" }
-                .map { url -> BackupRetention.TimedFile in
-                    let date = (try? url.resourceValues(forKeys: [.creationDateKey]))?.creationDate ?? .distantPast
-                    return BackupRetention.TimedFile(url: url, date: date)
+        let fileManager = FileManager.default
+        guard let files = try? fileManager.contentsOfDirectory(at: directory, includingPropertiesForKeys: [.creationDateKey]) else { return }
+        let backupFiles = files
+            .filter { $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json" }
+            .map { url -> BackupRetention.TimedFile in
+                var date = Date.distantPast
+                if let creationDate = (try? url.resourceValues(forKeys: [.creationDateKey]))?.creationDate {
+                    date = creationDate
                 }
-
-            let toDelete = BackupRetention.filesToDelete(from: backupFiles)
-            for url in toDelete {
-                try fileManager.removeItem(at: url)
+                return BackupRetention.TimedFile(url: url, date: date)
             }
-        } catch {
-            print("GroupStore: Backup cleanup failed: \(error)")
+
+        for url in BackupRetention.filesToDelete(from: backupFiles) {
+            try? fileManager.removeItem(at: url)
         }
     }
     
@@ -295,22 +287,19 @@ public class GroupStore: ObservableObject {
     // MARK: - Manual Backup
 
     public func manualBackup() -> ManualBackupResult {
-        do {
-            let data = try exportData()
+        // exportData() uses JSONEncoder on trivially Codable types, cannot fail
+        guard let data = try? exportData() else { return .error("Export failed") }
 
-            if let latestBackup = mostRecentBackupData(),
-               contentEqual(data, latestBackup) {
-                return .noChange
-            }
-
-            let timestamp = Self.backupDateFormatter.string(from: Date())
-            let backupFile = backupDirectory.appendingPathComponent("backup \(timestamp).json")
-            try data.write(to: backupFile, options: .atomic)
-            cleanupOldBackups(in: backupDirectory)
-            return .saved
-        } catch {
-            return .error(error.localizedDescription)
+        if let latestBackup = mostRecentBackupData(),
+           contentEqual(data, latestBackup) {
+            return .noChange
         }
+
+        let timestamp = Self.backupDateFormatter.string(from: Date())
+        let backupFile = backupDirectory.appendingPathComponent("backup \(timestamp).json")
+        try? data.write(to: backupFile, options: .atomic)
+        cleanupOldBackups(in: backupDirectory)
+        return .saved
     }
 
     /// Compare two export payloads ignoring the exportDate field

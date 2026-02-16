@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(ShortcutCycleCore)
+import ShortcutCycleCore
+#endif
 
 /// App switcher HUD overlay view
 struct AppSwitcherHUDView: View {

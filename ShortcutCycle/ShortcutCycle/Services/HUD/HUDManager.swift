@@ -4,6 +4,9 @@ import SwiftUI
 import CoreGraphics
 import KeyboardShortcuts
 import Combine
+#if canImport(ShortcutCycleCore)
+import ShortcutCycleCore
+#endif
 
 // MARK: - Dependency Injection Protocols
 

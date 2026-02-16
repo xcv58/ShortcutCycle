@@ -1,4 +1,5 @@
 import XCTest
+import KeyboardShortcuts
 #if canImport(ShortcutCycleCore)
 @testable import ShortcutCycleCore
 #else
@@ -428,17 +429,25 @@ final class SettingsExportTests: XCTestCase {
         let defaults = UserDefaults.standard
         let originalShowHUD = defaults.object(forKey: "showHUD")
         let originalShowShortcut = defaults.object(forKey: "showShortcutInHUD")
+        let originalLanguage = defaults.string(forKey: "selectedLanguage")
+        let originalTheme = defaults.string(forKey: "appTheme")
         defer {
             if let v = originalShowHUD { defaults.set(v, forKey: "showHUD") } else { defaults.removeObject(forKey: "showHUD") }
             if let v = originalShowShortcut { defaults.set(v, forKey: "showShortcutInHUD") } else { defaults.removeObject(forKey: "showShortcutInHUD") }
+            if let v = originalLanguage { defaults.set(v, forKey: "selectedLanguage") } else { defaults.removeObject(forKey: "selectedLanguage") }
+            if let v = originalTheme { defaults.set(v, forKey: "appTheme") } else { defaults.removeObject(forKey: "appTheme") }
         }
 
         defaults.removeObject(forKey: "showHUD")
         defaults.removeObject(forKey: "showShortcutInHUD")
+        defaults.removeObject(forKey: "selectedLanguage")
+        defaults.removeObject(forKey: "appTheme")
 
         let current = AppSettings.current()
         XCTAssertEqual(current.showHUD, true)
         XCTAssertEqual(current.showShortcutInHUD, true)
+        XCTAssertEqual(current.selectedLanguage, "system")
+        XCTAssertEqual(current.appTheme, "system")
     }
 
     func testAppSettingsApply() {
@@ -492,6 +501,21 @@ final class SettingsExportTests: XCTestCase {
         XCTAssertEqual(snapshot.groups[1].name, "Shot")
         XCTAssertEqual(snapshot.version, 3)
         XCTAssertNotNil(snapshot.settings)
+    }
+
+    func testFullSnapshotCapturesRegisteredShortcuts() {
+        let group = AppGroup(name: "WithShortcut")
+        let shortcut = KeyboardShortcuts.Shortcut(carbonKeyCode: 42, carbonModifiers: 768)
+        KeyboardShortcuts.setShortcut(shortcut, for: group.shortcutName)
+        defer { KeyboardShortcuts.setShortcut(nil, for: group.shortcutName) }
+
+        let snapshot = SettingsExport.fullSnapshot(groups: [group])
+
+        XCTAssertNotNil(snapshot.shortcuts)
+        let data = snapshot.shortcuts?[group.id.uuidString]
+        XCTAssertNotNil(data)
+        XCTAssertEqual(data?.carbonKeyCode, 42)
+        XCTAssertEqual(data?.carbonModifiers, 768)
     }
 
     func testFullSnapshotWithNoShortcutsRegistered() {

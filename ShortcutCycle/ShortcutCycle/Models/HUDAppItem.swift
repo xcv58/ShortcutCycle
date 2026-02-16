@@ -2,19 +2,19 @@ import Foundation
 import AppKit
 
 /// Common app item used in HUD
-struct HUDAppItem: Identifiable, Equatable, @unchecked Sendable {
+public struct HUDAppItem: Identifiable, Equatable, @unchecked Sendable {
     /// Unique identifier: "{bundleId}-{pid}" for running apps, or "{bundleId}" for non-running
-    let id: String
+    public let id: String
     /// The app's bundle identifier
-    let bundleId: String
+    public let bundleId: String
     /// Process ID for running instances (nil for non-running apps)
-    let pid: pid_t?
-    let name: String
-    let icon: NSImage?
-    let isRunning: Bool
-    
+    public let pid: pid_t?
+    public let name: String
+    public let icon: NSImage?
+    public let isRunning: Bool
+
     /// Initialize with a running app instance
-    init(runningApp: NSRunningApplication, name: String? = nil, icon: NSImage? = nil) {
+    public init(runningApp: NSRunningApplication, name: String? = nil, icon: NSImage? = nil) {
         let bundleId = runningApp.bundleIdentifier ?? ""
         self.bundleId = bundleId
         self.pid = runningApp.processIdentifier
@@ -23,9 +23,9 @@ struct HUDAppItem: Identifiable, Equatable, @unchecked Sendable {
         self.icon = icon ?? runningApp.icon
         self.isRunning = true
     }
-    
+
     /// Initialize for a non-running app
-    init(bundleId: String, name: String, icon: NSImage?) {
+    public init(bundleId: String, name: String, icon: NSImage?) {
         self.bundleId = bundleId
         self.pid = nil
         self.id = bundleId
@@ -33,9 +33,9 @@ struct HUDAppItem: Identifiable, Equatable, @unchecked Sendable {
         self.icon = icon
         self.isRunning = false
     }
-    
+
     /// Legacy initializer for compatibility (creates non-running style ID)
-    init(id: String, name: String, icon: NSImage?, isRunning: Bool) {
+    public init(id: String, name: String, icon: NSImage?, isRunning: Bool) {
         self.id = id
         self.bundleId = id
         self.pid = nil
@@ -43,9 +43,9 @@ struct HUDAppItem: Identifiable, Equatable, @unchecked Sendable {
         self.icon = icon
         self.isRunning = isRunning
     }
-    
+
     // For Equatable
-    static func == (lhs: HUDAppItem, rhs: HUDAppItem) -> Bool {
+    public static func == (lhs: HUDAppItem, rhs: HUDAppItem) -> Bool {
         lhs.id == rhs.id
     }
 }

@@ -103,12 +103,8 @@ struct BackupRetention {
         for file in files {
             let age = referenceDate.timeIntervalSince(file.date)
             let key = Int(age / interval)
-            if let existing = buckets[key] {
-                // Keep the newer one (smaller age = more recent)
-                if file.date > existing.date {
-                    buckets[key] = file
-                }
-            } else {
+            // Input is sorted newest-first, so the first file per bucket is always the newest
+            if buckets[key] == nil {
                 buckets[key] = file
             }
         }

@@ -10,10 +10,17 @@ public enum DiffStatus: Equatable {
 
 /// Change to a single app within a group
 public struct AppChange: Identifiable {
-    public let id = UUID()
+    public let id: UUID
     public let appName: String
     public let bundleIdentifier: String
     public let status: DiffStatus
+
+    public init(appName: String, bundleIdentifier: String, status: DiffStatus) {
+        self.id = UUID()
+        self.appName = appName
+        self.bundleIdentifier = bundleIdentifier
+        self.status = status
+    }
 }
 
 /// Change to a group
@@ -26,10 +33,17 @@ public struct GroupDiff: Identifiable {
 
 /// Change to a setting
 public struct SettingChange: Identifiable {
-    public let id = UUID()
+    public let id: UUID
     public let key: String
     public let oldValue: String
     public let newValue: String
+
+    public init(key: String, oldValue: String, newValue: String) {
+        self.id = UUID()
+        self.key = key
+        self.oldValue = oldValue
+        self.newValue = newValue
+    }
 }
 
 /// Result of comparing two backup snapshots
