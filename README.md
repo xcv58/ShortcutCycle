@@ -6,7 +6,7 @@
 
 ShortcutCycle helps you switch between your favorite apps with just one keyboard shortcut. Instead of remembering many shortcuts, just group your apps (like "Browsers", "Coding", or "Social") and use one key to cycle through them. Simplify your workflow and save time every day!
 
-[Official Website](https://xcv58.github.io/ShortcutCycle/)
+[Official Website](https://shortcutcycle.vercel.app/)
 
 ## Comparison
 
