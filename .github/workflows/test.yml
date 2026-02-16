@@ -14,6 +14,14 @@ jobs:
     - name: Run tests with coverage
       run: swift test --enable-code-coverage
       working-directory: ShortcutCycle
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v5
+      if: always()
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        slug: xcv58/ShortcutCycle
+
     - name: Generate coverage report
       if: always()
       working-directory: ShortcutCycle
