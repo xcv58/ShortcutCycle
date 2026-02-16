@@ -574,7 +574,7 @@ class HUDManager: @preconcurrency ObservableObject {
     
     private func activateOrLaunch(bundleId: String) {
         // Try to find the item in currentItems to get PID and real bundle ID.
-        // `bundleId` parameter may be a composite "bundleId-pid" string, so we
+        // `bundleId` parameter may be a composite "bundleId::pid" string, so we
         // resolve the real bundle identifier via currentItems to ensure macOS
         // APIs receive a valid bundle identifier in all fallback paths.
         let item = currentItems.first(where: { $0.id == bundleId || $0.bundleId == bundleId })

@@ -50,6 +50,8 @@ class AppSwitcher: @preconcurrency ObservableObject {
             return
         }
 
+        let liveItemIds = Set(hudItems.map { $0.id })
+
         // Determine the next app to activate
         var nextAppId: String
 
@@ -60,10 +62,10 @@ class AppSwitcher: @preconcurrency ObservableObject {
         let cycleItems = hudItems.map { CyclingAppItem(id: $0.id) }
         let frontmostApp = NSWorkspace.shared.frontmostApplication
 
-        // Build unique ID for frontmost app (bundleId-pid format)
+        // Build unique ID for frontmost app (bundleId::pid format)
         let frontmostAppUniqueId: String? = {
             guard let app = frontmostApp, let bundleId = app.bundleIdentifier else { return nil }
-            return "\(bundleId)-\(app.processIdentifier)"
+            return "\(bundleId)::\(app.processIdentifier)"
         }()
 
         let resolvableItems = hudItems.map { ResolvableAppItem(id: $0.id, bundleId: $0.bundleId) }
@@ -84,7 +86,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
         if !hasRunningApp {
             nextAppId = hudItems[0].id
             store.updateLastActiveApp(bundleId: nextAppId, for: group.id)
-            store.updateMRUOrder(activatedId: hudItems[0].id, activatedBundleId: hudItems[0].bundleId, for: group.id)
+            store.updateMRUOrder(activatedId: hudItems[0].id, activatedBundleId: hudItems[0].bundleId, for: group.id, liveItemIds: liveItemIds)
             if let item = hudItems.first {
                 activateOrLaunch(bundleId: item.bundleId, pid: item.pid)
                 LaunchOverlayManager.shared.show(appName: item.name, appIcon: item.icon)
@@ -95,7 +97,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
         // Find the HUDAppItem for the next app
         let nextItem = hudItems.first { $0.id == nextAppId }
 
-        // Store composite ID (e.g. "bundleId-pid") so we can identify the exact
+        // Store composite ID (e.g. "bundleId::pid") so we can identify the exact
         // instance next time. Falls back gracefully if the PID changes on restart.
         store.updateLastActiveApp(bundleId: nextItem?.id ?? nextAppId, for: group.id)
 
@@ -114,14 +116,14 @@ class AppSwitcher: @preconcurrency ObservableObject {
             onFinalize: { [weak store] selectedId in
                 Task { @MainActor in
                     let bundleId = hudItems.first(where: { $0.id == selectedId })?.bundleId ?? selectedId
-                    store?.updateMRUOrder(activatedId: selectedId, activatedBundleId: bundleId, for: group.id)
+                    store?.updateMRUOrder(activatedId: selectedId, activatedBundleId: bundleId, for: group.id, liveItemIds: liveItemIds)
                 }
             }
         )
 
         if !hudShown {
              activateOrLaunch(bundleId: nextItem?.bundleId ?? nextAppId, pid: nextItem?.pid)
-             store.updateMRUOrder(activatedId: nextItem?.id ?? nextAppId, activatedBundleId: nextItem?.bundleId ?? nextAppId, for: group.id)
+             store.updateMRUOrder(activatedId: nextItem?.id ?? nextAppId, activatedBundleId: nextItem?.bundleId ?? nextAppId, for: group.id, liveItemIds: liveItemIds)
         }
     }
     
@@ -134,13 +136,14 @@ class AppSwitcher: @preconcurrency ObservableObject {
         }
 
         let runningItems = hudItems.filter { $0.isRunning }
-        
+        let liveItemIds = Set(runningItems.map { $0.id })
+
         if runningItems.isEmpty {
             // No apps running - launch the first app and show launching overlay
             if let firstApp = group.apps.first {
                 launchApp(bundleIdentifier: firstApp.bundleIdentifier)
                 store.updateLastActiveApp(bundleId: firstApp.bundleIdentifier, for: group.id)
-                store.updateMRUOrder(activatedId: firstApp.bundleIdentifier, activatedBundleId: firstApp.bundleIdentifier, for: group.id)
+                store.updateMRUOrder(activatedId: firstApp.bundleIdentifier, activatedBundleId: firstApp.bundleIdentifier, for: group.id, liveItemIds: [])
                 LaunchOverlayManager.shared.show(
                     appName: firstApp.name,
                     appIcon: getIcon(for: firstApp)
@@ -178,7 +181,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
                     onFinalize: { [weak store] selectedId in
                         Task { @MainActor in
                             let bundleId = runningItems.first(where: { $0.id == selectedId })?.bundleId ?? selectedId
-                            store?.updateMRUOrder(activatedId: selectedId, activatedBundleId: bundleId, for: group.id)
+                            store?.updateMRUOrder(activatedId: selectedId, activatedBundleId: bundleId, for: group.id, liveItemIds: liveItemIds)
                         }
                     }
                 )
@@ -198,14 +201,14 @@ class AppSwitcher: @preconcurrency ObservableObject {
                     onFinalize: { [weak store] selectedId in
                         Task { @MainActor in
                             let bundleId = runningItems.first(where: { $0.id == selectedId })?.bundleId ?? selectedId
-                            store?.updateMRUOrder(activatedId: selectedId, activatedBundleId: bundleId, for: group.id)
+                            store?.updateMRUOrder(activatedId: selectedId, activatedBundleId: bundleId, for: group.id, liveItemIds: liveItemIds)
                         }
                     }
                 )
                 if !hudShown {
                     app?.unhide()
                     app?.activate(options: .activateAllWindows)
-                    store.updateMRUOrder(activatedId: item.id, activatedBundleId: item.bundleId, for: group.id)
+                    store.updateMRUOrder(activatedId: item.id, activatedBundleId: item.bundleId, for: group.id, liveItemIds: liveItemIds)
                 }
             }
             return
@@ -218,10 +221,10 @@ class AppSwitcher: @preconcurrency ObservableObject {
         let cycleItems = runningItems.map { CyclingAppItem(id: $0.id) }
         let frontmostApp = NSWorkspace.shared.frontmostApplication
 
-        // Build unique ID for frontmost app (bundleId-pid format)
+        // Build unique ID for frontmost app (bundleId::pid format)
         let frontmostAppUniqueId: String? = {
             guard let app = frontmostApp, let bundleId = app.bundleIdentifier else { return nil }
-            return "\(bundleId)-\(app.processIdentifier)"
+            return "\(bundleId)::\(app.processIdentifier)"
         }()
 
         let resolvableItems = runningItems.map { ResolvableAppItem(id: $0.id, bundleId: $0.bundleId) }
@@ -258,14 +261,14 @@ class AppSwitcher: @preconcurrency ObservableObject {
             onFinalize: { [weak store] selectedId in
                 Task { @MainActor in
                     let bundleId = runningItems.first(where: { $0.id == selectedId })?.bundleId ?? selectedId
-                    store?.updateMRUOrder(activatedId: selectedId, activatedBundleId: bundleId, for: group.id)
+                    store?.updateMRUOrder(activatedId: selectedId, activatedBundleId: bundleId, for: group.id, liveItemIds: liveItemIds)
                 }
             }
         )
 
         if !hudShown {
              activateOrLaunch(bundleId: nextItem?.bundleId ?? nextAppId, pid: nextItem?.pid)
-             store.updateMRUOrder(activatedId: nextItem?.id ?? nextAppId, activatedBundleId: nextItem?.bundleId ?? nextAppId, for: group.id)
+             store.updateMRUOrder(activatedId: nextItem?.id ?? nextAppId, activatedBundleId: nextItem?.bundleId ?? nextAppId, for: group.id, liveItemIds: liveItemIds)
         }
     }
     

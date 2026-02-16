@@ -126,8 +126,8 @@ The Core module is imported via `#if canImport(ShortcutCycleCore)` for compatibi
 ### Key Algorithms
 
 - **App cycling:** Deterministic algorithm in `AppCyclingLogic` — priority order: HUD selection > frontmost app > last active > first in group. Handles wrap-around.
-- **MRU ordering:** `AppCyclingLogic.sortedByMRU` reorders HUD items by most recently used. Tracks composite IDs (`"bundleId-pid"`) so each instance has its own MRU rank; backward-compatible with old plain bundle ID entries via 3-tier matching (exact composite → plain bundle ID → bundle prefix fallback). Updates only on finalization (modifier release / click), not during intermediate cycling. Persisted in `AppGroup.mruOrder`, managed by `GroupStore.updateMRUOrder`.
-- **Multi-instance apps:** Composite ID format `"{bundleId}-{pid}"` to distinguish browser profiles and multiple windows.
+- **MRU ordering:** `AppCyclingLogic.sortedByMRU` reorders HUD items by most recently used. Tracks composite IDs (`"bundleId::pid"`) so each instance has its own MRU rank; backward-compatible with old plain bundle ID entries via 3-tier matching (exact composite → plain bundle ID → bundle prefix fallback). Updates only on finalization (modifier release / click), not during intermediate cycling. Persisted in `AppGroup.mruOrder`, managed by `GroupStore.updateMRUOrder`.
+- **Multi-instance apps:** Composite ID format `"{bundleId}::{pid}"` to distinguish browser profiles and multiple windows.
 - **GFS backup retention:** Keep all < 1h, 1/hour for 1-24h, 1/day for 1-30d, 1/week for 30d+, cap at 100 backups.
 - **Debounced auto-backup:** 60s timer, duplicate detection via content comparison, flushes on app termination.
 

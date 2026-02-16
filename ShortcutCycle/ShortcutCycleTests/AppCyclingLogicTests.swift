@@ -121,74 +121,74 @@ final class AppCyclingLogicTests: XCTestCase {
     // MARK: - Multi-Profile (composite ID) Tests
 
     func testCompositeIdsCycleCorrectly() {
-        // Multiple instances of same app have composite "bundleId-pid" IDs
-        let items = makeItems(["com.google.Chrome-100", "com.google.Chrome-200", "com.app.B-300"])
+        // Multiple instances of same app have composite "bundleId::pid" IDs
+        let items = makeItems(["com.google.Chrome::100", "com.google.Chrome::200", "com.app.B::300"])
 
         // Frontmost is first Chrome instance, expect next Chrome instance
         let next = AppCyclingLogic.nextAppId(
             items: items,
-            currentFrontmostAppId: "com.google.Chrome-100",
+            currentFrontmostAppId: "com.google.Chrome::100",
             currentHUDSelectionId: nil,
             lastActiveAppId: nil,
             isHUDVisible: false
         )
 
-        XCTAssertEqual(next, "com.google.Chrome-200")
+        XCTAssertEqual(next, "com.google.Chrome::200")
     }
 
     func testCompositeIdsHUDCycling() {
         // HUD visible, cycling through multi-instance items
-        let items = makeItems(["com.google.Chrome-100", "com.google.Chrome-200", "com.app.B-300"])
+        let items = makeItems(["com.google.Chrome::100", "com.google.Chrome::200", "com.app.B::300"])
 
         // HUD shows Chrome-200, expect next is B-300
         let next = AppCyclingLogic.nextAppId(
             items: items,
-            currentFrontmostAppId: "com.google.Chrome-100",
-            currentHUDSelectionId: "com.google.Chrome-200",
+            currentFrontmostAppId: "com.google.Chrome::100",
+            currentHUDSelectionId: "com.google.Chrome::200",
             lastActiveAppId: nil,
             isHUDVisible: true
         )
 
-        XCTAssertEqual(next, "com.app.B-300")
+        XCTAssertEqual(next, "com.app.B::300")
     }
 
     func testCompositeIdsWrapAround() {
-        let items = makeItems(["com.google.Chrome-100", "com.google.Chrome-200"])
+        let items = makeItems(["com.google.Chrome::100", "com.google.Chrome::200"])
 
         // HUD shows last item, expect wrap to first
         let next = AppCyclingLogic.nextAppId(
             items: items,
             currentFrontmostAppId: nil,
-            currentHUDSelectionId: "com.google.Chrome-200",
+            currentHUDSelectionId: "com.google.Chrome::200",
             lastActiveAppId: nil,
             isHUDVisible: true
         )
 
-        XCTAssertEqual(next, "com.google.Chrome-100")
+        XCTAssertEqual(next, "com.google.Chrome::100")
     }
 
     func testResolvedLastActiveIdMatchesCompositeItem() {
         // Simulates the caller resolving a stored plain bundle ID to a composite ID
         // before calling nextAppId (as AppSwitcher now does)
-        let items = makeItems(["com.google.Chrome-500", "com.app.B-600"])
+        let items = makeItems(["com.google.Chrome::500", "com.app.B::600"])
 
         // lastActiveAppId has been pre-resolved to the composite ID by the caller
         let next = AppCyclingLogic.nextAppId(
             items: items,
             currentFrontmostAppId: "com.apple.finder", // Not in group
             currentHUDSelectionId: nil,
-            lastActiveAppId: "com.google.Chrome-500", // Resolved composite ID
+            lastActiveAppId: "com.google.Chrome::500", // Resolved composite ID
             isHUDVisible: false
         )
 
         // Should resume to last active (Chrome instance)
-        XCTAssertEqual(next, "com.google.Chrome-500")
+        XCTAssertEqual(next, "com.google.Chrome::500")
     }
 
     func testUnresolvedPlainBundleIdFallsToFirst() {
         // If lastActiveAppId is a plain bundle ID that doesn't match any composite item,
         // the cycling logic should fall through to the first item
-        let items = makeItems(["com.google.Chrome-500", "com.app.B-600"])
+        let items = makeItems(["com.google.Chrome::500", "com.app.B::600"])
 
         let next = AppCyclingLogic.nextAppId(
             items: items,
@@ -199,7 +199,7 @@ final class AppCyclingLogicTests: XCTestCase {
         )
 
         // Falls through to first item since no match
-        XCTAssertEqual(next, "com.google.Chrome-500")
+        XCTAssertEqual(next, "com.google.Chrome::500")
     }
 
     // MARK: - Multi-Instance Last Active Regression Tests
@@ -209,41 +209,41 @@ final class AppCyclingLogicTests: XCTestCase {
         // if the user was on instance C (PID 300) and switched away, the shortcut should
         // return to C, not A (the first by PID).
         let items = makeItems([
-            "org.mozilla.firefox-100",  // Profile A
-            "org.mozilla.firefox-200",  // Profile B
-            "org.mozilla.firefox-300"   // Profile C
+            "org.mozilla.firefox::100",  // Profile A
+            "org.mozilla.firefox::200",  // Profile B
+            "org.mozilla.firefox::300"   // Profile C
         ])
 
         // User was on profile C, switched to Finder, now hits shortcut
         let next = AppCyclingLogic.nextAppId(
             items: items,
-            currentFrontmostAppId: "com.apple.finder-999",
+            currentFrontmostAppId: "com.apple.finder::999",
             currentHUDSelectionId: nil,
-            lastActiveAppId: "org.mozilla.firefox-300", // Composite ID for profile C
+            lastActiveAppId: "org.mozilla.firefox::300", // Composite ID for profile C
             isHUDVisible: false
         )
 
         // Should return to profile C (last active), not profile A
-        XCTAssertEqual(next, "org.mozilla.firefox-300")
+        XCTAssertEqual(next, "org.mozilla.firefox::300")
     }
 
     func testCompositeLastActiveIdMiddleInstance() {
         // Same regression test but for the middle instance
         let items = makeItems([
-            "org.mozilla.firefox-100",  // Profile A
-            "org.mozilla.firefox-200",  // Profile B
-            "org.mozilla.firefox-300"   // Profile C
+            "org.mozilla.firefox::100",  // Profile A
+            "org.mozilla.firefox::200",  // Profile B
+            "org.mozilla.firefox::300"   // Profile C
         ])
 
         let next = AppCyclingLogic.nextAppId(
             items: items,
-            currentFrontmostAppId: "com.apple.finder-999",
+            currentFrontmostAppId: "com.apple.finder::999",
             currentHUDSelectionId: nil,
-            lastActiveAppId: "org.mozilla.firefox-200", // Profile B
+            lastActiveAppId: "org.mozilla.firefox::200", // Profile B
             isHUDVisible: false
         )
 
-        XCTAssertEqual(next, "org.mozilla.firefox-200")
+        XCTAssertEqual(next, "org.mozilla.firefox::200")
     }
 
     // MARK: - resolveLastActiveId Tests
@@ -254,7 +254,7 @@ final class AppCyclingLogicTests: XCTestCase {
 
     func testResolveNilStoredId() {
         let items = makeResolvable([
-            (id: "org.mozilla.firefox-100", bundleId: "org.mozilla.firefox")
+            (id: "org.mozilla.firefox::100", bundleId: "org.mozilla.firefox")
         ])
         XCTAssertNil(AppCyclingLogic.resolveLastActiveId(storedId: nil, items: items))
     }
@@ -262,71 +262,71 @@ final class AppCyclingLogicTests: XCTestCase {
     func testResolveExactCompositeMatch() {
         // Stored composite ID matches a running instance exactly
         let items = makeResolvable([
-            (id: "org.mozilla.firefox-100", bundleId: "org.mozilla.firefox"),
-            (id: "org.mozilla.firefox-200", bundleId: "org.mozilla.firefox"),
-            (id: "org.mozilla.firefox-300", bundleId: "org.mozilla.firefox")
+            (id: "org.mozilla.firefox::100", bundleId: "org.mozilla.firefox"),
+            (id: "org.mozilla.firefox::200", bundleId: "org.mozilla.firefox"),
+            (id: "org.mozilla.firefox::300", bundleId: "org.mozilla.firefox")
         ])
 
         let resolved = AppCyclingLogic.resolveLastActiveId(
-            storedId: "org.mozilla.firefox-300",
+            storedId: "org.mozilla.firefox::300",
             items: items
         )
         // Must return the exact instance, not the first one
-        XCTAssertEqual(resolved, "org.mozilla.firefox-300")
+        XCTAssertEqual(resolved, "org.mozilla.firefox::300")
     }
 
     func testResolvePlainBundleIdBackwardCompat() {
         // Old stored plain bundle ID resolves to the first instance (backward compat)
         let items = makeResolvable([
-            (id: "org.mozilla.firefox-100", bundleId: "org.mozilla.firefox"),
-            (id: "org.mozilla.firefox-200", bundleId: "org.mozilla.firefox")
+            (id: "org.mozilla.firefox::100", bundleId: "org.mozilla.firefox"),
+            (id: "org.mozilla.firefox::200", bundleId: "org.mozilla.firefox")
         ])
 
         let resolved = AppCyclingLogic.resolveLastActiveId(
             storedId: "org.mozilla.firefox",
             items: items
         )
-        XCTAssertEqual(resolved, "org.mozilla.firefox-100")
+        XCTAssertEqual(resolved, "org.mozilla.firefox::100")
     }
 
     func testResolveProfileClosedFallsBackToFirstRemaining() {
         // Profile C (PID 300) was last active but is now closed.
         // A (100) and B (200) are still running. Should fall back to first remaining.
         let items = makeResolvable([
-            (id: "org.mozilla.firefox-100", bundleId: "org.mozilla.firefox"),
-            (id: "org.mozilla.firefox-200", bundleId: "org.mozilla.firefox")
+            (id: "org.mozilla.firefox::100", bundleId: "org.mozilla.firefox"),
+            (id: "org.mozilla.firefox::200", bundleId: "org.mozilla.firefox")
         ])
 
         let resolved = AppCyclingLogic.resolveLastActiveId(
-            storedId: "org.mozilla.firefox-300",
+            storedId: "org.mozilla.firefox::300",
             items: items
         )
         // PID 300 doesn't exist; prefix fallback matches first Firefox instance
-        XCTAssertEqual(resolved, "org.mozilla.firefox-100")
+        XCTAssertEqual(resolved, "org.mozilla.firefox::100")
     }
 
     func testResolveAllClosedNewInstanceCreated() {
         // All old Firefox instances closed, new profile D (PID 400) appeared
         let items = makeResolvable([
-            (id: "org.mozilla.firefox-400", bundleId: "org.mozilla.firefox")
+            (id: "org.mozilla.firefox::400", bundleId: "org.mozilla.firefox")
         ])
 
         let resolved = AppCyclingLogic.resolveLastActiveId(
-            storedId: "org.mozilla.firefox-300",
+            storedId: "org.mozilla.firefox::300",
             items: items
         )
         // Prefix fallback finds the new instance
-        XCTAssertEqual(resolved, "org.mozilla.firefox-400")
+        XCTAssertEqual(resolved, "org.mozilla.firefox::400")
     }
 
     func testResolveAllInstancesClosedDifferentAppRunning() {
         // All Firefox instances closed, only Chrome is running
         let items = makeResolvable([
-            (id: "com.google.Chrome-500", bundleId: "com.google.Chrome")
+            (id: "com.google.Chrome::500", bundleId: "com.google.Chrome")
         ])
 
         let resolved = AppCyclingLogic.resolveLastActiveId(
-            storedId: "org.mozilla.firefox-300",
+            storedId: "org.mozilla.firefox::300",
             items: items
         )
         // No Firefox instances at all — returns nil
@@ -337,37 +337,37 @@ final class AppCyclingLogicTests: XCTestCase {
         // "Open App If Needed" mode: Firefox not running shows as plain bundle ID item
         let items = makeResolvable([
             (id: "org.mozilla.firefox", bundleId: "org.mozilla.firefox"),  // not running
-            (id: "com.google.Chrome-500", bundleId: "com.google.Chrome")  // running
+            (id: "com.google.Chrome::500", bundleId: "com.google.Chrome")  // running
         ])
 
         let resolved = AppCyclingLogic.resolveLastActiveId(
-            storedId: "org.mozilla.firefox-300",
+            storedId: "org.mozilla.firefox::300",
             items: items
         )
-        // Prefix fallback: "org.mozilla.firefox-300" starts with "org.mozilla.firefox-"
+        // Prefix fallback: "org.mozilla.firefox::300" starts with "org.mozilla.firefox::"
         // matches the non-running Firefox item, which is correct — it will trigger a launch
         XCTAssertEqual(resolved, "org.mozilla.firefox")
     }
 
     func testResolveEmptyItems() {
         let resolved = AppCyclingLogic.resolveLastActiveId(
-            storedId: "org.mozilla.firefox-300",
+            storedId: "org.mozilla.firefox::300",
             items: []
         )
         XCTAssertNil(resolved)
     }
 
     func testResolveDoesNotCrossMatchDifferentApps() {
-        // Ensure "com.app.foo-100" doesn't match "com.app.foobar" via prefix
+        // Ensure "com.app.foo::100" doesn't match "com.app.foobar" via prefix
         let items = makeResolvable([
-            (id: "com.app.foobar-200", bundleId: "com.app.foobar")
+            (id: "com.app.foobar::200", bundleId: "com.app.foobar")
         ])
 
         let resolved = AppCyclingLogic.resolveLastActiveId(
-            storedId: "com.app.foo-100",
+            storedId: "com.app.foo::100",
             items: items
         )
-        // "com.app.foo-100" does NOT start with "com.app.foobar-"
+        // "com.app.foo::100" does NOT start with "com.app.foobar::"
         XCTAssertNil(resolved)
     }
 
@@ -376,48 +376,48 @@ final class AppCyclingLogicTests: XCTestCase {
     func testEndToEndProfileClosedActivatesFirstRemaining() {
         // Profile C closed, A and B still running, user is on Finder
         let resolvable = makeResolvable([
-            (id: "org.mozilla.firefox-100", bundleId: "org.mozilla.firefox"),
-            (id: "org.mozilla.firefox-200", bundleId: "org.mozilla.firefox")
+            (id: "org.mozilla.firefox::100", bundleId: "org.mozilla.firefox"),
+            (id: "org.mozilla.firefox::200", bundleId: "org.mozilla.firefox")
         ])
         let resolved = AppCyclingLogic.resolveLastActiveId(
-            storedId: "org.mozilla.firefox-300", items: resolvable
+            storedId: "org.mozilla.firefox::300", items: resolvable
         )
         // Falls back to first Firefox instance
-        XCTAssertEqual(resolved, "org.mozilla.firefox-100")
+        XCTAssertEqual(resolved, "org.mozilla.firefox::100")
 
-        let items = makeItems(["org.mozilla.firefox-100", "org.mozilla.firefox-200"])
+        let items = makeItems(["org.mozilla.firefox::100", "org.mozilla.firefox::200"])
         let next = AppCyclingLogic.nextAppId(
             items: items,
-            currentFrontmostAppId: "com.apple.finder-999",
+            currentFrontmostAppId: "com.apple.finder::999",
             currentHUDSelectionId: nil,
             lastActiveAppId: resolved,
             isHUDVisible: false
         )
         // Activates profile A (first remaining Firefox instance)
-        XCTAssertEqual(next, "org.mozilla.firefox-100")
+        XCTAssertEqual(next, "org.mozilla.firefox::100")
     }
 
     func testEndToEndAllClosedNewProfileActivatesIt() {
         // All old Firefox gone, new profile D appeared, group also has Chrome
         let resolvable = makeResolvable([
-            (id: "org.mozilla.firefox-400", bundleId: "org.mozilla.firefox"),
-            (id: "com.google.Chrome-500", bundleId: "com.google.Chrome")
+            (id: "org.mozilla.firefox::400", bundleId: "org.mozilla.firefox"),
+            (id: "com.google.Chrome::500", bundleId: "com.google.Chrome")
         ])
         let resolved = AppCyclingLogic.resolveLastActiveId(
-            storedId: "org.mozilla.firefox-300", items: resolvable
+            storedId: "org.mozilla.firefox::300", items: resolvable
         )
-        XCTAssertEqual(resolved, "org.mozilla.firefox-400")
+        XCTAssertEqual(resolved, "org.mozilla.firefox::400")
 
-        let items = makeItems(["org.mozilla.firefox-400", "com.google.Chrome-500"])
+        let items = makeItems(["org.mozilla.firefox::400", "com.google.Chrome::500"])
         let next = AppCyclingLogic.nextAppId(
             items: items,
-            currentFrontmostAppId: "com.apple.finder-999",
+            currentFrontmostAppId: "com.apple.finder::999",
             currentHUDSelectionId: nil,
             lastActiveAppId: resolved,
             isHUDVisible: false
         )
         // Activates the new Firefox instance (stays with Firefox, not Chrome)
-        XCTAssertEqual(next, "org.mozilla.firefox-400")
+        XCTAssertEqual(next, "org.mozilla.firefox::400")
     }
 
     // MARK: - MRU Sorting Tests
@@ -481,7 +481,7 @@ final class AppCyclingLogicTests: XCTestCase {
 
     func testSortedByMRU_MultiInstance() {
         // Two instances of com.b with composite IDs, mruOrder has plain entries
-        let itemIds = ["com.a", "com.b-100", "com.b-200", "com.c"]
+        let itemIds = ["com.a", "com.b::100", "com.b::200", "com.c"]
         let itemBundleIds = ["com.a", "com.b", "com.b", "com.c"]
         let indices = AppCyclingLogic.sortedByMRU(
             itemIds: itemIds,
@@ -518,12 +518,12 @@ final class AppCyclingLogicTests: XCTestCase {
 
     func testSortedByMRU_CompositeIds() {
         // Two Chrome instances get distinct ranks via composite ID matching
-        let itemIds = ["com.chrome-100", "com.chrome-200", "com.app.B-300"]
+        let itemIds = ["com.chrome::100", "com.chrome::200", "com.app.B::300"]
         let itemBundleIds = ["com.chrome", "com.chrome", "com.app.B"]
         let indices = AppCyclingLogic.sortedByMRU(
             itemIds: itemIds,
             itemBundleIds: itemBundleIds,
-            mruOrder: ["com.chrome-200", "com.app.B-300", "com.chrome-100"],
+            mruOrder: ["com.chrome::200", "com.app.B::300", "com.chrome::100"],
             groupBundleIds: ["com.chrome", "com.app.B"]
         )
         // chrome-200 (rank 0), B-300 (rank 1), chrome-100 (rank 2)
@@ -532,7 +532,7 @@ final class AppCyclingLogicTests: XCTestCase {
 
     func testSortedByMRU_BackwardCompatPlainEntries() {
         // Old mruOrder with plain IDs still works via tier-2 matching
-        let itemIds = ["com.chrome-100", "com.firefox-200"]
+        let itemIds = ["com.chrome::100", "com.firefox::200"]
         let itemBundleIds = ["com.chrome", "com.firefox"]
         let indices = AppCyclingLogic.sortedByMRU(
             itemIds: itemIds,
@@ -545,16 +545,16 @@ final class AppCyclingLogicTests: XCTestCase {
     }
 
     func testSortedByMRU_StalePidFallback() {
-        // MRU has "com.chrome-999" (stale PID), current instance is "com.chrome-100"
-        let itemIds = ["com.chrome-100", "com.app.B-200"]
+        // MRU has "com.chrome::999" (stale PID), current instance is "com.chrome::100"
+        let itemIds = ["com.chrome::100", "com.app.B::200"]
         let itemBundleIds = ["com.chrome", "com.app.B"]
         let indices = AppCyclingLogic.sortedByMRU(
             itemIds: itemIds,
             itemBundleIds: itemBundleIds,
-            mruOrder: ["com.chrome-999", "com.app.B-200"],
+            mruOrder: ["com.chrome::999", "com.app.B::200"],
             groupBundleIds: ["com.chrome", "com.app.B"]
         )
-        // chrome-100 matches "com.chrome-999" via tier 3 prefix (rank 0), B-200 exact (rank 1)
+        // chrome-100 matches "com.chrome::999" via tier 3 prefix (rank 0), B-200 exact (rank 1)
         XCTAssertEqual(indices, [0, 1])
     }
 
@@ -565,7 +565,8 @@ final class AppCyclingLogicTests: XCTestCase {
             currentOrder: nil,
             activatedId: "com.a",
             activatedBundleId: "com.a",
-            validBundleIds: Set(["com.a", "com.b", "com.c"])
+            validBundleIds: Set(["com.a", "com.b", "com.c"]),
+            liveItemIds: Set(["com.a", "com.b", "com.c"])
         )
         XCTAssertEqual(order, ["com.a"])
     }
@@ -575,7 +576,8 @@ final class AppCyclingLogicTests: XCTestCase {
             currentOrder: ["com.a", "com.b", "com.c"],
             activatedId: "com.c",
             activatedBundleId: "com.c",
-            validBundleIds: Set(["com.a", "com.b", "com.c"])
+            validBundleIds: Set(["com.a", "com.b", "com.c"]),
+            liveItemIds: Set(["com.a", "com.b", "com.c"])
         )
         XCTAssertEqual(order, ["com.c", "com.a", "com.b"])
     }
@@ -585,7 +587,8 @@ final class AppCyclingLogicTests: XCTestCase {
             currentOrder: ["com.a", "com.b", "com.c"],
             activatedId: "com.a",
             activatedBundleId: "com.a",
-            validBundleIds: Set(["com.a", "com.b", "com.c"])
+            validBundleIds: Set(["com.a", "com.b", "com.c"]),
+            liveItemIds: Set(["com.a", "com.b", "com.c"])
         )
         XCTAssertEqual(order, ["com.a", "com.b", "com.c"])
     }
@@ -595,7 +598,8 @@ final class AppCyclingLogicTests: XCTestCase {
             currentOrder: ["com.x", "com.a", "com.b"],
             activatedId: "com.b",
             activatedBundleId: "com.b",
-            validBundleIds: Set(["com.a", "com.b"])
+            validBundleIds: Set(["com.a", "com.b"]),
+            liveItemIds: Set(["com.a", "com.b"])
         )
         XCTAssertEqual(order, ["com.b", "com.a"])
     }
@@ -605,7 +609,8 @@ final class AppCyclingLogicTests: XCTestCase {
             currentOrder: ["com.a", "com.b"],
             activatedId: "com.d",
             activatedBundleId: "com.d",
-            validBundleIds: Set(["com.a", "com.b", "com.d"])
+            validBundleIds: Set(["com.a", "com.b", "com.d"]),
+            liveItemIds: Set(["com.a", "com.b", "com.d"])
         )
         XCTAssertEqual(order, ["com.d", "com.a", "com.b"])
     }
@@ -616,85 +621,229 @@ final class AppCyclingLogicTests: XCTestCase {
         // Composite ID is stored, not plain bundle ID
         let order = AppCyclingLogic.updatedMRUOrder(
             currentOrder: nil,
-            activatedId: "com.chrome-200",
+            activatedId: "com.chrome::200",
             activatedBundleId: "com.chrome",
-            validBundleIds: Set(["com.chrome", "com.app.B"])
+            validBundleIds: Set(["com.chrome", "com.app.B"]),
+            liveItemIds: Set(["com.chrome::200", "com.app.B::300"])
         )
-        XCTAssertEqual(order, ["com.chrome-200"])
+        XCTAssertEqual(order, ["com.chrome::200"])
     }
 
     func testUpdatedMRUOrder_UpgradesPlainEntry() {
-        // Old plain entry "com.chrome" gets replaced by composite "com.chrome-200"
+        // Old plain entry "com.chrome" gets replaced by composite "com.chrome::200"
         let order = AppCyclingLogic.updatedMRUOrder(
-            currentOrder: ["com.chrome", "com.app.B-300"],
-            activatedId: "com.chrome-200",
+            currentOrder: ["com.chrome", "com.app.B::300"],
+            activatedId: "com.chrome::200",
             activatedBundleId: "com.chrome",
-            validBundleIds: Set(["com.chrome", "com.app.B"])
+            validBundleIds: Set(["com.chrome", "com.app.B"]),
+            liveItemIds: Set(["com.chrome::200", "com.app.B::300"])
         )
-        // "com.chrome" removed (upgrade), "com.chrome-200" at front
-        XCTAssertEqual(order, ["com.chrome-200", "com.app.B-300"])
+        // "com.chrome" removed (upgrade), "com.chrome::200" at front
+        XCTAssertEqual(order, ["com.chrome::200", "com.app.B::300"])
     }
 
     func testUpdatedMRUOrder_TwoInstancesSameBundle() {
         // Two Chrome instances tracked independently
+        let liveIds = Set(["com.chrome::100", "com.chrome::200"])
         var order = AppCyclingLogic.updatedMRUOrder(
             currentOrder: nil,
-            activatedId: "com.chrome-100",
+            activatedId: "com.chrome::100",
             activatedBundleId: "com.chrome",
-            validBundleIds: Set(["com.chrome"])
+            validBundleIds: Set(["com.chrome"]),
+            liveItemIds: liveIds
         )
-        XCTAssertEqual(order, ["com.chrome-100"])
+        XCTAssertEqual(order, ["com.chrome::100"])
 
         order = AppCyclingLogic.updatedMRUOrder(
             currentOrder: order,
-            activatedId: "com.chrome-200",
+            activatedId: "com.chrome::200",
             activatedBundleId: "com.chrome",
-            validBundleIds: Set(["com.chrome"])
+            validBundleIds: Set(["com.chrome"]),
+            liveItemIds: liveIds
         )
         // Both composite entries kept, 200 at front
-        XCTAssertEqual(order, ["com.chrome-200", "com.chrome-100"])
+        XCTAssertEqual(order, ["com.chrome::200", "com.chrome::100"])
 
         // Switch back to 100
         order = AppCyclingLogic.updatedMRUOrder(
             currentOrder: order,
-            activatedId: "com.chrome-100",
+            activatedId: "com.chrome::100",
             activatedBundleId: "com.chrome",
-            validBundleIds: Set(["com.chrome"])
+            validBundleIds: Set(["com.chrome"]),
+            liveItemIds: liveIds
         )
-        XCTAssertEqual(order, ["com.chrome-100", "com.chrome-200"])
+        XCTAssertEqual(order, ["com.chrome::100", "com.chrome::200"])
     }
 
     func testUpdatedMRUOrder_FilterCompositeByPrefix() {
-        // Composite entries are validated by bundle prefix
+        // Composite entries for removed bundles are filtered out
         let order = AppCyclingLogic.updatedMRUOrder(
-            currentOrder: ["com.removed-100", "com.chrome-200"],
-            activatedId: "com.chrome-100",
+            currentOrder: ["com.removed::100", "com.chrome::200"],
+            activatedId: "com.chrome::100",
             activatedBundleId: "com.chrome",
-            validBundleIds: Set(["com.chrome"])
+            validBundleIds: Set(["com.chrome"]),
+            liveItemIds: Set(["com.chrome::100", "com.chrome::200"])
         )
-        // "com.removed-100" filtered out (no matching bundle), both chrome entries kept
-        XCTAssertEqual(order, ["com.chrome-100", "com.chrome-200"])
+        // "com.removed::100" filtered out (not live and not a valid plain bundle ID)
+        XCTAssertEqual(order, ["com.chrome::100", "com.chrome::200"])
+    }
+
+    // MARK: - Stale PID Eviction Tests
+
+    func testUpdatedMRUOrder_StalePidRemoved() {
+        // Old PID entry evicted when new PID is live
+        let order = AppCyclingLogic.updatedMRUOrder(
+            currentOrder: ["com.chrome::100", "com.app.B::300"],
+            activatedId: "com.chrome::500",
+            activatedBundleId: "com.chrome",
+            validBundleIds: Set(["com.chrome", "com.app.B"]),
+            liveItemIds: Set(["com.chrome::500", "com.app.B::300"])
+        )
+        // "com.chrome::100" is stale (not in liveItemIds, not a plain bundle ID) → evicted
+        XCTAssertEqual(order, ["com.chrome::500", "com.app.B::300"])
+    }
+
+    func testUpdatedMRUOrder_LivePidsKept() {
+        // Multi-instance entries preserved when both are live
+        let order = AppCyclingLogic.updatedMRUOrder(
+            currentOrder: ["com.chrome::200", "com.chrome::100"],
+            activatedId: "com.app.B::300",
+            activatedBundleId: "com.app.B",
+            validBundleIds: Set(["com.chrome", "com.app.B"]),
+            liveItemIds: Set(["com.chrome::100", "com.chrome::200", "com.app.B::300"])
+        )
+        // Both Chrome instances are live → both kept
+        XCTAssertEqual(order, ["com.app.B::300", "com.chrome::200", "com.chrome::100"])
+    }
+
+    // MARK: - Stress Tests
+
+    func testUpdatedMRUOrder_ClearsHundredsOfStalePids() {
+        // 5 apps, each with 20 stale PID entries = 100 stale entries
+        var staleOrder: [String] = []
+        let bundles = ["com.a", "com.b", "com.c", "com.d", "com.e"]
+        for bundle in bundles {
+            for pid in 1...20 {
+                staleOrder.append("\(bundle)::\(pid)")
+            }
+        }
+        XCTAssertEqual(staleOrder.count, 100)
+
+        // Live items: one instance per app with fresh PIDs
+        let liveIds = Set(bundles.map { "\($0)::999" })
+
+        let order = AppCyclingLogic.updatedMRUOrder(
+            currentOrder: staleOrder,
+            activatedId: "com.a::999",
+            activatedBundleId: "com.a",
+            validBundleIds: Set(bundles),
+            liveItemIds: liveIds
+        )
+
+        // Only live entries should survive
+        for entry in order {
+            XCTAssertTrue(
+                liveIds.contains(entry) || bundles.contains(entry),
+                "Stale entry should have been evicted: \(entry)"
+            )
+        }
+        XCTAssertEqual(order.first, "com.a::999")
+    }
+
+    func testUpdatedMRUOrder_ClearsThousandsOfStalePids() {
+        // 10 apps, each with 100 stale PID entries = 1000 stale entries
+        var staleOrder: [String] = []
+        let bundles = (0..<10).map { "com.app\($0)" }
+        for bundle in bundles {
+            for pid in 1...100 {
+                staleOrder.append("\(bundle)::\(pid)")
+            }
+        }
+        XCTAssertEqual(staleOrder.count, 1000)
+
+        let liveIds = Set(bundles.map { "\($0)::9999" })
+
+        let order = AppCyclingLogic.updatedMRUOrder(
+            currentOrder: staleOrder,
+            activatedId: "com.app0::9999",
+            activatedBundleId: "com.app0",
+            validBundleIds: Set(bundles),
+            liveItemIds: liveIds
+        )
+
+        // Zero stale entries should survive
+        for entry in order {
+            XCTAssertTrue(
+                liveIds.contains(entry) || bundles.contains(entry),
+                "Stale entry should have been evicted: \(entry)"
+            )
+        }
+        XCTAssertEqual(order.first, "com.app0::9999")
+    }
+
+    func testUpdatedMRUOrder_MixedLiveAndStale() {
+        // 500 entries: 250 stale, 250 live
+        var mixedOrder: [String] = []
+        let bundles = (0..<50).map { "com.app\($0)" }
+
+        // 5 stale entries per app
+        for bundle in bundles {
+            for pid in 1...5 {
+                mixedOrder.append("\(bundle)::\(pid)")
+            }
+        }
+        // 5 live entries per app
+        var liveIds = Set<String>()
+        for bundle in bundles {
+            for pid in 1000...1004 {
+                let id = "\(bundle)::\(pid)"
+                mixedOrder.append(id)
+                liveIds.insert(id)
+            }
+        }
+        XCTAssertEqual(mixedOrder.count, 500)
+        XCTAssertEqual(liveIds.count, 250)
+
+        let order = AppCyclingLogic.updatedMRUOrder(
+            currentOrder: mixedOrder,
+            activatedId: "com.app0::1000",
+            activatedBundleId: "com.app0",
+            validBundleIds: Set(bundles),
+            liveItemIds: liveIds
+        )
+
+        // All live kept, all stale removed
+        for entry in order {
+            XCTAssertTrue(
+                liveIds.contains(entry) || bundles.contains(entry),
+                "Stale entry should have been evicted: \(entry)"
+            )
+        }
+        // All live entries should be present (activated entry is always first)
+        for liveId in liveIds {
+            XCTAssertTrue(order.contains(liveId), "Live entry missing: \(liveId)")
+        }
     }
 
     func testEndToEndAllFirefoxClosedFallsToNextApp() {
         // Firefox completely gone, only Chrome running
         let resolvable = makeResolvable([
-            (id: "com.google.Chrome-500", bundleId: "com.google.Chrome")
+            (id: "com.google.Chrome::500", bundleId: "com.google.Chrome")
         ])
         let resolved = AppCyclingLogic.resolveLastActiveId(
-            storedId: "org.mozilla.firefox-300", items: resolvable
+            storedId: "org.mozilla.firefox::300", items: resolvable
         )
         XCTAssertNil(resolved)
 
-        let items = makeItems(["com.google.Chrome-500"])
+        let items = makeItems(["com.google.Chrome::500"])
         let next = AppCyclingLogic.nextAppId(
             items: items,
-            currentFrontmostAppId: "com.apple.finder-999",
+            currentFrontmostAppId: "com.apple.finder::999",
             currentHUDSelectionId: nil,
             lastActiveAppId: resolved,
             isHUDVisible: false
         )
         // No Firefox at all — falls through to first item (Chrome)
-        XCTAssertEqual(next, "com.google.Chrome-500")
+        XCTAssertEqual(next, "com.google.Chrome::500")
     }
 }

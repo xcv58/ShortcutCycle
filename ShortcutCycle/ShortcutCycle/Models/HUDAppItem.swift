@@ -3,7 +3,7 @@ import AppKit
 
 /// Common app item used in HUD
 public struct HUDAppItem: Identifiable, Equatable, @unchecked Sendable {
-    /// Unique identifier: "{bundleId}-{pid}" for running apps, or "{bundleId}" for non-running
+    /// Unique identifier: "{bundleId}::{pid}" for running apps, or "{bundleId}" for non-running
     public let id: String
     /// The app's bundle identifier
     public let bundleId: String
@@ -18,7 +18,7 @@ public struct HUDAppItem: Identifiable, Equatable, @unchecked Sendable {
         let bundleId = runningApp.bundleIdentifier ?? ""
         self.bundleId = bundleId
         self.pid = runningApp.processIdentifier
-        self.id = "\(bundleId)-\(runningApp.processIdentifier)"
+        self.id = "\(bundleId)::\(runningApp.processIdentifier)"
         self.name = name ?? runningApp.localizedName ?? "App"
         self.icon = icon ?? runningApp.icon
         self.isRunning = true

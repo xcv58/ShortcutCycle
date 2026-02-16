@@ -113,11 +113,11 @@ public enum AppCyclingLogic {
 
     /// Resolves a stored last-active ID to a current item's composite ID.
     ///
-    /// The stored ID may be a composite ID ("bundleId-pid"), a plain bundle ID,
+    /// The stored ID may be a composite ID ("bundleId::pid"), a plain bundle ID,
     /// or nil. Resolution uses a 3-tier strategy:
-    /// 1. Exact match on composite ID (e.g. stored "firefox-300" matches item with id "firefox-300")
+    /// 1. Exact match on composite ID (e.g. stored "firefox::300" matches item with id "firefox::300")
     /// 2. Plain bundle ID match (e.g. stored "firefox" matches item with bundleId "firefox")
-    /// 3. Prefix fallback for stale PIDs (e.g. stored "firefox-300" matches item with bundleId "firefox"
+    /// 3. Prefix fallback for stale PIDs (e.g. stored "firefox::300" matches item with bundleId "firefox"
     ///    when PID 300 no longer exists but other instances are running)
     public static func resolveLastActiveId(
         storedId: String?,
@@ -135,7 +135,7 @@ public enum AppCyclingLogic {
         // 2. Fallback: stored composite ID whose PID no longer exists —
         //    match by bundle ID prefix to find another instance of the same app
         return items.first(where: {
-            storedId.hasPrefix($0.bundleId + "-")
+            storedId.hasPrefix($0.bundleId + "::")
         })?.id
     }
     /// Determines the next app ID to switch to
@@ -235,7 +235,7 @@ public enum AppCyclingLogic {
             if let r = mruRank[bundleId] { return r }
 
             // Tier 3: Bundle ID prefix match (stale PID fallback)
-            let prefix = bundleId + "-"
+            let prefix = bundleId + "::"
             for (idx, entry) in mruOrder.enumerated() {
                 if entry.hasPrefix(prefix) {
                     return idx
@@ -256,13 +256,16 @@ public enum AppCyclingLogic {
     }
 
     /// Returns an updated MRU order with the activated item moved to front.
-    /// Accepts composite ID (e.g. "bundleId-pid") and plain bundle ID.
-    /// Upgrades old plain entries to composite. Filters by validBundleIds.
+    /// Accepts composite ID (e.g. "bundleId::pid") and plain bundle ID.
+    /// Upgrades old plain entries to composite. Filters by validBundleIds
+    /// and liveItemIds to evict stale PID entries that no longer correspond
+    /// to any running instance.
     public static func updatedMRUOrder(
         currentOrder: [String]?,
         activatedId: String,
         activatedBundleId: String,
-        validBundleIds: Set<String>
+        validBundleIds: Set<String>,
+        liveItemIds: Set<String>
     ) -> [String] {
         var order = currentOrder ?? []
 
@@ -277,11 +280,13 @@ public enum AppCyclingLogic {
         // Insert composite ID at front
         order.insert(activatedId, at: 0)
 
-        // Filter: keep entries whose plain form is in validBundleIds,
-        // or composite entries whose bundle prefix is in validBundleIds
+        // Filter: keep entries that match a live HUD item ID,
+        // or plain bundle IDs still in the group. Stale composite IDs
+        // (PIDs that no longer exist) are evicted.
         return order.filter { entry in
+            if liveItemIds.contains(entry) { return true }
             if validBundleIds.contains(entry) { return true }
-            return validBundleIds.contains { entry.hasPrefix($0 + "-") }
+            return false
         }
     }
 }
