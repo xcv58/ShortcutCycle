@@ -31,10 +31,9 @@ We believe tools should be for everyone. ShortcutCycle is built with accessibili
 
 ## Installation
 
-### From Releases
-1. Download the latest `ShortcutCycle.dmg` from the [Releases page](https://github.com/xcv58/ShortcutCycle/releases).
-2. Open it and drag `ShortcutCycle` to your Applications folder.
-3. Open the app. You'll see a small icon in your menu bar.
+### From Mac App Store
+1. Download ShortcutCycle from the [Mac App Store](https://apps.apple.com/us/app/shortcutcycle/id6758281578).
+2. Open the app. You'll see a small icon (a command symbol in a square box) in your menu bar.
 
 ### From Source
 1. Clone the repository:
