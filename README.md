@@ -65,7 +65,7 @@ We believe tools should be for everyone. ShortcutCycle is built with accessibili
 4. Record a global shortcut (e.g., `Option + 1`).
 5. Press the shortcut to open the first app or cycle between them!
 
-> **Tip:** Hold the shortcut key to peek at the HUD without switching!
+> **Tip:** Hold the shortcut key to peek at the HUD and automatically cycle through your apps!
 
 ## Support
 
