@@ -161,6 +161,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -406,6 +407,13 @@
             gap: 8px;
             font-size: 1.1rem;
             transition: all 0.3s ease;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        .cta-button>* {
+            pointer-events: none;
         }
 
         .cta-primary {
@@ -567,9 +575,17 @@
             transition: all 0.3s ease;
         }
 
-        .video-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 24px var(--shadow);
+        /* --- VIDEO CARD HOVER --- */
+        @media (hover: hover) {
+            .video-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 12px 24px var(--shadow);
+            }
+        }
+
+        .video-card:active {
+            transform: scale(0.98);
+            transition: transform 0.1s;
         }
 
         .video-card video {
@@ -604,6 +620,20 @@
             padding: 32px;
             border-radius: 16px;
             border: 1px solid transparent;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        @media (hover: hover) {
+            .feature-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 12px 24px var(--shadow);
+                border-color: var(--border);
+            }
+        }
+
+        .feature-card:active {
+            transform: scale(0.98);
+            transition: transform 0.1s;
         }
 
         .feature-icon {
@@ -634,6 +664,86 @@
 
         .footer-links a {
             margin: 0 12px;
+        }
+
+        /* --- FAQ SECTION --- */
+        /* ... existing FAQ ... */
+
+        /* --- CTA BUTTON HOVER --- */
+        @media (hover: hover) {
+            .cta-primary:hover {
+                opacity: 0.9;
+                transform: translateY(-2px);
+                box-shadow: 0 0 25px rgba(0, 122, 255, 0.7);
+            }
+
+            .cta-secondary:hover {
+                border-color: var(--accent);
+                color: var(--accent);
+                transform: translateY(-2px);
+            }
+        }
+
+        .cta-primary:active {
+            transform: scale(0.98);
+            box-shadow: 0 0 10px rgba(0, 122, 255, 0.5);
+        }
+
+        .cta-secondary:active {
+            transform: scale(0.98);
+            background-color: var(--surface-hover);
+        }
+
+        /* --- SCROLL BTN HOVER --- */
+        @media (hover: hover) {
+            .scroll-btn:hover {
+                background-color: var(--surface);
+                opacity: 1;
+                transform: scale(1.1);
+                box-shadow: 0 6px 16px var(--shadow);
+            }
+        }
+
+        .scroll-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* --- BACK TO TOP HOVER --- */
+        @media (hover: hover) {
+            .back-to-top:hover {
+                background-color: var(--surface-hover);
+                transform: translateY(-4px);
+                box-shadow: 0 6px 16px var(--shadow);
+                color: var(--accent);
+                border-color: var(--accent);
+            }
+        }
+
+        /* --- VERSUS CARD HOVER --- */
+        .versus-card {
+            /* ... existing styles ... */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        @media (hover: hover) {
+            .versus-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 12px 32px var(--shadow);
+            }
+
+            .versus-card.new-way:hover {
+                box-shadow: 0 25px 70px -10px rgba(0, 0, 0, 0.15);
+                transform: translateY(-4px);
+            }
+
+            [data-theme='dark'] .versus-card.new-way:hover {
+                box-shadow: 0 25px 70px -10px rgba(0, 0, 0, 0.4);
+            }
+        }
+
+        .versus-card:active {
+            transform: scale(0.98);
+            transition: transform 0.1s;
         }
 
         /* --- FAQ SECTION --- */
@@ -806,12 +916,10 @@
             transform: translateY(0);
         }
 
-        .back-to-top:hover {
-            background-color: var(--surface-hover);
-            transform: translateY(-4px);
-            box-shadow: 0 6px 16px var(--shadow);
-            color: var(--accent);
-            border-color: var(--accent);
+
+
+        .back-to-top:active {
+            transform: scale(0.90);
         }
 
         .back-to-top svg {
@@ -824,7 +932,7 @@
         .versus-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 40px;
+            gap: 60px;
             max-width: 1000px;
             margin: 40px auto;
             position: relative;
@@ -849,7 +957,6 @@
         .versus-card.new-way {
             border: 2px solid var(--accent);
             box-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.1);
-            transform: scale(1.02);
             z-index: 2;
         }
 
@@ -1410,6 +1517,9 @@
     </button>
 
     <script>
+        // Enable active state on iOS
+        document.addEventListener('touchstart', () => { }, { passive: true });
+
         const html = document.documentElement;
         const btns = {
             system: document.getElementById('btn-system'),
