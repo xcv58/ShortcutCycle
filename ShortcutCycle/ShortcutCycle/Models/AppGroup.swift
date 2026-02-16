@@ -194,60 +194,94 @@ public enum AppCyclingLogic {
     // MARK: - MRU (Most Recently Used) Ordering
 
     /// Returns indices that reorder items by MRU (most recently used) order.
-    /// Items whose bundleId appears earlier in mruOrder come first.
+    /// Uses 3-tier matching per item: exact composite ID, plain bundle ID, bundle prefix.
     /// Items not in mruOrder maintain their original relative order at the end.
-    /// Multi-instance apps (same bundleId) stay grouped together in original order.
     public static func sortedByMRU(
+        itemIds: [String],
         itemBundleIds: [String],
         mruOrder: [String]?,
         groupBundleIds: [String]
     ) -> [Int] {
         guard let mruOrder = mruOrder, !mruOrder.isEmpty else {
-            return Array(itemBundleIds.indices)
+            return Array(itemIds.indices)
         }
 
-        // Build rank map for MRU items (lower = more recent)
-        var rank: [String: Int] = [:]
-        for (i, bundleId) in mruOrder.enumerated() {
-            rank[bundleId] = i
+        // Build rank map for MRU entries (lower = more recent)
+        var mruRank: [String: Int] = [:]
+        for (i, entry) in mruOrder.enumerated() {
+            mruRank[entry] = i
         }
 
         // Assign ranks to non-MRU items based on group order (after all MRU items)
         let offset = mruOrder.count
+        var groupRank: [String: Int] = [:]
         for (i, bundleId) in groupBundleIds.enumerated() {
-            if rank[bundleId] == nil {
-                rank[bundleId] = offset + i
+            if groupRank[bundleId] == nil {
+                groupRank[bundleId] = offset + i
             }
         }
 
         let fallback = offset + groupBundleIds.count
-        let ranks = itemBundleIds.map { rank[$0, default: fallback] }
 
-        return itemBundleIds.indices.sorted { a, b in
+        // 3-tier ranking for each item
+        let ranks: [Int] = itemIds.indices.map { i in
+            let itemId = itemIds[i]
+            let bundleId = itemBundleIds[i]
+
+            // Tier 1: Exact match on composite ID
+            if let r = mruRank[itemId] { return r }
+
+            // Tier 2: Exact match on plain bundle ID (backward compat)
+            if let r = mruRank[bundleId] { return r }
+
+            // Tier 3: Bundle ID prefix match (stale PID fallback)
+            let prefix = bundleId + "-"
+            for (idx, entry) in mruOrder.enumerated() {
+                if entry.hasPrefix(prefix) {
+                    return idx
+                }
+            }
+
+            // Tier 4: Group order fallback
+            return groupRank[bundleId, default: fallback]
+        }
+
+        return itemIds.indices.sorted { a, b in
             if ranks[a] != ranks[b] {
                 return ranks[a] < ranks[b]
             }
-            // Same rank (multi-instance same bundleId) — preserve original order
+            // Same rank — preserve original order
             return a < b
         }
     }
 
-    /// Returns an updated MRU order with the activated app moved to front.
-    /// Filters out bundle IDs not in validBundleIds.
+    /// Returns an updated MRU order with the activated item moved to front.
+    /// Accepts composite ID (e.g. "bundleId-pid") and plain bundle ID.
+    /// Upgrades old plain entries to composite. Filters by validBundleIds.
     public static func updatedMRUOrder(
         currentOrder: [String]?,
+        activatedId: String,
         activatedBundleId: String,
         validBundleIds: Set<String>
     ) -> [String] {
         var order = currentOrder ?? []
 
-        // Remove activated app from current position
-        order.removeAll { $0 == activatedBundleId }
+        // Remove exact composite ID
+        order.removeAll { $0 == activatedId }
 
-        // Insert at front
-        order.insert(activatedBundleId, at: 0)
+        // Remove plain bundle ID (upgrade old plain entries to composite)
+        if activatedId != activatedBundleId {
+            order.removeAll { $0 == activatedBundleId }
+        }
 
-        // Filter out stale entries (apps no longer in group)
-        return order.filter { validBundleIds.contains($0) }
+        // Insert composite ID at front
+        order.insert(activatedId, at: 0)
+
+        // Filter: keep entries whose plain form is in validBundleIds,
+        // or composite entries whose bundle prefix is in validBundleIds
+        return order.filter { entry in
+            if validBundleIds.contains(entry) { return true }
+            return validBundleIds.contains { entry.hasPrefix($0 + "-") }
+        }
     }
 }

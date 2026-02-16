@@ -143,11 +143,12 @@ public class GroupStore: ObservableObject {
         }
     }
 
-    public func updateMRUOrder(activatedBundleId: String, for groupId: UUID) {
+    public func updateMRUOrder(activatedId: String, activatedBundleId: String, for groupId: UUID) {
         guard let index = groups.firstIndex(where: { $0.id == groupId }) else { return }
         let validBundleIds = Set(groups[index].apps.map { $0.bundleIdentifier })
         let newOrder = AppCyclingLogic.updatedMRUOrder(
             currentOrder: groups[index].mruOrder,
+            activatedId: activatedId,
             activatedBundleId: activatedBundleId,
             validBundleIds: validBundleIds
         )

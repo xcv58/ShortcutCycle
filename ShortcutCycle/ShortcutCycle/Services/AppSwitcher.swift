@@ -84,7 +84,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
         if !hasRunningApp {
             nextAppId = hudItems[0].id
             store.updateLastActiveApp(bundleId: nextAppId, for: group.id)
-            store.updateMRUOrder(activatedBundleId: hudItems[0].bundleId, for: group.id)
+            store.updateMRUOrder(activatedId: hudItems[0].id, activatedBundleId: hudItems[0].bundleId, for: group.id)
             if let item = hudItems.first {
                 activateOrLaunch(bundleId: item.bundleId, pid: item.pid)
                 LaunchOverlayManager.shared.show(appName: item.name, appIcon: item.icon)
@@ -114,14 +114,14 @@ class AppSwitcher: @preconcurrency ObservableObject {
             onFinalize: { [weak store] selectedId in
                 Task { @MainActor in
                     let bundleId = hudItems.first(where: { $0.id == selectedId })?.bundleId ?? selectedId
-                    store?.updateMRUOrder(activatedBundleId: bundleId, for: group.id)
+                    store?.updateMRUOrder(activatedId: selectedId, activatedBundleId: bundleId, for: group.id)
                 }
             }
         )
 
         if !hudShown {
              activateOrLaunch(bundleId: nextItem?.bundleId ?? nextAppId, pid: nextItem?.pid)
-             store.updateMRUOrder(activatedBundleId: nextItem?.bundleId ?? nextAppId, for: group.id)
+             store.updateMRUOrder(activatedId: nextItem?.id ?? nextAppId, activatedBundleId: nextItem?.bundleId ?? nextAppId, for: group.id)
         }
     }
     
@@ -140,7 +140,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
             if let firstApp = group.apps.first {
                 launchApp(bundleIdentifier: firstApp.bundleIdentifier)
                 store.updateLastActiveApp(bundleId: firstApp.bundleIdentifier, for: group.id)
-                store.updateMRUOrder(activatedBundleId: firstApp.bundleIdentifier, for: group.id)
+                store.updateMRUOrder(activatedId: firstApp.bundleIdentifier, activatedBundleId: firstApp.bundleIdentifier, for: group.id)
                 LaunchOverlayManager.shared.show(
                     appName: firstApp.name,
                     appIcon: getIcon(for: firstApp)
@@ -178,7 +178,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
                     onFinalize: { [weak store] selectedId in
                         Task { @MainActor in
                             let bundleId = runningItems.first(where: { $0.id == selectedId })?.bundleId ?? selectedId
-                            store?.updateMRUOrder(activatedBundleId: bundleId, for: group.id)
+                            store?.updateMRUOrder(activatedId: selectedId, activatedBundleId: bundleId, for: group.id)
                         }
                     }
                 )
@@ -198,14 +198,14 @@ class AppSwitcher: @preconcurrency ObservableObject {
                     onFinalize: { [weak store] selectedId in
                         Task { @MainActor in
                             let bundleId = runningItems.first(where: { $0.id == selectedId })?.bundleId ?? selectedId
-                            store?.updateMRUOrder(activatedBundleId: bundleId, for: group.id)
+                            store?.updateMRUOrder(activatedId: selectedId, activatedBundleId: bundleId, for: group.id)
                         }
                     }
                 )
                 if !hudShown {
                     app?.unhide()
                     app?.activate(options: .activateAllWindows)
-                    store.updateMRUOrder(activatedBundleId: item.bundleId, for: group.id)
+                    store.updateMRUOrder(activatedId: item.id, activatedBundleId: item.bundleId, for: group.id)
                 }
             }
             return
@@ -258,14 +258,14 @@ class AppSwitcher: @preconcurrency ObservableObject {
             onFinalize: { [weak store] selectedId in
                 Task { @MainActor in
                     let bundleId = runningItems.first(where: { $0.id == selectedId })?.bundleId ?? selectedId
-                    store?.updateMRUOrder(activatedBundleId: bundleId, for: group.id)
+                    store?.updateMRUOrder(activatedId: selectedId, activatedBundleId: bundleId, for: group.id)
                 }
             }
         )
 
         if !hudShown {
              activateOrLaunch(bundleId: nextItem?.bundleId ?? nextAppId, pid: nextItem?.pid)
-             store.updateMRUOrder(activatedBundleId: nextItem?.bundleId ?? nextAppId, for: group.id)
+             store.updateMRUOrder(activatedId: nextItem?.id ?? nextAppId, activatedBundleId: nextItem?.bundleId ?? nextAppId, for: group.id)
         }
     }
     
@@ -308,9 +308,11 @@ class AppSwitcher: @preconcurrency ObservableObject {
         }
 
         // Apply MRU sort
+        let itemIds = items.map { $0.id }
         let itemBundleIds = items.map { $0.bundleId }
         let groupBundleIds = group.apps.map { $0.bundleIdentifier }
         let sortedIndices = AppCyclingLogic.sortedByMRU(
+            itemIds: itemIds,
             itemBundleIds: itemBundleIds,
             mruOrder: group.mruOrder,
             groupBundleIds: groupBundleIds

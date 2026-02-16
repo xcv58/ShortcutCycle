@@ -423,64 +423,79 @@ final class AppCyclingLogicTests: XCTestCase {
     // MARK: - MRU Sorting Tests
 
     func testSortedByMRU_NilOrder() {
+        let ids = ["com.a", "com.b", "com.c"]
         let indices = AppCyclingLogic.sortedByMRU(
-            itemBundleIds: ["com.a", "com.b", "com.c"],
+            itemIds: ids,
+            itemBundleIds: ids,
             mruOrder: nil,
-            groupBundleIds: ["com.a", "com.b", "com.c"]
+            groupBundleIds: ids
         )
         XCTAssertEqual(indices, [0, 1, 2])
     }
 
     func testSortedByMRU_EmptyOrder() {
+        let ids = ["com.a", "com.b", "com.c"]
         let indices = AppCyclingLogic.sortedByMRU(
-            itemBundleIds: ["com.a", "com.b", "com.c"],
+            itemIds: ids,
+            itemBundleIds: ids,
             mruOrder: [],
-            groupBundleIds: ["com.a", "com.b", "com.c"]
+            groupBundleIds: ids
         )
         XCTAssertEqual(indices, [0, 1, 2])
     }
 
     func testSortedByMRU_FullOrder() {
+        let ids = ["com.a", "com.b", "com.c"]
         let indices = AppCyclingLogic.sortedByMRU(
-            itemBundleIds: ["com.a", "com.b", "com.c"],
+            itemIds: ids,
+            itemBundleIds: ids,
             mruOrder: ["com.c", "com.a", "com.b"],
-            groupBundleIds: ["com.a", "com.b", "com.c"]
+            groupBundleIds: ids
         )
         XCTAssertEqual(indices, [2, 0, 1])
     }
 
     func testSortedByMRU_PartialOrder() {
+        let ids = ["com.a", "com.b", "com.c", "com.d"]
         let indices = AppCyclingLogic.sortedByMRU(
-            itemBundleIds: ["com.a", "com.b", "com.c", "com.d"],
+            itemIds: ids,
+            itemBundleIds: ids,
             mruOrder: ["com.c"],
-            groupBundleIds: ["com.a", "com.b", "com.c", "com.d"]
+            groupBundleIds: ids
         )
         // C first (MRU rank 0), then A, B, D in group order
         XCTAssertEqual(indices, [2, 0, 1, 3])
     }
 
     func testSortedByMRU_StaleEntries() {
+        let ids = ["com.a", "com.b"]
         let indices = AppCyclingLogic.sortedByMRU(
-            itemBundleIds: ["com.a", "com.b"],
+            itemIds: ids,
+            itemBundleIds: ids,
             mruOrder: ["com.x", "com.b", "com.a"],
-            groupBundleIds: ["com.a", "com.b"]
+            groupBundleIds: ids
         )
         // com.x ignored, B(rank 1), A(rank 2)
         XCTAssertEqual(indices, [1, 0])
     }
 
     func testSortedByMRU_MultiInstance() {
+        // Two instances of com.b with composite IDs, mruOrder has plain entries
+        let itemIds = ["com.a", "com.b-100", "com.b-200", "com.c"]
+        let itemBundleIds = ["com.a", "com.b", "com.b", "com.c"]
         let indices = AppCyclingLogic.sortedByMRU(
-            itemBundleIds: ["com.a", "com.b", "com.b", "com.c"],
+            itemIds: itemIds,
+            itemBundleIds: itemBundleIds,
             mruOrder: ["com.b", "com.c", "com.a"],
             groupBundleIds: ["com.a", "com.b", "com.c"]
         )
-        // B instances at indices 1,2 (rank 0), C at 3 (rank 1), A at 0 (rank 2)
+        // B instances at indices 1,2 (tier 2 match on "com.b", rank 0), C at 3 (rank 1), A at 0 (rank 2)
         XCTAssertEqual(indices, [1, 2, 3, 0])
     }
 
     func testSortedByMRU_SingleItem() {
         let indices = AppCyclingLogic.sortedByMRU(
+            itemIds: ["com.a"],
             itemBundleIds: ["com.a"],
             mruOrder: ["com.a"],
             groupBundleIds: ["com.a"]
@@ -489,8 +504,8 @@ final class AppCyclingLogicTests: XCTestCase {
     }
 
     func testSortedByMRU_UnknownBundleIdFallback() {
-        // Item "com.unknown" is not in mruOrder or groupBundleIds — hits ?? fallback
         let indices = AppCyclingLogic.sortedByMRU(
+            itemIds: ["com.unknown", "com.a"],
             itemBundleIds: ["com.unknown", "com.a"],
             mruOrder: ["com.a"],
             groupBundleIds: ["com.a"]
@@ -499,11 +514,56 @@ final class AppCyclingLogicTests: XCTestCase {
         XCTAssertEqual(indices, [1, 0])
     }
 
+    // MARK: - Instance-Aware MRU Sorting Tests
+
+    func testSortedByMRU_CompositeIds() {
+        // Two Chrome instances get distinct ranks via composite ID matching
+        let itemIds = ["com.chrome-100", "com.chrome-200", "com.app.B-300"]
+        let itemBundleIds = ["com.chrome", "com.chrome", "com.app.B"]
+        let indices = AppCyclingLogic.sortedByMRU(
+            itemIds: itemIds,
+            itemBundleIds: itemBundleIds,
+            mruOrder: ["com.chrome-200", "com.app.B-300", "com.chrome-100"],
+            groupBundleIds: ["com.chrome", "com.app.B"]
+        )
+        // chrome-200 (rank 0), B-300 (rank 1), chrome-100 (rank 2)
+        XCTAssertEqual(indices, [1, 2, 0])
+    }
+
+    func testSortedByMRU_BackwardCompatPlainEntries() {
+        // Old mruOrder with plain IDs still works via tier-2 matching
+        let itemIds = ["com.chrome-100", "com.firefox-200"]
+        let itemBundleIds = ["com.chrome", "com.firefox"]
+        let indices = AppCyclingLogic.sortedByMRU(
+            itemIds: itemIds,
+            itemBundleIds: itemBundleIds,
+            mruOrder: ["com.firefox", "com.chrome"],
+            groupBundleIds: ["com.chrome", "com.firefox"]
+        )
+        // firefox (rank 0 via tier 2), chrome (rank 1 via tier 2)
+        XCTAssertEqual(indices, [1, 0])
+    }
+
+    func testSortedByMRU_StalePidFallback() {
+        // MRU has "com.chrome-999" (stale PID), current instance is "com.chrome-100"
+        let itemIds = ["com.chrome-100", "com.app.B-200"]
+        let itemBundleIds = ["com.chrome", "com.app.B"]
+        let indices = AppCyclingLogic.sortedByMRU(
+            itemIds: itemIds,
+            itemBundleIds: itemBundleIds,
+            mruOrder: ["com.chrome-999", "com.app.B-200"],
+            groupBundleIds: ["com.chrome", "com.app.B"]
+        )
+        // chrome-100 matches "com.chrome-999" via tier 3 prefix (rank 0), B-200 exact (rank 1)
+        XCTAssertEqual(indices, [0, 1])
+    }
+
     // MARK: - MRU Update Tests
 
     func testUpdatedMRUOrder_FirstUse() {
         let order = AppCyclingLogic.updatedMRUOrder(
             currentOrder: nil,
+            activatedId: "com.a",
             activatedBundleId: "com.a",
             validBundleIds: Set(["com.a", "com.b", "com.c"])
         )
@@ -513,6 +573,7 @@ final class AppCyclingLogicTests: XCTestCase {
     func testUpdatedMRUOrder_MoveToFront() {
         let order = AppCyclingLogic.updatedMRUOrder(
             currentOrder: ["com.a", "com.b", "com.c"],
+            activatedId: "com.c",
             activatedBundleId: "com.c",
             validBundleIds: Set(["com.a", "com.b", "com.c"])
         )
@@ -522,6 +583,7 @@ final class AppCyclingLogicTests: XCTestCase {
     func testUpdatedMRUOrder_AlreadyFirst() {
         let order = AppCyclingLogic.updatedMRUOrder(
             currentOrder: ["com.a", "com.b", "com.c"],
+            activatedId: "com.a",
             activatedBundleId: "com.a",
             validBundleIds: Set(["com.a", "com.b", "com.c"])
         )
@@ -531,6 +593,7 @@ final class AppCyclingLogicTests: XCTestCase {
     func testUpdatedMRUOrder_FiltersStale() {
         let order = AppCyclingLogic.updatedMRUOrder(
             currentOrder: ["com.x", "com.a", "com.b"],
+            activatedId: "com.b",
             activatedBundleId: "com.b",
             validBundleIds: Set(["com.a", "com.b"])
         )
@@ -540,10 +603,77 @@ final class AppCyclingLogicTests: XCTestCase {
     func testUpdatedMRUOrder_NewApp() {
         let order = AppCyclingLogic.updatedMRUOrder(
             currentOrder: ["com.a", "com.b"],
+            activatedId: "com.d",
             activatedBundleId: "com.d",
             validBundleIds: Set(["com.a", "com.b", "com.d"])
         )
         XCTAssertEqual(order, ["com.d", "com.a", "com.b"])
+    }
+
+    // MARK: - Instance-Aware MRU Update Tests
+
+    func testUpdatedMRUOrder_CompositeId() {
+        // Composite ID is stored, not plain bundle ID
+        let order = AppCyclingLogic.updatedMRUOrder(
+            currentOrder: nil,
+            activatedId: "com.chrome-200",
+            activatedBundleId: "com.chrome",
+            validBundleIds: Set(["com.chrome", "com.app.B"])
+        )
+        XCTAssertEqual(order, ["com.chrome-200"])
+    }
+
+    func testUpdatedMRUOrder_UpgradesPlainEntry() {
+        // Old plain entry "com.chrome" gets replaced by composite "com.chrome-200"
+        let order = AppCyclingLogic.updatedMRUOrder(
+            currentOrder: ["com.chrome", "com.app.B-300"],
+            activatedId: "com.chrome-200",
+            activatedBundleId: "com.chrome",
+            validBundleIds: Set(["com.chrome", "com.app.B"])
+        )
+        // "com.chrome" removed (upgrade), "com.chrome-200" at front
+        XCTAssertEqual(order, ["com.chrome-200", "com.app.B-300"])
+    }
+
+    func testUpdatedMRUOrder_TwoInstancesSameBundle() {
+        // Two Chrome instances tracked independently
+        var order = AppCyclingLogic.updatedMRUOrder(
+            currentOrder: nil,
+            activatedId: "com.chrome-100",
+            activatedBundleId: "com.chrome",
+            validBundleIds: Set(["com.chrome"])
+        )
+        XCTAssertEqual(order, ["com.chrome-100"])
+
+        order = AppCyclingLogic.updatedMRUOrder(
+            currentOrder: order,
+            activatedId: "com.chrome-200",
+            activatedBundleId: "com.chrome",
+            validBundleIds: Set(["com.chrome"])
+        )
+        // Both composite entries kept, 200 at front
+        XCTAssertEqual(order, ["com.chrome-200", "com.chrome-100"])
+
+        // Switch back to 100
+        order = AppCyclingLogic.updatedMRUOrder(
+            currentOrder: order,
+            activatedId: "com.chrome-100",
+            activatedBundleId: "com.chrome",
+            validBundleIds: Set(["com.chrome"])
+        )
+        XCTAssertEqual(order, ["com.chrome-100", "com.chrome-200"])
+    }
+
+    func testUpdatedMRUOrder_FilterCompositeByPrefix() {
+        // Composite entries are validated by bundle prefix
+        let order = AppCyclingLogic.updatedMRUOrder(
+            currentOrder: ["com.removed-100", "com.chrome-200"],
+            activatedId: "com.chrome-100",
+            activatedBundleId: "com.chrome",
+            validBundleIds: Set(["com.chrome"])
+        )
+        // "com.removed-100" filtered out (no matching bundle), both chrome entries kept
+        XCTAssertEqual(order, ["com.chrome-100", "com.chrome-200"])
     }
 
     func testEndToEndAllFirefoxClosedFallsToNextApp() {

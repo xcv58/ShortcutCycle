@@ -581,7 +581,7 @@ final class GroupStoreTests: XCTestCase {
         store.addApp(app1, to: groupId)
         store.addApp(app2, to: groupId)
 
-        store.updateMRUOrder(activatedBundleId: "com.test.2", for: groupId)
+        store.updateMRUOrder(activatedId: "com.test.2", activatedBundleId: "com.test.2", for: groupId)
 
         let group = store.groups.first(where: { $0.id == groupId })
         XCTAssertEqual(group?.mruOrder, ["com.test.2"])
@@ -596,9 +596,9 @@ final class GroupStoreTests: XCTestCase {
         store.addApp(app2, to: groupId)
         store.addApp(app3, to: groupId)
 
-        store.updateMRUOrder(activatedBundleId: "com.test.1", for: groupId)
-        store.updateMRUOrder(activatedBundleId: "com.test.3", for: groupId)
-        store.updateMRUOrder(activatedBundleId: "com.test.1", for: groupId)
+        store.updateMRUOrder(activatedId: "com.test.1", activatedBundleId: "com.test.1", for: groupId)
+        store.updateMRUOrder(activatedId: "com.test.3", activatedBundleId: "com.test.3", for: groupId)
+        store.updateMRUOrder(activatedId: "com.test.1", activatedBundleId: "com.test.1", for: groupId)
 
         let group = store.groups.first(where: { $0.id == groupId })
         XCTAssertEqual(group?.mruOrder, ["com.test.1", "com.test.3"])
@@ -611,14 +611,14 @@ final class GroupStoreTests: XCTestCase {
         store.addApp(app1, to: groupId)
         store.addApp(app2, to: groupId)
 
-        store.updateMRUOrder(activatedBundleId: "com.test.1", for: groupId)
-        store.updateMRUOrder(activatedBundleId: "com.test.2", for: groupId)
+        store.updateMRUOrder(activatedId: "com.test.1", activatedBundleId: "com.test.1", for: groupId)
+        store.updateMRUOrder(activatedId: "com.test.2", activatedBundleId: "com.test.2", for: groupId)
 
         // Remove app1 from the group
         store.removeApp(app1, from: groupId)
 
         // Update MRU — com.test.1 should be filtered out
-        store.updateMRUOrder(activatedBundleId: "com.test.2", for: groupId)
+        store.updateMRUOrder(activatedId: "com.test.2", activatedBundleId: "com.test.2", for: groupId)
 
         let group = store.groups.first(where: { $0.id == groupId })
         XCTAssertEqual(group?.mruOrder, ["com.test.2"])
@@ -628,7 +628,7 @@ final class GroupStoreTests: XCTestCase {
         let groupId = store.groups.first!.id
         let app = AppItem(bundleIdentifier: "com.test.1", name: "App 1")
         store.addApp(app, to: groupId)
-        store.updateMRUOrder(activatedBundleId: "com.test.1", for: groupId)
+        store.updateMRUOrder(activatedId: "com.test.1", activatedBundleId: "com.test.1", for: groupId)
 
         let store2 = GroupStore(userDefaults: userDefaults)
         let group = store2.groups.first(where: { $0.id == groupId })
@@ -637,14 +637,14 @@ final class GroupStoreTests: XCTestCase {
 
     func testUpdateMRUOrderNonexistentGroup() {
         // Should not crash
-        store.updateMRUOrder(activatedBundleId: "com.test", for: UUID())
+        store.updateMRUOrder(activatedId: "com.test", activatedBundleId: "com.test", for: UUID())
     }
 
     func testExportImportPreservesMRUOrder() throws {
         let groupId = store.groups.first!.id
         let app = AppItem(bundleIdentifier: "com.test.1", name: "App 1")
         store.addApp(app, to: groupId)
-        store.updateMRUOrder(activatedBundleId: "com.test.1", for: groupId)
+        store.updateMRUOrder(activatedId: "com.test.1", activatedBundleId: "com.test.1", for: groupId)
 
         let data = try store.exportData()
 
@@ -660,6 +660,41 @@ final class GroupStoreTests: XCTestCase {
 
         let importedGroup = freshStore.groups.first(where: { $0.id == groupId })
         XCTAssertEqual(importedGroup?.mruOrder, ["com.test.1"])
+    }
+
+    func testUpdateMRUOrderCompositeIdPersistence() {
+        let groupId = store.groups.first!.id
+        let app = AppItem(bundleIdentifier: "com.chrome", name: "Chrome")
+        store.addApp(app, to: groupId)
+
+        // Store composite ID
+        store.updateMRUOrder(activatedId: "com.chrome-200", activatedBundleId: "com.chrome", for: groupId)
+
+        let group = store.groups.first(where: { $0.id == groupId })
+        XCTAssertEqual(group?.mruOrder, ["com.chrome-200"])
+
+        // Verify persistence
+        let store2 = GroupStore(userDefaults: userDefaults)
+        let group2 = store2.groups.first(where: { $0.id == groupId })
+        XCTAssertEqual(group2?.mruOrder, ["com.chrome-200"])
+    }
+
+    func testUpdateMRUOrderCompositeFiltering() {
+        let groupId = store.groups.first!.id
+        let app1 = AppItem(bundleIdentifier: "com.chrome", name: "Chrome")
+        let app2 = AppItem(bundleIdentifier: "com.firefox", name: "Firefox")
+        store.addApp(app1, to: groupId)
+        store.addApp(app2, to: groupId)
+
+        store.updateMRUOrder(activatedId: "com.chrome-100", activatedBundleId: "com.chrome", for: groupId)
+        store.updateMRUOrder(activatedId: "com.firefox-200", activatedBundleId: "com.firefox", for: groupId)
+
+        // Remove chrome from group — composite entries for chrome should be filtered
+        store.removeApp(app1, from: groupId)
+        store.updateMRUOrder(activatedId: "com.firefox-200", activatedBundleId: "com.firefox", for: groupId)
+
+        let group = store.groups.first(where: { $0.id == groupId })
+        XCTAssertEqual(group?.mruOrder, ["com.firefox-200"])
     }
 
     func testFlushWithNoPendingBackupIsNoOp() {
