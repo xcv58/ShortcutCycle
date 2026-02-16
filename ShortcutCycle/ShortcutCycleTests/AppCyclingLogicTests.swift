@@ -488,6 +488,17 @@ final class AppCyclingLogicTests: XCTestCase {
         XCTAssertEqual(indices, [0])
     }
 
+    func testSortedByMRU_UnknownBundleIdFallback() {
+        // Item "com.unknown" is not in mruOrder or groupBundleIds — hits ?? fallback
+        let indices = AppCyclingLogic.sortedByMRU(
+            itemBundleIds: ["com.unknown", "com.a"],
+            mruOrder: ["com.a"],
+            groupBundleIds: ["com.a"]
+        )
+        // com.a has rank 0, com.unknown has fallback rank → com.a first
+        XCTAssertEqual(indices, [1, 0])
+    }
+
     // MARK: - MRU Update Tests
 
     func testUpdatedMRUOrder_FirstUse() {

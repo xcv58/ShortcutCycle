@@ -468,4 +468,58 @@ final class BackupDiffTests: XCTestCase {
         XCTAssertFalse(diff.hasChanges)
         XCTAssertTrue(diff.settingChanges.isEmpty)
     }
+
+    // MARK: - Nil-coalescing paths for Language and Theme
+
+    func testLanguageChangeFromNilToValue() {
+        let before = makeExport(groups: [], settings: AppSettings(showHUD: true, showShortcutInHUD: true, selectedLanguage: nil))
+        let after = makeExport(groups: [], settings: AppSettings(showHUD: true, showShortcutInHUD: true, selectedLanguage: "en"))
+
+        let diff = BackupDiff.compute(before: before, after: after)
+
+        XCTAssertTrue(diff.hasChanges)
+        XCTAssertEqual(diff.settingChanges.count, 1)
+        XCTAssertEqual(diff.settingChanges[0].key, "Language")
+        XCTAssertEqual(diff.settingChanges[0].oldValue, "system")
+        XCTAssertEqual(diff.settingChanges[0].newValue, "en")
+    }
+
+    func testThemeChangeFromNilToValue() {
+        let before = makeExport(groups: [], settings: AppSettings(showHUD: true, showShortcutInHUD: true, appTheme: nil))
+        let after = makeExport(groups: [], settings: AppSettings(showHUD: true, showShortcutInHUD: true, appTheme: "dark"))
+
+        let diff = BackupDiff.compute(before: before, after: after)
+
+        XCTAssertTrue(diff.hasChanges)
+        XCTAssertEqual(diff.settingChanges.count, 1)
+        XCTAssertEqual(diff.settingChanges[0].key, "Theme")
+        XCTAssertEqual(diff.settingChanges[0].oldValue, "system")
+        XCTAssertEqual(diff.settingChanges[0].newValue, "dark")
+    }
+
+    func testLanguageChangeFromValueToNil() {
+        let before = makeExport(groups: [], settings: AppSettings(showHUD: true, showShortcutInHUD: true, selectedLanguage: "ja"))
+        let after = makeExport(groups: [], settings: AppSettings(showHUD: true, showShortcutInHUD: true, selectedLanguage: nil))
+
+        let diff = BackupDiff.compute(before: before, after: after)
+
+        XCTAssertTrue(diff.hasChanges)
+        XCTAssertEqual(diff.settingChanges.count, 1)
+        XCTAssertEqual(diff.settingChanges[0].key, "Language")
+        XCTAssertEqual(diff.settingChanges[0].oldValue, "ja")
+        XCTAssertEqual(diff.settingChanges[0].newValue, "system")
+    }
+
+    func testThemeChangeFromValueToNil() {
+        let before = makeExport(groups: [], settings: AppSettings(showHUD: true, showShortcutInHUD: true, appTheme: "light"))
+        let after = makeExport(groups: [], settings: AppSettings(showHUD: true, showShortcutInHUD: true, appTheme: nil))
+
+        let diff = BackupDiff.compute(before: before, after: after)
+
+        XCTAssertTrue(diff.hasChanges)
+        XCTAssertEqual(diff.settingChanges.count, 1)
+        XCTAssertEqual(diff.settingChanges[0].key, "Theme")
+        XCTAssertEqual(diff.settingChanges[0].oldValue, "light")
+        XCTAssertEqual(diff.settingChanges[0].newValue, "system")
+    }
 }

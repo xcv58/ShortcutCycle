@@ -1,4 +1,5 @@
 import XCTest
+import KeyboardShortcuts
 #if canImport(ShortcutCycleCore)
 @testable import ShortcutCycleCore
 #else
@@ -386,6 +387,26 @@ final class AppGroupTests: XCTestCase {
 
         // No shortcut registered in test environment
         XCTAssertNil(group.shortcutDisplayString)
+    }
+
+    @MainActor
+    func testHasShortcutTrueWhenRegistered() {
+        let group = AppGroup(name: "With Shortcut")
+        let shortcut = KeyboardShortcuts.Shortcut(carbonKeyCode: 0, carbonModifiers: 256)
+        KeyboardShortcuts.setShortcut(shortcut, for: group.shortcutName)
+        defer { KeyboardShortcuts.setShortcut(nil, for: group.shortcutName) }
+
+        XCTAssertTrue(group.hasShortcut)
+    }
+
+    @MainActor
+    func testShortcutDisplayStringNonNilWhenRegistered() {
+        let group = AppGroup(name: "With Shortcut")
+        let shortcut = KeyboardShortcuts.Shortcut(carbonKeyCode: 0, carbonModifiers: 256)
+        KeyboardShortcuts.setShortcut(shortcut, for: group.shortcutName)
+        defer { KeyboardShortcuts.setShortcut(nil, for: group.shortcutName) }
+
+        XCTAssertNotNil(group.shortcutDisplayString)
     }
 
     // MARK: - Legacy Shortcut Decoding
