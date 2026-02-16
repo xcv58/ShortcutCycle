@@ -565,7 +565,8 @@ final class AppCyclingLogicTests: XCTestCase {
             currentOrder: nil,
             activatedId: "com.a",
             activatedBundleId: "com.a",
-            validBundleIds: Set(["com.a", "com.b", "com.c"])
+            validBundleIds: Set(["com.a", "com.b", "com.c"]),
+            liveItemIds: Set(["com.a", "com.b", "com.c"])
         )
         XCTAssertEqual(order, ["com.a"])
     }
@@ -575,7 +576,8 @@ final class AppCyclingLogicTests: XCTestCase {
             currentOrder: ["com.a", "com.b", "com.c"],
             activatedId: "com.c",
             activatedBundleId: "com.c",
-            validBundleIds: Set(["com.a", "com.b", "com.c"])
+            validBundleIds: Set(["com.a", "com.b", "com.c"]),
+            liveItemIds: Set(["com.a", "com.b", "com.c"])
         )
         XCTAssertEqual(order, ["com.c", "com.a", "com.b"])
     }
@@ -585,7 +587,8 @@ final class AppCyclingLogicTests: XCTestCase {
             currentOrder: ["com.a", "com.b", "com.c"],
             activatedId: "com.a",
             activatedBundleId: "com.a",
-            validBundleIds: Set(["com.a", "com.b", "com.c"])
+            validBundleIds: Set(["com.a", "com.b", "com.c"]),
+            liveItemIds: Set(["com.a", "com.b", "com.c"])
         )
         XCTAssertEqual(order, ["com.a", "com.b", "com.c"])
     }
@@ -595,7 +598,8 @@ final class AppCyclingLogicTests: XCTestCase {
             currentOrder: ["com.x", "com.a", "com.b"],
             activatedId: "com.b",
             activatedBundleId: "com.b",
-            validBundleIds: Set(["com.a", "com.b"])
+            validBundleIds: Set(["com.a", "com.b"]),
+            liveItemIds: Set(["com.a", "com.b"])
         )
         XCTAssertEqual(order, ["com.b", "com.a"])
     }
@@ -605,7 +609,8 @@ final class AppCyclingLogicTests: XCTestCase {
             currentOrder: ["com.a", "com.b"],
             activatedId: "com.d",
             activatedBundleId: "com.d",
-            validBundleIds: Set(["com.a", "com.b", "com.d"])
+            validBundleIds: Set(["com.a", "com.b", "com.d"]),
+            liveItemIds: Set(["com.a", "com.b", "com.d"])
         )
         XCTAssertEqual(order, ["com.d", "com.a", "com.b"])
     }
@@ -618,7 +623,8 @@ final class AppCyclingLogicTests: XCTestCase {
             currentOrder: nil,
             activatedId: "com.chrome::200",
             activatedBundleId: "com.chrome",
-            validBundleIds: Set(["com.chrome", "com.app.B"])
+            validBundleIds: Set(["com.chrome", "com.app.B"]),
+            liveItemIds: Set(["com.chrome::200", "com.app.B::300"])
         )
         XCTAssertEqual(order, ["com.chrome::200"])
     }
@@ -629,7 +635,8 @@ final class AppCyclingLogicTests: XCTestCase {
             currentOrder: ["com.chrome", "com.app.B::300"],
             activatedId: "com.chrome::200",
             activatedBundleId: "com.chrome",
-            validBundleIds: Set(["com.chrome", "com.app.B"])
+            validBundleIds: Set(["com.chrome", "com.app.B"]),
+            liveItemIds: Set(["com.chrome::200", "com.app.B::300"])
         )
         // "com.chrome" removed (upgrade), "com.chrome::200" at front
         XCTAssertEqual(order, ["com.chrome::200", "com.app.B::300"])
@@ -637,11 +644,13 @@ final class AppCyclingLogicTests: XCTestCase {
 
     func testUpdatedMRUOrder_TwoInstancesSameBundle() {
         // Two Chrome instances tracked independently
+        let liveIds = Set(["com.chrome::100", "com.chrome::200"])
         var order = AppCyclingLogic.updatedMRUOrder(
             currentOrder: nil,
             activatedId: "com.chrome::100",
             activatedBundleId: "com.chrome",
-            validBundleIds: Set(["com.chrome"])
+            validBundleIds: Set(["com.chrome"]),
+            liveItemIds: liveIds
         )
         XCTAssertEqual(order, ["com.chrome::100"])
 
@@ -649,7 +658,8 @@ final class AppCyclingLogicTests: XCTestCase {
             currentOrder: order,
             activatedId: "com.chrome::200",
             activatedBundleId: "com.chrome",
-            validBundleIds: Set(["com.chrome"])
+            validBundleIds: Set(["com.chrome"]),
+            liveItemIds: liveIds
         )
         // Both composite entries kept, 200 at front
         XCTAssertEqual(order, ["com.chrome::200", "com.chrome::100"])
@@ -659,21 +669,160 @@ final class AppCyclingLogicTests: XCTestCase {
             currentOrder: order,
             activatedId: "com.chrome::100",
             activatedBundleId: "com.chrome",
-            validBundleIds: Set(["com.chrome"])
+            validBundleIds: Set(["com.chrome"]),
+            liveItemIds: liveIds
         )
         XCTAssertEqual(order, ["com.chrome::100", "com.chrome::200"])
     }
 
     func testUpdatedMRUOrder_FilterCompositeByPrefix() {
-        // Composite entries are validated by bundle prefix
+        // Composite entries for removed bundles are filtered out
         let order = AppCyclingLogic.updatedMRUOrder(
             currentOrder: ["com.removed::100", "com.chrome::200"],
             activatedId: "com.chrome::100",
             activatedBundleId: "com.chrome",
-            validBundleIds: Set(["com.chrome"])
+            validBundleIds: Set(["com.chrome"]),
+            liveItemIds: Set(["com.chrome::100", "com.chrome::200"])
         )
-        // "com.removed::100" filtered out (no matching bundle), both chrome entries kept
+        // "com.removed::100" filtered out (not live and not a valid plain bundle ID)
         XCTAssertEqual(order, ["com.chrome::100", "com.chrome::200"])
+    }
+
+    // MARK: - Stale PID Eviction Tests
+
+    func testUpdatedMRUOrder_StalePidRemoved() {
+        // Old PID entry evicted when new PID is live
+        let order = AppCyclingLogic.updatedMRUOrder(
+            currentOrder: ["com.chrome::100", "com.app.B::300"],
+            activatedId: "com.chrome::500",
+            activatedBundleId: "com.chrome",
+            validBundleIds: Set(["com.chrome", "com.app.B"]),
+            liveItemIds: Set(["com.chrome::500", "com.app.B::300"])
+        )
+        // "com.chrome::100" is stale (not in liveItemIds, not a plain bundle ID) → evicted
+        XCTAssertEqual(order, ["com.chrome::500", "com.app.B::300"])
+    }
+
+    func testUpdatedMRUOrder_LivePidsKept() {
+        // Multi-instance entries preserved when both are live
+        let order = AppCyclingLogic.updatedMRUOrder(
+            currentOrder: ["com.chrome::200", "com.chrome::100"],
+            activatedId: "com.app.B::300",
+            activatedBundleId: "com.app.B",
+            validBundleIds: Set(["com.chrome", "com.app.B"]),
+            liveItemIds: Set(["com.chrome::100", "com.chrome::200", "com.app.B::300"])
+        )
+        // Both Chrome instances are live → both kept
+        XCTAssertEqual(order, ["com.app.B::300", "com.chrome::200", "com.chrome::100"])
+    }
+
+    // MARK: - Stress Tests
+
+    func testUpdatedMRUOrder_ClearsHundredsOfStalePids() {
+        // 5 apps, each with 20 stale PID entries = 100 stale entries
+        var staleOrder: [String] = []
+        let bundles = ["com.a", "com.b", "com.c", "com.d", "com.e"]
+        for bundle in bundles {
+            for pid in 1...20 {
+                staleOrder.append("\(bundle)::\(pid)")
+            }
+        }
+        XCTAssertEqual(staleOrder.count, 100)
+
+        // Live items: one instance per app with fresh PIDs
+        let liveIds = Set(bundles.map { "\($0)::999" })
+
+        let order = AppCyclingLogic.updatedMRUOrder(
+            currentOrder: staleOrder,
+            activatedId: "com.a::999",
+            activatedBundleId: "com.a",
+            validBundleIds: Set(bundles),
+            liveItemIds: liveIds
+        )
+
+        // Only live entries should survive
+        for entry in order {
+            XCTAssertTrue(
+                liveIds.contains(entry) || bundles.contains(entry),
+                "Stale entry should have been evicted: \(entry)"
+            )
+        }
+        XCTAssertEqual(order.first, "com.a::999")
+    }
+
+    func testUpdatedMRUOrder_ClearsThousandsOfStalePids() {
+        // 10 apps, each with 100 stale PID entries = 1000 stale entries
+        var staleOrder: [String] = []
+        let bundles = (0..<10).map { "com.app\($0)" }
+        for bundle in bundles {
+            for pid in 1...100 {
+                staleOrder.append("\(bundle)::\(pid)")
+            }
+        }
+        XCTAssertEqual(staleOrder.count, 1000)
+
+        let liveIds = Set(bundles.map { "\($0)::9999" })
+
+        let order = AppCyclingLogic.updatedMRUOrder(
+            currentOrder: staleOrder,
+            activatedId: "com.app0::9999",
+            activatedBundleId: "com.app0",
+            validBundleIds: Set(bundles),
+            liveItemIds: liveIds
+        )
+
+        // Zero stale entries should survive
+        for entry in order {
+            XCTAssertTrue(
+                liveIds.contains(entry) || bundles.contains(entry),
+                "Stale entry should have been evicted: \(entry)"
+            )
+        }
+        XCTAssertEqual(order.first, "com.app0::9999")
+    }
+
+    func testUpdatedMRUOrder_MixedLiveAndStale() {
+        // 500 entries: 250 stale, 250 live
+        var mixedOrder: [String] = []
+        let bundles = (0..<50).map { "com.app\($0)" }
+
+        // 5 stale entries per app
+        for bundle in bundles {
+            for pid in 1...5 {
+                mixedOrder.append("\(bundle)::\(pid)")
+            }
+        }
+        // 5 live entries per app
+        var liveIds = Set<String>()
+        for bundle in bundles {
+            for pid in 1000...1004 {
+                let id = "\(bundle)::\(pid)"
+                mixedOrder.append(id)
+                liveIds.insert(id)
+            }
+        }
+        XCTAssertEqual(mixedOrder.count, 500)
+        XCTAssertEqual(liveIds.count, 250)
+
+        let order = AppCyclingLogic.updatedMRUOrder(
+            currentOrder: mixedOrder,
+            activatedId: "com.app0::1000",
+            activatedBundleId: "com.app0",
+            validBundleIds: Set(bundles),
+            liveItemIds: liveIds
+        )
+
+        // All live kept, all stale removed
+        for entry in order {
+            XCTAssertTrue(
+                liveIds.contains(entry) || bundles.contains(entry),
+                "Stale entry should have been evicted: \(entry)"
+            )
+        }
+        // All live entries should be present (activated entry is always first)
+        for liveId in liveIds {
+            XCTAssertTrue(order.contains(liveId), "Live entry missing: \(liveId)")
+        }
     }
 
     func testEndToEndAllFirefoxClosedFallsToNextApp() {
