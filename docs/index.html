@@ -77,6 +77,9 @@
             --text-primary: #f5f5f7;
             --text-secondary: #a1a1aa;
             --border: #2c2c2e;
+            --accent: #4da6ff;
+            /* Lighter blue for dark mode contrast */
+            --accent-hover: #73bcff;
             --shadow: rgba(0, 0, 0, 0.5);
             --toggle-bg: #1c1c1e;
             --toggle-active: #636366;
@@ -92,6 +95,8 @@
                 --text-primary: #f5f5f7;
                 --text-secondary: #a1a1aa;
                 --border: #2c2c2e;
+                --accent: #4da6ff;
+                --accent-hover: #73bcff;
                 --shadow: rgba(0, 0, 0, 0.5);
                 --toggle-bg: #1c1c1e;
                 --toggle-active: #636366;
@@ -190,7 +195,8 @@
 
         /* --- LAYOUT --- */
         .container {
-            max-width: 1024px;
+            max-width: 1200px;
+            /* Increased from 1024px for better table spacing */
             margin: 0 auto;
             padding: 0 24px;
         }
@@ -305,6 +311,22 @@
             margin-bottom: 24px;
         }
 
+        .text-gradient {
+            background: linear-gradient(to right, var(--accent) 0%, #a855f7 50%, var(--accent) 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: inline-block;
+            animation: gradient-shine 3s linear infinite reverse;
+        }
+
+        @keyframes gradient-shine {
+            to {
+                background-position: 200% center;
+            }
+        }
+
         .hero-subtitle {
             font-size: 1.3rem;
             color: var(--text-secondary);
@@ -313,11 +335,58 @@
         }
 
         .hero-benefit {
-            font-size: 1.1rem;
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            /* Muted color to not compete with CTA */
+            margin-bottom: 40px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            font-weight: 400;
+        }
+
+        /* Tooltip Styles */
+        .tooltip-trigger {
+            border-bottom: 1px dotted var(--text-secondary);
+            cursor: help;
+            position: relative;
+            transition: color 0.2s ease;
+        }
+
+        .tooltip-trigger:hover {
             color: var(--accent);
-            font-weight: 500;
-            max-width: 600px;
-            margin: 0 auto 40px auto;
+            border-bottom-color: var(--accent);
+        }
+
+        .tooltip-trigger::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            background: var(--surface);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            white-space: normal;
+            width: 260px;
+            box-shadow: 0 4px 12px var(--shadow);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
+            z-index: 10;
+            pointer-events: none;
+            /* Prevent tooltip from blocking mouse */
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        .tooltip-trigger:hover::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
         }
 
         .cta-group {
@@ -340,14 +409,23 @@
         }
 
         .cta-primary {
-            background-color: var(--accent);
+            background: linear-gradient(to right, var(--accent) 0%, #a855f7 50%, var(--accent) 100%);
+            background-size: 200% auto;
             color: #fff;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 15px rgba(0, 122, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: gradient-shine 3s linear infinite reverse;
         }
 
         .cta-primary:hover {
-            background-color: var(--accent-hover);
+            opacity: 0.9;
             transform: translateY(-2px);
+            box-shadow: 0 0 25px rgba(0, 122, 255, 0.7);
         }
+
+
 
         .cta-secondary {
             background-color: transparent;
@@ -593,15 +671,28 @@
             display: none;
         }
 
+        .faq-item:focus-within {
+            box-shadow: 0 0 0 2px var(--accent);
+            /* Outer ring around the entire detail block */
+            border-color: transparent;
+        }
+
+        .faq-item summary:focus,
+        .faq-item summary:focus-visible {
+            outline: none;
+            box-shadow: none;
+        }
+
         .faq-item summary::after {
             content: '+';
             font-size: 1.5rem;
-            font-weight: 300;
+            font-weight: 400;
             transition: transform 0.3s ease;
         }
 
         .faq-item[open] summary::after {
-            transform: rotate(45deg);
+            content: '-';
+            transform: none;
         }
 
         .faq-item p {
@@ -619,6 +710,33 @@
             color: var(--accent-hover);
         }
 
+        .faq-toggle-container {
+            max-width: 800px;
+            margin: 0 auto 16px auto;
+            text-align: right;
+        }
+
+        .faq-toggle-btn {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            /* Use secondary text for less visual noise */
+            font-size: 0.9rem;
+            cursor: pointer;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 99px;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px var(--shadow);
+        }
+
+        .faq-toggle-btn:hover {
+            background: var(--surface-hover);
+            color: var(--text-primary);
+            border-color: var(--accent);
+            /* Subtle accent on hover */
+        }
+
         @media (max-width: 768px) {
             .hero h1 {
                 font-size: 2.5rem;
@@ -630,6 +748,18 @@
 
             .hero-benefit {
                 font-size: 1rem;
+            }
+
+            .tooltip-trigger::after {
+                width: 200px;
+                left: 50%;
+                margin-left: -100px;
+            }
+
+            .tooltip-trigger::after {
+                width: 200px;
+                left: 50%;
+                margin-left: -100px;
             }
 
             .cta-group {
@@ -644,6 +774,199 @@
 
             .video-grid {
                 grid-template-columns: 1fr;
+            }
+        }
+
+        /* --- BACK TO TOP BUTTON --- */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background-color: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px var(--shadow);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 999;
+            color: var(--text-primary);
+        }
+
+        .back-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .back-to-top:hover {
+            background-color: var(--surface-hover);
+            transform: translateY(-4px);
+            box-shadow: 0 6px 16px var(--shadow);
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .back-to-top svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+
+        .versus-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            max-width: 1000px;
+            margin: 40px auto;
+            position: relative;
+        }
+
+        .versus-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 40px 30px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .versus-card.old-way {
+            background: rgba(125, 125, 125, 0.03);
+            border-style: dashed;
+        }
+
+        .versus-card.new-way {
+            border: 2px solid var(--accent);
+            box-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.1);
+            transform: scale(1.02);
+            z-index: 2;
+        }
+
+        [data-theme='dark'] .versus-card.new-way {
+            box-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.3);
+        }
+
+        .versus-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 20px;
+        }
+
+        .versus-header h3 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+
+        .versus-header p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .versus-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .versus-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .versus-icon {
+            font-size: 1.5rem;
+            line-height: 1;
+            flex-shrink: 0;
+            opacity: 0.8;
+        }
+
+        .versus-content strong {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+
+        .versus-content span {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .card-badge {
+            position: absolute;
+            top: -16px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent);
+            color: #fff;
+            padding: 6px 20px;
+            border-radius: 99px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* VS Circle between cards */
+        .versus-grid::after {
+            content: "VS";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: var(--text-secondary);
+            z-index: 3;
+            box-shadow: 0 4px 12px var(--shadow);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .versus-grid {
+                grid-template-columns: 1fr;
+                gap: 60px;
+                /* More space for vertical stack */
+                margin-top: 20px;
+            }
+
+            .versus-card.new-way {
+                transform: none;
+                order: 2;
+                /* Ensure consistent order if needed, though HTML order is fine */
+            }
+
+            .versus-grid::after {
+                top: 46%;
+                /* Adjust VS position for vertical stack */
+                /* Actually, VS circle is tricky on mobile. Let's hide or reposition it. */
+                display: none;
             }
         }
     </style>
@@ -714,11 +1037,16 @@
         <main id="main-content" role="main">
 
             <section class="hero">
-                <h1>Cycle apps by group.<br>Instantly.</h1>
-                <p class="hero-subtitle">Stop endlessly tabbing. Group your apps by context—Web, Code, Social—and cycle
-                    through them with
+                <h1 class="text-gradient">Cycle apps by group, instantly.</h1>
+                <p class="hero-subtitle">Stop endlessly tabbing. Group apps by context—Web, Code, Social—and cycle with
                     dedicated hotkeys.</p>
-                <p class="hero-benefit">Save hours every week with app switching tailored to your own workflow.</p>
+                <p class="hero-benefit">
+                    <span class="tooltip-trigger"
+                        data-tooltip="Based on saving 3 seconds per switch, 400 times a day = ~2 hours saved/week.">
+                        Save hours every week
+                    </span>
+                    with app switching tailored to your own workflow.
+                </p>
 
                 <div class="cta-group">
                     <a href="https://apps.apple.com/us/app/shortcutcycle/id6758281578?mt=12"
@@ -918,25 +1246,113 @@
                 </div>
             </section>
 
+            <!-- Comparison Section -->
+            <section class="section" id="comparison">
+                <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 16px;">The Group Cycling Advantage</h2>
+                <p class="section-subtitle"
+                    style="max-width: 700px; margin: 0 auto 60px auto; color: var(--text-secondary); text-align: center; font-size: 1.1rem; line-height: 1.6;">
+                    Most switchers force you to search, type, or scan a history list. ShortcutCycle uses <strong>muscle
+                        memory</strong>.
+                    Group your apps by context (e.g., "Browsers", "Code") and cycle them with a single keystroke.
+                    It's faster, consistent, and demands less cognitive load.
+                </p>
+                <div class="versus-grid">
+                    <!-- The Old Way -->
+                    <div class="versus-card old-way">
+                        <div class="versus-header">
+                            <h3>The Old Way</h3>
+                            <p>Cmd+Tab / AltTab • Raycast / Alfred</p>
+                        </div>
+                        <ul class="versus-list">
+                            <li class="versus-item">
+                                <span class="versus-icon">🔍</span>
+                                <div class="versus-content">
+                                    <strong>Search & Scan</strong>
+                                    <span>Requires reading lists, typing names, or scanning icons. Breaks your
+                                        flow.</span>
+                                </div>
+                            </li>
+                            <li class="versus-item">
+                                <span class="versus-icon">🤯</span>
+                                <div class="versus-content">
+                                    <strong>High Cognitive Load</strong>
+                                    <span>"Is it window 3 or 4? What did I title it?" Constant micro-decisions add
+                                        up.</span>
+                                </div>
+                            </li>
+                            <li class="versus-item">
+                                <span class="versus-icon">🐌</span>
+                                <div class="versus-content">
+                                    <strong>Slow Inputs</strong>
+                                    <span>Cmd+Space+T-y-p-e or Cmd+Tab+Tab+Tab. Every switch takes seconds.</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- ShortcutCycle -->
+                    <div class="versus-card new-way">
+                        <div class="card-badge">The Better Way</div>
+                        <div class="versus-header">
+                            <h3 style="color: var(--accent);">ShortcutCycle</h3>
+                            <p>Context-Aware Group Cycling</p>
+                        </div>
+                        <ul class="versus-list">
+                            <li class="versus-item">
+                                <span class="versus-icon">⚡️</span>
+                                <div class="versus-content">
+                                    <strong>Muscle Memory</strong>
+                                    <span>Your fingers know exactly where "Code" is. Zero thought required.</span>
+                                </div>
+                            </li>
+                            <li class="versus-item">
+                                <span class="versus-icon">🎯</span>
+                                <div class="versus-content">
+                                    <strong>Instant Scope</strong>
+                                    <span>Only cycle relevant windows (e.g., just browsers). Ignore the noise.</span>
+                                </div>
+                            </li>
+                            <li class="versus-item">
+                                <span class="versus-icon">🎹</span>
+                                <div class="versus-content">
+                                    <strong>One Keystroke</strong>
+                                    <span>Option+1. Done. You're there instantly.</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
             <!-- FAQ Section -->
             <section class="section" id="faq">
-                <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 60px;">Frequently Asked Questions</h2>
+                <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 30px;">Frequently Asked Questions</h2>
+                <div class="faq-toggle-container">
+                    <button id="faq-toggle-btn" class="faq-toggle-btn" onclick="toggleAllFAQ()">Expand All</button>
+                </div>
                 <div class="faq-container">
                     <details class="faq-item">
-                        <summary>How is ShortcutCycle different from Command+Tab?</summary>
-                        <p>Command+Tab cycles through <strong>all</strong> your open applications. ShortcutCycle lets
-                            you create groups (like "Browsers", "Code", "Communication") and cycle through only the apps
-                            in that specific group. This means fewer keystrokes and faster switching to exactly what you
-                            need.</p>
+                        <summary>How do I create a group?</summary>
+                        <p>It's simple. Open the settings, click the <strong>+</strong> button to create a new group
+                            (like "Social" or "Dev"), and assign a global hotkey (e.g., <code>Option+1</code>). Then,
+                            just drag and drop the apps you want into that group.</p>
                     </details>
 
                     <details class="faq-item">
-                        <summary>How does it compare to Alfred's app launcher?</summary>
-                        <p>Alfred's app launcher uses <strong>one shortcut per app</strong>—you need to remember a
-                            different shortcut for each application. ShortcutCycle uses <strong>one shortcut per
-                                group</strong>—press Option+1 to cycle through all your browsers, Option+2 for all your
-                            code editors, etc. It's more flexible and requires fewer shortcuts to remember.</p>
+                        <summary>Can I customize the shortcuts?</summary>
+                        <p>Yes, you have full control. You can assign any global shortcut to activate a specific group.
+                            Inside the group, apps are cycled based on the order you arrange them in.</p>
                     </details>
+
+                    <details class="faq-item">
+                        <summary>What happens if an app isn't open?</summary>
+                        <p>ShortcutCycle acts as a launcher too. If you cycle to an app that isn't running, we'll
+                            <strong>automatically launch it</strong> for you instantly.
+                        </p>
+                    </details>
+
+
+
 
                     <details class="faq-item">
                         <summary>Is my data private?</summary>
@@ -986,6 +1402,13 @@
         </footer>
     </div>
 
+    <!-- Back to Top Button -->
+    <button id="backToTop" class="back-to-top" aria-label="Back to Top">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M12 4l-8 8h6v8h4v-8h6z" />
+        </svg>
+    </button>
+
     <script>
         const html = document.documentElement;
         const btns = {
@@ -1011,7 +1434,25 @@
             if (btns[activeTheme]) btns[activeTheme].classList.add('active');
         }
 
-        // Initialize
+        function toggleAllFAQ() {
+            const btn = document.getElementById('faq-toggle-btn');
+            const details = document.querySelectorAll('details.faq-item');
+
+            // Determine state based on button text (simple logic)
+            const isExpanding = btn.innerText === 'Expand All';
+
+            details.forEach(detail => {
+                if (isExpanding) {
+                    detail.setAttribute('open', '');
+                } else {
+                    detail.removeAttribute('open');
+                }
+            });
+
+            btn.innerText = isExpanding ? 'Collapse All' : 'Expand All';
+        }
+
+        // Initialize Theme
         const initialTheme = getStoredTheme();
         setTheme(initialTheme);
 
@@ -1067,6 +1508,24 @@
                 });
             });
         }
+
+        // --- Back to Top Button ---
+        const backToTopBtn = document.getElementById('backToTop');
+
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                backToTopBtn.classList.add('visible');
+            } else {
+                backToTopBtn.classList.remove('visible');
+            }
+        });
+
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
     </script>
 
     <!-- GLightbox JavaScript -->
