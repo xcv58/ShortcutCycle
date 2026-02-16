@@ -12,7 +12,8 @@ public struct AppGroup: Identifiable, Codable, Equatable {
     public var isEnabled: Bool = true
     public var lastModified: Date = Date()
     public var openAppIfNeeded: Bool?
-    
+    public var mruOrder: [String]?
+
     public var shouldOpenAppIfNeeded: Bool {
         openAppIfNeeded ?? false
     }
@@ -21,12 +22,13 @@ public struct AppGroup: Identifiable, Codable, Equatable {
     // This allows old data to be decoded without crashing
     private var shortcut: LegacyKeyboardShortcutData?
     
-    public init(id: UUID = UUID(), name: String, apps: [AppItem] = [], isEnabled: Bool = true, openAppIfNeeded: Bool? = nil, lastModified: Date = Date()) {
+    public init(id: UUID = UUID(), name: String, apps: [AppItem] = [], isEnabled: Bool = true, openAppIfNeeded: Bool? = nil, mruOrder: [String]? = nil, lastModified: Date = Date()) {
         self.id = id
         self.name = name
         self.apps = apps
         self.isEnabled = isEnabled
         self.openAppIfNeeded = openAppIfNeeded
+        self.mruOrder = mruOrder
         self.lastModified = lastModified
     }
     
@@ -187,5 +189,66 @@ public enum AppCyclingLogic {
         
         // 4. Default to first item
         return items[0].id
+    }
+
+    // MARK: - MRU (Most Recently Used) Ordering
+
+    /// Returns indices that reorder items by MRU (most recently used) order.
+    /// Items whose bundleId appears earlier in mruOrder come first.
+    /// Items not in mruOrder maintain their original relative order at the end.
+    /// Multi-instance apps (same bundleId) stay grouped together in original order.
+    public static func sortedByMRU(
+        itemBundleIds: [String],
+        mruOrder: [String]?,
+        groupBundleIds: [String]
+    ) -> [Int] {
+        guard let mruOrder = mruOrder, !mruOrder.isEmpty else {
+            return Array(itemBundleIds.indices)
+        }
+
+        // Build rank map for MRU items (lower = more recent)
+        var rank: [String: Int] = [:]
+        for (i, bundleId) in mruOrder.enumerated() {
+            rank[bundleId] = i
+        }
+
+        // Assign ranks to non-MRU items based on group order (after all MRU items)
+        let offset = mruOrder.count
+        for (i, bundleId) in groupBundleIds.enumerated() {
+            if rank[bundleId] == nil {
+                rank[bundleId] = offset + i
+            }
+        }
+
+        let fallback = offset + groupBundleIds.count
+
+        return itemBundleIds.indices.sorted { a, b in
+            let rankA = rank[itemBundleIds[a]] ?? fallback
+            let rankB = rank[itemBundleIds[b]] ?? fallback
+            if rankA != rankB {
+                return rankA < rankB
+            }
+            // Same rank (multi-instance same bundleId) — preserve original order
+            return a < b
+        }
+    }
+
+    /// Returns an updated MRU order with the activated app moved to front.
+    /// Filters out bundle IDs not in validBundleIds.
+    public static func updatedMRUOrder(
+        currentOrder: [String]?,
+        activatedBundleId: String,
+        validBundleIds: Set<String>
+    ) -> [String] {
+        var order = currentOrder ?? []
+
+        // Remove activated app from current position
+        order.removeAll { $0 == activatedBundleId }
+
+        // Insert at front
+        order.insert(activatedBundleId, at: 0)
+
+        // Filter out stale entries (apps no longer in group)
+        return order.filter { validBundleIds.contains($0) }
     }
 }

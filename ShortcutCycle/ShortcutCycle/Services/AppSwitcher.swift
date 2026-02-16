@@ -84,6 +84,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
         if !hasRunningApp {
             nextAppId = hudItems[0].id
             store.updateLastActiveApp(bundleId: nextAppId, for: group.id)
+            store.updateMRUOrder(activatedBundleId: hudItems[0].bundleId, for: group.id)
             if let item = hudItems.first {
                 activateOrLaunch(bundleId: item.bundleId, pid: item.pid)
                 LaunchOverlayManager.shared.show(appName: item.name, appIcon: item.icon)
@@ -109,11 +110,18 @@ class AppSwitcher: @preconcurrency ObservableObject {
                 Task { @MainActor in
                     store?.updateLastActiveApp(bundleId: selectedId, for: group.id)
                 }
+            },
+            onFinalize: { [weak store] selectedId in
+                Task { @MainActor in
+                    let bundleId = hudItems.first(where: { $0.id == selectedId })?.bundleId ?? selectedId
+                    store?.updateMRUOrder(activatedBundleId: bundleId, for: group.id)
+                }
             }
         )
 
         if !hudShown {
              activateOrLaunch(bundleId: nextItem?.bundleId ?? nextAppId, pid: nextItem?.pid)
+             store.updateMRUOrder(activatedBundleId: nextItem?.bundleId ?? nextAppId, for: group.id)
         }
     }
     
@@ -132,6 +140,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
             if let firstApp = group.apps.first {
                 launchApp(bundleIdentifier: firstApp.bundleIdentifier)
                 store.updateLastActiveApp(bundleId: firstApp.bundleIdentifier, for: group.id)
+                store.updateMRUOrder(activatedBundleId: firstApp.bundleIdentifier, for: group.id)
                 LaunchOverlayManager.shared.show(
                     appName: firstApp.name,
                     appIcon: getIcon(for: firstApp)
@@ -165,6 +174,12 @@ class AppSwitcher: @preconcurrency ObservableObject {
                         Task { @MainActor in
                              store?.updateLastActiveApp(bundleId: selectedId, for: group.id)
                         }
+                    },
+                    onFinalize: { [weak store] selectedId in
+                        Task { @MainActor in
+                            let bundleId = runningItems.first(where: { $0.id == selectedId })?.bundleId ?? selectedId
+                            store?.updateMRUOrder(activatedBundleId: bundleId, for: group.id)
+                        }
                     }
                 )
             } else {
@@ -179,11 +194,18 @@ class AppSwitcher: @preconcurrency ObservableObject {
                         Task { @MainActor in
                              store?.updateLastActiveApp(bundleId: selectedId, for: group.id)
                         }
+                    },
+                    onFinalize: { [weak store] selectedId in
+                        Task { @MainActor in
+                            let bundleId = runningItems.first(where: { $0.id == selectedId })?.bundleId ?? selectedId
+                            store?.updateMRUOrder(activatedBundleId: bundleId, for: group.id)
+                        }
                     }
                 )
                 if !hudShown {
                     app?.unhide()
                     app?.activate(options: .activateAllWindows)
+                    store.updateMRUOrder(activatedBundleId: item.bundleId, for: group.id)
                 }
             }
             return
@@ -232,24 +254,33 @@ class AppSwitcher: @preconcurrency ObservableObject {
                 Task { @MainActor in
                     store?.updateLastActiveApp(bundleId: selectedId, for: group.id)
                 }
+            },
+            onFinalize: { [weak store] selectedId in
+                Task { @MainActor in
+                    let bundleId = runningItems.first(where: { $0.id == selectedId })?.bundleId ?? selectedId
+                    store?.updateMRUOrder(activatedBundleId: bundleId, for: group.id)
+                }
             }
         )
-        
+
         if !hudShown {
              activateOrLaunch(bundleId: nextItem?.bundleId ?? nextAppId, pid: nextItem?.pid)
+             store.updateMRUOrder(activatedBundleId: nextItem?.bundleId ?? nextAppId, for: group.id)
         }
     }
     
     // MARK: - Helpers
     
     private func getHUDItems(for group: AppGroup) -> [HUDAppItem] {
+        var items: [HUDAppItem]
+
         if group.shouldOpenAppIfNeeded {
             // Create items for all apps in group, with separate entries for each running instance
-            var items: [HUDAppItem] = []
+            items = []
             for appItem in group.apps {
                 let runningApps = NSRunningApplication.runningApplications(withBundleIdentifier: appItem.bundleIdentifier)
                     .filter { $0.activationPolicy == .regular }
-                
+
                 if runningApps.isEmpty {
                     // App not running - add a single non-running item
                     items.append(HUDAppItem(
@@ -268,14 +299,23 @@ class AppSwitcher: @preconcurrency ObservableObject {
                     }
                 }
             }
-            return items
         } else {
             // Original logic: only running apps, sorted by group order, with separate entries for each instance
             let runningApps = getRunningApps(in: group)
-            return runningApps.map { app in
+            items = runningApps.map { app in
                 HUDAppItem(runningApp: app)
             }
         }
+
+        // Apply MRU sort
+        let itemBundleIds = items.map { $0.bundleId }
+        let groupBundleIds = group.apps.map { $0.bundleIdentifier }
+        let sortedIndices = AppCyclingLogic.sortedByMRU(
+            itemBundleIds: itemBundleIds,
+            mruOrder: group.mruOrder,
+            groupBundleIds: groupBundleIds
+        )
+        return sortedIndices.map { items[$0] }
     }
     
     private func getRunningApps(in group: AppGroup) -> [NSRunningApplication] {
@@ -325,17 +365,18 @@ class AppSwitcher: @preconcurrency ObservableObject {
     }
     
     @discardableResult
-    private func showHUD(items: [HUDAppItem], activeAppId: String, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key? = nil, shouldActivate: Bool = true, immediate: Bool = false, onSelect: ((String) -> Void)? = nil) -> Bool {
+    private func showHUD(items: [HUDAppItem], activeAppId: String, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key? = nil, shouldActivate: Bool = true, immediate: Bool = false, onSelect: ((String) -> Void)? = nil, onFinalize: ((String) -> Void)? = nil) -> Bool {
         if UserDefaults.standard.bool(forKey: "showHUD") {
             HUDManager.shared.scheduleShow(
                 items: items,
-                activeAppId: activeAppId, 
-                modifierFlags: modifierFlags, 
-                shortcut: shortcut, 
-                activeKey: activeKey, 
-                shouldActivate: shouldActivate, 
-                immediate: immediate, 
-                onSelect: onSelect
+                activeAppId: activeAppId,
+                modifierFlags: modifierFlags,
+                shortcut: shortcut,
+                activeKey: activeKey,
+                shouldActivate: shouldActivate,
+                immediate: immediate,
+                onSelect: onSelect,
+                onFinalize: onFinalize
             )
             return true
         }

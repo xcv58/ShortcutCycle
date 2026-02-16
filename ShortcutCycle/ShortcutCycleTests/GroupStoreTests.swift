@@ -542,6 +542,101 @@ final class GroupStoreTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(countAfterFlush, countAfterFirst)
     }
 
+    // MARK: - MRU Order
+
+    func testMRUOrderNilByDefault() {
+        let group = store.groups.first!
+        XCTAssertNil(group.mruOrder)
+    }
+
+    func testUpdateMRUOrder() {
+        let groupId = store.groups.first!.id
+        let app1 = AppItem(bundleIdentifier: "com.test.1", name: "App 1")
+        let app2 = AppItem(bundleIdentifier: "com.test.2", name: "App 2")
+        store.addApp(app1, to: groupId)
+        store.addApp(app2, to: groupId)
+
+        store.updateMRUOrder(activatedBundleId: "com.test.2", for: groupId)
+
+        let group = store.groups.first(where: { $0.id == groupId })
+        XCTAssertEqual(group?.mruOrder, ["com.test.2"])
+    }
+
+    func testUpdateMRUOrderMovesToFront() {
+        let groupId = store.groups.first!.id
+        let app1 = AppItem(bundleIdentifier: "com.test.1", name: "App 1")
+        let app2 = AppItem(bundleIdentifier: "com.test.2", name: "App 2")
+        let app3 = AppItem(bundleIdentifier: "com.test.3", name: "App 3")
+        store.addApp(app1, to: groupId)
+        store.addApp(app2, to: groupId)
+        store.addApp(app3, to: groupId)
+
+        store.updateMRUOrder(activatedBundleId: "com.test.1", for: groupId)
+        store.updateMRUOrder(activatedBundleId: "com.test.3", for: groupId)
+        store.updateMRUOrder(activatedBundleId: "com.test.1", for: groupId)
+
+        let group = store.groups.first(where: { $0.id == groupId })
+        XCTAssertEqual(group?.mruOrder, ["com.test.1", "com.test.3"])
+    }
+
+    func testUpdateMRUOrderFiltersStale() {
+        let groupId = store.groups.first!.id
+        let app1 = AppItem(bundleIdentifier: "com.test.1", name: "App 1")
+        let app2 = AppItem(bundleIdentifier: "com.test.2", name: "App 2")
+        store.addApp(app1, to: groupId)
+        store.addApp(app2, to: groupId)
+
+        store.updateMRUOrder(activatedBundleId: "com.test.1", for: groupId)
+        store.updateMRUOrder(activatedBundleId: "com.test.2", for: groupId)
+
+        // Remove app1 from the group
+        store.removeApp(app1, from: groupId)
+
+        // Update MRU — com.test.1 should be filtered out
+        store.updateMRUOrder(activatedBundleId: "com.test.2", for: groupId)
+
+        let group = store.groups.first(where: { $0.id == groupId })
+        XCTAssertEqual(group?.mruOrder, ["com.test.2"])
+    }
+
+    func testUpdateMRUOrderPersistsAcrossInstances() {
+        let groupId = store.groups.first!.id
+        let app = AppItem(bundleIdentifier: "com.test.1", name: "App 1")
+        store.addApp(app, to: groupId)
+        store.updateMRUOrder(activatedBundleId: "com.test.1", for: groupId)
+
+        let store2 = GroupStore(userDefaults: userDefaults)
+        let group = store2.groups.first(where: { $0.id == groupId })
+        XCTAssertEqual(group?.mruOrder, ["com.test.1"])
+    }
+
+    func testUpdateMRUOrderNonexistentGroup() {
+        // Should not crash
+        store.updateMRUOrder(activatedBundleId: "com.test", for: UUID())
+    }
+
+    func testExportImportPreservesMRUOrder() throws {
+        let groupId = store.groups.first!.id
+        let app = AppItem(bundleIdentifier: "com.test.1", name: "App 1")
+        store.addApp(app, to: groupId)
+        store.updateMRUOrder(activatedBundleId: "com.test.1", for: groupId)
+
+        let data = try store.exportData()
+
+        let freshDefaults = UserDefaults(suiteName: "TestMRUExport")!
+        freshDefaults.removePersistentDomain(forName: "TestMRUExport")
+        let freshStore = GroupStore(userDefaults: freshDefaults)
+        defer {
+            try? FileManager.default.removeItem(at: freshStore.backupDirectory)
+            freshDefaults.removePersistentDomain(forName: "TestMRUExport")
+        }
+
+        try freshStore.importData(data)
+
+        let importedGroup = freshStore.groups.first(where: { $0.id == groupId })
+        XCTAssertEqual(importedGroup?.mruOrder, ["com.test.1"])
+    }
+
     func testFlushWithNoPendingBackupIsNoOp() {
         // Create a fresh store, don't make any changes
         let freshDefaults = UserDefaults(suiteName: "TestFlushNoOp")!

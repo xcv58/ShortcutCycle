@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [1.4] - 2026-02-12
 
 ### Added
+- **MRU Cycling**: Apps in each group are now ordered by Most Recently Used, matching macOS Cmd+Tab behavior. The most recently used app is always one tap away. MRU order updates only when you finalize your selection (release modifiers or click), not during intermediate cycling steps.
 - **Press and Hold**: Added support for "Press and Hold" behavior to match macOS Command+Tab. Hold the shortcut to view the HUD; tap quickly to switch blindly.
 - **In-App Keyboard Shortcuts**: Added macOS menu bar commands with keyboard shortcuts when the settings window is open. Includes tab switching (Cmd+1/2), add/delete group (Cmd+N, Cmd+Delete with confirmation), group navigation (Cmd+Up/Down, Cmd+[/], Cmd+K/J), and sidebar toggle (Cmd+Ctrl+S).
 - **Language Picker**: Language picker now shows both the system-language name and the native name (e.g. "German / Deutsch") for easier identification.
