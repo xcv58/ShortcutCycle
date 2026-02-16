@@ -34,6 +34,7 @@ class ShortcutManager: @preconcurrency ObservableObject {
     
     /// Register all shortcuts from the group store
     func registerAllShortcuts() {
+#if DEBUG
         // Register the settings toggle shortcut once.
         // KeyboardShortcuts.onKeyDown appends handlers and does not replace existing ones.
         if !hasRegisteredToggleSettingsShortcut {
@@ -44,6 +45,7 @@ class ShortcutManager: @preconcurrency ObservableObject {
             }
             hasRegisteredToggleSettingsShortcut = true
         }
+#endif
         
         // Unregister all previously registered shortcuts first
         // This is crucial to handle deleted groups or disabled groups
