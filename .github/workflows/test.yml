@@ -15,31 +15,46 @@ jobs:
       run: swift test --enable-code-coverage
       working-directory: ShortcutCycle
 
-    - name: Get Coverage Path
-      id: get-coverage
-      working-directory: ShortcutCycle
-      run: echo "CODECOV_PATH=$(swift test --show-codecov-path)" >> $GITHUB_ENV
-
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v5
-      if: always()
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        slug: xcv58/ShortcutCycle
-        files: ${{ env.CODECOV_PATH }}
-
     - name: Generate coverage report
       if: always()
       working-directory: ShortcutCycle
       run: |
         CODECOV_PATH=$(swift test --show-codecov-path 2>/dev/null || true)
         if [ -f "$CODECOV_PATH" ]; then
+          # Export to LCOV
+          # We need the binary path for llvm-cov
+          BIN_PATH=$(swift build --show-bin-path)
+          TEST_BINARY="$BIN_PATH/ShortcutCyclePackageTests.xctest/Contents/MacOS/ShortcutCyclePackageTests"
+          
+          # If the standard location doesn't exist, try to find it (sometimes it's a flat binary depending on swift version/platform)
+          if [ ! -f "$TEST_BINARY" ]; then
+             TEST_BINARY=$(find "$BIN_PATH" -name "ShortcutCyclePackageTests" -type f | head -n 1)
+          fi
+          
+          if [ -f "$TEST_BINARY" ]; then
+              echo "Found test binary at $TEST_BINARY"
+              xcrun llvm-cov export -format="lcov" \
+                "$TEST_BINARY" \
+                -instr-profile="$CODECOV_PATH" \
+                -ignore-filename-regex=".build|Tests" \
+                > coverage.lcov
+          else
+              echo "Could not find test binary"
+          fi
+
           echo "## Test Coverage" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "| File | Coverage |" >> "$GITHUB_STEP_SUMMARY"
           echo "|------|----------|" >> "$GITHUB_STEP_SUMMARY"
           python3 -c "
         import json, sys, os
+        
+        # Also filter the LCOV file if it exists
+        lcov_lines = []
+        if os.path.exists('coverage.lcov'):
+            with open('coverage.lcov', 'r') as f:
+                lcov_lines = f.readlines()
+        
         data = json.load(open('$CODECOV_PATH'))
         files = data['data'][0]['files']
         # Only include ShortcutCycleCore source files (Models/)
@@ -49,6 +64,27 @@ jobs:
             'KeyboardShortcutsNames.swift', 'SettingsExport.swift',
             'HUDAppItem.swift'
         ]
+        
+        # Filter LCOV content
+        filtered_lcov = []
+        current_file = None
+        writing = False
+        
+        for line in lcov_lines:
+            if line.startswith('SF:'):
+                current_file = line.strip().split('/')[-1]
+                if current_file in source_files:
+                    writing = True
+                    filtered_lcov.append(line)
+                else:
+                    writing = False
+            elif writing:
+                filtered_lcov.append(line)
+                
+        if filtered_lcov:
+            with open('coverage.lcov', 'w') as f:
+                f.writelines(filtered_lcov)
+
         total_covered = 0
         total_count = 0
         for f in sorted(files, key=lambda x: x['filename']):
@@ -69,3 +105,11 @@ jobs:
         else
           echo "Coverage data not found" >> "$GITHUB_STEP_SUMMARY"
         fi
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v5
+      if: always()
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        slug: xcv58/ShortcutCycle
+        files: ShortcutCycle/coverage.lcov
