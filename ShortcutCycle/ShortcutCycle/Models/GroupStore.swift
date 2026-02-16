@@ -18,6 +18,7 @@ public class GroupStore: ObservableObject {
     
     private let saveKey = "ShortcutCycle.Groups"
     private let userDefaults: UserDefaults
+    private let fileManager: FileManager
 
     private static let backupDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -32,9 +33,14 @@ public class GroupStore: ObservableObject {
     private var lastBackupTime: Date = .distantPast
 
     // Internal init for testing
-    init(userDefaults: UserDefaults = .standard, backupDebounceInterval: TimeInterval = 60.0) {
+    init(
+        userDefaults: UserDefaults = .standard,
+        backupDebounceInterval: TimeInterval = 60.0,
+        fileManager: FileManager = .default
+    ) {
         self.userDefaults = userDefaults
         self.backupDebounceInterval = backupDebounceInterval
+        self.fileManager = fileManager
         loadGroups()
         setupTerminationObserver()
     }
@@ -208,14 +214,19 @@ public class GroupStore: ObservableObject {
 
         let timestamp = Self.backupDateFormatter.string(from: Date())
         let backupFile = backupDirectory.appendingPathComponent("backup \(timestamp).json")
-        try? data.write(to: backupFile, options: .atomic)
+        do {
+            try data.write(to: backupFile, options: .atomic)
+        } catch {
+            print("Failed to write auto backup: \(error)")
+            return
+        }
 
         cleanupOldBackups(in: backupDirectory)
     }
 
     /// Returns the Data contents of the most recent backup file, if any
     private func mostRecentBackupData() -> Data? {
-        let fm = FileManager.default
+        let fm = fileManager
         guard let files = try? fm.contentsOfDirectory(at: backupDirectory, includingPropertiesForKeys: [.creationDateKey]) else { return nil }
         let latest = files
             .filter { $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json" }
@@ -230,13 +241,18 @@ public class GroupStore: ObservableObject {
     
     /// Directory where backups are stored
     public var backupDirectory: URL {
-        let fileManager = FileManager.default
         let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         let dirName = userDefaults == .standard ? "ShortcutCycle" : "ShortcutCycle-Test"
         let url = appSupport.appendingPathComponent(dirName, isDirectory: true)
         
         // Ensure directory exists
-        try? fileManager.createDirectory(at: url, withIntermediateDirectories: true)
+        if !fileManager.fileExists(atPath: url.path) {
+            do {
+                try fileManager.createDirectory(at: url, withIntermediateDirectories: true)
+            } catch {
+                print("Failed to create backup directory at \(url.path): \(error)")
+            }
+        }
         
         return url
     }
@@ -244,7 +260,6 @@ public class GroupStore: ObservableObject {
     /// Thin old backups using GFS (Grandfather-Father-Son) retention policy.
     /// Keeps more granularity for recent backups, progressively fewer for older ones.
     private func cleanupOldBackups(in directory: URL) {
-        let fileManager = FileManager.default
         guard let files = try? fileManager.contentsOfDirectory(at: directory, includingPropertiesForKeys: [.creationDateKey]) else { return }
         let backupFiles = files
             .filter { $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json" }
@@ -299,7 +314,11 @@ public class GroupStore: ObservableObject {
 
         let timestamp = Self.backupDateFormatter.string(from: Date())
         let backupFile = backupDirectory.appendingPathComponent("backup \(timestamp).json")
-        try? data.write(to: backupFile, options: .atomic)
+        do {
+            try data.write(to: backupFile, options: .atomic)
+        } catch {
+            return .error("Write failed: \(error.localizedDescription)")
+        }
         cleanupOldBackups(in: backupDirectory)
         return .saved
     }

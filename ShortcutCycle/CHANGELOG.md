@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 - **HUD Visibility Bug**: Fixed an issue where rapid, disjoint presses of the shortcut could incorrectly trigger the HUD (treating it as a cycle). Now, releasing the key properly ends the session, ensuring blind switching is reliable.
 - **Multi-Profile Reliability**: Fixed issues where cycling and app activation could fail for multi-instance apps (e.g. Firefox/Chrome profiles) after a process restart or when the HUD fallback path was triggered. Also fixed a regression where the shortcut always activated the first instance (by PID) instead of the last-active one when returning from a different app.
 - **System Language Detection**: Fixed detection of system language for non-English locales.
+- **Manual Backup Error Feedback**: Fixed "Back Up Now" flow to show a failure message when writing the backup file fails, instead of reporting a successful save.
 
 ## [1.3] - 2026-02-06
 
