@@ -26,8 +26,8 @@ final class ShortcutCycleTests: XCTestCase {
     // MARK: - ResolvableAppItem
 
     func testResolvableAppItemProperties() {
-        let item = ResolvableAppItem(id: "com.test.app-100", bundleId: "com.test.app")
-        XCTAssertEqual(item.id, "com.test.app-100")
+        let item = ResolvableAppItem(id: "com.test.app::100", bundleId: "com.test.app")
+        XCTAssertEqual(item.id, "com.test.app::100")
         XCTAssertEqual(item.bundleId, "com.test.app")
     }
 

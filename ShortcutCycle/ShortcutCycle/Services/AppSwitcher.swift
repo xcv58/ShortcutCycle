@@ -60,10 +60,10 @@ class AppSwitcher: @preconcurrency ObservableObject {
         let cycleItems = hudItems.map { CyclingAppItem(id: $0.id) }
         let frontmostApp = NSWorkspace.shared.frontmostApplication
 
-        // Build unique ID for frontmost app (bundleId-pid format)
+        // Build unique ID for frontmost app (bundleId::pid format)
         let frontmostAppUniqueId: String? = {
             guard let app = frontmostApp, let bundleId = app.bundleIdentifier else { return nil }
-            return "\(bundleId)-\(app.processIdentifier)"
+            return "\(bundleId)::\(app.processIdentifier)"
         }()
 
         let resolvableItems = hudItems.map { ResolvableAppItem(id: $0.id, bundleId: $0.bundleId) }
@@ -95,7 +95,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
         // Find the HUDAppItem for the next app
         let nextItem = hudItems.first { $0.id == nextAppId }
 
-        // Store composite ID (e.g. "bundleId-pid") so we can identify the exact
+        // Store composite ID (e.g. "bundleId::pid") so we can identify the exact
         // instance next time. Falls back gracefully if the PID changes on restart.
         store.updateLastActiveApp(bundleId: nextItem?.id ?? nextAppId, for: group.id)
 
@@ -218,10 +218,10 @@ class AppSwitcher: @preconcurrency ObservableObject {
         let cycleItems = runningItems.map { CyclingAppItem(id: $0.id) }
         let frontmostApp = NSWorkspace.shared.frontmostApplication
 
-        // Build unique ID for frontmost app (bundleId-pid format)
+        // Build unique ID for frontmost app (bundleId::pid format)
         let frontmostAppUniqueId: String? = {
             guard let app = frontmostApp, let bundleId = app.bundleIdentifier else { return nil }
-            return "\(bundleId)-\(app.processIdentifier)"
+            return "\(bundleId)::\(app.processIdentifier)"
         }()
 
         let resolvableItems = runningItems.map { ResolvableAppItem(id: $0.id, bundleId: $0.bundleId) }

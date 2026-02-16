@@ -59,7 +59,7 @@ final class HUDAppItemTests: XCTestCase {
         let expectedBundleId = runningApp.bundleIdentifier ?? ""
         XCTAssertEqual(item.bundleId, expectedBundleId)
         XCTAssertEqual(item.pid, runningApp.processIdentifier)
-        XCTAssertEqual(item.id, "\(expectedBundleId)-\(runningApp.processIdentifier)")
+        XCTAssertEqual(item.id, "\(expectedBundleId)::\(runningApp.processIdentifier)")
         XCTAssertTrue(item.isRunning)
         // Name should fall back to localizedName or "App"
         XCTAssertFalse(item.name.isEmpty)

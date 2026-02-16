@@ -668,15 +668,15 @@ final class GroupStoreTests: XCTestCase {
         store.addApp(app, to: groupId)
 
         // Store composite ID
-        store.updateMRUOrder(activatedId: "com.chrome-200", activatedBundleId: "com.chrome", for: groupId)
+        store.updateMRUOrder(activatedId: "com.chrome::200", activatedBundleId: "com.chrome", for: groupId)
 
         let group = store.groups.first(where: { $0.id == groupId })
-        XCTAssertEqual(group?.mruOrder, ["com.chrome-200"])
+        XCTAssertEqual(group?.mruOrder, ["com.chrome::200"])
 
         // Verify persistence
         let store2 = GroupStore(userDefaults: userDefaults)
         let group2 = store2.groups.first(where: { $0.id == groupId })
-        XCTAssertEqual(group2?.mruOrder, ["com.chrome-200"])
+        XCTAssertEqual(group2?.mruOrder, ["com.chrome::200"])
     }
 
     func testUpdateMRUOrderCompositeFiltering() {
@@ -686,15 +686,15 @@ final class GroupStoreTests: XCTestCase {
         store.addApp(app1, to: groupId)
         store.addApp(app2, to: groupId)
 
-        store.updateMRUOrder(activatedId: "com.chrome-100", activatedBundleId: "com.chrome", for: groupId)
-        store.updateMRUOrder(activatedId: "com.firefox-200", activatedBundleId: "com.firefox", for: groupId)
+        store.updateMRUOrder(activatedId: "com.chrome::100", activatedBundleId: "com.chrome", for: groupId)
+        store.updateMRUOrder(activatedId: "com.firefox::200", activatedBundleId: "com.firefox", for: groupId)
 
         // Remove chrome from group — composite entries for chrome should be filtered
         store.removeApp(app1, from: groupId)
-        store.updateMRUOrder(activatedId: "com.firefox-200", activatedBundleId: "com.firefox", for: groupId)
+        store.updateMRUOrder(activatedId: "com.firefox::200", activatedBundleId: "com.firefox", for: groupId)
 
         let group = store.groups.first(where: { $0.id == groupId })
-        XCTAssertEqual(group?.mruOrder, ["com.firefox-200"])
+        XCTAssertEqual(group?.mruOrder, ["com.firefox::200"])
     }
 
     func testFlushWithNoPendingBackupIsNoOp() {
