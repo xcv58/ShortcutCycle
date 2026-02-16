@@ -5,6 +5,38 @@ import XCTest
 @testable import ShortcutCycle
 #endif
 
+private final class FailingCreateDirectoryFileManager: FileManager {
+    private let mockedAppSupportURL: URL
+    private(set) var createDirectoryCallCount = 0
+
+    init(mockedAppSupportURL: URL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)) {
+        self.mockedAppSupportURL = mockedAppSupportURL
+        super.init()
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func urls(for directory: SearchPathDirectory, in domainMask: SearchPathDomainMask) -> [URL] {
+        [mockedAppSupportURL]
+    }
+
+    override func fileExists(atPath path: String) -> Bool {
+        false
+    }
+
+    override func createDirectory(
+        at url: URL,
+        withIntermediateDirectories createIntermediates: Bool,
+        attributes: [FileAttributeKey: Any]? = nil
+    ) throws {
+        createDirectoryCallCount += 1
+        struct ForcedCreateDirectoryError: Error {}
+        throw ForcedCreateDirectoryError()
+    }
+}
+
 @MainActor
 final class GroupStoreTests: XCTestCase {
 
@@ -415,6 +447,48 @@ final class GroupStoreTests: XCTestCase {
 
         let second = store.manualBackup()
         XCTAssertEqual(second, .saved)
+    }
+
+    func testManualBackupReturnsErrorWhenDirectoryCreationFails() {
+        let suiteName = "TestManualBackupWriteFailure-\(UUID().uuidString)"
+        let failingDefaults = UserDefaults(suiteName: suiteName)!
+        failingDefaults.removePersistentDomain(forName: suiteName)
+        defer { failingDefaults.removePersistentDomain(forName: suiteName) }
+
+        let failingFileManager = FailingCreateDirectoryFileManager()
+        let failingStore = GroupStore(userDefaults: failingDefaults, fileManager: failingFileManager)
+
+        let result = failingStore.manualBackup()
+        if case .error(let message) = result {
+            XCTAssertTrue(message.hasPrefix("Write failed:"))
+        } else {
+            XCTFail("Expected manualBackup to return .error when backup directory cannot be created")
+        }
+
+        XCTAssertGreaterThan(
+            failingFileManager.createDirectoryCallCount,
+            0,
+            "Expected backupDirectory creation attempts to occur"
+        )
+    }
+
+    func testAutoBackupWriteFailureIsHandledWhenDirectoryCreationFails() {
+        let suiteName = "TestAutoBackupWriteFailure-\(UUID().uuidString)"
+        let failingDefaults = UserDefaults(suiteName: suiteName)!
+        failingDefaults.removePersistentDomain(forName: suiteName)
+        defer { failingDefaults.removePersistentDomain(forName: suiteName) }
+
+        let failingFileManager = FailingCreateDirectoryFileManager()
+        let failingStore = GroupStore(userDefaults: failingDefaults, fileManager: failingFileManager)
+
+        // Triggers saveGroups -> scheduleAutoBackup -> performAutoBackup
+        _ = failingStore.addGroup(name: "TriggerFailure")
+
+        XCTAssertGreaterThan(
+            failingFileManager.createDirectoryCallCount,
+            0,
+            "Expected backupDirectory creation attempts to occur"
+        )
     }
 
     // MARK: - Corrupt Data Recovery

@@ -18,6 +18,7 @@ public class GroupStore: ObservableObject {
     
     private let saveKey = "ShortcutCycle.Groups"
     private let userDefaults: UserDefaults
+    private let fileManager: FileManager
 
     private static let backupDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -32,9 +33,14 @@ public class GroupStore: ObservableObject {
     private var lastBackupTime: Date = .distantPast
 
     // Internal init for testing
-    init(userDefaults: UserDefaults = .standard, backupDebounceInterval: TimeInterval = 60.0) {
+    init(
+        userDefaults: UserDefaults = .standard,
+        backupDebounceInterval: TimeInterval = 60.0,
+        fileManager: FileManager = .default
+    ) {
         self.userDefaults = userDefaults
         self.backupDebounceInterval = backupDebounceInterval
+        self.fileManager = fileManager
         loadGroups()
         setupTerminationObserver()
     }
@@ -220,7 +226,7 @@ public class GroupStore: ObservableObject {
 
     /// Returns the Data contents of the most recent backup file, if any
     private func mostRecentBackupData() -> Data? {
-        let fm = FileManager.default
+        let fm = fileManager
         guard let files = try? fm.contentsOfDirectory(at: backupDirectory, includingPropertiesForKeys: [.creationDateKey]) else { return nil }
         let latest = files
             .filter { $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json" }
@@ -235,7 +241,6 @@ public class GroupStore: ObservableObject {
     
     /// Directory where backups are stored
     public var backupDirectory: URL {
-        let fileManager = FileManager.default
         let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         let dirName = userDefaults == .standard ? "ShortcutCycle" : "ShortcutCycle-Test"
         let url = appSupport.appendingPathComponent(dirName, isDirectory: true)
@@ -255,7 +260,6 @@ public class GroupStore: ObservableObject {
     /// Thin old backups using GFS (Grandfather-Father-Son) retention policy.
     /// Keeps more granularity for recent backups, progressively fewer for older ones.
     private func cleanupOldBackups(in directory: URL) {
-        let fileManager = FileManager.default
         guard let files = try? fileManager.contentsOfDirectory(at: directory, includingPropertiesForKeys: [.creationDateKey]) else { return }
         let backupFiles = files
             .filter { $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json" }
