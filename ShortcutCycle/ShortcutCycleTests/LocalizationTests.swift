@@ -12,7 +12,18 @@ final class LocalizationTests: XCTestCase {
     
     /// Parse a Localizable.strings file and return all keys
     private func parseLocalizationKeys(from url: URL) -> Set<String> {
-        guard let contents = try? String(contentsOf: url, encoding: .utf8) else {
+        // First try parsing as a property list dictionary, which correctly handles
+        // .strings files across encodings and escaped characters.
+        if let data = try? Data(contentsOf: url),
+           let plist = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil),
+           let dict = plist as? [String: Any] {
+            return Set(dict.keys)
+        }
+
+        // Fallback for malformed files: best-effort line parsing.
+        let encodings: [String.Encoding] = [.utf8, .utf16, .utf16LittleEndian, .utf16BigEndian]
+        let contents = encodings.lazy.compactMap { try? String(contentsOf: url, encoding: $0) }.first
+        guard let contents else {
             return []
         }
         
@@ -45,25 +56,28 @@ final class LocalizationTests: XCTestCase {
     
     /// Find the Resources directory containing localization files
     private func findResourcesDirectory() -> URL? {
-        // Try to find the bundle's resources (works in Xcode test runner)
-        let bundle = Bundle(for: type(of: self))
-
-        if let enPath = bundle.path(forResource: "Localizable", ofType: "strings", inDirectory: nil, forLocalization: "en") {
-            return URL(fileURLWithPath: enPath).deletingLastPathComponent().deletingLastPathComponent()
-        }
-
-        // Fallback: try source-relative paths (works in SPM `swift test`)
+        // Prefer source-relative paths first to avoid accidentally resolving
+        // unrelated Localizable.strings from dependency bundles in Xcode tests.
         // #file = .../ShortcutCycleTests/LocalizationTests.swift
         // Go up to project root, then into ShortcutCycle/Resources
         let testFileURL = URL(fileURLWithPath: #file)
         let projectRoot = testFileURL.deletingLastPathComponent().deletingLastPathComponent()
+        let sourceResources = projectRoot.appendingPathComponent("ShortcutCycle/Resources")
+        let sourceEnPath = sourceResources.appendingPathComponent("en.lproj/Localizable.strings")
+        if FileManager.default.fileExists(atPath: sourceEnPath.path) {
+            return sourceResources
+        }
+
+        // Fallback: try to find the bundle's resources (works in Xcode test runner)
+        let bundle = Bundle(for: type(of: self))
+        if let enPath = bundle.path(forResource: "Localizable", ofType: "strings", inDirectory: nil, forLocalization: "en") {
+            return URL(fileURLWithPath: enPath).deletingLastPathComponent().deletingLastPathComponent()
+        }
 
         let possiblePaths = [
             // Xcode bundle-relative
             bundle.bundleURL.deletingLastPathComponent().appendingPathComponent("ShortcutCycle.app/Contents/Resources"),
             bundle.bundleURL.appendingPathComponent("Contents/Resources"),
-            // SPM source-relative: ShortcutCycleTests/ -> project root -> ShortcutCycle/Resources
-            projectRoot.appendingPathComponent("ShortcutCycle/Resources"),
         ]
 
         for path in possiblePaths {

@@ -1,6 +1,10 @@
 import XCTest
 
 import Combine
+import KeyboardShortcuts
+#if canImport(ShortcutCycleCore)
+@testable import ShortcutCycleCore
+#endif
 @testable import ShortcutCycle
 
 @MainActor
@@ -57,7 +61,7 @@ final class PressAndHoldTests: XCTestCase {
         manager.timerScheduler = timerMock
 
         // Reset state
-        await manager.hide() // Ensure clean state
+        manager.hide() // Ensure clean state
         manager.lastRequestTime = nil
         manager.isLoopKeyHeld = false
         manager.currentLoopKey = nil
@@ -301,14 +305,13 @@ final class PressAndHoldTests: XCTestCase {
         timeMock.currentTime = timeMock.currentTime.addingTimeInterval(0.1)
 
         // Second call takes immediate path, which calls scheduleLoopStart
-        // (if activeKey is provided and isLoopKeyHeld is true)
-        manager.isLoopKeyHeld = true
-        manager.currentLoopKey = 0
+        // when an activeKey is provided.
         manager.scheduleShow(
             items: items,
             activeAppId: items[0].id,
             modifierFlags: [.option],
             shortcut: "Opt+1",
+            activeKey: .a,
             immediate: true
         )
 

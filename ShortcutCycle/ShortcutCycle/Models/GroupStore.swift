@@ -208,7 +208,12 @@ public class GroupStore: ObservableObject {
 
         let timestamp = Self.backupDateFormatter.string(from: Date())
         let backupFile = backupDirectory.appendingPathComponent("backup \(timestamp).json")
-        try? data.write(to: backupFile, options: .atomic)
+        do {
+            try data.write(to: backupFile, options: .atomic)
+        } catch {
+            print("Failed to write auto backup: \(error)")
+            return
+        }
 
         cleanupOldBackups(in: backupDirectory)
     }
@@ -236,7 +241,13 @@ public class GroupStore: ObservableObject {
         let url = appSupport.appendingPathComponent(dirName, isDirectory: true)
         
         // Ensure directory exists
-        try? fileManager.createDirectory(at: url, withIntermediateDirectories: true)
+        if !fileManager.fileExists(atPath: url.path) {
+            do {
+                try fileManager.createDirectory(at: url, withIntermediateDirectories: true)
+            } catch {
+                print("Failed to create backup directory at \(url.path): \(error)")
+            }
+        }
         
         return url
     }
@@ -299,7 +310,11 @@ public class GroupStore: ObservableObject {
 
         let timestamp = Self.backupDateFormatter.string(from: Date())
         let backupFile = backupDirectory.appendingPathComponent("backup \(timestamp).json")
-        try? data.write(to: backupFile, options: .atomic)
+        do {
+            try data.write(to: backupFile, options: .atomic)
+        } catch {
+            return .error("Write failed: \(error.localizedDescription)")
+        }
         cleanupOldBackups(in: backupDirectory)
         return .saved
     }

@@ -21,6 +21,7 @@ class ShortcutManager: @preconcurrency ObservableObject {
     
     private var registeredGroupIds: Set<UUID> = []
     private var observedGroupIds: Set<UUID> = []
+    private var hasRegisteredToggleSettingsShortcut = false
     
     private init() {
         // Observers
@@ -33,11 +34,15 @@ class ShortcutManager: @preconcurrency ObservableObject {
     
     /// Register all shortcuts from the group store
     func registerAllShortcuts() {
-        // Register the settings toggle shortcut
-        KeyboardShortcuts.onKeyDown(for: .toggleSettings) { [weak self] in
-            Task { @MainActor in
-                self?.handleToggleSettings()
+        // Register the settings toggle shortcut once.
+        // KeyboardShortcuts.onKeyDown appends handlers and does not replace existing ones.
+        if !hasRegisteredToggleSettingsShortcut {
+            KeyboardShortcuts.onKeyDown(for: .toggleSettings) { [weak self] in
+                Task { @MainActor in
+                    self?.handleToggleSettings()
+                }
             }
+            hasRegisteredToggleSettingsShortcut = true
         }
         
         // Unregister all previously registered shortcuts first

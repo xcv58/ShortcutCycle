@@ -131,14 +131,16 @@ class HUDManager: @preconcurrency ObservableObject {
              self.previousFrontmostApp = NSWorkspace.shared.frontmostApplication
         }
         
-        // Activate our app so we can receive local events
-        NSApp.activate(ignoringOtherApps: true)
-        
-        // Fix for "Splash" issue:
-        DispatchQueue.main.async {
-            NSApp.windows.forEach { win in
-                if win !== self.window && win.isVisible {
-                    win.orderBack(nil)
+        // Activate our app so we can receive local events when running under AppKit.
+        if let app = NSApp {
+            app.activate(ignoringOtherApps: true)
+
+            // Fix for "Splash" issue:
+            DispatchQueue.main.async {
+                app.windows.forEach { win in
+                    if win !== self.window && win.isVisible {
+                        win.orderBack(nil)
+                    }
                 }
             }
         }
@@ -637,8 +639,8 @@ class HUDManager: @preconcurrency ObservableObject {
             pendingActiveAppId = nil
         }
         
-        if NSApp.isActive {
-            NSApp.hide(nil) // Yield focus back
+        if let app = NSApp, app.isActive {
+            app.hide(nil) // Yield focus back
         }
         
         hideTimer?.invalidate()
