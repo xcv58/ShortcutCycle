@@ -49,8 +49,8 @@
     }
     </script>
 
-    <!-- GLightbox CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css">
+    <!-- GLightbox CSS (vendored locally) -->
+    <link rel="stylesheet" href="assets/vendor/glightbox/glightbox.min.css">
 
     <style>
         /* --- THEME VARIABLES --- */
@@ -359,6 +359,12 @@
             border-bottom-color: var(--accent);
         }
 
+        .tooltip-trigger:focus,
+        .tooltip-trigger:focus-visible {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
         .tooltip-trigger::after {
             content: attr(data-tooltip);
             position: absolute;
@@ -385,6 +391,13 @@
         }
 
         .tooltip-trigger:hover::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .tooltip-trigger:focus::after,
+        .tooltip-trigger:focus-visible::after {
             opacity: 1;
             visibility: visible;
             transform: translateX(-50%) translateY(0);
@@ -866,12 +879,6 @@
                 margin-left: -100px;
             }
 
-            .tooltip-trigger::after {
-                width: 200px;
-                left: 50%;
-                margin-left: -100px;
-            }
-
             .cta-group {
                 flex-direction: column;
                 width: 100%;
@@ -1094,9 +1101,11 @@
             <div class="nav-wrapper">
                 <nav class="nav-links" role="navigation" aria-label="Main navigation">
                     <a href="https://github.com/xcv58/ShortcutCycle/blob/master/PRIVACY_POLICY.md"
-                        target="_blank">Privacy</a>
-                    <a href="https://github.com/xcv58/ShortcutCycle/issues" target="_blank">Support</a>
-                    <a href="https://github.com/xcv58/ShortcutCycle" target="_blank">GitHub</a>
+                        target="_blank" rel="noopener noreferrer">Privacy</a>
+                    <a href="https://github.com/xcv58/ShortcutCycle/issues" target="_blank"
+                        rel="noopener noreferrer">Support</a>
+                    <a href="https://github.com/xcv58/ShortcutCycle" target="_blank"
+                        rel="noopener noreferrer">GitHub</a>
                 </nav>
 
                 <div class="theme-switch" role="group" aria-label="Theme Toggle">
@@ -1149,9 +1158,13 @@
                     dedicated hotkeys.</p>
                 <p class="hero-benefit">
                     <span class="tooltip-trigger"
+                        tabindex="0"
+                        aria-describedby="hero-benefit-tooltip"
                         data-tooltip="Based on saving 3 seconds per switch, 400 times a day = ~2 hours saved/week.">
                         Save hours every week
                     </span>
+                    <span id="hero-benefit-tooltip" class="sr-only">Based on saving 3 seconds per switch, 400 times a
+                        day equals about 2 hours saved per week.</span>
                     with app switching tailored to your own workflow.
                 </p>
 
@@ -1164,7 +1177,7 @@
                             <path d="M5 12h14M12 5l7 7-7 7" />
                         </svg>
                     </a>
-                    <a href="https://github.com/xcv58/ShortcutCycle" target="_blank" rel="noopener"
+                    <a href="https://github.com/xcv58/ShortcutCycle" target="_blank" rel="noopener noreferrer"
                         class="cta-button cta-secondary">
                         <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
                             <path
@@ -1497,7 +1510,8 @@
                         <summary>Is it open source?</summary>
                         <p>Yes! ShortcutCycle is <strong>100% open source</strong> under the MIT license. You can view
                             the code, contribute, or build it yourself on <a
-                                href="https://github.com/xcv58/ShortcutCycle" target="_blank" rel="noopener">GitHub</a>.
+                                href="https://github.com/xcv58/ShortcutCycle" target="_blank"
+                                rel="noopener noreferrer">GitHub</a>.
                         </p>
                     </details>
                 </div>
@@ -1532,15 +1546,25 @@
             light: document.getElementById('btn-light'),
             dark: document.getElementById('btn-dark')
         };
+        const themeAnnouncement = document.getElementById('theme-announcement');
 
         function getStoredTheme() {
             return localStorage.getItem('theme') || 'system';
         }
 
-        function setTheme(theme) {
+        function announceTheme(theme) {
+            if (!themeAnnouncement) return;
+            const label = theme === 'system'
+                ? 'System theme selected'
+                : `${theme.charAt(0).toUpperCase()}${theme.slice(1)} theme selected`;
+            themeAnnouncement.textContent = label;
+        }
+
+        function setTheme(theme, shouldAnnounce = true) {
             html.setAttribute('data-theme', theme);
             localStorage.setItem('theme', theme);
             updateControls(theme);
+            if (shouldAnnounce) announceTheme(theme);
         }
 
         function updateControls(activeTheme) {
@@ -1570,7 +1594,7 @@
 
         // Initialize Theme
         const initialTheme = getStoredTheme();
-        setTheme(initialTheme);
+        setTheme(initialTheme, false);
 
         // --- Gallery Buttons Interaction ---
         const galleryScroller = document.querySelector('.gallery-scroller');
@@ -1644,8 +1668,8 @@
         });
     </script>
 
-    <!-- GLightbox JavaScript -->
-    <script src="https://cdn.jsdelivr.net/npm/glightbox/dist/js/glightbox.min.js"></script>
+    <!-- GLightbox JavaScript (vendored locally) -->
+    <script src="assets/vendor/glightbox/glightbox.min.js"></script>
     <script>
         // Initialize GLightbox with theme support
         function getGLightboxSkin() {
@@ -1656,31 +1680,32 @@
             return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         }
 
-        let lightbox = GLightbox({
-            selector: '.glightbox',
-            touchNavigation: true,
-            loop: true,
-            autoplayVideos: false,
-            skin: getGLightboxSkin()
-        });
-
-        // Update lightbox theme when page theme changes
-        const lightboxObserver = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                if (mutation.attributeName === 'data-theme') {
-                    // Reinitialize with new theme
-                    lightbox.destroy();
-                    lightbox = GLightbox({
-                        selector: '.glightbox',
-                        touchNavigation: true,
-                        loop: true,
-                        autoplayVideos: false,
-                        skin: getGLightboxSkin()
-                    });
-                }
+        function createLightbox() {
+            if (typeof window.GLightbox !== 'function') return null;
+            return window.GLightbox({
+                selector: '.glightbox',
+                touchNavigation: true,
+                loop: true,
+                autoplayVideos: false,
+                skin: getGLightboxSkin()
             });
-        });
-        lightboxObserver.observe(document.documentElement, { attributes: true });
+        }
+
+        let lightbox = createLightbox();
+
+        if (lightbox) {
+            // Update lightbox theme when page theme changes
+            const lightboxObserver = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.attributeName === 'data-theme') {
+                        // Reinitialize with new theme
+                        lightbox.destroy();
+                        lightbox = createLightbox();
+                    }
+                });
+            });
+            lightboxObserver.observe(document.documentElement, { attributes: true });
+        }
     </script>
 
     <!-- Custom GLightbox theme styles -->
