@@ -7,7 +7,7 @@
 ShortcutCycle
 
 ## Subtitle
-Cycle apps by group. Instantly.
+Cycle apps by group, instantly.
 
 ## Promotional Text
 Stop endlessly tabbing. Group your apps by context—Web, Code, Social—and cycle through them with dedicated hotkeys. Build muscle memory and flow.
