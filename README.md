@@ -4,19 +4,21 @@
 
 [![Test](https://github.com/xcv58/ShortcutCycle/actions/workflows/test.yml/badge.svg)](https://github.com/xcv58/ShortcutCycle/actions/workflows/test.yml) [![codecov](https://codecov.io/gh/xcv58/ShortcutCycle/graph/badge.svg?token=8C1D6F0E5B)](https://codecov.io/gh/xcv58/ShortcutCycle)
 
-ShortcutCycle helps you switch between your favorite apps with just one keyboard shortcut. Instead of remembering many shortcuts, just group your apps (like "Chat Apps" or "Work Apps") and use one key to cycle through them. Simplify your workflow and save time every day!
+ShortcutCycle helps you switch between your favorite apps with just one keyboard shortcut. Instead of remembering many shortcuts, just group your apps (like "Browsers", "Coding", or "Social") and use one key to cycle through them. Simplify your workflow and save time every day!
 
 [Official Website](https://xcv58.github.io/ShortcutCycle/)
 
 ## Comparison
 
-| Feature | ShortcutCycle | Command+Tab | Stage Manager |
-| :--- | :---: | :---: | :---: |
-| **Context Switching** | ✅ (Group based) | ❌ (All apps) | ⚠️ (Manual groups) |
-| **One-Key Cycle** | ✅ | ❌ | ❌ |
-| **Visual HUD** | ✅ (Customizable) | ✅ | ✅ |
-| **Launch Apps** | ✅ | ❌ | ❌ |
-| **Window Restoration** | ✅ | ⚠️ | ✅ |
+| Feature | ShortcutCycle | AltTab | Contexts | Witch | rcmd | TabTab | Raycast | Alfred | Manico | Command+Tab |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Type** | Group Switcher | Window Switcher | Window Switcher | Window Switcher | App Switcher | Window Switcher | Launcher | Launcher | App Launcher | App Switcher |
+| **Context Switching** | ✅ (Groups) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **One-Key Cycle** | ✅ (Option+Num) | ❌ | ⚠️ (Numbered) | ❌ | ✅ (R-Cmd+Key) | ❌ | ❌ | ❌ | ✅ (Option+Num) | ❌ |
+| **Visual HUD** | ✅ | ✅ (Thumbnails) | ✅ (Sidebar) | ✅ (List) | ✅ (Dynamic) | ✅ (Thumbnails) | ✅ (List) | ✅ (List) | ✅ (List) | ✅ (Icons) |
+| **Launch Apps** | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ |
+| **Search Windows** | ❌ | ❌ | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ |
+| **Price** | $3.99 | Free | ~$10 | $14 | ~$10 | ~$24 | Free/Pro | Free/Powerpack | Free/Pro | Free |
 
 ## Features
 
