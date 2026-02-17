@@ -318,10 +318,14 @@ public enum CycleSessionLogic {
         groupId: UUID,
         currentItemIds: [String],
         fallbackNextId: String,
+        useSession: Bool = true,
         isHUDVisible: Bool,
         now: Date,
         timeout: TimeInterval
     ) -> (nextId: String, nextState: CycleSessionState?) {
+        guard useSession else {
+            return (fallbackNextId, nil)
+        }
         guard !isHUDVisible else {
             return (fallbackNextId, nil)
         }

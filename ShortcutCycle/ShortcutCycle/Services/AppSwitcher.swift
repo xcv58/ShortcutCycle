@@ -325,11 +325,13 @@ class AppSwitcher: @preconcurrency ObservableObject {
     // MARK: - Helpers
 
     private func resolveSessionNextAppId(groupId: UUID, itemIds: [String], fallbackNextId: String, isHUDVisible: Bool) -> String {
+        let shouldUseSession = !UserDefaults.standard.bool(forKey: "showHUD")
         let result = CycleSessionLogic.nextId(
             state: cycleSessionState,
             groupId: groupId,
             currentItemIds: itemIds,
             fallbackNextId: fallbackNextId,
+            useSession: shouldUseSession,
             isHUDVisible: isHUDVisible,
             now: Date(),
             timeout: cycleSessionTimeout

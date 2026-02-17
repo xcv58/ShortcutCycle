@@ -969,6 +969,31 @@ final class AppCyclingLogicTests: XCTestCase {
         XCTAssertNil(result.nextState)
     }
 
+    func testCycleSession_WhenDisabledBySetting_BypassesSession() {
+        let groupId = UUID()
+        let now = Date()
+        let existing = CycleSessionState(
+            groupId: groupId,
+            cycleOrder: ["A", "B", "C"],
+            lastSelectedId: "B",
+            updatedAt: now
+        )
+
+        let result = CycleSessionLogic.nextId(
+            state: existing,
+            groupId: groupId,
+            currentItemIds: ["A", "B", "C"],
+            fallbackNextId: "A",
+            useSession: false,
+            isHUDVisible: false,
+            now: now.addingTimeInterval(0.2),
+            timeout: 1.2
+        )
+
+        XCTAssertEqual(result.nextId, "A")
+        XCTAssertNil(result.nextState)
+    }
+
     func testCycleSession_ExpiresAndFallsBack() {
         let groupId = UUID()
         let t0 = Date()
