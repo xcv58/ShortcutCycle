@@ -191,8 +191,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
             }()
             
             if app?.isActive == true {
-                app?.hide()
-                showHUD(
+                let hudShown = showHUD(
                     items: runningItems,
                     activeAppId: item.id,
                     modifierFlags: modifierFlags,
@@ -211,6 +210,15 @@ class AppSwitcher: @preconcurrency ObservableObject {
                         }
                     }
                 )
+                if hudShown {
+                    // Preserve existing toggle behavior when HUD is visible.
+                    app?.hide()
+                } else {
+                    // With HUD disabled, keep behavior as an explicit activation.
+                    app?.unhide()
+                    app?.activate(options: .activateAllWindows)
+                    store.updateMRUOrder(activatedId: item.id, activatedBundleId: item.bundleId, for: group.id, liveItemIds: liveItemIds)
+                }
             } else {
                 store.updateLastActiveApp(bundleId: item.id, for: group.id)
                 let hudShown = showHUD(
