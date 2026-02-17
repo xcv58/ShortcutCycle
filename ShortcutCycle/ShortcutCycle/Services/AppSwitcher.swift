@@ -18,6 +18,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
     static let shared = AppSwitcher()
     
     let objectWillChange = ObservableObjectPublisher()
+    private var lastInvokedGroupId: UUID?
     
     private init() {
         UserDefaults.standard.register(defaults: ["showHUD": true, "showShortcutInHUD": true])
@@ -28,26 +29,48 @@ class AppSwitcher: @preconcurrency ObservableObject {
         let modifierFlags = getModifierFlags(for: group)
         let shortcutString = group.shortcutDisplayString
         let activeKey = getShortcutKey(for: group)
+        let prioritizeFrontmost = lastInvokedGroupId == group.id
         
         let hudItems = getHUDItems(for: group)
 
+        let handled: Bool
         // If "Open App If Needed" is enabled, we cycle through ALL apps
         if group.shouldOpenAppIfNeeded {
              if hudItems.isEmpty { return }
-             cycleAllApps(hudItems: hudItems, group: group, store: store, modifierFlags: modifierFlags, shortcut: shortcutString, activeKey: activeKey)
+             handled = cycleAllApps(
+                hudItems: hudItems,
+                group: group,
+                store: store,
+                modifierFlags: modifierFlags,
+                shortcut: shortcutString,
+                activeKey: activeKey,
+                prioritizeFrontmost: prioritizeFrontmost
+             )
         } else {
              // Legacy behavior: Only cycle running apps
-             cycleRunningAppsOnly(hudItems: hudItems, group: group, store: store, modifierFlags: modifierFlags, shortcut: shortcutString, activeKey: activeKey)
+             handled = cycleRunningAppsOnly(
+                hudItems: hudItems,
+                group: group,
+                store: store,
+                modifierFlags: modifierFlags,
+                shortcut: shortcutString,
+                activeKey: activeKey,
+                prioritizeFrontmost: prioritizeFrontmost
+             )
+        }
+
+        if handled {
+            lastInvokedGroupId = group.id
         }
     }
     
     // MARK: - Logic for "Open App If Needed" (New Feature)
     
-    private func cycleAllApps(hudItems: [HUDAppItem], group: AppGroup, store: GroupStore, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key?) {
+    private func cycleAllApps(hudItems: [HUDAppItem], group: AppGroup, store: GroupStore, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key?, prioritizeFrontmost: Bool) -> Bool {
         // If the HUD is currently self-driving (looping via timer), ignore external shortcut requests (Key Repeats)
         // This prevents double-incrementing when holding the key.
         if HUDManager.shared.isLooping {
-            return
+            return false
         }
 
         let liveItemIds = Set(hudItems.map { $0.id })
@@ -79,7 +102,8 @@ class AppSwitcher: @preconcurrency ObservableObject {
             currentFrontmostAppId: frontmostAppUniqueId,
             currentHUDSelectionId: HUDManager.shared.currentSelectedAppId,
             lastActiveAppId: resolvedLastActiveId,
-            isHUDVisible: HUDManager.shared.isVisible
+            isHUDVisible: HUDManager.shared.isVisible,
+            prioritizeFrontmost: prioritizeFrontmost
         )
 
         // If no app from the group is running, launch the first app and show overlay
@@ -91,7 +115,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
                 activateOrLaunch(bundleId: item.bundleId, pid: item.pid)
                 LaunchOverlayManager.shared.show(appName: item.name, appIcon: item.icon)
             }
-            return
+            return true
         }
 
         // Find the HUDAppItem for the next app
@@ -125,14 +149,15 @@ class AppSwitcher: @preconcurrency ObservableObject {
              activateOrLaunch(bundleId: nextItem?.bundleId ?? nextAppId, pid: nextItem?.pid)
              store.updateMRUOrder(activatedId: nextItem?.id ?? nextAppId, activatedBundleId: nextItem?.bundleId ?? nextAppId, for: group.id, liveItemIds: liveItemIds)
         }
+        return true
     }
     
     // MARK: - Legacy Logic (Only Running Apps)
     
-    private func cycleRunningAppsOnly(hudItems: [HUDAppItem], group: AppGroup, store: GroupStore, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key?) {
+    private func cycleRunningAppsOnly(hudItems: [HUDAppItem], group: AppGroup, store: GroupStore, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key?, prioritizeFrontmost: Bool) -> Bool {
         // If the HUD is currently self-driving (looping via timer), ignore external shortcut requests (Key Repeats)
         if HUDManager.shared.isLooping {
-            return
+            return false
         }
 
         let runningItems = hudItems.filter { $0.isRunning }
@@ -148,8 +173,9 @@ class AppSwitcher: @preconcurrency ObservableObject {
                     appName: firstApp.name,
                     appIcon: getIcon(for: firstApp)
                 )
+                return true
             }
-            return
+            return false
         }
         
         if runningItems.count == 1 {
@@ -211,7 +237,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
                     store.updateMRUOrder(activatedId: item.id, activatedBundleId: item.bundleId, for: group.id, liveItemIds: liveItemIds)
                 }
             }
-            return
+            return true
         }
         
         // Cycle logic
@@ -238,7 +264,8 @@ class AppSwitcher: @preconcurrency ObservableObject {
             currentFrontmostAppId: frontmostAppUniqueId,
             currentHUDSelectionId: HUDManager.shared.currentSelectedAppId,
             lastActiveAppId: resolvedLastActiveId,
-            isHUDVisible: HUDManager.shared.isVisible
+            isHUDVisible: HUDManager.shared.isVisible,
+            prioritizeFrontmost: prioritizeFrontmost
         )
         
         // Find the HUDAppItem for the next app
@@ -270,6 +297,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
              activateOrLaunch(bundleId: nextItem?.bundleId ?? nextAppId, pid: nextItem?.pid)
              store.updateMRUOrder(activatedId: nextItem?.id ?? nextAppId, activatedBundleId: nextItem?.bundleId ?? nextAppId, for: group.id, liveItemIds: liveItemIds)
         }
+        return true
     }
     
     // MARK: - Helpers

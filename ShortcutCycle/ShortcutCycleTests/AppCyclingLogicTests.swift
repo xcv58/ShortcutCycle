@@ -83,6 +83,38 @@ final class AppCyclingLogicTests: XCTestCase {
         
         XCTAssertEqual(next, "com.app.B")
     }
+
+    func testNewCycleFrontmostInGroupWithoutPrioritizingFrontmost_UsesLastActive() {
+        let items = makeItems(["com.app.A", "com.app.B", "com.app.C"])
+
+        // Cross-group entry should resume group context instead of stepping from frontmost.
+        let next = AppCyclingLogic.nextAppId(
+            items: items,
+            currentFrontmostAppId: "com.app.A",
+            currentHUDSelectionId: nil,
+            lastActiveAppId: "com.app.C",
+            isHUDVisible: false,
+            prioritizeFrontmost: false
+        )
+
+        XCTAssertEqual(next, "com.app.C")
+    }
+
+    func testNewCycleFrontmostInGroupWithoutPrioritizingFrontmost_NoLastActiveUsesFirst() {
+        let items = makeItems(["com.app.A", "com.app.B", "com.app.C"])
+
+        // If there is no group context yet, default to first item.
+        let next = AppCyclingLogic.nextAppId(
+            items: items,
+            currentFrontmostAppId: "com.app.A",
+            currentHUDSelectionId: nil,
+            lastActiveAppId: nil,
+            isHUDVisible: false,
+            prioritizeFrontmost: false
+        )
+
+        XCTAssertEqual(next, "com.app.A")
+    }
     
     func testNewCycleFrontmostNotInGroupWithLastActive() {
         let items = makeItems(["com.app.A", "com.app.B", "com.app.C"])

@@ -145,13 +145,15 @@ public enum AppCyclingLogic {
     ///   - currentHUDSelectionId: The bundle ID currently selected in the HUD (if visible)
     ///   - lastActiveAppId: The bundle ID of the last active app in this group
     ///   - isHUDVisible: Whether the HUD is currently visible
+    ///   - prioritizeFrontmost: Whether a new cycle should advance from current frontmost app
     /// - Returns: The bundle ID of the next app to activate
     public static func nextAppId(
         items: [CyclingAppItem],
         currentFrontmostAppId: String?,
         currentHUDSelectionId: String?,
         lastActiveAppId: String?,
-        isHUDVisible: Bool
+        isHUDVisible: Bool,
+        prioritizeFrontmost: Bool = true
     ) -> String {
         guard !items.isEmpty else {
             // Fallback if no items (should not happen in caller, but safe)
@@ -173,11 +175,13 @@ public enum AppCyclingLogic {
         // 2. HUD is NOT visible. This is a new cycle start.
         
         // Check if the frontmost app is part of our group
-        if let frontmostID = currentFrontmostAppId,
-           let currentIndex = items.firstIndex(where: { $0.id == frontmostID }) {
-            // We are gathering "speed" from the current app. Go to next.
-            let nextIndex = (currentIndex + 1) % items.count
-            return items[nextIndex].id
+        if prioritizeFrontmost {
+            if let frontmostID = currentFrontmostAppId,
+               let currentIndex = items.firstIndex(where: { $0.id == frontmostID }) {
+                // We are gathering "speed" from the current app. Go to next.
+                let nextIndex = (currentIndex + 1) % items.count
+                return items[nextIndex].id
+            }
         }
         
         // 3. Frontmost app is NOT in the group (or we are not in it).
