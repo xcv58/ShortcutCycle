@@ -1068,6 +1068,61 @@ final class AppCyclingLogicTests: XCTestCase {
         XCTAssertEqual(result.nextId, "C")
     }
 
+    func testCycleSession_NoAvailableItemsInOrder_FallsBackToFreshSession() {
+        let groupId = UUID()
+        let now = Date()
+        let existing = CycleSessionState(
+            groupId: groupId,
+            cycleOrder: ["A", "B", "C"],
+            lastSelectedId: "B",
+            updatedAt: now
+        )
+
+        // None of the current items are present in the saved session order.
+        // continuedIdFromSession should return nil and trigger a fresh fallback session.
+        let result = CycleSessionLogic.nextId(
+            state: existing,
+            groupId: groupId,
+            currentItemIds: ["X", "Y"],
+            fallbackNextId: "Y",
+            useSession: true,
+            isHUDVisible: false,
+            now: now.addingTimeInterval(0.2),
+            timeout: 1.2
+        )
+
+        XCTAssertEqual(result.nextId, "Y")
+        XCTAssertEqual(result.nextState?.cycleOrder, ["X", "Y"])
+        XCTAssertEqual(result.nextState?.lastSelectedId, "Y")
+    }
+
+    func testCycleSession_LastSelectedMissingInOrder_UsesFirstAvailableFromSessionOrder() {
+        let groupId = UUID()
+        let now = Date()
+        let existing = CycleSessionState(
+            groupId: groupId,
+            cycleOrder: ["A", "B", "C"],
+            lastSelectedId: "Z", // Not in cycleOrder anymore
+            updatedAt: now
+        )
+
+        // Falls back to first available in original session order: A before C.
+        let result = CycleSessionLogic.nextId(
+            state: existing,
+            groupId: groupId,
+            currentItemIds: ["C", "A"],
+            fallbackNextId: "C",
+            useSession: true,
+            isHUDVisible: false,
+            now: now.addingTimeInterval(0.2),
+            timeout: 1.2
+        )
+
+        XCTAssertEqual(result.nextId, "A")
+        XCTAssertEqual(result.nextState?.cycleOrder, ["A", "B", "C"])
+        XCTAssertEqual(result.nextState?.lastSelectedId, "A")
+    }
+
     func testCycleSession_SingleItemRemainsStable() {
         let groupId = UUID()
         let now = Date()
