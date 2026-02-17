@@ -145,13 +145,15 @@ public enum AppCyclingLogic {
     ///   - currentHUDSelectionId: The bundle ID currently selected in the HUD (if visible)
     ///   - lastActiveAppId: The bundle ID of the last active app in this group
     ///   - isHUDVisible: Whether the HUD is currently visible
+    ///   - prioritizeFrontmost: Whether a new cycle should advance from current frontmost app
     /// - Returns: The bundle ID of the next app to activate
     public static func nextAppId(
         items: [CyclingAppItem],
         currentFrontmostAppId: String?,
         currentHUDSelectionId: String?,
         lastActiveAppId: String?,
-        isHUDVisible: Bool
+        isHUDVisible: Bool,
+        prioritizeFrontmost: Bool = true
     ) -> String {
         guard !items.isEmpty else {
             // Fallback if no items (should not happen in caller, but safe)
@@ -173,11 +175,13 @@ public enum AppCyclingLogic {
         // 2. HUD is NOT visible. This is a new cycle start.
         
         // Check if the frontmost app is part of our group
-        if let frontmostID = currentFrontmostAppId,
-           let currentIndex = items.firstIndex(where: { $0.id == frontmostID }) {
-            // We are gathering "speed" from the current app. Go to next.
-            let nextIndex = (currentIndex + 1) % items.count
-            return items[nextIndex].id
+        if prioritizeFrontmost {
+            if let frontmostID = currentFrontmostAppId,
+               let currentIndex = items.firstIndex(where: { $0.id == frontmostID }) {
+                // We are gathering "speed" from the current app. Go to next.
+                let nextIndex = (currentIndex + 1) % items.count
+                return items[nextIndex].id
+            }
         }
         
         // 3. Frontmost app is NOT in the group (or we are not in it).
@@ -288,5 +292,92 @@ public enum AppCyclingLogic {
             if validBundleIds.contains(entry) { return true }
             return false
         }
+    }
+}
+
+public struct CycleSessionState: Equatable {
+    public let groupId: UUID
+    public let cycleOrder: [String]
+    public let lastSelectedId: String
+    public let updatedAt: Date
+
+    public init(groupId: UUID, cycleOrder: [String], lastSelectedId: String, updatedAt: Date) {
+        self.groupId = groupId
+        self.cycleOrder = cycleOrder
+        self.lastSelectedId = lastSelectedId
+        self.updatedAt = updatedAt
+    }
+}
+
+public enum CycleSessionLogic {
+    /// Returns the next item ID for blind-tap cycling and the updated session state.
+    /// - Note: HUD-visible interactions bypass session logic and reset state to avoid
+    ///   conflicts with HUD's own selection progression.
+    public static func nextId(
+        state: CycleSessionState?,
+        groupId: UUID,
+        currentItemIds: [String],
+        fallbackNextId: String,
+        useSession: Bool = true,
+        isHUDVisible: Bool,
+        now: Date,
+        timeout: TimeInterval
+    ) -> (nextId: String, nextState: CycleSessionState?) {
+        guard useSession else {
+            return (fallbackNextId, nil)
+        }
+        guard !isHUDVisible else {
+            return (fallbackNextId, nil)
+        }
+        guard !currentItemIds.isEmpty else {
+            return (fallbackNextId, nil)
+        }
+
+        if let state = state,
+           state.groupId == groupId,
+           now.timeIntervalSince(state.updatedAt) <= timeout,
+           let continuedId = continuedIdFromSession(state: state, currentItemIds: currentItemIds) {
+            return (
+                continuedId,
+                CycleSessionState(
+                    groupId: groupId,
+                    cycleOrder: state.cycleOrder,
+                    lastSelectedId: continuedId,
+                    updatedAt: now
+                )
+            )
+        }
+
+        // Start a fresh short-lived session from the current order.
+        return (
+            fallbackNextId,
+            CycleSessionState(
+                groupId: groupId,
+                cycleOrder: currentItemIds,
+                lastSelectedId: fallbackNextId,
+                updatedAt: now
+            )
+        )
+    }
+
+    private static func continuedIdFromSession(state: CycleSessionState, currentItemIds: [String]) -> String? {
+        let available = Set(currentItemIds)
+        let order = state.cycleOrder
+        guard !order.isEmpty else { return nil }
+
+        if let lastIndex = order.firstIndex(of: state.lastSelectedId) {
+            for step in 1...order.count {
+                let index = (lastIndex + step) % order.count
+                let candidate = order[index]
+                if available.contains(candidate) {
+                    return candidate
+                }
+            }
+            return nil
+        }
+
+        // Last selected item no longer exists in session order; pick first available
+        // in that original order to preserve predictable progression.
+        return order.first(where: { available.contains($0) })
     }
 }

@@ -18,6 +18,9 @@ class AppSwitcher: @preconcurrency ObservableObject {
     static let shared = AppSwitcher()
     
     let objectWillChange = ObservableObjectPublisher()
+    private var lastInvokedGroupId: UUID?
+    private var cycleSessionState: CycleSessionState?
+    private let cycleSessionTimeout: TimeInterval = 1.2
     
     private init() {
         UserDefaults.standard.register(defaults: ["showHUD": true, "showShortcutInHUD": true])
@@ -28,26 +31,48 @@ class AppSwitcher: @preconcurrency ObservableObject {
         let modifierFlags = getModifierFlags(for: group)
         let shortcutString = group.shortcutDisplayString
         let activeKey = getShortcutKey(for: group)
+        let prioritizeFrontmost = lastInvokedGroupId == group.id
         
         let hudItems = getHUDItems(for: group)
 
+        let handled: Bool
         // If "Open App If Needed" is enabled, we cycle through ALL apps
         if group.shouldOpenAppIfNeeded {
              if hudItems.isEmpty { return }
-             cycleAllApps(hudItems: hudItems, group: group, store: store, modifierFlags: modifierFlags, shortcut: shortcutString, activeKey: activeKey)
+             handled = cycleAllApps(
+                hudItems: hudItems,
+                group: group,
+                store: store,
+                modifierFlags: modifierFlags,
+                shortcut: shortcutString,
+                activeKey: activeKey,
+                prioritizeFrontmost: prioritizeFrontmost
+             )
         } else {
              // Legacy behavior: Only cycle running apps
-             cycleRunningAppsOnly(hudItems: hudItems, group: group, store: store, modifierFlags: modifierFlags, shortcut: shortcutString, activeKey: activeKey)
+             handled = cycleRunningAppsOnly(
+                hudItems: hudItems,
+                group: group,
+                store: store,
+                modifierFlags: modifierFlags,
+                shortcut: shortcutString,
+                activeKey: activeKey,
+                prioritizeFrontmost: prioritizeFrontmost
+             )
+        }
+
+        if handled {
+            lastInvokedGroupId = group.id
         }
     }
     
     // MARK: - Logic for "Open App If Needed" (New Feature)
     
-    private func cycleAllApps(hudItems: [HUDAppItem], group: AppGroup, store: GroupStore, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key?) {
+    private func cycleAllApps(hudItems: [HUDAppItem], group: AppGroup, store: GroupStore, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key?, prioritizeFrontmost: Bool) -> Bool {
         // If the HUD is currently self-driving (looping via timer), ignore external shortcut requests (Key Repeats)
         // This prevents double-incrementing when holding the key.
         if HUDManager.shared.isLooping {
-            return
+            return false
         }
 
         let liveItemIds = Set(hudItems.map { $0.id })
@@ -74,12 +99,20 @@ class AppSwitcher: @preconcurrency ObservableObject {
             items: resolvableItems
         )
 
+        let isHUDVisible = HUDManager.shared.isVisible
         nextAppId = AppCyclingLogic.nextAppId(
             items: cycleItems,
             currentFrontmostAppId: frontmostAppUniqueId,
             currentHUDSelectionId: HUDManager.shared.currentSelectedAppId,
             lastActiveAppId: resolvedLastActiveId,
-            isHUDVisible: HUDManager.shared.isVisible
+            isHUDVisible: isHUDVisible,
+            prioritizeFrontmost: prioritizeFrontmost
+        )
+        nextAppId = resolveSessionNextAppId(
+            groupId: group.id,
+            itemIds: cycleItems.map(\.id),
+            fallbackNextId: nextAppId,
+            isHUDVisible: isHUDVisible
         )
 
         // If no app from the group is running, launch the first app and show overlay
@@ -91,7 +124,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
                 activateOrLaunch(bundleId: item.bundleId, pid: item.pid)
                 LaunchOverlayManager.shared.show(appName: item.name, appIcon: item.icon)
             }
-            return
+            return true
         }
 
         // Find the HUDAppItem for the next app
@@ -125,14 +158,15 @@ class AppSwitcher: @preconcurrency ObservableObject {
              activateOrLaunch(bundleId: nextItem?.bundleId ?? nextAppId, pid: nextItem?.pid)
              store.updateMRUOrder(activatedId: nextItem?.id ?? nextAppId, activatedBundleId: nextItem?.bundleId ?? nextAppId, for: group.id, liveItemIds: liveItemIds)
         }
+        return true
     }
     
     // MARK: - Legacy Logic (Only Running Apps)
     
-    private func cycleRunningAppsOnly(hudItems: [HUDAppItem], group: AppGroup, store: GroupStore, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key?) {
+    private func cycleRunningAppsOnly(hudItems: [HUDAppItem], group: AppGroup, store: GroupStore, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key?, prioritizeFrontmost: Bool) -> Bool {
         // If the HUD is currently self-driving (looping via timer), ignore external shortcut requests (Key Repeats)
         if HUDManager.shared.isLooping {
-            return
+            return false
         }
 
         let runningItems = hudItems.filter { $0.isRunning }
@@ -148,8 +182,9 @@ class AppSwitcher: @preconcurrency ObservableObject {
                     appName: firstApp.name,
                     appIcon: getIcon(for: firstApp)
                 )
+                return true
             }
-            return
+            return false
         }
         
         if runningItems.count == 1 {
@@ -165,8 +200,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
             }()
             
             if app?.isActive == true {
-                app?.hide()
-                showHUD(
+                let hudShown = showHUD(
                     items: runningItems,
                     activeAppId: item.id,
                     modifierFlags: modifierFlags,
@@ -185,6 +219,14 @@ class AppSwitcher: @preconcurrency ObservableObject {
                         }
                     }
                 )
+                if hudShown {
+                    // Preserve existing toggle behavior when HUD is visible.
+                    app?.hide()
+                } else {
+                    // With HUD disabled, keep behavior as an explicit activation.
+                    activateOrLaunch(bundleId: item.bundleId, pid: item.pid)
+                    store.updateMRUOrder(activatedId: item.id, activatedBundleId: item.bundleId, for: group.id, liveItemIds: liveItemIds)
+                }
             } else {
                 store.updateLastActiveApp(bundleId: item.id, for: group.id)
                 let hudShown = showHUD(
@@ -206,12 +248,11 @@ class AppSwitcher: @preconcurrency ObservableObject {
                     }
                 )
                 if !hudShown {
-                    app?.unhide()
-                    app?.activate(options: .activateAllWindows)
+                    activateOrLaunch(bundleId: item.bundleId, pid: item.pid)
                     store.updateMRUOrder(activatedId: item.id, activatedBundleId: item.bundleId, for: group.id, liveItemIds: liveItemIds)
                 }
             }
-            return
+            return true
         }
         
         // Cycle logic
@@ -233,12 +274,20 @@ class AppSwitcher: @preconcurrency ObservableObject {
             items: resolvableItems
         )
 
+        let isHUDVisible = HUDManager.shared.isVisible
         nextAppId = AppCyclingLogic.nextAppId(
             items: cycleItems,
             currentFrontmostAppId: frontmostAppUniqueId,
             currentHUDSelectionId: HUDManager.shared.currentSelectedAppId,
             lastActiveAppId: resolvedLastActiveId,
-            isHUDVisible: HUDManager.shared.isVisible
+            isHUDVisible: isHUDVisible,
+            prioritizeFrontmost: prioritizeFrontmost
+        )
+        nextAppId = resolveSessionNextAppId(
+            groupId: group.id,
+            itemIds: cycleItems.map(\.id),
+            fallbackNextId: nextAppId,
+            isHUDVisible: isHUDVisible
         )
         
         // Find the HUDAppItem for the next app
@@ -270,9 +319,26 @@ class AppSwitcher: @preconcurrency ObservableObject {
              activateOrLaunch(bundleId: nextItem?.bundleId ?? nextAppId, pid: nextItem?.pid)
              store.updateMRUOrder(activatedId: nextItem?.id ?? nextAppId, activatedBundleId: nextItem?.bundleId ?? nextAppId, for: group.id, liveItemIds: liveItemIds)
         }
+        return true
     }
     
     // MARK: - Helpers
+
+    private func resolveSessionNextAppId(groupId: UUID, itemIds: [String], fallbackNextId: String, isHUDVisible: Bool) -> String {
+        let shouldUseSession = !UserDefaults.standard.bool(forKey: "showHUD")
+        let result = CycleSessionLogic.nextId(
+            state: cycleSessionState,
+            groupId: groupId,
+            currentItemIds: itemIds,
+            fallbackNextId: fallbackNextId,
+            useSession: shouldUseSession,
+            isHUDVisible: isHUDVisible,
+            now: Date(),
+            timeout: cycleSessionTimeout
+        )
+        cycleSessionState = result.nextState
+        return result.nextId
+    }
     
     private func getHUDItems(for group: AppGroup) -> [HUDAppItem] {
         var items: [HUDAppItem]
@@ -393,17 +459,54 @@ class AppSwitcher: @preconcurrency ObservableObject {
             // Activate specific instance by PID
             let runningApps = NSRunningApplication.runningApplications(withBundleIdentifier: bundleId)
             if let app = runningApps.first(where: { $0.processIdentifier == pid }) {
-                app.unhide()
-                app.activate(options: .activateAllWindows)
+                activateRunningApp(app, bundleId: bundleId)
                 return
             }
         }
         // Fallback: activate by bundle ID (first match) or launch
         if let app = NSRunningApplication.runningApplications(withBundleIdentifier: bundleId).first {
-             app.unhide()
-             app.activate(options: .activateAllWindows)
+             activateRunningApp(app, bundleId: bundleId)
         } else {
              launchApp(bundleIdentifier: bundleId)
+        }
+    }
+
+    private func activateRunningApp(_ app: NSRunningApplication, bundleId: String) {
+        yieldFocusIfNeeded()
+        app.unhide()
+        let activated = app.activate(options: .activateAllWindows)
+        // Some apps can visually update windows without becoming frontmost.
+        // Verify frontmost shortly after activation and retry via NSWorkspace if needed.
+        if !activated {
+            relaunchToFront(bundleId: bundleId)
+            return
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
+            guard let self = self else { return }
+            let frontmostBundleId = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
+            if frontmostBundleId != bundleId {
+                self.relaunchToFront(bundleId: bundleId)
+            }
+        }
+    }
+
+    private func relaunchToFront(bundleId: String) {
+        guard let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleId) else {
+            print("Could not find app with bundle identifier: \(bundleId)")
+            return
+        }
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.activates = true
+        NSWorkspace.shared.openApplication(at: appURL, configuration: configuration) { _, error in
+            if let error = error {
+                print("Failed to reactivate app: \(error)")
+            }
+        }
+    }
+
+    private func yieldFocusIfNeeded() {
+        if let app = NSApp, app.isActive {
+            app.hide(nil)
         }
     }
     
