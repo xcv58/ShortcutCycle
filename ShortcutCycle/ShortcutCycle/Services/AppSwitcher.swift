@@ -215,8 +215,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
                     app?.hide()
                 } else {
                     // With HUD disabled, keep behavior as an explicit activation.
-                    app?.unhide()
-                    app?.activate(options: .activateAllWindows)
+                    activateOrLaunch(bundleId: item.bundleId, pid: item.pid)
                     store.updateMRUOrder(activatedId: item.id, activatedBundleId: item.bundleId, for: group.id, liveItemIds: liveItemIds)
                 }
             } else {
@@ -240,8 +239,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
                     }
                 )
                 if !hudShown {
-                    app?.unhide()
-                    app?.activate(options: .activateAllWindows)
+                    activateOrLaunch(bundleId: item.bundleId, pid: item.pid)
                     store.updateMRUOrder(activatedId: item.id, activatedBundleId: item.bundleId, for: group.id, liveItemIds: liveItemIds)
                 }
             }
@@ -429,17 +427,54 @@ class AppSwitcher: @preconcurrency ObservableObject {
             // Activate specific instance by PID
             let runningApps = NSRunningApplication.runningApplications(withBundleIdentifier: bundleId)
             if let app = runningApps.first(where: { $0.processIdentifier == pid }) {
-                app.unhide()
-                app.activate(options: .activateAllWindows)
+                activateRunningApp(app, bundleId: bundleId)
                 return
             }
         }
         // Fallback: activate by bundle ID (first match) or launch
         if let app = NSRunningApplication.runningApplications(withBundleIdentifier: bundleId).first {
-             app.unhide()
-             app.activate(options: .activateAllWindows)
+             activateRunningApp(app, bundleId: bundleId)
         } else {
              launchApp(bundleIdentifier: bundleId)
+        }
+    }
+
+    private func activateRunningApp(_ app: NSRunningApplication, bundleId: String) {
+        yieldFocusIfNeeded()
+        app.unhide()
+        let activated = app.activate(options: .activateAllWindows)
+        // Some apps can visually update windows without becoming frontmost.
+        // Verify frontmost shortly after activation and retry via NSWorkspace if needed.
+        if !activated {
+            relaunchToFront(bundleId: bundleId)
+            return
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
+            guard let self = self else { return }
+            let frontmostBundleId = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
+            if frontmostBundleId != bundleId {
+                self.relaunchToFront(bundleId: bundleId)
+            }
+        }
+    }
+
+    private func relaunchToFront(bundleId: String) {
+        guard let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleId) else {
+            print("Could not find app with bundle identifier: \(bundleId)")
+            return
+        }
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.activates = true
+        NSWorkspace.shared.openApplication(at: appURL, configuration: configuration) { _, error in
+            if let error = error {
+                print("Failed to reactivate app: \(error)")
+            }
+        }
+    }
+
+    private func yieldFocusIfNeeded() {
+        if let app = NSApp, app.isActive {
+            app.hide(nil)
         }
     }
     
