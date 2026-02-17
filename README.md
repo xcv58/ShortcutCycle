@@ -34,6 +34,34 @@ ShortcutCycle helps you switch between your favorite apps with just one keyboard
 - **Import/Export**: Save your groups and settings to a JSON file to keep them safe or share with others.
 - **Light & Dark**: Looks great in both Light and Dark modes.
 
+### How Cycling Works
+
+ShortcutCycle behaves a little differently depending on whether the HUD is enabled:
+
+- **When HUD is enabled** (`Show HUD` = on):
+  - Cycling follows the HUD selection during that interaction.
+  - MRU order still decides which apps are near the front.
+  - Best when you want visual feedback while switching.
+
+- **When HUD is disabled** (`Show HUD` = off):
+  - Repeated taps continue through the group in a short tap session.
+  - This avoids getting stuck toggling between only two apps.
+  - Best when you want fast, blind switching.
+
+- **When switching between groups**:
+  - First tap in a different group resumes that group's context, instead of stepping from an overlapping app that happens to be frontmost.
+
+**Example (HUD off):**
+- Group: `A, B, C`
+- You tap the group shortcut repeatedly.
+- Result: `A -> B -> C -> A` (continuous cycle), not just `A <-> B`.
+
+**Example (cross-group):**
+- Group 1: `A, B, C, D`
+- Group 2: `X, Y, D`
+- You use Group 2 and land on `D`, then trigger Group 1.
+- Group 1 resumes its own context instead of jumping based only on `D` being frontmost.
+
 ### Accessibility
 We believe tools should be for everyone. ShortcutCycle is built with accessibility in mind:
 - **VoiceOver**: Fully labeled controls and navigation.
