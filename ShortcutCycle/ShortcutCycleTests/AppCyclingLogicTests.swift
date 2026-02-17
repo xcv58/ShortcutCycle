@@ -901,6 +901,31 @@ final class AppCyclingLogicTests: XCTestCase {
         XCTAssertEqual(result.nextState?.lastSelectedId, "B")
     }
 
+    func testCycleSession_EmptyCurrentItems_ReturnsFallbackAndNilState() {
+        let groupId = UUID()
+        let now = Date()
+        let existing = CycleSessionState(
+            groupId: groupId,
+            cycleOrder: ["A", "B"],
+            lastSelectedId: "A",
+            updatedAt: now
+        )
+
+        let result = CycleSessionLogic.nextId(
+            state: existing,
+            groupId: groupId,
+            currentItemIds: [],
+            fallbackNextId: "FALLBACK",
+            useSession: true,
+            isHUDVisible: false,
+            now: now.addingTimeInterval(0.2),
+            timeout: 1.2
+        )
+
+        XCTAssertEqual(result.nextId, "FALLBACK")
+        XCTAssertNil(result.nextState)
+    }
+
     func testCycleSession_ContinuesAcrossMRUReorders_InHUDOffMode() {
         let groupId = UUID()
         let t0 = Date()
