@@ -878,4 +878,194 @@ final class AppCyclingLogicTests: XCTestCase {
         // No Firefox at all — falls through to first item (Chrome)
         XCTAssertEqual(next, "com.google.Chrome::500")
     }
+
+    // MARK: - Session Cycling Tests (HUD On/Off)
+
+    func testCycleSession_NewSessionStartsFromFallback() {
+        let groupId = UUID()
+        let now = Date()
+
+        let result = CycleSessionLogic.nextId(
+            state: nil,
+            groupId: groupId,
+            currentItemIds: ["A", "B", "C"],
+            fallbackNextId: "B",
+            isHUDVisible: false,
+            now: now,
+            timeout: 1.2
+        )
+
+        XCTAssertEqual(result.nextId, "B")
+        XCTAssertEqual(result.nextState?.groupId, groupId)
+        XCTAssertEqual(result.nextState?.cycleOrder, ["A", "B", "C"])
+        XCTAssertEqual(result.nextState?.lastSelectedId, "B")
+    }
+
+    func testCycleSession_ContinuesAcrossMRUReorders_InHUDOffMode() {
+        let groupId = UUID()
+        let t0 = Date()
+        let t1 = t0.addingTimeInterval(0.3)
+        let t2 = t0.addingTimeInterval(0.6)
+
+        // First press: fallback picks B.
+        let first = CycleSessionLogic.nextId(
+            state: nil,
+            groupId: groupId,
+            currentItemIds: ["A", "B", "C"],
+            fallbackNextId: "B",
+            isHUDVisible: false,
+            now: t0,
+            timeout: 1.2
+        )
+        XCTAssertEqual(first.nextId, "B")
+
+        // Second press: MRU reorder would normally toggle back to A via frontmost+1.
+        // Session should continue to C instead.
+        let second = CycleSessionLogic.nextId(
+            state: first.nextState,
+            groupId: groupId,
+            currentItemIds: ["B", "A", "C"],
+            fallbackNextId: "A",
+            isHUDVisible: false,
+            now: t1,
+            timeout: 1.2
+        )
+        XCTAssertEqual(second.nextId, "C")
+
+        // Third press continues to A (full cycle), not B<->A ping-pong.
+        let third = CycleSessionLogic.nextId(
+            state: second.nextState,
+            groupId: groupId,
+            currentItemIds: ["C", "B", "A"],
+            fallbackNextId: "B",
+            isHUDVisible: false,
+            now: t2,
+            timeout: 1.2
+        )
+        XCTAssertEqual(third.nextId, "A")
+    }
+
+    func testCycleSession_HUDVisibleBypassesAndResetsSession() {
+        let groupId = UUID()
+        let now = Date()
+        let existing = CycleSessionState(
+            groupId: groupId,
+            cycleOrder: ["A", "B", "C"],
+            lastSelectedId: "B",
+            updatedAt: now
+        )
+
+        let result = CycleSessionLogic.nextId(
+            state: existing,
+            groupId: groupId,
+            currentItemIds: ["A", "B", "C"],
+            fallbackNextId: "C",
+            isHUDVisible: true,
+            now: now,
+            timeout: 1.2
+        )
+
+        XCTAssertEqual(result.nextId, "C")
+        XCTAssertNil(result.nextState)
+    }
+
+    func testCycleSession_ExpiresAndFallsBack() {
+        let groupId = UUID()
+        let t0 = Date()
+        let expired = t0.addingTimeInterval(2.0)
+        let existing = CycleSessionState(
+            groupId: groupId,
+            cycleOrder: ["A", "B", "C"],
+            lastSelectedId: "B",
+            updatedAt: t0
+        )
+
+        let result = CycleSessionLogic.nextId(
+            state: existing,
+            groupId: groupId,
+            currentItemIds: ["A", "B", "C"],
+            fallbackNextId: "A",
+            isHUDVisible: false,
+            now: expired,
+            timeout: 1.2
+        )
+
+        XCTAssertEqual(result.nextId, "A")
+        XCTAssertEqual(result.nextState?.lastSelectedId, "A")
+    }
+
+    func testCycleSession_DifferentGroupStartsFresh() {
+        let groupA = UUID()
+        let groupB = UUID()
+        let now = Date()
+        let existing = CycleSessionState(
+            groupId: groupA,
+            cycleOrder: ["A", "B", "C"],
+            lastSelectedId: "B",
+            updatedAt: now
+        )
+
+        let result = CycleSessionLogic.nextId(
+            state: existing,
+            groupId: groupB,
+            currentItemIds: ["X", "Y", "Z"],
+            fallbackNextId: "Y",
+            isHUDVisible: false,
+            now: now.addingTimeInterval(0.2),
+            timeout: 1.2
+        )
+
+        XCTAssertEqual(result.nextId, "Y")
+        XCTAssertEqual(result.nextState?.groupId, groupB)
+        XCTAssertEqual(result.nextState?.cycleOrder, ["X", "Y", "Z"])
+    }
+
+    func testCycleSession_SkipsUnavailableItems() {
+        let groupId = UUID()
+        let now = Date()
+        let existing = CycleSessionState(
+            groupId: groupId,
+            cycleOrder: ["A", "B", "C"],
+            lastSelectedId: "B",
+            updatedAt: now
+        )
+
+        let result = CycleSessionLogic.nextId(
+            state: existing,
+            groupId: groupId,
+            currentItemIds: ["A", "C"], // B closed
+            fallbackNextId: "A",
+            isHUDVisible: false,
+            now: now.addingTimeInterval(0.2),
+            timeout: 1.2
+        )
+
+        XCTAssertEqual(result.nextId, "C")
+    }
+
+    func testCycleSession_SingleItemRemainsStable() {
+        let groupId = UUID()
+        let now = Date()
+        let first = CycleSessionLogic.nextId(
+            state: nil,
+            groupId: groupId,
+            currentItemIds: ["A"],
+            fallbackNextId: "A",
+            isHUDVisible: false,
+            now: now,
+            timeout: 1.2
+        )
+        let second = CycleSessionLogic.nextId(
+            state: first.nextState,
+            groupId: groupId,
+            currentItemIds: ["A"],
+            fallbackNextId: "A",
+            isHUDVisible: false,
+            now: now.addingTimeInterval(0.2),
+            timeout: 1.2
+        )
+
+        XCTAssertEqual(first.nextId, "A")
+        XCTAssertEqual(second.nextId, "A")
+    }
 }

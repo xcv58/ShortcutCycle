@@ -19,6 +19,8 @@ class AppSwitcher: @preconcurrency ObservableObject {
     
     let objectWillChange = ObservableObjectPublisher()
     private var lastInvokedGroupId: UUID?
+    private var cycleSessionState: CycleSessionState?
+    private let cycleSessionTimeout: TimeInterval = 1.2
     
     private init() {
         UserDefaults.standard.register(defaults: ["showHUD": true, "showShortcutInHUD": true])
@@ -97,13 +99,20 @@ class AppSwitcher: @preconcurrency ObservableObject {
             items: resolvableItems
         )
 
+        let isHUDVisible = HUDManager.shared.isVisible
         nextAppId = AppCyclingLogic.nextAppId(
             items: cycleItems,
             currentFrontmostAppId: frontmostAppUniqueId,
             currentHUDSelectionId: HUDManager.shared.currentSelectedAppId,
             lastActiveAppId: resolvedLastActiveId,
-            isHUDVisible: HUDManager.shared.isVisible,
+            isHUDVisible: isHUDVisible,
             prioritizeFrontmost: prioritizeFrontmost
+        )
+        nextAppId = resolveSessionNextAppId(
+            groupId: group.id,
+            itemIds: cycleItems.map(\.id),
+            fallbackNextId: nextAppId,
+            isHUDVisible: isHUDVisible
         )
 
         // If no app from the group is running, launch the first app and show overlay
@@ -265,13 +274,20 @@ class AppSwitcher: @preconcurrency ObservableObject {
             items: resolvableItems
         )
 
+        let isHUDVisible = HUDManager.shared.isVisible
         nextAppId = AppCyclingLogic.nextAppId(
             items: cycleItems,
             currentFrontmostAppId: frontmostAppUniqueId,
             currentHUDSelectionId: HUDManager.shared.currentSelectedAppId,
             lastActiveAppId: resolvedLastActiveId,
-            isHUDVisible: HUDManager.shared.isVisible,
+            isHUDVisible: isHUDVisible,
             prioritizeFrontmost: prioritizeFrontmost
+        )
+        nextAppId = resolveSessionNextAppId(
+            groupId: group.id,
+            itemIds: cycleItems.map(\.id),
+            fallbackNextId: nextAppId,
+            isHUDVisible: isHUDVisible
         )
         
         // Find the HUDAppItem for the next app
@@ -307,6 +323,20 @@ class AppSwitcher: @preconcurrency ObservableObject {
     }
     
     // MARK: - Helpers
+
+    private func resolveSessionNextAppId(groupId: UUID, itemIds: [String], fallbackNextId: String, isHUDVisible: Bool) -> String {
+        let result = CycleSessionLogic.nextId(
+            state: cycleSessionState,
+            groupId: groupId,
+            currentItemIds: itemIds,
+            fallbackNextId: fallbackNextId,
+            isHUDVisible: isHUDVisible,
+            now: Date(),
+            timeout: cycleSessionTimeout
+        )
+        cycleSessionState = result.nextState
+        return result.nextId
+    }
     
     private func getHUDItems(for group: AppGroup) -> [HUDAppItem] {
         var items: [HUDAppItem]
