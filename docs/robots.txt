@@ -1,3 +1,3 @@
 User-agent: *
 Allow: /
-Sitemap: https://shortcutcycle.vercel.app/sitemap.xml
+Sitemap: https://s.jenny.media/sitemap.xml
