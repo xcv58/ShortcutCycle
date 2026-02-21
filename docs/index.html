@@ -164,6 +164,13 @@
             -webkit-tap-highlight-color: transparent;
         }
 
+        /* Prevent transitions on page load (anti-FOUC) */
+        body.preload,
+        body.preload * {
+            transition: none !important;
+            animation: none !important;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
@@ -1126,7 +1133,7 @@
     </style>
 </head>
 
-<body>
+<body class="preload">
 
     <!-- Skip Navigation for Accessibility -->
     <a href="#main-content" class="skip-link">Skip to main content</a>
@@ -1590,6 +1597,13 @@
     <script>
         // Enable active state on iOS
         document.addEventListener('touchstart', () => { }, { passive: true });
+
+        // Remove preload class to enable transitions after first paint
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                document.body.classList.remove('preload');
+            });
+        });
 
         const html = document.documentElement;
         const btns = {
