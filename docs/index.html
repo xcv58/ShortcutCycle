@@ -226,14 +226,17 @@
 
         /* --- LAYOUT --- */
         .container {
-            max-width: 1200px;
-            /* Increased from 1024px for better table spacing */
+            max-width: 1600px;
             margin: 0 auto;
-            padding: 0 24px;
+            padding: 0 clamp(24px, 3vw, 64px);
         }
 
         .section {
             padding: 80px 0;
+        }
+
+        .section-divider {
+            border-top: 1px solid var(--border);
         }
 
         /* --- HEADER & NAV --- */
@@ -331,7 +334,7 @@
 
         /* --- HERO --- */
         .hero {
-            padding: 100px 0 40px 0;
+            padding: 72px 0 40px 0;
         }
 
         .hero>h1 {
@@ -467,6 +470,11 @@
             flex-wrap: wrap;
         }
 
+        .hero-text .cta-group {
+            margin-top: 20px;
+            justify-content: flex-start;
+        }
+
         .cta-button {
             padding: 14px 36px;
             border-radius: 99px;
@@ -479,6 +487,56 @@
             -webkit-user-select: none;
             user-select: none;
             -webkit-touch-callout: none;
+        }
+
+        .cta-badge-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            transition: transform 0.3s ease, filter 0.3s ease;
+        }
+
+        .cta-store-link {
+            line-height: 0;
+        }
+
+        .cta-store-badge {
+            width: 180px;
+            height: auto;
+        }
+
+        .cta-store-badge-dark {
+            display: none;
+        }
+
+        [data-theme="dark"] .cta-store-badge-light {
+            display: none;
+        }
+
+        [data-theme="dark"] .cta-store-badge-dark {
+            display: block;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            [data-theme="system"] .cta-store-badge-light {
+                display: none;
+            }
+
+            [data-theme="system"] .cta-store-badge-dark {
+                display: block;
+            }
+        }
+
+        @media (hover: hover) {
+            .cta-badge-link:hover {
+                transform: translateY(-2px);
+                filter: drop-shadow(0 6px 16px var(--shadow));
+            }
+        }
+
+        .cta-badge-link:active {
+            transform: scale(0.98);
         }
 
         .cta-button>* {
@@ -547,6 +605,81 @@
             align-items: center;
         }
 
+        .gallery-toolbar {
+            margin-top: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 12px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .gallery-toolbar-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+
+        .gallery-toolbar-separator {
+            width: 1px;
+            height: 18px;
+            background: var(--border);
+            border-radius: 999px;
+        }
+
+        .screenshot-theme-switch {
+            display: inline-flex;
+            gap: 6px;
+            padding: 4px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .screenshot-theme-btn {
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            padding: 8px 12px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            line-height: 1;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .screenshot-theme-icon {
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+        }
+
+        .screenshot-theme-btn.active {
+            color: var(--text-primary);
+            background: var(--toggle-active);
+            box-shadow: 0 1px 2px var(--shadow);
+        }
+
+        .screenshot-theme-btn[data-screenshot-theme="dark"].active {
+            background: #111827;
+            color: #f9fafb;
+        }
+
+        @media (hover: hover) {
+            .screenshot-theme-btn:hover:not(.active) {
+                color: var(--text-primary);
+                background: var(--surface-hover);
+            }
+        }
+
         .scroll-btn {
             background-color: var(--surface);
             border: 1px solid transparent;
@@ -586,6 +719,17 @@
             }
         }
 
+        @media(max-width: 768px) {
+            .gallery-toolbar {
+                justify-content: center;
+                gap: 10px;
+            }
+
+            .gallery-toolbar-separator {
+                display: none;
+            }
+        }
+
         .screenshot-frame {
             flex: 0 0 85%;
             max-width: 900px;
@@ -611,6 +755,39 @@
             }
         }
 
+        @media(min-width: 901px) {
+            .gallery-wrapper {
+                display: block;
+            }
+
+            .gallery-scroller {
+                margin-top: 48px;
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 24px;
+                overflow: visible;
+                padding-bottom: 0;
+                scroll-snap-type: none;
+            }
+
+            .screenshot-frame {
+                flex: initial;
+                width: 100%;
+                max-width: none;
+                scroll-snap-align: none;
+            }
+
+            .scroll-btn {
+                display: none;
+            }
+        }
+
+        @media(min-width: 1400px) {
+            .gallery-scroller {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
         /* --- VIDEO SECTION --- */
         .video-section {
             text-align: center;
@@ -632,7 +809,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 32px;
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
         }
 
@@ -917,6 +1094,10 @@
         }
 
         @media (max-width: 768px) {
+            .hero {
+                padding: 64px 0 40px 0;
+            }
+
             .hero>h1 {
                 font-size: 2.5rem;
             }
@@ -954,6 +1135,7 @@
                 width: 100%;
             }
 
+            .cta-badge-link,
             .cta-button {
                 width: 100%;
                 justify-content: center;
@@ -1010,9 +1192,19 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 60px;
-            max-width: 1000px;
+            max-width: 980px;
             margin: 40px auto;
             position: relative;
+        }
+
+        @media (min-width: 1800px) {
+            .container {
+                max-width: 1760px;
+            }
+
+            .video-grid {
+                max-width: 1600px;
+            }
         }
 
         .versus-card {
@@ -1238,6 +1430,17 @@
                                 times a day equals about 2 hours saved per week.</span>
                             with app switching tailored to your own workflow.
                         </p>
+                        <div class="cta-group">
+                            <a href="https://apps.apple.com/us/app/shortcutcycle/id6758281578?mt=12"
+                                class="cta-badge-link cta-store-link" aria-label="Download ShortcutCycle on the App Store">
+                                <img src="assets/images/app-store-badge-light.svg"
+                                    class="cta-store-badge cta-store-badge-light" width="180" height="60"
+                                    alt="Download on the App Store" decoding="async">
+                                <img src="assets/images/app-store-badge-dark.svg"
+                                    class="cta-store-badge cta-store-badge-dark" width="180" height="60" alt=""
+                                    aria-hidden="true" decoding="async">
+                            </a>
+                        </div>
                     </div>
 
                     <div class="hero-video-container">
@@ -1248,23 +1451,37 @@
                     </div>
                 </div>
 
-                <div class="cta-group">
-                    <a href="https://apps.apple.com/us/app/shortcutcycle/id6758281578?mt=12"
-                        class="cta-button cta-primary">
-                        Download on App Store
-                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"
-                            viewBox="0 0 24 24">
-                            <path d="M5 12h14M12 5l7 7-7 7" />
-                        </svg>
-                    </a>
-                    <a href="https://github.com/xcv58/ShortcutCycle" target="_blank" rel="noopener noreferrer"
-                        class="cta-button cta-secondary">
-                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-                            <path
-                                d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-                        </svg>
-                        View on GitHub
-                    </a>
+                <div class="gallery-toolbar">
+                    <span class="gallery-toolbar-label">Screenshots</span>
+                    <span class="gallery-toolbar-separator" aria-hidden="true"></span>
+                    <div class="screenshot-theme-switch" role="group" aria-label="Screenshot Theme Toggle">
+                        <button id="screenshot-btn-light" class="screenshot-theme-btn" type="button"
+                            data-screenshot-theme="light" aria-pressed="false" title="Show light screenshots">
+                            <svg class="screenshot-theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="12" cy="12" r="5"></circle>
+                                <line x1="12" y1="1" x2="12" y2="3"></line>
+                                <line x1="12" y1="21" x2="12" y2="23"></line>
+                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                <line x1="1" y1="12" x2="3" y2="12"></line>
+                                <line x1="21" y1="12" x2="23" y2="12"></line>
+                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                            </svg>
+                            <span>Light</span>
+                        </button>
+                        <button id="screenshot-btn-dark" class="screenshot-theme-btn" type="button"
+                            data-screenshot-theme="dark" aria-pressed="false" title="Show dark screenshots">
+                            <svg class="screenshot-theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                            </svg>
+                            <span>Dark</span>
+                        </button>
+                    </div>
+                    <div role="status" aria-live="polite" aria-atomic="true" class="sr-only"
+                        id="screenshot-theme-announcement"></div>
                 </div>
 
                 <div class="gallery-wrapper">
@@ -1275,54 +1492,81 @@
                         </svg>
                     </button>
                     <div class="gallery-scroller">
-                        <a href="assets/images/hud-light.webp" class="screenshot-frame glightbox"
-                            data-gallery="screenshots" data-title="HUD Overlay Light">
+                        <a href="assets/images/hud-light.webp" class="screenshot-frame screenshot-variant glightbox"
+                            data-gallery="screenshots" data-title="HUD Overlay Light"
+                            data-light-href="assets/images/hud-light.webp"
+                            data-light-src="assets/images/hud-light.webp"
+                            data-light-srcset="assets/images/hud-light-small.webp 900w, assets/images/hud-light.webp 1800w"
+                            data-light-title="HUD Overlay Light" data-light-alt="HUD Overlay Light"
+                            data-dark-href="assets/images/hud-dark.webp"
+                            data-dark-src="assets/images/hud-dark.webp"
+                            data-dark-srcset="assets/images/hud-dark-small.webp 900w, assets/images/hud-dark.webp 1800w"
+                            data-dark-title="HUD Overlay Dark" data-dark-alt="HUD Overlay Dark">
                             <img src="assets/images/hud-light.webp"
                                 srcset="assets/images/hud-light-small.webp 900w, assets/images/hud-light.webp 1800w"
                                 sizes="(max-width: 900px) 100vw, 900px" width="900" height="562" alt="HUD Overlay Light"
                                 fetchpriority="high" decoding="async">
                         </a>
-                        <a href="assets/images/hud-grid-light.webp" class="screenshot-frame glightbox"
-                            data-gallery="screenshots" data-title="Grid View Light">
+                        <a href="assets/images/hud-grid-light.webp"
+                            class="screenshot-frame screenshot-variant glightbox" data-gallery="screenshots"
+                            data-title="Grid View Light" data-light-href="assets/images/hud-grid-light.webp"
+                            data-light-src="assets/images/hud-grid-light.webp"
+                            data-light-srcset="assets/images/hud-grid-light-small.webp 900w, assets/images/hud-grid-light.webp 1800w"
+                            data-light-title="Grid View Light" data-light-alt="Grid View Light"
+                            data-dark-href="assets/images/hud-grid-dark.webp"
+                            data-dark-src="assets/images/hud-grid-dark.webp"
+                            data-dark-srcset="assets/images/hud-grid-dark-small.webp 900w, assets/images/hud-grid-dark.webp 1800w"
+                            data-dark-title="Grid View Dark" data-dark-alt="Grid View Dark">
                             <img src="assets/images/hud-grid-light.webp"
                                 srcset="assets/images/hud-grid-light-small.webp 900w, assets/images/hud-grid-light.webp 1800w"
                                 sizes="(max-width: 900px) 100vw, 900px" loading="lazy" width="900" height="562"
                                 alt="Grid View Light" decoding="async">
                         </a>
-                        <a href="assets/images/hud-dark.webp" class="screenshot-frame glightbox"
-                            data-gallery="screenshots" data-title="HUD Overlay Dark">
-                            <img src="assets/images/hud-dark.webp"
-                                srcset="assets/images/hud-dark-small.webp 900w, assets/images/hud-dark.webp 1800w"
-                                sizes="(max-width: 900px) 100vw, 900px" loading="lazy" width="900" height="562"
-                                alt="HUD Overlay Dark" decoding="async">
-                        </a>
-                        <a href="assets/images/hud-grid-dark.webp" class="screenshot-frame glightbox"
-                            data-gallery="screenshots" data-title="Grid View Dark">
-                            <img src="assets/images/hud-grid-dark.webp"
-                                srcset="assets/images/hud-grid-dark-small.webp 900w, assets/images/hud-grid-dark.webp 1800w"
-                                sizes="(max-width: 900px) 100vw, 900px" loading="lazy" width="900" height="562"
-                                alt="Grid View Dark" decoding="async">
-                        </a>
-                        <a href="assets/images/general-light.webp" class="screenshot-frame glightbox"
-                            data-gallery="screenshots" data-title="General Settings Light">
+                        <a href="assets/images/general-light.webp" class="screenshot-frame screenshot-variant glightbox"
+                            data-gallery="screenshots" data-title="General Settings Light"
+                            data-light-href="assets/images/general-light.webp"
+                            data-light-src="assets/images/general-light.webp"
+                            data-light-srcset="assets/images/general-light-small.webp 900w, assets/images/general-light.webp 1800w"
+                            data-light-title="General Settings Light" data-light-alt="General Settings Light"
+                            data-dark-href="assets/images/general-dark.webp"
+                            data-dark-src="assets/images/general-dark.webp"
+                            data-dark-srcset="assets/images/general-dark-small.webp 900w, assets/images/general-dark.webp 1800w"
+                            data-dark-title="General Settings Dark" data-dark-alt="General Settings Dark">
                             <img src="assets/images/general-light.webp"
                                 srcset="assets/images/general-light-small.webp 900w, assets/images/general-light.webp 1800w"
                                 sizes="(max-width: 900px) 100vw, 900px" loading="lazy" width="900" height="562"
                                 alt="General Settings Light" decoding="async">
                         </a>
-                        <a href="assets/images/general-dark.webp" class="screenshot-frame glightbox"
-                            data-gallery="screenshots" data-title="General Settings Dark">
-                            <img src="assets/images/general-dark.webp"
-                                srcset="assets/images/general-dark-small.webp 900w, assets/images/general-dark.webp 1800w"
+                        <a href="assets/images/group-light.webp" class="screenshot-frame screenshot-variant glightbox"
+                            data-gallery="screenshots" data-title="Group Settings Light"
+                            data-light-href="assets/images/group-light.webp"
+                            data-light-src="assets/images/group-light.webp"
+                            data-light-srcset="assets/images/group-light-small.webp 900w, assets/images/group-light.webp 1800w"
+                            data-light-title="Group Settings Light" data-light-alt="Group Settings Light"
+                            data-dark-href="assets/images/group-dark.webp"
+                            data-dark-src="assets/images/group-dark.webp"
+                            data-dark-srcset="assets/images/group-dark-small.webp 900w, assets/images/group-dark.webp 1800w"
+                            data-dark-title="Group Settings Dark" data-dark-alt="Group Settings Dark">
+                            <img src="assets/images/group-light.webp"
+                                srcset="assets/images/group-light-small.webp 900w, assets/images/group-light.webp 1800w"
                                 sizes="(max-width: 900px) 100vw, 900px" loading="lazy" width="900" height="562"
-                                alt="General Settings Dark" decoding="async">
+                                alt="Group Settings Light" decoding="async">
                         </a>
-                        <a href="assets/images/group-dark.webp" class="screenshot-frame glightbox"
-                            data-gallery="screenshots" data-title="Group Settings Dark">
-                            <img src="assets/images/group-dark.webp"
-                                srcset="assets/images/group-dark-small.webp 900w, assets/images/group-dark.webp 1800w"
+                        <a href="assets/images/automatic-backups.webp"
+                            class="screenshot-frame screenshot-variant glightbox" data-gallery="screenshots"
+                            data-title="Automatic Backups Light"
+                            data-light-href="assets/images/automatic-backups.webp"
+                            data-light-src="assets/images/automatic-backups.webp"
+                            data-light-srcset="assets/images/automatic-backups-small.webp 900w, assets/images/automatic-backups.webp 1800w"
+                            data-light-title="Automatic Backups Light" data-light-alt="Automatic Backups Light"
+                            data-dark-href="assets/images/automatic-backups-dark.webp"
+                            data-dark-src="assets/images/automatic-backups-dark.webp"
+                            data-dark-srcset="assets/images/automatic-backups-dark-small.webp 900w, assets/images/automatic-backups-dark.webp 1800w"
+                            data-dark-title="Automatic Backups Dark" data-dark-alt="Automatic Backups Dark">
+                            <img src="assets/images/automatic-backups.webp"
+                                srcset="assets/images/automatic-backups-small.webp 900w, assets/images/automatic-backups.webp 1800w"
                                 sizes="(max-width: 900px) 100vw, 900px" loading="lazy" width="900" height="562"
-                                alt="Group Settings Dark" decoding="async">
+                                alt="Automatic Backups Light" decoding="async">
                         </a>
                         <a href="assets/images/menubar-languages.webp" class="screenshot-frame glightbox"
                             data-gallery="screenshots" data-title="Menu Bar and Localization">
@@ -1330,13 +1574,6 @@
                                 srcset="assets/images/menubar-languages-small.webp 900w, assets/images/menubar-languages.webp 1800w"
                                 sizes="(max-width: 900px) 100vw, 900px" loading="lazy" width="900" height="562"
                                 alt="Menu Bar and Localization" decoding="async">
-                        </a>
-                        <a href="assets/images/automatic-backups.webp" class="screenshot-frame glightbox"
-                            data-gallery="screenshots" data-title="Automatic Backups">
-                            <img src="assets/images/automatic-backups.webp"
-                                srcset="assets/images/automatic-backups-small.webp 900w, assets/images/automatic-backups.webp 1800w"
-                                sizes="(max-width: 900px) 100vw, 900px" loading="lazy" width="900" height="562"
-                                alt="Automatic Backups" decoding="async">
                         </a>
                     </div>
                     <button class="scroll-btn next" id="gallery-next" aria-label="Next">
@@ -1348,113 +1585,8 @@
                 </div>
             </section>
 
-            <!-- Video Demo Section -->
-            <section class="section video-section" aria-labelledby="video-heading">
-                <h2 id="video-heading">See It In Action</h2>
-                <p class="section-subtitle">Watch how ShortcutCycle transforms your workflow</p>
-
-                <div class="video-grid">
-                    <div class="video-card">
-                        <video controls preload="none" poster="assets/images/poster-1.webp">
-                            <source src="assets/videos/1.mp4" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-                        <h3>Quick App Switching</h3>
-                        <p>Cycle through grouped apps with a single keystroke</p>
-                    </div>
-                    <div class="video-card">
-                        <video controls preload="none" poster="assets/images/poster-2.webp">
-                            <source src="assets/videos/2.mp4" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-                        <h3>Visual HUD Overlay</h3>
-                        <p>See exactly what you're switching to with the beautiful native overlay</p>
-                    </div>
-                    <div class="video-card">
-                        <video controls preload="none" poster="assets/images/poster-3.webp">
-                            <source src="assets/videos/3.mp4" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-                        <h3>Easy Configuration</h3>
-                        <p>Set up your groups and shortcuts in seconds</p>
-                    </div>
-                </div>
-            </section>
-
-            <section class="section" aria-labelledby="features-heading">
-                <h2 id="features-heading" class="sr-only">Features</h2>
-                <div class="features-grid">
-                    <div class="feature-card">
-                        <span class="feature-icon">💎</span>
-                        <h3>No Subscriptions</h3>
-                        <p>Pay once, keep it forever. Enjoy a <strong>lifetime license</strong> for just
-                            <strong>$3.99</strong>. No recurring fees, ever.
-                        </p>
-                    </div>
-                    <div class="feature-card">
-                        <span class="feature-icon">🎯</span>
-                        <h3>Context Groups</h3>
-                        <p>Stop cycling through 20 irrelevant windows. Group apps by workflow—"coding", "writing",
-                            "social"—and switch only between what you need.</p>
-                    </div>
-                    <div class="feature-card">
-                        <span class="feature-icon">⚡️</span>
-                        <h3>Instant Switching</h3>
-                        <p>Press <code>Option+1</code> to activate your browser group. Press again to cycle through
-                            windows. Build instant muscle memory.</p>
-                    </div>
-                    <div class="feature-card">
-                        <span class="feature-icon">👥</span>
-                        <h3>Browser Profiles</h3>
-                        <p>Treat work and personal profiles (Chrome, Firefox, Edge) as separate apps. Cycle through your
-                            work browser without seeing your personal tabs.</p>
-                    </div>
-                    <div class="feature-card">
-                        <span class="feature-icon">✨</span>
-                        <h3>Beautiful HUD</h3>
-                        <p>A native, lightweight overlay shows your target before you switch. Know exactly where you're
-                            landing.</p>
-                    </div>
-                    <div class="feature-card">
-                        <span class="feature-icon">💻</span>
-                        <h3>Native & Fast</h3>
-                        <p>Built with Swift for Apple Silicon. Instant startup, zero lag, and negligible battery impact.
-                        </p>
-                    </div>
-                    <div class="feature-card">
-                        <span class="feature-icon">🚀</span>
-                        <h3>Auto-Launch</h3>
-                        <p>Targeted app not running? We launch it instantly. ShortcutCycle is a switcher and launcher in
-                            one.</p>
-                    </div>
-                    <div class="feature-card">
-                        <span class="feature-icon">🔒</span>
-                        <h3>Private by Design</h3>
-                        <p>No analytics. No tracking. Your configuration stays on your Mac. Export to JSON to backup
-                            your settings.</p>
-                    </div>
-                    <div class="feature-card">
-                        <span class="feature-icon">🛟</span>
-                        <h3>Automatic Backups</h3>
-                        <p>Mistakes happen. Configuration snapshots are saved automatically, letting you restore
-                            previous setups in seconds.</p>
-                    </div>
-                    <div class="feature-card">
-                        <span class="feature-icon">🌍</span>
-                        <h3>Global Ready</h3>
-                        <p>Fully localized interface in 15 languages. Productivity that speaks your language.</p>
-                    </div>
-                    <div class="feature-card">
-                        <span class="feature-icon">♿️</span>
-                        <h3>Fully Accessible</h3>
-                        <p>Complete VoiceOver support, Voice Control compatibility, and keyboard navigation throughout.
-                            Built with accessibility in mind from day one.</p>
-                    </div>
-                </div>
-            </section>
-
             <!-- Comparison Section -->
-            <section class="section" id="comparison">
+            <section class="section section-divider" id="comparison">
                 <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 16px;">The Group Cycling Advantage</h2>
                 <p class="section-subtitle"
                     style="max-width: 700px; margin: 0 auto 60px auto; color: var(--text-secondary); text-align: center; font-size: 1.1rem; line-height: 1.6;">
@@ -1531,8 +1663,113 @@
                 </div>
             </section>
 
+            <section class="section section-divider" aria-labelledby="features-heading">
+                <h2 id="features-heading" class="sr-only">Features</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <span class="feature-icon">💎</span>
+                        <h3>No Subscriptions</h3>
+                        <p>Pay once, keep it forever. Enjoy a <strong>lifetime license</strong> for just
+                            <strong>$3.99</strong>. No recurring fees, ever.
+                        </p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">🎯</span>
+                        <h3>Context Groups</h3>
+                        <p>Stop cycling through 20 irrelevant windows. Group apps by workflow—"coding", "writing",
+                            "social"—and switch only between what you need.</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">⚡️</span>
+                        <h3>Instant Switching</h3>
+                        <p>Press <code>Option+1</code> to activate your browser group. Press again to cycle through
+                            windows. Build instant muscle memory.</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">👥</span>
+                        <h3>Browser Profiles</h3>
+                        <p>Treat work and personal profiles (Chrome, Firefox, Edge) as separate apps. Cycle through your
+                            work browser without seeing your personal tabs.</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">✨</span>
+                        <h3>Beautiful HUD</h3>
+                        <p>A native, lightweight overlay shows your target before you switch. Know exactly where you're
+                            landing.</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">💻</span>
+                        <h3>Native & Fast</h3>
+                        <p>Built with Swift for Apple Silicon. Instant startup, zero lag, and negligible battery impact.
+                        </p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">🚀</span>
+                        <h3>Auto-Launch</h3>
+                        <p>Targeted app not running? We launch it instantly. ShortcutCycle is a switcher and launcher in
+                            one.</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">🔒</span>
+                        <h3>Private by Design</h3>
+                        <p>No analytics. No tracking. Your configuration stays on your Mac. Export to JSON to backup
+                            your settings.</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">🛟</span>
+                        <h3>Automatic Backups</h3>
+                        <p>Mistakes happen. Configuration snapshots are saved automatically, letting you restore
+                            previous setups in seconds.</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">🌍</span>
+                        <h3>Global Ready</h3>
+                        <p>Fully localized interface in 15 languages. Productivity that speaks your language.</p>
+                    </div>
+                    <div class="feature-card">
+                        <span class="feature-icon">♿️</span>
+                        <h3>Fully Accessible</h3>
+                        <p>Complete VoiceOver support, Voice Control compatibility, and keyboard navigation throughout.
+                            Built with accessibility in mind from day one.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Video Demo Section -->
+            <section class="section section-divider video-section" aria-labelledby="video-heading">
+                <h2 id="video-heading">See It In Action</h2>
+                <p class="section-subtitle">Watch how ShortcutCycle transforms your workflow</p>
+
+                <div class="video-grid">
+                    <div class="video-card">
+                        <video controls preload="none" poster="assets/images/poster-1.webp">
+                            <source src="assets/videos/1.mp4" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                        <h3>Quick App Switching</h3>
+                        <p>Cycle through grouped apps with a single keystroke</p>
+                    </div>
+                    <div class="video-card">
+                        <video controls preload="none" poster="assets/images/poster-2.webp">
+                            <source src="assets/videos/2.mp4" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                        <h3>Visual HUD Overlay</h3>
+                        <p>See exactly what you're switching to with the beautiful native overlay</p>
+                    </div>
+                    <div class="video-card">
+                        <video controls preload="none" poster="assets/images/poster-3.webp">
+                            <source src="assets/videos/3.mp4" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                        <h3>Easy Configuration</h3>
+                        <p>Set up your groups and shortcuts in seconds</p>
+                    </div>
+                </div>
+            </section>
+
             <!-- FAQ Section -->
-            <section class="section" id="faq">
+            <section class="section section-divider" id="faq">
                 <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 30px;">Frequently Asked Questions</h2>
                 <div class="faq-toggle-container">
                     <button id="faq-toggle-btn" class="faq-toggle-btn" onclick="toggleAllFAQ()">Expand All</button>
@@ -1635,9 +1872,23 @@
             dark: document.getElementById('btn-dark')
         };
         const themeAnnouncement = document.getElementById('theme-announcement');
+        const prefersDarkMedia = window.matchMedia('(prefers-color-scheme: dark)');
+        const screenshotThemeBtns = {
+            light: document.getElementById('screenshot-btn-light'),
+            dark: document.getElementById('screenshot-btn-dark')
+        };
+        const screenshotThemeAnnouncement = document.getElementById('screenshot-theme-announcement');
+        const screenshotVariantFrames = Array.from(document.querySelectorAll('.screenshot-variant'));
+        const desktopHoverMedia = window.matchMedia('(hover: hover) and (pointer: fine)');
+        let isScreenshotThemeOverridden = false;
 
         function getStoredTheme() {
             return localStorage.getItem('theme') || 'system';
+        }
+
+        function getResolvedTheme(theme = html.getAttribute('data-theme') || 'system') {
+            if (theme === 'light' || theme === 'dark') return theme;
+            return prefersDarkMedia.matches ? 'dark' : 'light';
         }
 
         function announceTheme(theme) {
@@ -1648,10 +1899,59 @@
             themeAnnouncement.textContent = label;
         }
 
+        function announceScreenshotTheme(theme) {
+            if (!screenshotThemeAnnouncement) return;
+            screenshotThemeAnnouncement.textContent = `${theme.charAt(0).toUpperCase()}${theme.slice(1)} screenshots selected`;
+        }
+
+        function updateScreenshotControls(activeTheme) {
+            Object.entries(screenshotThemeBtns).forEach(([theme, btn]) => {
+                if (!btn) return;
+                const isActive = theme === activeTheme;
+                btn.classList.toggle('active', isActive);
+                btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            });
+        }
+
+        function applyScreenshotTheme(theme, options = {}) {
+            if (theme !== 'light' && theme !== 'dark') return;
+
+            const { lock = false, announce = false } = options;
+
+            screenshotVariantFrames.forEach((frame) => {
+                const image = frame.querySelector('img');
+                const href = frame.dataset[`${theme}Href`];
+                const src = frame.dataset[`${theme}Src`];
+                const srcset = frame.dataset[`${theme}Srcset`];
+                const title = frame.dataset[`${theme}Title`];
+                const alt = frame.dataset[`${theme}Alt`];
+
+                if (href) frame.setAttribute('href', href);
+                if (title) frame.setAttribute('data-title', title);
+
+                if (!image) return;
+                if (src) image.setAttribute('src', src);
+                if (srcset) image.setAttribute('srcset', srcset);
+                if (alt) image.setAttribute('alt', alt);
+            });
+
+            updateScreenshotControls(theme);
+
+            if (lock) isScreenshotThemeOverridden = true;
+            if (announce) announceScreenshotTheme(theme);
+            document.dispatchEvent(new CustomEvent('screenshots-theme-updated'));
+        }
+
+        function syncScreenshotThemeWithPage() {
+            if (isScreenshotThemeOverridden) return;
+            applyScreenshotTheme(getResolvedTheme());
+        }
+
         function setTheme(theme, shouldAnnounce = true) {
             html.setAttribute('data-theme', theme);
             localStorage.setItem('theme', theme);
             updateControls(theme);
+            syncScreenshotThemeWithPage();
             if (shouldAnnounce) announceTheme(theme);
         }
 
@@ -1683,6 +1983,29 @@
         // Initialize Theme
         const initialTheme = getStoredTheme();
         setTheme(initialTheme, false);
+
+        Object.entries(screenshotThemeBtns).forEach(([theme, btn]) => {
+            if (!btn) return;
+
+            btn.addEventListener('click', () => {
+                applyScreenshotTheme(theme, { lock: true, announce: true });
+            });
+
+            btn.addEventListener('mouseenter', () => {
+                if (!desktopHoverMedia.matches) return;
+                applyScreenshotTheme(theme, { lock: true, announce: false });
+            });
+        });
+
+        function handleSystemThemeChange() {
+            syncScreenshotThemeWithPage();
+        }
+
+        if (typeof prefersDarkMedia.addEventListener === 'function') {
+            prefersDarkMedia.addEventListener('change', handleSystemThemeChange);
+        } else if (typeof prefersDarkMedia.addListener === 'function') {
+            prefersDarkMedia.addListener(handleSystemThemeChange);
+        }
 
         // --- Gallery Buttons Interaction ---
         const galleryScroller = document.querySelector('.gallery-scroller');
@@ -1793,6 +2116,11 @@
                 });
             });
             lightboxObserver.observe(document.documentElement, { attributes: true });
+
+            document.addEventListener('screenshots-theme-updated', () => {
+                lightbox.destroy();
+                lightbox = createLightbox();
+            });
         }
     </script>
 
