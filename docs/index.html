@@ -301,15 +301,31 @@
 
         /* --- HERO --- */
         .hero {
-            text-align: center;
             padding: 100px 0 40px 0;
         }
 
-        .hero h1 {
+        .hero>h1 {
+            text-align: center;
             font-size: 3.5rem;
             font-weight: 800;
             letter-spacing: -0.02em;
-            margin-bottom: 24px;
+            margin-bottom: 48px;
+            display: block;
+        }
+
+        .hero-split {
+            display: grid;
+            grid-template-columns: fit-content(420px) 1fr;
+            gap: 40px;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .hero-text {
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .text-gradient {
@@ -331,19 +347,29 @@
         .hero-subtitle {
             font-size: 1.3rem;
             color: var(--text-secondary);
-            max-width: 600px;
-            margin: 0 auto 16px auto;
+            margin: 0 0 16px 0;
         }
 
         .hero-benefit {
             font-size: 1.25rem;
             color: var(--text-secondary);
-            /* Muted color to not compete with CTA */
-            margin-bottom: 40px;
-            max-width: 700px;
-            margin-left: auto;
-            margin-right: auto;
+            margin-bottom: 0;
             font-weight: 400;
+        }
+
+        /* --- HERO VIDEO --- */
+        .hero-video-container {
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 40px var(--shadow);
+        }
+
+        .hero-video-container video {
+            width: 100%;
+            display: block;
+            aspect-ratio: 16 / 9;
+            background: #000;
         }
 
         /* Tooltip Styles */
@@ -861,8 +887,22 @@
         }
 
         @media (max-width: 768px) {
-            .hero h1 {
+            .hero>h1 {
                 font-size: 2.5rem;
+            }
+
+            .hero-split {
+                grid-template-columns: 1fr;
+                gap: 32px;
+            }
+
+            .hero-text {
+                text-align: center;
+                order: 1;
+            }
+
+            .hero-video-container {
+                order: 2;
             }
 
             .hero-subtitle {
@@ -1100,8 +1140,8 @@
 
             <div class="nav-wrapper">
                 <nav class="nav-links" role="navigation" aria-label="Main navigation">
-                    <a href="https://github.com/xcv58/ShortcutCycle/blob/master/PRIVACY_POLICY.md"
-                        target="_blank" rel="noopener noreferrer">Privacy</a>
+                    <a href="https://github.com/xcv58/ShortcutCycle/blob/master/PRIVACY_POLICY.md" target="_blank"
+                        rel="noopener noreferrer">Privacy</a>
                     <a href="https://github.com/xcv58/ShortcutCycle/issues" target="_blank"
                         rel="noopener noreferrer">Support</a>
                     <a href="https://github.com/xcv58/ShortcutCycle" target="_blank"
@@ -1154,19 +1194,29 @@
 
             <section class="hero">
                 <h1 class="text-gradient">Cycle apps by group, instantly.</h1>
-                <p class="hero-subtitle">Stop endlessly tabbing. Group apps by context—Web, Code, Social—and cycle with
-                    dedicated hotkeys.</p>
-                <p class="hero-benefit">
-                    <span class="tooltip-trigger"
-                        tabindex="0"
-                        aria-describedby="hero-benefit-tooltip"
-                        data-tooltip="Based on saving 3 seconds per switch, 400 times a day = ~2 hours saved/week.">
-                        Save hours every week
-                    </span>
-                    <span id="hero-benefit-tooltip" class="sr-only">Based on saving 3 seconds per switch, 400 times a
-                        day equals about 2 hours saved per week.</span>
-                    with app switching tailored to your own workflow.
-                </p>
+
+                <div class="hero-split">
+                    <div class="hero-text">
+                        <p class="hero-subtitle">Stop endlessly tabbing. Group apps by context—Web, Code, Social—and
+                            cycle with dedicated hotkeys.</p>
+                        <p class="hero-benefit">
+                            <span class="tooltip-trigger" tabindex="0" aria-describedby="hero-benefit-tooltip"
+                                data-tooltip="Based on saving 3 seconds per switch, 400 times a day = ~2 hours saved/week.">
+                                Save hours every week
+                            </span>
+                            <span id="hero-benefit-tooltip" class="sr-only">Based on saving 3 seconds per switch, 400
+                                times a day equals about 2 hours saved per week.</span>
+                            with app switching tailored to your own workflow.
+                        </p>
+                    </div>
+
+                    <div class="hero-video-container">
+                        <video autoplay loop muted playsinline preload="auto" poster="assets/images/poster-1.webp"
+                            aria-label="Demo: quick app switching with ShortcutCycle">
+                            <source src="assets/videos/1.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                </div>
 
                 <div class="cta-group">
                     <a href="https://apps.apple.com/us/app/shortcutcycle/id6758281578?mt=12"
@@ -1308,7 +1358,8 @@
                         <span class="feature-icon">💎</span>
                         <h3>No Subscriptions</h3>
                         <p>Pay once, keep it forever. Enjoy a <strong>lifetime license</strong> for just
-                            <strong>$3.99</strong>. No recurring fees, ever.</p>
+                            <strong>$3.99</strong>. No recurring fees, ever.
+                        </p>
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">🎯</span>
