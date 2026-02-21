@@ -22,9 +22,11 @@ FILES_TO_PROCESS = {
     "HUD-Grid Dark.png": "hud-grid-dark",
     "General Light.png": "general-light",
     "General Dark.png": "general-dark",
+    "Group Light.png": "group-light",
     "Group Dark.png": "group-dark",
     "Menubar and languages.png": "menubar-languages",
     "Automatic Backups.png": "automatic-backups",
+    "Automatic Backups Dark.png": "automatic-backups-dark",
 }
 
 # Target widths for responsive images
