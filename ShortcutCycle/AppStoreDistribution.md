@@ -31,18 +31,23 @@ Selected price point for launch. One-time purchase.
 
 `CURRENT_PROJECT_VERSION` (build number) must be unique for each TestFlight/App Store upload.
 
-### Xcode Cloud
-Build numbers are set automatically by `<repo-root>/ci_scripts/ci_post_clone.sh` using `$CI_BUILD_NUMBER + 100` offset. No manual action needed.
+Both Xcode Cloud and local archives now use the same script:
+`scripts/sync_project_version.sh`
 
-### Local Builds
-Before archiving locally, bump the build number from the terminal:
+### How it works
+- On every archive, the shared scheme runs `scripts/sync_project_version.sh` as an Archive pre-action.
+- In Xcode Cloud, `ShortcutCycle/ci_scripts/ci_post_clone.sh` runs the same script before the build (it sits next to `ShortcutCycle.xcodeproj`).
+- Local default build number = current `CURRENT_PROJECT_VERSION + 1`.
+- Xcode Cloud default build number = `CI_BUILD_NUMBER + SC_CI_BUILD_OFFSET` (`SC_CI_BUILD_OFFSET` defaults to `1000`), with a monotonic guard.
+- `MARKETING_VERSION` remains manual unless overridden.
+- Local archives will update `ShortcutCycle.xcodeproj/project.pbxproj` (expected).
 
+### Optional overrides
 ```sh
-cd ShortcutCycle  # directory containing .xcodeproj
-agvtool next-version -all
+SC_BUILD_NUMBER=123 /bin/sh scripts/sync_project_version.sh
+SC_CI_BUILD_OFFSET=2000 /bin/sh scripts/sync_project_version.sh
+SC_MARKETING_VERSION=1.5 /bin/sh scripts/sync_project_version.sh
 ```
-
-Then archive in Xcode (Product > Archive) and upload to TestFlight.
 
 ## 4. Launch Checklist
 - [ ] Requirements: "Paid Applications Agreement" Active (Green light in Business).
