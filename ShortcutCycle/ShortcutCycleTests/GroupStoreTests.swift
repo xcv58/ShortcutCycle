@@ -37,6 +37,27 @@ private final class FailingCreateDirectoryFileManager: FileManager {
     }
 }
 
+private final class IsolatedAppSupportFileManager: FileManager {
+    let appSupportURL: URL
+
+    init(appSupportURL: URL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)) {
+        self.appSupportURL = appSupportURL
+        super.init()
+        try? FileManager.default.createDirectory(at: appSupportURL, withIntermediateDirectories: true)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func urls(for directory: SearchPathDirectory, in domainMask: SearchPathDomainMask) -> [URL] {
+        if directory == .applicationSupportDirectory {
+            return [appSupportURL]
+        }
+        return super.urls(for: directory, in: domainMask)
+    }
+}
+
 @MainActor
 final class GroupStoreTests: XCTestCase {
 
@@ -881,36 +902,30 @@ final class GroupStoreTests: XCTestCase {
     // MARK: - Timer debounce callback
 
     func testTimerDebounceCallbackFires() {
-        let freshDefaults = UserDefaults(suiteName: "TestTimerDebounce")!
-        freshDefaults.removePersistentDomain(forName: "TestTimerDebounce")
-        let freshStore = GroupStore(userDefaults: freshDefaults, backupDebounceInterval: 0.05)
+        let suiteName = "TestTimerDebounce-\(UUID().uuidString)"
+        let freshDefaults = UserDefaults(suiteName: suiteName)!
+        freshDefaults.removePersistentDomain(forName: suiteName)
+        let isolatedFileManager = IsolatedAppSupportFileManager()
+        let freshStore = GroupStore(
+            userDefaults: freshDefaults,
+            backupDebounceInterval: 0.2,
+            fileManager: isolatedFileManager
+        )
         defer {
-            try? FileManager.default.removeItem(at: freshStore.backupDirectory)
-            freshDefaults.removePersistentDomain(forName: "TestTimerDebounce")
+            try? FileManager.default.removeItem(at: isolatedFileManager.appSupportURL)
+            freshDefaults.removePersistentDomain(forName: suiteName)
         }
 
-        // First change triggers immediate backup
+        // Establish baseline backup state.
         _ = freshStore.addGroup(name: "First")
+        freshStore.flushPendingBackup()
 
-        // Wait to ensure different backup timestamp (filenames use second precision)
-        Thread.sleep(forTimeInterval: 1.1)
-
-        let fm = FileManager.default
-        let countAfterFirst = ((try? fm.contentsOfDirectory(at: freshStore.backupDirectory, includingPropertiesForKeys: nil))?.filter {
-            $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json"
-        } ?? []).count
-
-        // Second change within debounce → pending, timer started
+        // Second change should be persisted by the debounce timer callback.
         _ = freshStore.addGroup(name: "Second")
+        RunLoop.main.run(until: Date().addingTimeInterval(0.6))
 
-        // Let the timer fire
-        RunLoop.main.run(until: Date().addingTimeInterval(0.2))
-
-        let countAfterTimer = ((try? fm.contentsOfDirectory(at: freshStore.backupDirectory, includingPropertiesForKeys: nil))?.filter {
-            $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json"
-        } ?? []).count
-
-        XCTAssertGreaterThan(countAfterTimer, countAfterFirst)
+        // If timer backup already ran, manual backup sees no change.
+        XCTAssertEqual(freshStore.manualBackup(), .noChange)
     }
 }
 
