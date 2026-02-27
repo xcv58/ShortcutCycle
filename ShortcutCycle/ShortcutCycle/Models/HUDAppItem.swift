@@ -41,14 +41,25 @@ public struct HUDAppItem: Identifiable, Equatable, @unchecked Sendable {
 
     /// Initialize for a specific window of a running app (per-window mode)
     public init(runningApp: NSRunningApplication, windowTitle: String?, windowIndex: Int, isMinimized: Bool = false, name: String? = nil, icon: NSImage? = nil) {
-        let bundleId = runningApp.bundleIdentifier ?? ""
+        self.init(
+            bundleId: runningApp.bundleIdentifier ?? "",
+            pid: runningApp.processIdentifier,
+            windowTitle: windowTitle,
+            windowIndex: windowIndex,
+            isMinimized: isMinimized,
+            name: name ?? runningApp.localizedName ?? "App",
+            icon: icon ?? runningApp.icon
+        )
+    }
+
+    /// Initialize for a specific window with explicit parameters (testable, no NSRunningApplication needed)
+    public init(bundleId: String, pid: pid_t, windowTitle: String?, windowIndex: Int, isMinimized: Bool = false, name: String, icon: NSImage? = nil) {
         self.bundleId = bundleId
-        self.pid = runningApp.processIdentifier
-        self.id = "\(bundleId)::\(runningApp.processIdentifier)::w\(windowIndex)"
-        let resolvedName = name ?? runningApp.localizedName ?? "App"
-        self.appName = resolvedName
-        self.name = windowTitle ?? "\(resolvedName) - Window \(windowIndex + 1)"
-        self.icon = icon ?? runningApp.icon
+        self.pid = pid
+        self.id = "\(bundleId)::\(pid)::w\(windowIndex)"
+        self.appName = name
+        self.name = windowTitle ?? "\(name) - Window \(windowIndex + 1)"
+        self.icon = icon
         self.isRunning = true
         self.windowTitle = windowTitle
         self.windowIndex = windowIndex
