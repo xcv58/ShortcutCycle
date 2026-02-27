@@ -141,3 +141,13 @@
 
 /* Share */
 "Share" = "Deel";
+
+/* Per-Window Mode */
+"Per-Window Mode" = "Per-venstermodus";
+"Window Cycling" = "Vensterwisseling";
+"When enabled, each window of an app appears as a separate entry in the HUD cycle." = "Wanneer ingeschakeld, verschijnt elk venster van een app als een afzonderlijk item in de HUD-cyclus.";
+"Accessibility: Granted" = "Toegankelijkheid: Verleend";
+"Accessibility: Not Granted" = "Toegankelijkheid: Niet verleend";
+"Open Accessibility Settings" = "Open toegankelijkheidsinstellingen";
+"Accessibility Permission Required" = "Toegankelijkheidstoestemming vereist";
+"Per-Window Mode requires Accessibility permission to enumerate and raise individual windows." = "De per-venstermodus vereist toegankelijkheidstoestemming om individuele vensters op te sommen en naar voren te brengen.";

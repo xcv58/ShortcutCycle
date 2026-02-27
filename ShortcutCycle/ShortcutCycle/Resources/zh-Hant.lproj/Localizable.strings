@@ -143,3 +143,13 @@
 
 /* Share */
 "Share" = "分享";
+
+/* Per-Window Mode */
+"Per-Window Mode" = "逐視窗模式";
+"Window Cycling" = "視窗切換";
+"When enabled, each window of an app appears as a separate entry in the HUD cycle." = "啟用後，應用程式的每個視窗將作為單獨的項目顯示在 HUD 循環中。";
+"Accessibility: Granted" = "輔助使用：已授權";
+"Accessibility: Not Granted" = "輔助使用：未授權";
+"Open Accessibility Settings" = "打開輔助使用設定";
+"Accessibility Permission Required" = "需要輔助使用權限";
+"Per-Window Mode requires Accessibility permission to enumerate and raise individual windows." = "逐視窗模式需要輔助使用權限來列舉和提升各個視窗。";

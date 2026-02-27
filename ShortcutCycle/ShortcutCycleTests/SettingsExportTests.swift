@@ -475,19 +475,95 @@ final class SettingsExportTests: XCTestCase {
     func testAppSettingsApplyWithNilThemeDoesNotWrite() {
         let defaults = UserDefaults.standard
         let originalTheme = defaults.string(forKey: "appTheme")
+        let originalPerWindow = defaults.object(forKey: "perWindowMode")
         defer {
             if let v = originalTheme { defaults.set(v, forKey: "appTheme") } else { defaults.removeObject(forKey: "appTheme") }
+            if let v = originalPerWindow { defaults.set(v, forKey: "perWindowMode") } else { defaults.removeObject(forKey: "perWindowMode") }
         }
 
         defaults.set("existing", forKey: "appTheme")
+        defaults.set(true, forKey: "perWindowMode")
 
-        let settings = AppSettings(showHUD: true, showShortcutInHUD: true, selectedLanguage: nil, appTheme: nil)
+        let settings = AppSettings(showHUD: true, showShortcutInHUD: true, selectedLanguage: nil, appTheme: nil, perWindowMode: nil)
         settings.apply()
 
         // nil appTheme should NOT overwrite existing value
         XCTAssertEqual(defaults.string(forKey: "appTheme"), "existing")
         // nil selectedLanguage should write "system"
         XCTAssertEqual(defaults.string(forKey: "selectedLanguage"), "system")
+        // nil perWindowMode should NOT overwrite existing value
+        XCTAssertEqual(defaults.bool(forKey: "perWindowMode"), true)
+    }
+
+    func testAppSettingsPerWindowModeRoundTrip() throws {
+        let settings = AppSettings(showHUD: true, showShortcutInHUD: true, perWindowMode: true)
+        let data = try JSONEncoder().encode(settings)
+        let decoded = try JSONDecoder().decode(AppSettings.self, from: data)
+        XCTAssertEqual(decoded.perWindowMode, true)
+    }
+
+    func testAppSettingsPerWindowModeNilByDefault() throws {
+        let settings = AppSettings(showHUD: true, showShortcutInHUD: true)
+        let data = try JSONEncoder().encode(settings)
+        let decoded = try JSONDecoder().decode(AppSettings.self, from: data)
+        XCTAssertNil(decoded.perWindowMode)
+    }
+
+    func testAppSettingsPerWindowModeApply() {
+        let defaults = UserDefaults.standard
+        let original = defaults.object(forKey: "perWindowMode")
+        defer {
+            if let v = original { defaults.set(v, forKey: "perWindowMode") } else { defaults.removeObject(forKey: "perWindowMode") }
+        }
+
+        let settings = AppSettings(showHUD: true, showShortcutInHUD: true, perWindowMode: true)
+        settings.apply()
+        XCTAssertEqual(defaults.bool(forKey: "perWindowMode"), true)
+    }
+
+    func testAppSettingsCurrentReadsPerWindowMode() {
+        let defaults = UserDefaults.standard
+        let original = defaults.object(forKey: "perWindowMode")
+        defer {
+            if let v = original { defaults.set(v, forKey: "perWindowMode") } else { defaults.removeObject(forKey: "perWindowMode") }
+        }
+
+        defaults.set(true, forKey: "perWindowMode")
+        let current = AppSettings.current()
+        XCTAssertEqual(current.perWindowMode, true)
+    }
+
+    func testAppSettingsCurrentPerWindowModeDefaultNil() {
+        let defaults = UserDefaults.standard
+        let original = defaults.object(forKey: "perWindowMode")
+        defer {
+            if let v = original { defaults.set(v, forKey: "perWindowMode") } else { defaults.removeObject(forKey: "perWindowMode") }
+        }
+
+        defaults.removeObject(forKey: "perWindowMode")
+        let current = AppSettings.current()
+        XCTAssertNil(current.perWindowMode)
+    }
+
+    func testBackwardCompatV2WithoutPerWindowMode() throws {
+        // v2 JSON has no perWindowMode field — should decode as nil
+        let json = """
+        {
+            "version": 2,
+            "exportDate": "2025-01-01T00:00:00Z",
+            "groups": [],
+            "settings": {
+                "showHUD": true,
+                "showShortcutInHUD": false,
+                "selectedLanguage": "en"
+            }
+        }
+        """
+        let data = json.data(using: .utf8)!
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let decoded = try decoder.decode(SettingsExport.self, from: data)
+        XCTAssertNil(decoded.settings?.perWindowMode)
     }
 
     // MARK: - fullSnapshot

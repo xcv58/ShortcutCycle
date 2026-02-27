@@ -143,3 +143,13 @@
 
 /* Share */
 "Share" = "Share";
+
+/* Per-Window Mode */
+"Per-Window Mode" = "Per-Window Mode";
+"Window Cycling" = "Window Cycling";
+"When enabled, each window of an app appears as a separate entry in the HUD cycle." = "When enabled, each window of an app appears as a separate entry in the HUD cycle.";
+"Accessibility: Granted" = "Accessibility: Granted";
+"Accessibility: Not Granted" = "Accessibility: Not Granted";
+"Open Accessibility Settings" = "Open Accessibility Settings";
+"Accessibility Permission Required" = "Accessibility Permission Required";
+"Per-Window Mode requires Accessibility permission to enumerate and raise individual windows." = "Per-Window Mode requires Accessibility permission to enumerate and raise individual windows.";

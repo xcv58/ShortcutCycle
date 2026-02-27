@@ -141,3 +141,13 @@
 
 /* Share */
 "Share" = "Partager";
+
+/* Per-Window Mode */
+"Per-Window Mode" = "Mode par fenêtre";
+"Window Cycling" = "Cycle des fenêtres";
+"When enabled, each window of an app appears as a separate entry in the HUD cycle." = "Lorsqu'il est activé, chaque fenêtre d'une app apparaît comme une entrée distincte dans le cycle HUD.";
+"Accessibility: Granted" = "Accessibilité : Accordée";
+"Accessibility: Not Granted" = "Accessibilité : Non accordée";
+"Open Accessibility Settings" = "Ouvrir les réglages d'accessibilité";
+"Accessibility Permission Required" = "Autorisation d'accessibilité requise";
+"Per-Window Mode requires Accessibility permission to enumerate and raise individual windows." = "Le mode par fenêtre nécessite l'autorisation d'accessibilité pour énumérer et mettre en avant les fenêtres individuelles.";

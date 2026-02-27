@@ -121,7 +121,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
             store.updateLastActiveApp(bundleId: nextAppId, for: group.id)
             store.updateMRUOrder(activatedId: hudItems[0].id, activatedBundleId: hudItems[0].bundleId, for: group.id, liveItemIds: liveItemIds)
             if let item = hudItems.first {
-                activateOrLaunch(bundleId: item.bundleId, pid: item.pid)
+                activateOrLaunch(bundleId: item.bundleId, pid: item.pid, windowIndex: item.windowIndex)
                 LaunchOverlayManager.shared.show(appName: item.name, appIcon: item.icon)
             }
             return true
@@ -155,12 +155,12 @@ class AppSwitcher: @preconcurrency ObservableObject {
         )
 
         if !hudShown {
-             activateOrLaunch(bundleId: nextItem?.bundleId ?? nextAppId, pid: nextItem?.pid)
+             activateOrLaunch(bundleId: nextItem?.bundleId ?? nextAppId, pid: nextItem?.pid, windowIndex: nextItem?.windowIndex)
              store.updateMRUOrder(activatedId: nextItem?.id ?? nextAppId, activatedBundleId: nextItem?.bundleId ?? nextAppId, for: group.id, liveItemIds: liveItemIds)
         }
         return true
     }
-    
+
     // MARK: - Legacy Logic (Only Running Apps)
     
     private func cycleRunningAppsOnly(hudItems: [HUDAppItem], group: AppGroup, store: GroupStore, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key?, prioritizeFrontmost: Bool) -> Bool {
@@ -224,7 +224,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
                     app?.hide()
                 } else {
                     // With HUD disabled, keep behavior as an explicit activation.
-                    activateOrLaunch(bundleId: item.bundleId, pid: item.pid)
+                    activateOrLaunch(bundleId: item.bundleId, pid: item.pid, windowIndex: item.windowIndex)
                     store.updateMRUOrder(activatedId: item.id, activatedBundleId: item.bundleId, for: group.id, liveItemIds: liveItemIds)
                 }
             } else {
@@ -248,13 +248,13 @@ class AppSwitcher: @preconcurrency ObservableObject {
                     }
                 )
                 if !hudShown {
-                    activateOrLaunch(bundleId: item.bundleId, pid: item.pid)
+                    activateOrLaunch(bundleId: item.bundleId, pid: item.pid, windowIndex: item.windowIndex)
                     store.updateMRUOrder(activatedId: item.id, activatedBundleId: item.bundleId, for: group.id, liveItemIds: liveItemIds)
                 }
             }
             return true
         }
-        
+
         // Cycle logic
         var nextAppId: String
         
@@ -316,12 +316,12 @@ class AppSwitcher: @preconcurrency ObservableObject {
         )
 
         if !hudShown {
-             activateOrLaunch(bundleId: nextItem?.bundleId ?? nextAppId, pid: nextItem?.pid)
+             activateOrLaunch(bundleId: nextItem?.bundleId ?? nextAppId, pid: nextItem?.pid, windowIndex: nextItem?.windowIndex)
              store.updateMRUOrder(activatedId: nextItem?.id ?? nextAppId, activatedBundleId: nextItem?.bundleId ?? nextAppId, for: group.id, liveItemIds: liveItemIds)
         }
         return true
     }
-    
+
     // MARK: - Helpers
 
     private func resolveSessionNextAppId(groupId: UUID, itemIds: [String], fallbackNextId: String, isHUDVisible: Bool) -> String {
@@ -341,6 +341,9 @@ class AppSwitcher: @preconcurrency ObservableObject {
     }
     
     private func getHUDItems(for group: AppGroup) -> [HUDAppItem] {
+        let isPerWindowMode = UserDefaults.standard.bool(forKey: "perWindowMode")
+            && WindowEnumerator.isAccessibilityTrusted
+
         var items: [HUDAppItem]
 
         if group.shouldOpenAppIfNeeded {
@@ -357,6 +360,16 @@ class AppSwitcher: @preconcurrency ObservableObject {
                         name: appItem.name,
                         icon: getIcon(for: appItem)
                     ))
+                } else if isPerWindowMode {
+                    // Per-window mode: enumerate individual windows
+                    for runningApp in runningApps {
+                        let windowItems = getPerWindowItems(
+                            for: runningApp,
+                            appName: appItem.name,
+                            icon: getIcon(for: appItem)
+                        )
+                        items.append(contentsOf: windowItems)
+                    }
                 } else {
                     // App has one or more running instances - add each one
                     for runningApp in runningApps {
@@ -371,8 +384,16 @@ class AppSwitcher: @preconcurrency ObservableObject {
         } else {
             // Original logic: only running apps, sorted by group order, with separate entries for each instance
             let runningApps = getRunningApps(in: group)
-            items = runningApps.map { app in
-                HUDAppItem(runningApp: app)
+            if isPerWindowMode {
+                items = []
+                for app in runningApps {
+                    let windowItems = getPerWindowItems(for: app, appName: nil, icon: nil)
+                    items.append(contentsOf: windowItems)
+                }
+            } else {
+                items = runningApps.map { app in
+                    HUDAppItem(runningApp: app)
+                }
             }
         }
 
@@ -387,6 +408,28 @@ class AppSwitcher: @preconcurrency ObservableObject {
             groupBundleIds: groupBundleIds
         )
         return sortedIndices.map { items[$0] }
+    }
+
+    /// Creates per-window HUD items for a running app via the Accessibility API.
+    /// Falls back to a single process-level item if no accessible windows are found.
+    private func getPerWindowItems(for runningApp: NSRunningApplication, appName: String?, icon: NSImage?) -> [HUDAppItem] {
+        let windows = WindowEnumerator.shared.windows(for: runningApp.processIdentifier)
+
+        if windows.isEmpty {
+            // No accessible windows (e.g. menu bar utility) — fall back to process-level item
+            return [HUDAppItem(runningApp: runningApp, name: appName, icon: icon)]
+        }
+
+        return windows.map { windowInfo in
+            HUDAppItem(
+                runningApp: runningApp,
+                windowTitle: windowInfo.title,
+                windowIndex: windowInfo.index,
+                isMinimized: windowInfo.isMinimized,
+                name: appName,
+                icon: icon
+            )
+        }
     }
     
     private func getRunningApps(in group: AppGroup) -> [NSRunningApplication] {
@@ -454,7 +497,16 @@ class AppSwitcher: @preconcurrency ObservableObject {
         return false
     }
     
-    private func activateOrLaunch(bundleId: String, pid: pid_t? = nil) {
+    private func activateOrLaunch(bundleId: String, pid: pid_t? = nil, windowIndex: Int? = nil) {
+        if let pid = pid, let windowIndex = windowIndex {
+            // Per-window mode: raise specific window via Accessibility API
+            let windows = WindowEnumerator.shared.windows(for: pid)
+            if let windowInfo = windows.first(where: { $0.index == windowIndex }) {
+                WindowEnumerator.shared.raiseWindow(windowInfo, pid: pid)
+                return
+            }
+        }
+
         if let pid = pid {
             // Activate specific instance by PID
             let runningApps = NSRunningApplication.runningApplications(withBundleIdentifier: bundleId)

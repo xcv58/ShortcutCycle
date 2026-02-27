@@ -10,8 +10,10 @@ struct GeneralSettingsView: View {
     @AppStorage("showHUD") private var showHUD = true
     @AppStorage("showShortcutInHUD") private var showShortcutInHUD = true
     @AppStorage("appTheme") private var appTheme: AppTheme = .system
+    @AppStorage("perWindowMode") private var perWindowMode = false
     @StateObject private var launchAtLogin = LaunchAtLoginManager.shared
-    
+    @StateObject private var accessibilityManager = AccessibilityPermissionManager.shared
+
     // Derived language for localization updates
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
     
@@ -26,6 +28,9 @@ struct GeneralSettingsView: View {
     // Backup browser state
     @State private var showBackupBrowser = false
     @State private var manualBackupFeedback: String?
+
+    // Accessibility alert
+    @State private var showAccessibilityAlert = false
 
     // Clipboard state
     @State private var showClipboardImportConfirmation = false
@@ -85,7 +90,51 @@ struct GeneralSettingsView: View {
             } footer: {
                 Text("The HUD appears briefly when you cycle through applications in a group.".localized(language: selectedLanguage))
             }
-            
+
+            Section {
+                Toggle("Per-Window Mode".localized(language: selectedLanguage), isOn: Binding(
+                    get: { perWindowMode },
+                    set: { newValue in
+                        if newValue && !accessibilityManager.isGranted {
+                            // Request permission first
+                            accessibilityManager.requestPermission()
+                            showAccessibilityAlert = true
+                            return
+                        }
+                        perWindowMode = newValue
+                    }
+                ))
+
+                if perWindowMode {
+                    HStack {
+                        if accessibilityManager.isGranted {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.green)
+                            Text("Accessibility: Granted".localized(language: selectedLanguage))
+                                .foregroundColor(.secondary)
+                        } else {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundColor(.orange)
+                            Text("Accessibility: Not Granted".localized(language: selectedLanguage))
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            Button("Open Accessibility Settings".localized(language: selectedLanguage)) {
+                                if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+                                    NSWorkspace.shared.open(url)
+                                }
+                                accessibilityManager.startPolling()
+                            }
+                            .controlSize(.small)
+                        }
+                    }
+                    .font(.caption)
+                }
+            } header: {
+                Text("Window Cycling".localized(language: selectedLanguage))
+            } footer: {
+                Text("When enabled, each window of an app appears as a separate entry in the HUD cycle.".localized(language: selectedLanguage))
+            }
+
             #if DEBUG
             Section {
                 HStack {
@@ -235,6 +284,23 @@ struct GeneralSettingsView: View {
             }
         } message: {
             Text(clipboardImportSummary)
+        }
+        .alert("Accessibility Permission Required".localized(language: selectedLanguage), isPresented: $showAccessibilityAlert) {
+            Button("Open Accessibility Settings".localized(language: selectedLanguage)) {
+                if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+                    NSWorkspace.shared.open(url)
+                }
+                accessibilityManager.startPolling()
+            }
+            Button("Cancel".localized(language: selectedLanguage), role: .cancel) {}
+        } message: {
+            Text("Per-Window Mode requires Accessibility permission to enumerate and raise individual windows.".localized(language: selectedLanguage))
+        }
+        .onChange(of: accessibilityManager.isGranted) { _, granted in
+            if granted && showAccessibilityAlert {
+                showAccessibilityAlert = false
+                perWindowMode = true
+            }
         }
         .sheet(isPresented: $showBackupBrowser) {
             BackupBrowserView()

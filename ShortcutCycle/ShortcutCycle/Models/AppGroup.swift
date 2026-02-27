@@ -113,26 +113,37 @@ public enum AppCyclingLogic {
 
     /// Resolves a stored last-active ID to a current item's composite ID.
     ///
-    /// The stored ID may be a composite ID ("bundleId::pid"), a plain bundle ID,
-    /// or nil. Resolution uses a 3-tier strategy:
-    /// 1. Exact match on composite ID (e.g. stored "firefox::300" matches item with id "firefox::300")
+    /// The stored ID may be a composite ID ("bundleId::pid"), a per-window ID
+    /// ("bundleId::pid::wN"), a plain bundle ID, or nil. Resolution uses a 4-tier strategy:
+    /// 1. Exact match on full ID (e.g. "firefox::300::w0" matches item with that exact id)
     /// 2. Plain bundle ID match (e.g. stored "firefox" matches item with bundleId "firefox")
-    /// 3. Prefix fallback for stale PIDs (e.g. stored "firefox::300" matches item with bundleId "firefox"
-    ///    when PID 300 no longer exists but other instances are running)
+    /// 3. Process-level prefix match (e.g. stored "firefox::300::w0" matches any "firefox::300::*" item)
+    /// 4. Bundle ID prefix fallback for stale PIDs (e.g. stored "firefox::300" matches item with bundleId "firefox")
     public static func resolveLastActiveId(
         storedId: String?,
         items: [ResolvableAppItem]
     ) -> String? {
         guard let storedId = storedId else { return nil }
 
-        // 1. Exact match on composite ID or plain bundle ID
+        // Tier 1: Exact match on composite ID or plain bundle ID
         if let match = items.first(where: {
             $0.id == storedId || $0.bundleId == storedId
         }) {
             return match.id
         }
 
-        // 2. Fallback: stored composite ID whose PID no longer exists —
+        // Tier 3: Process-level prefix match for per-window IDs.
+        // Extract "bundleId::pid" from a stored "bundleId::pid::wN" and match
+        // any item whose ID starts with the same process prefix.
+        let storedParts = storedId.components(separatedBy: "::")
+        if storedParts.count >= 2 {
+            let processPrefix = storedParts[0] + "::" + storedParts[1] + "::"
+            if let match = items.first(where: { $0.id.hasPrefix(processPrefix) }) {
+                return match.id
+            }
+        }
+
+        // Tier 4: Fallback: stored composite ID whose PID no longer exists —
         //    match by bundle ID prefix to find another instance of the same app
         return items.first(where: {
             storedId.hasPrefix($0.bundleId + "::")
@@ -198,7 +209,8 @@ public enum AppCyclingLogic {
     // MARK: - MRU (Most Recently Used) Ordering
 
     /// Returns indices that reorder items by MRU (most recently used) order.
-    /// Uses 3-tier matching per item: exact composite ID, plain bundle ID, bundle prefix.
+    /// Uses 4-tier matching per item: exact composite ID, plain bundle ID,
+    /// process-level prefix (for per-window IDs), bundle prefix (stale PID fallback).
     /// Items not in mruOrder maintain their original relative order at the end.
     public static func sortedByMRU(
         itemIds: [String],
@@ -227,18 +239,30 @@ public enum AppCyclingLogic {
 
         let fallback = offset + groupBundleIds.count
 
-        // 3-tier ranking for each item
+        // 4-tier ranking for each item
         let ranks: [Int] = itemIds.indices.map { i in
             let itemId = itemIds[i]
             let bundleId = itemBundleIds[i]
 
-            // Tier 1: Exact match on composite ID
+            // Tier 1: Exact match on composite ID (includes per-window "bundleId::pid::wN")
             if let r = mruRank[itemId] { return r }
 
             // Tier 2: Exact match on plain bundle ID (backward compat)
             if let r = mruRank[bundleId] { return r }
 
-            // Tier 3: Bundle ID prefix match (stale PID fallback)
+            // Tier 3: Process-level prefix match for per-window IDs.
+            // Extract "bundleId::pid" from item ID "bundleId::pid::wN" and match
+            // any MRU entry that shares the same process prefix.
+            // Uses offset rank so these sort after all explicitly ranked items.
+            let itemParts = itemId.components(separatedBy: "::")
+            if itemParts.count >= 2 {
+                let processPrefix = itemParts[0] + "::" + itemParts[1] + "::"
+                if mruOrder.contains(where: { $0.hasPrefix(processPrefix) }) {
+                    return offset
+                }
+            }
+
+            // Tier 4: Bundle ID prefix match (stale PID fallback)
             let prefix = bundleId + "::"
             for (idx, entry) in mruOrder.enumerated() {
                 if entry.hasPrefix(prefix) {
@@ -246,7 +270,7 @@ public enum AppCyclingLogic {
                 }
             }
 
-            // Tier 4: Group order fallback
+            // Tier 5: Group order fallback
             return groupRank[bundleId, default: fallback]
         }
 
@@ -260,7 +284,7 @@ public enum AppCyclingLogic {
     }
 
     /// Returns an updated MRU order with the activated item moved to front.
-    /// Accepts composite ID (e.g. "bundleId::pid") and plain bundle ID.
+    /// Accepts composite ID (e.g. "bundleId::pid" or "bundleId::pid::wN") and plain bundle ID.
     /// Upgrades old plain entries to composite. Filters by validBundleIds
     /// and liveItemIds to evict stale PID entries that no longer correspond
     /// to any running instance.
@@ -273,7 +297,7 @@ public enum AppCyclingLogic {
     ) -> [String] {
         var order = currentOrder ?? []
 
-        // Remove exact composite ID
+        // Remove exact composite ID (including per-window IDs)
         order.removeAll { $0 == activatedId }
 
         // Remove plain bundle ID (upgrade old plain entries to composite)
@@ -286,7 +310,7 @@ public enum AppCyclingLogic {
 
         // Filter: keep entries that match a live HUD item ID,
         // or plain bundle IDs still in the group. Stale composite IDs
-        // (PIDs that no longer exist) are evicted.
+        // (PIDs that no longer exist) and stale per-window IDs are evicted.
         return order.filter { entry in
             if liveItemIds.contains(entry) { return true }
             if validBundleIds.contains(entry) { return true }

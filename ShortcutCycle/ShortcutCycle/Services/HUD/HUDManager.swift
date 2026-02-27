@@ -576,11 +576,20 @@ class HUDManager: @preconcurrency ObservableObject {
     
     private func activateOrLaunch(bundleId: String) {
         // Try to find the item in currentItems to get PID and real bundle ID.
-        // `bundleId` parameter may be a composite "bundleId::pid" string, so we
-        // resolve the real bundle identifier via currentItems to ensure macOS
+        // `bundleId` parameter may be a composite "bundleId::pid" or "bundleId::pid::wN" string,
+        // so we resolve the real bundle identifier via currentItems to ensure macOS
         // APIs receive a valid bundle identifier in all fallback paths.
         let item = currentItems.first(where: { $0.id == bundleId || $0.bundleId == bundleId })
         let realBundleId = item?.bundleId ?? bundleId
+
+        // Per-window mode: raise specific window via Accessibility API
+        if let pid = item?.pid, let windowIndex = item?.windowIndex {
+            let windows = WindowEnumerator.shared.windows(for: pid)
+            if let windowInfo = windows.first(where: { $0.index == windowIndex }) {
+                WindowEnumerator.shared.raiseWindow(windowInfo, pid: pid)
+                return
+            }
+        }
 
         if let pid = item?.pid {
             // Activate specific instance by PID

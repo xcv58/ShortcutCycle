@@ -141,3 +141,13 @@
 
 /* Share */
 "Share" = "Paylaş";
+
+/* Per-Window Mode */
+"Per-Window Mode" = "Pencere Bazlı Mod";
+"Window Cycling" = "Pencere Döngüsü";
+"When enabled, each window of an app appears as a separate entry in the HUD cycle." = "Etkinleştirildiğinde, bir uygulamanın her penceresi HUD döngüsünde ayrı bir giriş olarak görünür.";
+"Accessibility: Granted" = "Erişilebilirlik: Verildi";
+"Accessibility: Not Granted" = "Erişilebilirlik: Verilmedi";
+"Open Accessibility Settings" = "Erişilebilirlik Ayarlarını Aç";
+"Accessibility Permission Required" = "Erişilebilirlik İzni Gerekli";
+"Per-Window Mode requires Accessibility permission to enumerate and raise individual windows." = "Pencere Bazlı Mod, tek tek pencereleri listelemek ve öne getirmek için Erişilebilirlik izni gerektirir.";

@@ -141,3 +141,13 @@
 
 /* Share */
 "Share" = "공유";
+
+/* Per-Window Mode */
+"Per-Window Mode" = "창별 모드";
+"Window Cycling" = "창 전환";
+"When enabled, each window of an app appears as a separate entry in the HUD cycle." = "활성화하면 앱의 각 창이 HUD 순환에서 별도의 항목으로 표시됩니다.";
+"Accessibility: Granted" = "손쉬운 사용: 허용됨";
+"Accessibility: Not Granted" = "손쉬운 사용: 허용되지 않음";
+"Open Accessibility Settings" = "손쉬운 사용 설정 열기";
+"Accessibility Permission Required" = "손쉬운 사용 권한 필요";
+"Per-Window Mode requires Accessibility permission to enumerate and raise individual windows." = "창별 모드는 개별 창을 나열하고 앞으로 가져오기 위해 손쉬운 사용 권한이 필요합니다.";
