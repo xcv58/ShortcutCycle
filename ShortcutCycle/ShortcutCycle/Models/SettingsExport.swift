@@ -18,12 +18,14 @@ public struct AppSettings: Codable, Equatable {
     public var showShortcutInHUD: Bool
     public var selectedLanguage: String?
     public var appTheme: String?
+    public var perWindowMode: Bool?
 
-    public init(showHUD: Bool, showShortcutInHUD: Bool, selectedLanguage: String? = nil, appTheme: String? = nil) {
+    public init(showHUD: Bool, showShortcutInHUD: Bool, selectedLanguage: String? = nil, appTheme: String? = nil, perWindowMode: Bool? = nil) {
         self.showHUD = showHUD
         self.showShortcutInHUD = showShortcutInHUD
         self.selectedLanguage = selectedLanguage
         self.appTheme = appTheme
+        self.perWindowMode = perWindowMode
     }
 
     /// Load current settings from UserDefaults
@@ -32,7 +34,8 @@ public struct AppSettings: Codable, Equatable {
             showHUD: UserDefaults.standard.object(forKey: "showHUD") as? Bool ?? true,
             showShortcutInHUD: UserDefaults.standard.object(forKey: "showShortcutInHUD") as? Bool ?? true,
             selectedLanguage: UserDefaults.standard.string(forKey: "selectedLanguage") ?? "system",
-            appTheme: UserDefaults.standard.string(forKey: "appTheme") ?? "system"
+            appTheme: UserDefaults.standard.string(forKey: "appTheme") ?? "system",
+            perWindowMode: UserDefaults.standard.object(forKey: "perWindowMode") as? Bool
         )
     }
 
@@ -43,6 +46,9 @@ public struct AppSettings: Codable, Equatable {
         UserDefaults.standard.set(selectedLanguage ?? "system", forKey: "selectedLanguage")
         if let appTheme = appTheme {
             UserDefaults.standard.set(appTheme, forKey: "appTheme")
+        }
+        if let perWindowMode = perWindowMode {
+            UserDefaults.standard.set(perWindowMode, forKey: "perWindowMode")
         }
     }
 }

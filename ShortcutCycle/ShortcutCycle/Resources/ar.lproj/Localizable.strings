@@ -142,3 +142,13 @@
 
 /* Share */
 "Share" = "مشاركة";
+
+/* Per-Window Mode */
+"Per-Window Mode" = "وضع لكل نافذة";
+"Window Cycling" = "تدوير النوافذ";
+"When enabled, each window of an app appears as a separate entry in the HUD cycle." = "عند التفعيل، تظهر كل نافذة من نوافذ التطبيق كعنصر منفصل في دورة HUD.";
+"Accessibility: Granted" = "إمكانية الوصول: ممنوحة";
+"Accessibility: Not Granted" = "إمكانية الوصول: غير ممنوحة";
+"Open Accessibility Settings" = "فتح إعدادات إمكانية الوصول";
+"Accessibility Permission Required" = "إذن إمكانية الوصول مطلوب";
+"Per-Window Mode requires Accessibility permission to enumerate and raise individual windows." = "يتطلب وضع لكل نافذة إذن إمكانية الوصول لتعداد النوافذ الفردية ورفعها.";

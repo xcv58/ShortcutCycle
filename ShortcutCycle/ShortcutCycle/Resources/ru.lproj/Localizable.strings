@@ -141,3 +141,13 @@
 
 /* Share */
 "Share" = "Поделиться";
+
+/* Per-Window Mode */
+"Per-Window Mode" = "Режим отдельных окон";
+"Window Cycling" = "Переключение окон";
+"When enabled, each window of an app appears as a separate entry in the HUD cycle." = "При включении каждое окно приложения отображается как отдельный элемент в цикле HUD.";
+"Accessibility: Granted" = "Универсальный доступ: Разрешён";
+"Accessibility: Not Granted" = "Универсальный доступ: Не разрешён";
+"Open Accessibility Settings" = "Открыть настройки универсального доступа";
+"Accessibility Permission Required" = "Требуется разрешение универсального доступа";
+"Per-Window Mode requires Accessibility permission to enumerate and raise individual windows." = "Режим отдельных окон требует разрешения универсального доступа для перечисления и вывода отдельных окон на передний план.";

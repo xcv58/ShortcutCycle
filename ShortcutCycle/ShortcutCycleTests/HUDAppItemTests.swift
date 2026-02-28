@@ -100,4 +100,136 @@ final class HUDAppItemTests: XCTestCase {
         // Same id, different init → should be equal
         XCTAssertEqual(item1, item2)
     }
+
+    // MARK: - Per-window properties on existing initializers
+
+    func testNonRunningInitHasNilWindowProperties() {
+        let item = HUDAppItem(bundleId: "com.test", name: "Test", icon: nil)
+
+        XCTAssertNil(item.windowTitle)
+        XCTAssertNil(item.windowIndex)
+        XCTAssertNil(item.appName)
+    }
+
+    func testLegacyInitHasNilWindowProperties() {
+        let item = HUDAppItem(id: "com.test", name: "Test", icon: nil, isRunning: true)
+
+        XCTAssertNil(item.windowTitle)
+        XCTAssertNil(item.windowIndex)
+        XCTAssertNil(item.appName)
+    }
+
+    func testRunningAppInitHasNilWindowProperties() {
+        let item = HUDAppItem(runningApp: NSRunningApplication.current)
+
+        XCTAssertNil(item.windowTitle)
+        XCTAssertNil(item.windowIndex)
+        XCTAssertNil(item.appName)
+    }
+
+    // MARK: - Per-window init (testable)
+
+    func testPerWindowInitWithTitle() {
+        let item = HUDAppItem(
+            bundleId: "com.chrome",
+            pid: 1234,
+            windowTitle: "GitHub - Google Chrome",
+            windowIndex: 0,
+            name: "Google Chrome"
+        )
+
+        XCTAssertEqual(item.id, "com.chrome::1234::w0")
+        XCTAssertEqual(item.bundleId, "com.chrome")
+        XCTAssertEqual(item.pid, 1234)
+        XCTAssertEqual(item.name, "GitHub - Google Chrome")
+        XCTAssertEqual(item.windowTitle, "GitHub - Google Chrome")
+        XCTAssertEqual(item.windowIndex, 0)
+        XCTAssertEqual(item.appName, "Google Chrome")
+        XCTAssertTrue(item.isRunning)
+        XCTAssertNil(item.icon)
+    }
+
+    func testPerWindowInitWithNilTitle() {
+        let item = HUDAppItem(
+            bundleId: "com.app",
+            pid: 500,
+            windowTitle: nil,
+            windowIndex: 2,
+            name: "MyApp"
+        )
+
+        // Nil title falls back to "AppName - Window N+1"
+        XCTAssertEqual(item.name, "MyApp - Window 3")
+        XCTAssertNil(item.windowTitle)
+        XCTAssertEqual(item.windowIndex, 2)
+        XCTAssertEqual(item.appName, "MyApp")
+        XCTAssertEqual(item.id, "com.app::500::w2")
+    }
+
+    func testPerWindowInitWithIcon() {
+        let icon = NSImage()
+        let item = HUDAppItem(
+            bundleId: "com.app",
+            pid: 100,
+            windowTitle: "Window",
+            windowIndex: 0,
+            name: "App",
+            icon: icon
+        )
+
+        XCTAssertEqual(item.icon, icon)
+    }
+
+    func testPerWindowInitViaRunningApp() {
+        let runningApp = NSRunningApplication.current
+        let item = HUDAppItem(
+            runningApp: runningApp,
+            windowTitle: "Test Window",
+            windowIndex: 0,
+            name: "Test"
+        )
+
+        let expectedBundleId = runningApp.bundleIdentifier ?? ""
+        XCTAssertEqual(item.bundleId, expectedBundleId)
+        XCTAssertEqual(item.pid, runningApp.processIdentifier)
+        XCTAssertEqual(item.id, "\(expectedBundleId)::\(runningApp.processIdentifier)::w0")
+        XCTAssertEqual(item.windowTitle, "Test Window")
+        XCTAssertEqual(item.windowIndex, 0)
+        XCTAssertEqual(item.appName, "Test")
+        XCTAssertTrue(item.isRunning)
+    }
+
+    func testPerWindowInitViaRunningAppDefaultName() {
+        let runningApp = NSRunningApplication.current
+        // Pass nil for name and icon to exercise the fallback paths
+        let item = HUDAppItem(
+            runningApp: runningApp,
+            windowTitle: "Window",
+            windowIndex: 1
+        )
+
+        let expectedBundleId = runningApp.bundleIdentifier ?? ""
+        XCTAssertEqual(item.id, "\(expectedBundleId)::\(runningApp.processIdentifier)::w1")
+        // appName should fall back to localizedName or "App"
+        XCTAssertNotNil(item.appName)
+        XCTAssertFalse(item.appName!.isEmpty)
+        XCTAssertEqual(item.windowTitle, "Window")
+        XCTAssertTrue(item.isRunning)
+    }
+
+    func testPerWindowEqualityById() {
+        let item1 = HUDAppItem(bundleId: "com.app", pid: 100, windowTitle: "A", windowIndex: 0, name: "App")
+        let item2 = HUDAppItem(bundleId: "com.app", pid: 100, windowTitle: "B", windowIndex: 0, name: "App")
+
+        // Same id (same bundleId::pid::w0) → equal
+        XCTAssertEqual(item1, item2)
+    }
+
+    func testPerWindowDifferentIndexNotEqual() {
+        let item1 = HUDAppItem(bundleId: "com.app", pid: 100, windowTitle: "A", windowIndex: 0, name: "App")
+        let item2 = HUDAppItem(bundleId: "com.app", pid: 100, windowTitle: "A", windowIndex: 1, name: "App")
+
+        // Different window index → different id → not equal
+        XCTAssertNotEqual(item1, item2)
+    }
 }

@@ -95,13 +95,30 @@ struct AppSwitcherHUDView: View {
     private var activeAppNameView: some View {
         VStack(spacing: 4) {
             if let activeApp = apps.first(where: { $0.id == activeAppId }) {
-                Text(activeApp.name)
-                    .font(.title3)
-                    .fontWeight(.bold)
-                    .fontDesign(.rounded)
-                    .foregroundColor(.primary)
+                if let windowTitle = activeApp.windowTitle {
+                    // Per-window mode: show window title as primary, app name as caption
+                    Text(windowTitle)
+                        .font(.title3)
+                        .fontWeight(.bold)
+                        .fontDesign(.rounded)
+                        .foregroundColor(.primary)
+                        .lineLimit(1)
+
+                    if let appName = activeApp.appName {
+                        Text(appName)
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundStyle(.tertiary)
+                    }
+                } else {
+                    Text(activeApp.name)
+                        .font(.title3)
+                        .fontWeight(.bold)
+                        .fontDesign(.rounded)
+                        .foregroundColor(.primary)
+                }
             }
-            
+
             if showShortcutInHUD, let shortcut = shortcutString {
                 Text(shortcut)
                     .font(.caption)
@@ -134,17 +151,17 @@ struct HUDItemView: View {
     let isActive: Bool
     let isRunning: Bool
     var size: CGFloat = 72 // Default size
-    
+
     @State private var isHovering = false
-    
+
     var body: some View {
         Image(nsImage: icon)
             .resizable()
             .aspectRatio(contentMode: .fit)
             .frame(width: size, height: size)
             .scaleEffect(isActive ? 1.15 : (isHovering ? 1.08 : 1.0))
-            .saturation(isActive ? 1.1 : (isRunning ? (isHovering ? 1.0 : 0.8) : 0.2)) // Grayscale if not running, slight color on hover
-            .opacity(isActive ? 1.0 : (isRunning ? (isHovering ? 0.9 : 0.7) : 0.5)) // Dimmer if not running
+            .saturation(isActive ? 1.1 : (isRunning ? (isHovering ? 1.0 : 0.8) : 0.2))
+            .opacity(isActive ? 1.0 : (isRunning ? (isHovering ? 0.9 : 0.7) : 0.5))
             .blur(radius: 0)
             .overlay(alignment: .bottomTrailing) {
                  if !isRunning {
@@ -162,7 +179,7 @@ struct HUDItemView: View {
                     if isActive {
                         RoundedRectangle(cornerRadius: 18, style: .continuous)
                             .fill(Color.primary.opacity(0.1))
-                        
+
                         RoundedRectangle(cornerRadius: 18, style: .continuous)
                             .stroke(Color.primary.opacity(0.3), lineWidth: 1)
                             .shadow(color: Color.primary.opacity(0.2), radius: 8, x: 0, y: 0)

@@ -141,3 +141,13 @@
 
 /* Share */
 "Share" = "共有";
+
+/* Per-Window Mode */
+"Per-Window Mode" = "ウィンドウ単位モード";
+"Window Cycling" = "ウィンドウ切替";
+"When enabled, each window of an app appears as a separate entry in the HUD cycle." = "有効にすると、アプリの各ウィンドウがHUDサイクルに個別のエントリとして表示されます。";
+"Accessibility: Granted" = "アクセシビリティ：許可済み";
+"Accessibility: Not Granted" = "アクセシビリティ：未許可";
+"Open Accessibility Settings" = "アクセシビリティ設定を開く";
+"Accessibility Permission Required" = "アクセシビリティの許可が必要です";
+"Per-Window Mode requires Accessibility permission to enumerate and raise individual windows." = "ウィンドウ単位モードでは、個々のウィンドウを列挙して前面に表示するためにアクセシビリティの許可が必要です。";

@@ -141,3 +141,13 @@
 
 /* Share */
 "Share" = "Condividi";
+
+/* Per-Window Mode */
+"Per-Window Mode" = "Modalità per finestra";
+"Window Cycling" = "Ciclo delle finestre";
+"When enabled, each window of an app appears as a separate entry in the HUD cycle." = "Quando abilitato, ogni finestra di un'app appare come voce separata nel ciclo HUD.";
+"Accessibility: Granted" = "Accessibilità: Concessa";
+"Accessibility: Not Granted" = "Accessibilità: Non concessa";
+"Open Accessibility Settings" = "Apri impostazioni accessibilità";
+"Accessibility Permission Required" = "Autorizzazione accessibilità richiesta";
+"Per-Window Mode requires Accessibility permission to enumerate and raise individual windows." = "La modalità per finestra richiede l'autorizzazione di accessibilità per enumerare e portare in primo piano le singole finestre.";

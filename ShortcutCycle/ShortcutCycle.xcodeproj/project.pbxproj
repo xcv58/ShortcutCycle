@@ -66,6 +66,10 @@
 		DF88A3B12F300CB00042E749 /* BackupDiff.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3AE2F300CB00042E749 /* BackupDiff.swift */; };
 		DF88A3B22F300CB10042E749 /* BackupBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3AF2F300CB10042E749 /* BackupBrowserView.swift */; };
 		DF88A3B32F300CB10042E749 /* BackupBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3AF2F300CB10042E749 /* BackupBrowserView.swift */; };
+		DF88A3C02F300CC00042E749 /* WindowEnumerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3C42F300CC40042E749 /* WindowEnumerator.swift */; };
+		DF88A3C12F300CC10042E749 /* WindowEnumerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3C42F300CC40042E749 /* WindowEnumerator.swift */; };
+		DF88A3C22F300CC20042E749 /* AccessibilityPermissionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3C52F300CC50042E749 /* AccessibilityPermissionManager.swift */; };
+		DF88A3C32F300CC30042E749 /* AccessibilityPermissionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3C52F300CC50042E749 /* AccessibilityPermissionManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -124,6 +128,8 @@
 		DF88A3AB2F300CA20042E749 /* BackupRetention.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupRetention.swift; sourceTree = "<group>"; };
 		DF88A3AE2F300CB00042E749 /* BackupDiff.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupDiff.swift; sourceTree = "<group>"; };
 		DF88A3AF2F300CB10042E749 /* BackupBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupBrowserView.swift; sourceTree = "<group>"; };
+		DF88A3C42F300CC40042E749 /* WindowEnumerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowEnumerator.swift; sourceTree = "<group>"; };
+		DF88A3C52F300CC50042E749 /* AccessibilityPermissionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityPermissionManager.swift; sourceTree = "<group>"; };
 		DF8B47D72F2F090100C473F8 /* ShortcutCycleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ShortcutCycleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -232,6 +238,15 @@
 			path = Overlay;
 			sourceTree = "<group>";
 		};
+		DF88A3C62F300CC60042E749 /* Window */ = {
+			isa = PBXGroup;
+			children = (
+				DF88A3C52F300CC50042E749 /* AccessibilityPermissionManager.swift */,
+				DF88A3C42F300CC40042E749 /* WindowEnumerator.swift */,
+			);
+			path = Window;
+			sourceTree = "<group>";
+		};
 		DF88A35D2F300B110042E749 /* Services */ = {
 			isa = PBXGroup;
 			children = (
@@ -239,6 +254,7 @@
 				DF88A3552F300B110042E749 /* HUD */,
 				DF88A3572F300B110042E749 /* Managers */,
 				DF88A3592F300B110042E749 /* Overlay */,
+				DF88A3C62F300CC60042E749 /* Window */,
 				DF88A35A2F300B110042E749 /* AppSwitcher.swift */,
 				DF88A35B2F300B110042E749 /* LaunchAtLoginManager.swift */,
 				DF88A35C2F300B110042E749 /* ShortcutManager.swift */,
@@ -519,6 +535,8 @@
 				DF88A3902F300C3B0042E749 /* ShortcutCycleApp.swift in Sources */,
 				DF88A3992F300C7A0042E749 /* String+Localization.swift in Sources */,
 				DF88A3A42F300C960042E749 /* LanguageManager.swift in Sources */,
+				DF88A3C02F300CC00042E749 /* WindowEnumerator.swift in Sources */,
+				DF88A3C22F300CC20042E749 /* AccessibilityPermissionManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -553,6 +571,8 @@
 				DF88A38B2F300B110042E749 /* KeyboardShortcutsNames.swift in Sources */,
 				DF88A38C2F300B110042E749 /* ShortcutManager.swift in Sources */,
 				DF88A38D2F300B110042E749 /* SettingsExport.swift in Sources */,
+				DF88A3C12F300CC10042E749 /* WindowEnumerator.swift in Sources */,
+				DF88A3C32F300CC30042E749 /* AccessibilityPermissionManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
