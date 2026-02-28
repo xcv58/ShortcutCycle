@@ -54,7 +54,7 @@ class HUDWindow: NSPanel {
 @MainActor
 class HUDManager: @preconcurrency ObservableObject {
     static let shared = HUDManager()
-    
+
     let objectWillChange = ObservableObjectPublisher()
     
     // Dependencies
@@ -74,6 +74,7 @@ class HUDManager: @preconcurrency ObservableObject {
     private var lastLocalKeyDownTime: Date?
     
     private var currentItems: [HUDAppItem] = []
+    private var activationTargetsByItemId: [String: WindowActivationTarget] = [:]
 
     private var previousFrontmostApp: NSRunningApplication?
     private var pendingActiveAppId: String?
@@ -104,6 +105,12 @@ class HUDManager: @preconcurrency ObservableObject {
     private var onSelectCallback: ((String) -> Void)?
     private var onFinalizeCallback: ((String) -> Void)?
 
+    private struct WindowActivationTarget {
+        let pid: pid_t
+        let windowIndex: Int?
+        let windowNumber: CGWindowID?
+    }
+
     /// Schedule showing the HUD with macOS Command+Tab logic
     func scheduleShow(items: [HUDAppItem], activeAppId: String, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key? = nil, shouldActivate: Bool = true, immediate: Bool = false, onSelect: ((String) -> Void)? = nil, onFinalize: ((String) -> Void)? = nil) {
         // Cancel existing hide timer
@@ -124,6 +131,7 @@ class HUDManager: @preconcurrency ObservableObject {
         
         // Store items immediately so fast switch path can look up PID
         self.currentItems = items
+        self.activationTargetsByItemId = makeActivationTargets(from: items)
         
         // Capture the previous frontmost app if we aren't already visible
         // We do this BEFORE we activate ourselves
@@ -182,6 +190,7 @@ class HUDManager: @preconcurrency ObservableObject {
         }
 
         self.currentItems = items
+        self.activationTargetsByItemId = makeActivationTargets(from: items)
         currentSelectedAppId = activeAppId
 
         if let shortcut = shortcut {
@@ -552,43 +561,41 @@ class HUDManager: @preconcurrency ObservableObject {
 
         fireOnFinalizeIfNeeded()
 
-        // Fast switch: user released keys before HUD appeared or while it was visible
-        if let pendingId = pendingActiveAppId {
-            activateOrLaunch(bundleId: pendingId)
-            pendingActiveAppId = nil
-        }
-        
-        if window?.isVisible == true {
-            hide() // Hide immediately
-        }
-        
-        // Stop monitoring
-        for monitor in eventMonitors {
-            NSEvent.removeMonitor(monitor)
-        }
-        eventMonitors.removeAll()
-        
-        if let observer = appResignObserver {
-            NotificationCenter.default.removeObserver(observer)
-            appResignObserver = nil
-        }
+        // Hide first, then activate pending target in hide() so synthetic click fallback
+        // can hit the real app window (not the HUD panel).
+        hide()
     }
     
     private func activateOrLaunch(bundleId: String) {
+        if let target = activationTargetsByItemId[bundleId] {
+            WindowEnumerator.shared.raiseWindow(
+                pid: target.pid,
+                windowIndex: target.windowIndex,
+                windowNumber: target.windowNumber
+            )
+            return
+        }
+
         // Try to find the item in currentItems to get PID and real bundle ID.
         // `bundleId` parameter may be a composite "bundleId::pid" or "bundleId::pid::wN" string,
         // so we resolve the real bundle identifier via currentItems to ensure macOS
         // APIs receive a valid bundle identifier in all fallback paths.
-        let item = currentItems.first(where: { $0.id == bundleId || $0.bundleId == bundleId })
-        let realBundleId = item?.bundleId ?? bundleId
+        let item = currentItems.first(where: { $0.id == bundleId })
+            ?? currentItems.first(where: {
+                $0.bundleId == bundleId && $0.windowIndex == nil && $0.windowNumber == nil
+            })
+        let realBundleId = item?.bundleId
+            ?? bundleId.split(separator: ":", maxSplits: 1, omittingEmptySubsequences: false).first.map(String.init)
+            ?? bundleId
 
-        // Per-window mode: raise specific window via Accessibility API
-        if let pid = item?.pid, let windowIndex = item?.windowIndex {
-            let windows = WindowEnumerator.shared.windows(for: pid)
-            if let windowInfo = windows.first(where: { $0.index == windowIndex }) {
-                WindowEnumerator.shared.raiseWindow(windowInfo, pid: pid)
-                return
-            }
+        // Per-window mode: raise specific window via cached AXUIElement
+        if let pid = item?.pid, (item?.windowIndex != nil || item?.windowNumber != nil) {
+            WindowEnumerator.shared.raiseWindow(
+                pid: pid,
+                windowIndex: item?.windowIndex,
+                windowNumber: item?.windowNumber
+            )
+            return
         }
 
         if let pid = item?.pid {
@@ -624,6 +631,24 @@ class HUDManager: @preconcurrency ObservableObject {
             }
         }
     }
+
+    private func makeActivationTargets(from items: [HUDAppItem]) -> [String: WindowActivationTarget] {
+        var targets: [String: WindowActivationTarget] = [:]
+        targets.reserveCapacity(items.count)
+
+        for item in items {
+            guard let pid = item.pid else { continue }
+            guard item.windowIndex != nil || item.windowNumber != nil else { continue }
+
+            targets[item.id] = WindowActivationTarget(
+                pid: pid,
+                windowIndex: item.windowIndex,
+                windowNumber: item.windowNumber
+            )
+        }
+
+        return targets
+    }
     
     private func scheduleAutoHide() {
         hideTimer?.invalidate()
@@ -637,17 +662,23 @@ class HUDManager: @preconcurrency ObservableObject {
     /// Hide the HUD
     func hide() {
         fireOnFinalizeIfNeeded()
+
+        let pendingId = pendingActiveAppId
+        pendingActiveAppId = nil
+
+        window?.ignoresMouseEvents = true
         window?.orderOut(nil)
         window = nil
+
+        if let pendingId {
+            activateOrLaunch(bundleId: pendingId)
+        }
+
         currentSelectedAppId = nil
         currentShortcut = nil
-        
-        // Ensure we activate the pending app if it exists (fallback)
-        if let pendingId = pendingActiveAppId {
-            activateOrLaunch(bundleId: pendingId)
-            pendingActiveAppId = nil
-        }
-        
+        currentItems = []
+        activationTargetsByItemId = [:]
+
         if let app = NSApp, app.isActive {
             app.hide(nil) // Yield focus back
         }

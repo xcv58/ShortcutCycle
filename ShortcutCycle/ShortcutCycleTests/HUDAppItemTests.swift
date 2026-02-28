@@ -108,7 +108,6 @@ final class HUDAppItemTests: XCTestCase {
 
         XCTAssertNil(item.windowTitle)
         XCTAssertNil(item.windowIndex)
-        XCTAssertFalse(item.isMinimized)
         XCTAssertNil(item.appName)
     }
 
@@ -117,7 +116,6 @@ final class HUDAppItemTests: XCTestCase {
 
         XCTAssertNil(item.windowTitle)
         XCTAssertNil(item.windowIndex)
-        XCTAssertFalse(item.isMinimized)
         XCTAssertNil(item.appName)
     }
 
@@ -126,7 +124,6 @@ final class HUDAppItemTests: XCTestCase {
 
         XCTAssertNil(item.windowTitle)
         XCTAssertNil(item.windowIndex)
-        XCTAssertFalse(item.isMinimized)
         XCTAssertNil(item.appName)
     }
 
@@ -147,7 +144,6 @@ final class HUDAppItemTests: XCTestCase {
         XCTAssertEqual(item.name, "GitHub - Google Chrome")
         XCTAssertEqual(item.windowTitle, "GitHub - Google Chrome")
         XCTAssertEqual(item.windowIndex, 0)
-        XCTAssertFalse(item.isMinimized)
         XCTAssertEqual(item.appName, "Google Chrome")
         XCTAssertTrue(item.isRunning)
         XCTAssertNil(item.icon)
@@ -170,21 +166,6 @@ final class HUDAppItemTests: XCTestCase {
         XCTAssertEqual(item.id, "com.app::500::w2")
     }
 
-    func testPerWindowInitMinimized() {
-        let item = HUDAppItem(
-            bundleId: "com.app",
-            pid: 100,
-            windowTitle: "Doc.txt",
-            windowIndex: 1,
-            isMinimized: true,
-            name: "TextEdit"
-        )
-
-        XCTAssertTrue(item.isMinimized)
-        XCTAssertEqual(item.windowTitle, "Doc.txt")
-        XCTAssertEqual(item.appName, "TextEdit")
-    }
-
     func testPerWindowInitWithIcon() {
         let icon = NSImage()
         let item = HUDAppItem(
@@ -205,7 +186,6 @@ final class HUDAppItemTests: XCTestCase {
             runningApp: runningApp,
             windowTitle: "Test Window",
             windowIndex: 0,
-            isMinimized: false,
             name: "Test"
         )
 
@@ -215,7 +195,6 @@ final class HUDAppItemTests: XCTestCase {
         XCTAssertEqual(item.id, "\(expectedBundleId)::\(runningApp.processIdentifier)::w0")
         XCTAssertEqual(item.windowTitle, "Test Window")
         XCTAssertEqual(item.windowIndex, 0)
-        XCTAssertFalse(item.isMinimized)
         XCTAssertEqual(item.appName, "Test")
         XCTAssertTrue(item.isRunning)
     }

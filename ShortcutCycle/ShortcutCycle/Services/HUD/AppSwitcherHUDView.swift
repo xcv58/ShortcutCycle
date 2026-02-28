@@ -52,7 +52,7 @@ struct AppSwitcherHUDView: View {
                 LazyVGrid(columns: Array(repeating: GridItem(.fixed(80), spacing: 30), count: 5), spacing: 30) {
                     ForEach(apps) { app in
                         if let icon = app.icon {
-                            HUDItemView(icon: icon, isActive: app.id == activeAppId, isRunning: app.isRunning, isMinimized: app.isMinimized, size: 72)
+                            HUDItemView(icon: icon, isActive: app.id == activeAppId, isRunning: app.isRunning, size: 72)
                                 .id(app.id)
                                 .onTapGesture {
                                     onSelect?(app.id)
@@ -75,7 +75,7 @@ struct AppSwitcherHUDView: View {
                 HStack(spacing: 20) {
                     ForEach(apps) { app in
                         if let icon = app.icon {
-                            HUDItemView(icon: icon, isActive: app.id == activeAppId, isRunning: app.isRunning, isMinimized: app.isMinimized, size: 72)
+                            HUDItemView(icon: icon, isActive: app.id == activeAppId, isRunning: app.isRunning, size: 72)
                                 .id(app.id)
                                 .onTapGesture {
                                     onSelect?(app.id)
@@ -150,7 +150,6 @@ struct HUDItemView: View {
     let icon: NSImage
     let isActive: Bool
     let isRunning: Bool
-    var isMinimized: Bool = false
     var size: CGFloat = 72 // Default size
 
     @State private var isHovering = false
@@ -161,8 +160,8 @@ struct HUDItemView: View {
             .aspectRatio(contentMode: .fit)
             .frame(width: size, height: size)
             .scaleEffect(isActive ? 1.15 : (isHovering ? 1.08 : 1.0))
-            .saturation(isActive ? 1.1 : (isRunning ? (isMinimized ? 0.4 : (isHovering ? 1.0 : 0.8)) : 0.2))
-            .opacity(isActive ? 1.0 : (isRunning ? (isMinimized ? 0.5 : (isHovering ? 0.9 : 0.7)) : 0.5))
+            .saturation(isActive ? 1.1 : (isRunning ? (isHovering ? 1.0 : 0.8) : 0.2))
+            .opacity(isActive ? 1.0 : (isRunning ? (isHovering ? 0.9 : 0.7) : 0.5))
             .blur(radius: 0)
             .overlay(alignment: .bottomTrailing) {
                  if !isRunning {
@@ -173,16 +172,6 @@ struct HUDItemView: View {
                          .offset(x: 4, y: 4)
                          .shadow(radius: 2)
                  }
-            }
-            .overlay(alignment: .bottomLeading) {
-                if isMinimized {
-                    Image(systemName: "minus.circle.fill")
-                        .font(.system(size: 18))
-                        .foregroundColor(.orange)
-                        .background(Circle().fill(Color.white).frame(width: 14, height: 14))
-                        .offset(x: -4, y: 4)
-                        .shadow(radius: 2)
-                }
             }
             .padding(12)
             .background(

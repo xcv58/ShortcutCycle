@@ -121,7 +121,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
             store.updateLastActiveApp(bundleId: nextAppId, for: group.id)
             store.updateMRUOrder(activatedId: hudItems[0].id, activatedBundleId: hudItems[0].bundleId, for: group.id, liveItemIds: liveItemIds)
             if let item = hudItems.first {
-                activateOrLaunch(bundleId: item.bundleId, pid: item.pid, windowIndex: item.windowIndex)
+                activateOrLaunch(bundleId: item.bundleId, pid: item.pid, windowIndex: item.windowIndex, windowNumber: item.windowNumber)
                 LaunchOverlayManager.shared.show(appName: item.name, appIcon: item.icon)
             }
             return true
@@ -155,7 +155,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
         )
 
         if !hudShown {
-             activateOrLaunch(bundleId: nextItem?.bundleId ?? nextAppId, pid: nextItem?.pid, windowIndex: nextItem?.windowIndex)
+             activateOrLaunch(bundleId: nextItem?.bundleId ?? nextAppId, pid: nextItem?.pid, windowIndex: nextItem?.windowIndex, windowNumber: nextItem?.windowNumber)
              store.updateMRUOrder(activatedId: nextItem?.id ?? nextAppId, activatedBundleId: nextItem?.bundleId ?? nextAppId, for: group.id, liveItemIds: liveItemIds)
         }
         return true
@@ -224,7 +224,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
                     app?.hide()
                 } else {
                     // With HUD disabled, keep behavior as an explicit activation.
-                    activateOrLaunch(bundleId: item.bundleId, pid: item.pid, windowIndex: item.windowIndex)
+                    activateOrLaunch(bundleId: item.bundleId, pid: item.pid, windowIndex: item.windowIndex, windowNumber: item.windowNumber)
                     store.updateMRUOrder(activatedId: item.id, activatedBundleId: item.bundleId, for: group.id, liveItemIds: liveItemIds)
                 }
             } else {
@@ -248,7 +248,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
                     }
                 )
                 if !hudShown {
-                    activateOrLaunch(bundleId: item.bundleId, pid: item.pid, windowIndex: item.windowIndex)
+                    activateOrLaunch(bundleId: item.bundleId, pid: item.pid, windowIndex: item.windowIndex, windowNumber: item.windowNumber)
                     store.updateMRUOrder(activatedId: item.id, activatedBundleId: item.bundleId, for: group.id, liveItemIds: liveItemIds)
                 }
             }
@@ -316,7 +316,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
         )
 
         if !hudShown {
-             activateOrLaunch(bundleId: nextItem?.bundleId ?? nextAppId, pid: nextItem?.pid, windowIndex: nextItem?.windowIndex)
+             activateOrLaunch(bundleId: nextItem?.bundleId ?? nextAppId, pid: nextItem?.pid, windowIndex: nextItem?.windowIndex, windowNumber: nextItem?.windowNumber)
              store.updateMRUOrder(activatedId: nextItem?.id ?? nextAppId, activatedBundleId: nextItem?.bundleId ?? nextAppId, for: group.id, liveItemIds: liveItemIds)
         }
         return true
@@ -425,7 +425,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
                 runningApp: runningApp,
                 windowTitle: windowInfo.title,
                 windowIndex: windowInfo.index,
-                isMinimized: windowInfo.isMinimized,
+                windowNumber: windowInfo.windowNumber,
                 name: appName,
                 icon: icon
             )
@@ -497,12 +497,11 @@ class AppSwitcher: @preconcurrency ObservableObject {
         return false
     }
     
-    private func activateOrLaunch(bundleId: String, pid: pid_t? = nil, windowIndex: Int? = nil) {
-        if let pid = pid, let windowIndex = windowIndex {
-            // Per-window mode: raise specific window via Accessibility API
-            let windows = WindowEnumerator.shared.windows(for: pid)
-            if let windowInfo = windows.first(where: { $0.index == windowIndex }) {
-                WindowEnumerator.shared.raiseWindow(windowInfo, pid: pid)
+    private func activateOrLaunch(bundleId: String, pid: pid_t? = nil, windowIndex: Int? = nil, windowNumber: CGWindowID? = nil) {
+        if let pid = pid {
+            // Per-window mode: raise specific window via cached AXUIElement
+            if windowIndex != nil || windowNumber != nil {
+                WindowEnumerator.shared.raiseWindow(pid: pid, windowIndex: windowIndex, windowNumber: windowNumber)
                 return
             }
         }

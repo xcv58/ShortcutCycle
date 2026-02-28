@@ -19,8 +19,8 @@ public struct HUDAppItem: Identifiable, Equatable, @unchecked Sendable {
     public let windowTitle: String?
     /// Index in the AX window list (nil for process-level items)
     public let windowIndex: Int?
-    /// Whether the window is minimized
-    public let isMinimized: Bool
+    /// Stable CGWindowID when available (preferred for activation)
+    public let windowNumber: CGWindowID?
     /// Original app name (shown as subtitle when windowTitle is primary)
     public let appName: String?
 
@@ -35,25 +35,25 @@ public struct HUDAppItem: Identifiable, Equatable, @unchecked Sendable {
         self.isRunning = true
         self.windowTitle = nil
         self.windowIndex = nil
-        self.isMinimized = false
+        self.windowNumber = nil
         self.appName = nil
     }
 
     /// Initialize for a specific window of a running app (per-window mode)
-    public init(runningApp: NSRunningApplication, windowTitle: String?, windowIndex: Int, isMinimized: Bool = false, name: String? = nil, icon: NSImage? = nil) {
+    public init(runningApp: NSRunningApplication, windowTitle: String?, windowIndex: Int, windowNumber: CGWindowID? = nil, name: String? = nil, icon: NSImage? = nil) {
         self.init(
             bundleId: runningApp.bundleIdentifier ?? "",
             pid: runningApp.processIdentifier,
             windowTitle: windowTitle,
             windowIndex: windowIndex,
-            isMinimized: isMinimized,
+            windowNumber: windowNumber,
             name: name ?? runningApp.localizedName ?? "App",
             icon: icon ?? runningApp.icon
         )
     }
 
     /// Initialize for a specific window with explicit parameters (testable, no NSRunningApplication needed)
-    public init(bundleId: String, pid: pid_t, windowTitle: String?, windowIndex: Int, isMinimized: Bool = false, name: String, icon: NSImage? = nil) {
+    public init(bundleId: String, pid: pid_t, windowTitle: String?, windowIndex: Int, windowNumber: CGWindowID? = nil, name: String, icon: NSImage? = nil) {
         self.bundleId = bundleId
         self.pid = pid
         self.id = "\(bundleId)::\(pid)::w\(windowIndex)"
@@ -63,7 +63,7 @@ public struct HUDAppItem: Identifiable, Equatable, @unchecked Sendable {
         self.isRunning = true
         self.windowTitle = windowTitle
         self.windowIndex = windowIndex
-        self.isMinimized = isMinimized
+        self.windowNumber = windowNumber
     }
 
     /// Initialize for a non-running app
@@ -76,7 +76,7 @@ public struct HUDAppItem: Identifiable, Equatable, @unchecked Sendable {
         self.isRunning = false
         self.windowTitle = nil
         self.windowIndex = nil
-        self.isMinimized = false
+        self.windowNumber = nil
         self.appName = nil
     }
 
@@ -90,7 +90,7 @@ public struct HUDAppItem: Identifiable, Equatable, @unchecked Sendable {
         self.isRunning = isRunning
         self.windowTitle = nil
         self.windowIndex = nil
-        self.isMinimized = false
+        self.windowNumber = nil
         self.appName = nil
     }
 
