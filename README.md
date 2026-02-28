@@ -103,6 +103,10 @@ Found a bug or have a feature request? Please [open an issue](https://github.com
 
 Everything runs locally on your Mac. No data is collected.
 
+## Why no per-window switching?
+
+ShortcutCycle intentionally switches apps, not individual windows. Reliable window-by-window control needs much broader accessibility access to other apps, and we prefer a privacy-first approach with minimal permissions.
+
 ## For Developers
 
 Requirements:
