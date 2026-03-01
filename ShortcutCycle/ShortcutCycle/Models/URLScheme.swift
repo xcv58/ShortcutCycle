@@ -39,15 +39,15 @@ public enum ShortcutCycleURLCommand: Equatable {
     case reorderGroup(URLGroupTarget, position: Int)
     case addApp(URLGroupTarget, bundleId: String)
     case removeApp(URLGroupTarget, bundleId: String)
-    case listGroups(output: String)
-    case getGroup(URLGroupTarget, output: String)
+    case listGroups
+    case getGroup(URLGroupTarget)
 }
 
 // MARK: - URL Parser
 
 public enum ShortcutCycleURLParser {
     public static let scheme = "shortcutcycle"
-    public static let defaultQueryOutputPath = "/tmp/shortcutcycle-result.json"
+    public static let queryResultFileName = "shortcutcycle-result.json"
 
     public static func parse(_ url: URL) -> ShortcutCycleURLCommand? {
         guard url.scheme?.lowercased() == scheme else { return nil }
@@ -118,10 +118,10 @@ public enum ShortcutCycleURLParser {
             guard let target, let bundleId = parseBundleId(from: query) else { return nil }
             return .removeApp(target, bundleId: bundleId)
         case "list-groups":
-            return .listGroups(output: parseOutputPath(from: query))
+            return .listGroups
         case "get-group":
             guard let target else { return nil }
-            return .getGroup(target, output: parseOutputPath(from: query))
+            return .getGroup(target)
         default:
             return nil
         }
@@ -254,9 +254,4 @@ public enum ShortcutCycleURLParser {
         return raw
     }
 
-    private static func parseOutputPath(from query: [String: String]) -> String {
-        let raw = query["output"]?.trimmingCharacters(in: .whitespacesAndNewlines)
-        if let raw, !raw.isEmpty { return raw }
-        return defaultQueryOutputPath
-    }
 }

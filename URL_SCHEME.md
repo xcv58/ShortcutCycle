@@ -111,14 +111,15 @@ open "shortcutcycle://remove-app?group=Browsers&bundle=com.apple.Safari"
 
 ### Query commands
 
-Query commands write JSON results to a file. Default output: `/tmp/shortcutcycle-result.json`.
+Query commands write JSON results to a fixed, sandbox-safe file:
+`$HOME/Library/Containers/com.xcv58.ShortcutCycle/Data/tmp/shortcutcycle-result.json`.
 
 - `list-groups`
-  - Optional: `output=<path>` (default: `/tmp/shortcutcycle-result.json`)
   - Returns all groups with id, name, isEnabled, appCount, and 1-based index.
 - `get-group` (group selector required)
-  - Optional: `output=<path>` (default: `/tmp/shortcutcycle-result.json`)
   - Returns full group details including apps (bundleId and name).
+
+`output=<path>` is deprecated for query commands and ignored.
 
 Output format:
 
@@ -136,16 +137,10 @@ Examples:
 
 ```bash
 open "shortcutcycle://list-groups"
-sleep 0.5 && cat /tmp/shortcutcycle-result.json
-
-open "shortcutcycle://list-groups?output=/tmp/groups.json"
-sleep 0.5 && cat /tmp/groups.json
+sleep 0.5 && cat "$HOME/Library/Containers/com.xcv58.ShortcutCycle/Data/tmp/shortcutcycle-result.json"
 
 open "shortcutcycle://get-group?group=Browsers"
-sleep 0.5 && cat /tmp/shortcutcycle-result.json
-
-open "shortcutcycle://get-group?group=Browsers&output=/tmp/detail.json"
-sleep 0.5 && cat /tmp/detail.json
+sleep 0.5 && cat "$HOME/Library/Containers/com.xcv58.ShortcutCycle/Data/tmp/shortcutcycle-result.json"
 ```
 
 ### Backup actions
@@ -173,8 +168,8 @@ open "shortcutcycle://flush-auto-save"
 open "shortcutcycle://restore-backup"
 open "shortcutcycle://restore-backup?index=2"
 open "shortcutcycle://restore-backup?name=backup%202026-03-01%2000-00-00.json"
-open "shortcutcycle://restore-backup?path=/tmp/backup.json"
-open "shortcutcycle://restore-backup?file=/tmp/backup.json"
+open "shortcutcycle://restore-backup?path=$HOME/Library/Containers/com.xcv58.ShortcutCycle/Data/tmp/backup.json"
+open "shortcutcycle://restore-backup?file=$HOME/Library/Containers/com.xcv58.ShortcutCycle/Data/tmp/backup.json"
 ```
 
 ### Settings actions
@@ -220,10 +215,10 @@ open "shortcutcycle://set-setting?key=openAtLogin&value=true"
 Examples:
 
 ```bash
-open "shortcutcycle://export-settings?path=/tmp/ShortcutCycle-Settings.json"
-open "shortcutcycle://import-settings?path=/tmp/ShortcutCycle-Settings.json"
-open "shortcutcycle://export-settings?file=/tmp/ShortcutCycle-Settings.json"
-open "shortcutcycle://import-settings?file=/tmp/ShortcutCycle-Settings.json"
+open "shortcutcycle://export-settings?path=$HOME/Library/Containers/com.xcv58.ShortcutCycle/Data/tmp/ShortcutCycle-Settings.json"
+open "shortcutcycle://import-settings?path=$HOME/Library/Containers/com.xcv58.ShortcutCycle/Data/tmp/ShortcutCycle-Settings.json"
+open "shortcutcycle://export-settings?file=$HOME/Library/Containers/com.xcv58.ShortcutCycle/Data/tmp/ShortcutCycle-Settings.json"
+open "shortcutcycle://import-settings?file=$HOME/Library/Containers/com.xcv58.ShortcutCycle/Data/tmp/ShortcutCycle-Settings.json"
 ```
 
 ## Group selector parameters
@@ -254,4 +249,4 @@ open "shortcutcycle://x-callback-url/enable-group?index=2"
 - Use absolute paths or `file://` URLs for file-based commands.
 - Relative paths may resolve from the app process working directory, which is not stable.
 - URL-encode special characters and spaces (for example, use `%20`).
-- Query commands (`list-groups`, `get-group`) write results asynchronously. Use `sleep 0.5` before reading the output file in scripts.
+- Query commands (`list-groups`, `get-group`) write results asynchronously to `$HOME/Library/Containers/com.xcv58.ShortcutCycle/Data/tmp/shortcutcycle-result.json`. Use `sleep 0.5` before reading the file in scripts.

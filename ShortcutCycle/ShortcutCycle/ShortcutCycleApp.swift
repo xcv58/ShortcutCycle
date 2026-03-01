@@ -301,7 +301,7 @@ enum ShortcutCycleURLRouter {
             guard let group = resolveGroup(target, in: store) else { return }
             guard let appItem = group.apps.first(where: { $0.bundleIdentifier == bundleId }) else { return }
             store.removeApp(appItem, from: group.id)
-        case .listGroups(let output):
+        case .listGroups:
             let groupsData = store.groups.enumerated().map { index, group in
                 [
                     "id": group.id.uuidString,
@@ -311,8 +311,8 @@ enum ShortcutCycleURLRouter {
                     "index": index + 1
                 ] as [String: Any]
             }
-            writeQueryResult(groupsData, command: "list-groups", to: output)
-        case .getGroup(let target, let output):
+            writeQueryResult(groupsData, command: "list-groups")
+        case .getGroup(let target):
             guard let group = resolveGroup(target, in: store) else { return }
             let appsData = group.apps.map { app in
                 [
@@ -326,7 +326,7 @@ enum ShortcutCycleURLRouter {
                 "isEnabled": group.isEnabled,
                 "apps": appsData
             ]
-            writeQueryResult(groupData, command: "get-group", to: output)
+            writeQueryResult(groupData, command: "get-group")
         }
     }
 
@@ -558,7 +558,7 @@ enum ShortcutCycleURLRouter {
             }
     }
 
-    private static func writeQueryResult(_ data: Any, command: String, to outputPath: String) {
+    private static func writeQueryResult(_ data: Any, command: String) {
         let result: [String: Any] = [
             "command": command,
             "success": true,
@@ -567,10 +567,19 @@ enum ShortcutCycleURLRouter {
         guard let jsonData = try? JSONSerialization.data(withJSONObject: result, options: [.prettyPrinted, .sortedKeys]) else {
             return
         }
-        let url = URL(fileURLWithPath: (outputPath as NSString).expandingTildeInPath)
+        let url = queryResultFileURL()
         let parentDir = url.deletingLastPathComponent()
         try? FileManager.default.createDirectory(at: parentDir, withIntermediateDirectories: true)
         try? jsonData.write(to: url, options: .atomic)
+    }
+
+    private static func queryResultFileURL() -> URL {
+        // In sandboxed builds, NSHomeDirectory() is the app container's Data directory.
+        // Writing under <home>/tmp keeps the output deterministic and writable.
+        let sandboxHome = URL(fileURLWithPath: NSHomeDirectory(), isDirectory: true)
+        return sandboxHome
+            .appendingPathComponent("tmp", isDirectory: true)
+            .appendingPathComponent(ShortcutCycleURLParser.queryResultFileName, isDirectory: false)
     }
 
     private static func fileURL(from rawPath: String) -> URL? {

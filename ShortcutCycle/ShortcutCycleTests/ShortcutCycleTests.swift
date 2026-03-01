@@ -316,22 +316,22 @@ final class ShortcutCycleTests: XCTestCase {
 
     func testParseListGroupsURL() {
         let url = URL(string: "shortcutcycle://list-groups")!
-        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .listGroups(output: "/tmp/shortcutcycle-result.json"))
+        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .listGroups)
     }
 
-    func testParseListGroupsWithOutputURL() {
+    func testParseListGroupsWithOutputURLIgnoresOutputPath() {
         let url = URL(string: "shortcutcycle://list-groups?output=/tmp/groups.json")!
-        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .listGroups(output: "/tmp/groups.json"))
+        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .listGroups)
     }
 
     func testParseGetGroupURL() {
         let url = URL(string: "shortcutcycle://get-group?group=Browsers")!
-        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .getGroup(.name("Browsers"), output: "/tmp/shortcutcycle-result.json"))
+        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .getGroup(.name("Browsers")))
     }
 
-    func testParseGetGroupWithOutputURL() {
+    func testParseGetGroupWithOutputURLIgnoresOutputPath() {
         let url = URL(string: "shortcutcycle://get-group?group=Browsers&output=/tmp/detail.json")!
-        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .getGroup(.name("Browsers"), output: "/tmp/detail.json"))
+        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .getGroup(.name("Browsers")))
     }
 
     func testParseGetGroupRequiresTarget() {
