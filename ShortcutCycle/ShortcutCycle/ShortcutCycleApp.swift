@@ -282,9 +282,8 @@ enum ShortcutCycleURLRouter {
             guard alert.runModal() == .alertFirstButtonReturn else { return }
             store.deleteGroup(group)
         case .renameGroup(let target, let newName):
-            guard var group = resolveGroup(target, in: store) else { return }
-            group.name = newName
-            store.updateGroup(group)
+            guard let group = resolveGroup(target, in: store) else { return }
+            store.renameGroup(group, newName: newName)
         case .reorderGroup(let target, let position):
             guard let group = resolveGroup(target, in: store) else { return }
             guard let currentIndex = store.groups.firstIndex(where: { $0.id == group.id }) else { return }
@@ -569,6 +568,8 @@ enum ShortcutCycleURLRouter {
             return
         }
         let url = URL(fileURLWithPath: (outputPath as NSString).expandingTildeInPath)
+        let parentDir = url.deletingLastPathComponent()
+        try? FileManager.default.createDirectory(at: parentDir, withIntermediateDirectories: true)
         try? jsonData.write(to: url, options: .atomic)
     }
 
