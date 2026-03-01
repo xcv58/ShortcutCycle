@@ -268,9 +268,66 @@ enum ShortcutCycleURLRouter {
             importSettings(from: path, store: store)
         case .restoreBackup(let target):
             restoreBackup(target: target, store: store)
-        case .createGroup, .deleteGroup, .renameGroup, .reorderGroup,
-             .addApp, .removeApp, .listGroups, .getGroup:
-            break // TODO: Implement in router layer
+        case .createGroup(let name):
+            _ = store.addGroup(name: name)
+            NotificationCenter.default.post(name: .shortcutsNeedUpdate, object: nil)
+        case .deleteGroup(let target):
+            guard let group = resolveGroup(target, in: store) else { return }
+            let alert = NSAlert()
+            alert.messageText = "Delete '\(group.name)'?"
+            alert.informativeText = "This will permanently remove the group and its shortcut."
+            alert.alertStyle = .warning
+            alert.addButton(withTitle: "Delete")
+            alert.addButton(withTitle: "Cancel")
+            guard alert.runModal() == .alertFirstButtonReturn else { return }
+            store.deleteGroup(group)
+        case .renameGroup(let target, let newName):
+            guard var group = resolveGroup(target, in: store) else { return }
+            group.name = newName
+            store.updateGroup(group)
+        case .reorderGroup(let target, let position):
+            guard let group = resolveGroup(target, in: store) else { return }
+            guard let currentIndex = store.groups.firstIndex(where: { $0.id == group.id }) else { return }
+            let clampedDestination = min(max(position - 1, 0), store.groups.count - 1)
+            let toOffset = clampedDestination > currentIndex ? clampedDestination + 1 : clampedDestination
+            store.moveGroups(from: IndexSet(integer: currentIndex), to: toOffset)
+        case .addApp(let target, let bundleId):
+            guard let group = resolveGroup(target, in: store) else { return }
+            guard let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleId),
+                  let appItem = AppItem.from(appURL: appURL) else {
+                return
+            }
+            store.addApp(appItem, to: group.id)
+        case .removeApp(let target, let bundleId):
+            guard let group = resolveGroup(target, in: store) else { return }
+            guard let appItem = group.apps.first(where: { $0.bundleIdentifier == bundleId }) else { return }
+            store.removeApp(appItem, from: group.id)
+        case .listGroups(let output):
+            let groupsData = store.groups.enumerated().map { index, group in
+                [
+                    "id": group.id.uuidString,
+                    "name": group.name,
+                    "isEnabled": group.isEnabled,
+                    "appCount": group.apps.count,
+                    "index": index + 1
+                ] as [String: Any]
+            }
+            writeQueryResult(groupsData, command: "list-groups", to: output)
+        case .getGroup(let target, let output):
+            guard let group = resolveGroup(target, in: store) else { return }
+            let appsData = group.apps.map { app in
+                [
+                    "bundleId": app.bundleIdentifier,
+                    "name": app.name
+                ]
+            }
+            let groupData: [String: Any] = [
+                "id": group.id.uuidString,
+                "name": group.name,
+                "isEnabled": group.isEnabled,
+                "apps": appsData
+            ]
+            writeQueryResult(groupData, command: "get-group", to: output)
         }
     }
 
@@ -500,6 +557,19 @@ enum ShortcutCycleURLRouter {
                 let rightDate = (try? rhs.resourceValues(forKeys: [.creationDateKey]))?.creationDate ?? .distantPast
                 return leftDate > rightDate
             }
+    }
+
+    private static func writeQueryResult(_ data: Any, command: String, to outputPath: String) {
+        let result: [String: Any] = [
+            "command": command,
+            "success": true,
+            "data": data
+        ]
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: result, options: [.prettyPrinted, .sortedKeys]) else {
+            return
+        }
+        let url = URL(fileURLWithPath: (outputPath as NSString).expandingTildeInPath)
+        try? jsonData.write(to: url, options: .atomic)
     }
 
     private static func fileURL(from rawPath: String) -> URL? {
