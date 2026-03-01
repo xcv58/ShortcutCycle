@@ -17,6 +17,7 @@ open "shortcutcycle://<command>?<query>"
 open "shortcutcycle://open-settings"
 open "shortcutcycle://cycle?group=Browsers"
 open "shortcutcycle://set-setting?key=showHUD&value=true"
+open "shortcutcycle://set-setting?key=showHUD&value=false"
 open "shortcutcycle://backup"
 open "shortcutcycle://create-group?name=Editors"
 open "shortcutcycle://add-app?group=Editors&bundleId=com.microsoft.VSCode"
@@ -232,6 +233,10 @@ Commands that target groups can use:
 - `group=<name>` (alias: `name=<name>`, case-insensitive)
 - `groupId=<uuid>` (alias: `id=<uuid>`)
 - `index=<1-based-index>` (alias: `groupindex=<1-based-index>`)
+
+Selector precedence: `groupId` > `index` > `group` (name).
+
+If multiple groups share the same name, `group=<name>` matches the first one in the list. Use `groupId` or `index` to target a specific group unambiguously. Run `list-groups` to see each group's UUID and index.
 
 ## x-callback style action path
 
