@@ -15,7 +15,8 @@ struct GroupEditView: View {
     @State private var draggingApp: AppItem?
     @State private var isHovering: Bool = false
     @FocusState private var isNameFocused: Bool
-    
+    @State private var suppressAutoFocus = true
+
     private var group: AppGroup? {
         store.groups.first { $0.id == groupId }
     }
@@ -44,6 +45,7 @@ struct GroupEditView: View {
                             isHovering = hovering
                         }
                         .onChange(of: groupName) { _, newValue in
+                            guard isNameFocused else { return }
                             var updatedGroup = group
                             updatedGroup.name = newValue
                             store.updateGroup(updatedGroup)
@@ -151,9 +153,23 @@ struct GroupEditView: View {
     }
     .onAppear {
         loadGroupData()
+        // Prevent the system from auto-focusing the name field on appear
+        suppressAutoFocus = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            suppressAutoFocus = false
+        }
+    }
+    .onChange(of: isNameFocused) { _, focused in
+        if focused && suppressAutoFocus {
+            isNameFocused = false
+        }
     }
     .onChange(of: groupId) { _, _ in
+        suppressAutoFocus = true
         loadGroupData()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            suppressAutoFocus = false
+        }
     }
 }
     
