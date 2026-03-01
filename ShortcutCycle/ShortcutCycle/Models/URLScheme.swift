@@ -33,12 +33,21 @@ public enum ShortcutCycleURLCommand: Equatable {
     case exportSettings(path: String)
     case importSettings(path: String)
     case restoreBackup(URLBackupTarget?)
+    case createGroup(name: String)
+    case deleteGroup(URLGroupTarget)
+    case renameGroup(URLGroupTarget, newName: String)
+    case reorderGroup(URLGroupTarget, position: Int)
+    case addApp(URLGroupTarget, bundleId: String)
+    case removeApp(URLGroupTarget, bundleId: String)
+    case listGroups(output: String)
+    case getGroup(URLGroupTarget, output: String)
 }
 
 // MARK: - URL Parser
 
 public enum ShortcutCycleURLParser {
     public static let scheme = "shortcutcycle"
+    public static let defaultQueryOutputPath = "/tmp/shortcutcycle-result.json"
 
     public static func parse(_ url: URL) -> ShortcutCycleURLCommand? {
         guard url.scheme?.lowercased() == scheme else { return nil }
@@ -89,6 +98,30 @@ public enum ShortcutCycleURLParser {
             return .importSettings(path: path)
         case "restore-backup", "restore":
             return .restoreBackup(parseBackupTarget(from: query))
+        case "create-group":
+            let name = (query["name"] ?? query["group"])?.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard let name, !name.isEmpty else { return nil }
+            return .createGroup(name: name)
+        case "delete-group":
+            guard let target else { return nil }
+            return .deleteGroup(target)
+        case "rename-group":
+            guard let target, let newName = parseNewName(from: query) else { return nil }
+            return .renameGroup(target, newName: newName)
+        case "reorder-group":
+            guard let target, let position = parsePosition(from: query) else { return nil }
+            return .reorderGroup(target, position: position)
+        case "add-app":
+            guard let target, let bundleId = parseBundleId(from: query) else { return nil }
+            return .addApp(target, bundleId: bundleId)
+        case "remove-app":
+            guard let target, let bundleId = parseBundleId(from: query) else { return nil }
+            return .removeApp(target, bundleId: bundleId)
+        case "list-groups":
+            return .listGroups(output: parseOutputPath(from: query))
+        case "get-group":
+            guard let target else { return nil }
+            return .getGroup(target, output: parseOutputPath(from: query))
         default:
             return nil
         }
@@ -201,5 +234,29 @@ public enum ShortcutCycleURLParser {
 
         // nil => latest backup
         return nil
+    }
+
+    private static func parseNewName(from query: [String: String]) -> String? {
+        let raw = (query["newname"] ?? query["to"])?.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let raw, !raw.isEmpty else { return nil }
+        return raw
+    }
+
+    private static func parsePosition(from query: [String: String]) -> Int? {
+        let raw = query["position"] ?? query["to"]
+        guard let raw, let pos = Int(raw), pos > 0 else { return nil }
+        return pos
+    }
+
+    private static func parseBundleId(from query: [String: String]) -> String? {
+        let raw = (query["bundleid"] ?? query["app"] ?? query["bundle"])?.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let raw, !raw.isEmpty else { return nil }
+        return raw
+    }
+
+    private static func parseOutputPath(from query: [String: String]) -> String {
+        let raw = query["output"]?.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let raw, !raw.isEmpty { return raw }
+        return defaultQueryOutputPath
     }
 }

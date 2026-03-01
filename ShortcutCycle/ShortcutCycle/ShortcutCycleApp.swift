@@ -268,6 +268,9 @@ enum ShortcutCycleURLRouter {
             importSettings(from: path, store: store)
         case .restoreBackup(let target):
             restoreBackup(target: target, store: store)
+        case .createGroup, .deleteGroup, .renameGroup, .reorderGroup,
+             .addApp, .removeApp, .listGroups, .getGroup:
+            break // TODO: Implement in router layer
         }
     }
 

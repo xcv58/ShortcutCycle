@@ -191,4 +191,126 @@ final class ShortcutCycleTests: XCTestCase {
             .restoreBackup(.path("/tmp/backup.json"))
         )
     }
+
+    // MARK: - URL Parser: Group CRUD
+
+    func testParseCreateGroupURL() {
+        let url = URL(string: "shortcutcycle://create-group?name=Editors")!
+        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .createGroup(name: "Editors"))
+    }
+
+    func testParseCreateGroupEmptyNameReturnsNil() {
+        let url = URL(string: "shortcutcycle://create-group?name=")!
+        XCTAssertNil(ShortcutCycleURLParser.parse(url))
+    }
+
+    func testParseCreateGroupNoNameReturnsNil() {
+        let url = URL(string: "shortcutcycle://create-group")!
+        XCTAssertNil(ShortcutCycleURLParser.parse(url))
+    }
+
+    func testParseDeleteGroupURL() {
+        let url = URL(string: "shortcutcycle://delete-group?group=Browsers")!
+        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .deleteGroup(.name("Browsers")))
+    }
+
+    func testParseDeleteGroupRequiresTarget() {
+        let url = URL(string: "shortcutcycle://delete-group")!
+        XCTAssertNil(ShortcutCycleURLParser.parse(url))
+    }
+
+    func testParseRenameGroupURL() {
+        let url = URL(string: "shortcutcycle://rename-group?group=Browsers&newName=Web")!
+        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .renameGroup(.name("Browsers"), newName: "Web"))
+    }
+
+    func testParseRenameGroupToAliasURL() {
+        let url = URL(string: "shortcutcycle://rename-group?group=Browsers&to=Web")!
+        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .renameGroup(.name("Browsers"), newName: "Web"))
+    }
+
+    func testParseRenameGroupRequiresNewName() {
+        let url = URL(string: "shortcutcycle://rename-group?group=Browsers")!
+        XCTAssertNil(ShortcutCycleURLParser.parse(url))
+    }
+
+    func testParseReorderGroupURL() {
+        let url = URL(string: "shortcutcycle://reorder-group?group=Browsers&position=1")!
+        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .reorderGroup(.name("Browsers"), position: 1))
+    }
+
+    func testParseReorderGroupToAliasURL() {
+        let url = URL(string: "shortcutcycle://reorder-group?group=Browsers&to=2")!
+        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .reorderGroup(.name("Browsers"), position: 2))
+    }
+
+    func testParseReorderGroupRequiresPosition() {
+        let url = URL(string: "shortcutcycle://reorder-group?group=Browsers")!
+        XCTAssertNil(ShortcutCycleURLParser.parse(url))
+    }
+
+    // MARK: - URL Parser: App Management
+
+    func testParseAddAppURL() {
+        let url = URL(string: "shortcutcycle://add-app?group=Browsers&bundleId=com.google.Chrome")!
+        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .addApp(.name("Browsers"), bundleId: "com.google.Chrome"))
+    }
+
+    func testParseAddAppWithAppAlias() {
+        let url = URL(string: "shortcutcycle://add-app?group=Browsers&app=com.google.Chrome")!
+        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .addApp(.name("Browsers"), bundleId: "com.google.Chrome"))
+    }
+
+    func testParseAddAppWithBundleAlias() {
+        let url = URL(string: "shortcutcycle://add-app?group=Browsers&bundle=com.google.Chrome")!
+        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .addApp(.name("Browsers"), bundleId: "com.google.Chrome"))
+    }
+
+    func testParseAddAppRequiresGroupAndBundleId() {
+        let noGroup = URL(string: "shortcutcycle://add-app?bundleId=com.google.Chrome")!
+        XCTAssertNil(ShortcutCycleURLParser.parse(noGroup))
+
+        let noBundleId = URL(string: "shortcutcycle://add-app?group=Browsers")!
+        XCTAssertNil(ShortcutCycleURLParser.parse(noBundleId))
+    }
+
+    func testParseRemoveAppURL() {
+        let url = URL(string: "shortcutcycle://remove-app?group=Browsers&bundleId=com.google.Chrome")!
+        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .removeApp(.name("Browsers"), bundleId: "com.google.Chrome"))
+    }
+
+    func testParseRemoveAppRequiresGroupAndBundleId() {
+        let noGroup = URL(string: "shortcutcycle://remove-app?bundleId=com.google.Chrome")!
+        XCTAssertNil(ShortcutCycleURLParser.parse(noGroup))
+
+        let noBundleId = URL(string: "shortcutcycle://remove-app?group=Browsers")!
+        XCTAssertNil(ShortcutCycleURLParser.parse(noBundleId))
+    }
+
+    // MARK: - URL Parser: Query Commands
+
+    func testParseListGroupsURL() {
+        let url = URL(string: "shortcutcycle://list-groups")!
+        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .listGroups(output: "/tmp/shortcutcycle-result.json"))
+    }
+
+    func testParseListGroupsWithOutputURL() {
+        let url = URL(string: "shortcutcycle://list-groups?output=/tmp/groups.json")!
+        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .listGroups(output: "/tmp/groups.json"))
+    }
+
+    func testParseGetGroupURL() {
+        let url = URL(string: "shortcutcycle://get-group?group=Browsers")!
+        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .getGroup(.name("Browsers"), output: "/tmp/shortcutcycle-result.json"))
+    }
+
+    func testParseGetGroupWithOutputURL() {
+        let url = URL(string: "shortcutcycle://get-group?group=Browsers&output=/tmp/detail.json")!
+        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .getGroup(.name("Browsers"), output: "/tmp/detail.json"))
+    }
+
+    func testParseGetGroupRequiresTarget() {
+        let url = URL(string: "shortcutcycle://get-group")!
+        XCTAssertNil(ShortcutCycleURLParser.parse(url))
+    }
 }
