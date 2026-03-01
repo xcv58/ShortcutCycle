@@ -234,6 +234,11 @@ final class ShortcutCycleTests: XCTestCase {
         XCTAssertNil(ShortcutCycleURLParser.parse(url))
     }
 
+    func testParseRenameGroupRequiresTarget() {
+        let url = URL(string: "shortcutcycle://rename-group?newName=Web")!
+        XCTAssertNil(ShortcutCycleURLParser.parse(url))
+    }
+
     func testParseReorderGroupURL() {
         let url = URL(string: "shortcutcycle://reorder-group?group=Browsers&position=1")!
         XCTAssertEqual(ShortcutCycleURLParser.parse(url), .reorderGroup(.name("Browsers"), position: 1))
@@ -246,6 +251,16 @@ final class ShortcutCycleTests: XCTestCase {
 
     func testParseReorderGroupRequiresPosition() {
         let url = URL(string: "shortcutcycle://reorder-group?group=Browsers")!
+        XCTAssertNil(ShortcutCycleURLParser.parse(url))
+    }
+
+    func testParseReorderGroupRequiresTarget() {
+        let url = URL(string: "shortcutcycle://reorder-group?position=1")!
+        XCTAssertNil(ShortcutCycleURLParser.parse(url))
+    }
+
+    func testParseReorderGroupZeroPositionReturnsNil() {
+        let url = URL(string: "shortcutcycle://reorder-group?group=Browsers&position=0")!
         XCTAssertNil(ShortcutCycleURLParser.parse(url))
     }
 
@@ -276,6 +291,16 @@ final class ShortcutCycleTests: XCTestCase {
 
     func testParseRemoveAppURL() {
         let url = URL(string: "shortcutcycle://remove-app?group=Browsers&bundleId=com.google.Chrome")!
+        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .removeApp(.name("Browsers"), bundleId: "com.google.Chrome"))
+    }
+
+    func testParseRemoveAppWithAppAlias() {
+        let url = URL(string: "shortcutcycle://remove-app?group=Browsers&app=com.google.Chrome")!
+        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .removeApp(.name("Browsers"), bundleId: "com.google.Chrome"))
+    }
+
+    func testParseRemoveAppWithBundleAlias() {
+        let url = URL(string: "shortcutcycle://remove-app?group=Browsers&bundle=com.google.Chrome")!
         XCTAssertEqual(ShortcutCycleURLParser.parse(url), .removeApp(.name("Browsers"), bundleId: "com.google.Chrome"))
     }
 
