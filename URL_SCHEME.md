@@ -18,6 +18,9 @@ open "shortcutcycle://open-settings"
 open "shortcutcycle://cycle?group=Browsers"
 open "shortcutcycle://set-setting?key=showHUD&value=true"
 open "shortcutcycle://backup"
+open "shortcutcycle://create-group?name=Editors"
+open "shortcutcycle://add-app?group=Editors&bundleId=com.microsoft.VSCode"
+open "shortcutcycle://list-groups"
 ```
 
 ## Commands
@@ -60,6 +63,88 @@ open "shortcutcycle://select-group?index=1"
 open "shortcutcycle://enable-group?group=Browsers"
 open "shortcutcycle://disable-group?group=Browsers"
 open "shortcutcycle://toggle-group?group=Browsers"
+```
+
+### Group CRUD
+
+- `create-group`
+  - Required: `name=<string>`
+  - Creates a new group with the given name.
+- `delete-group` (group selector required)
+  - Shows a confirmation dialog before deleting.
+- `rename-group` (group selector required)
+  - Required: `newName=<string>` (alias: `to`)
+- `reorder-group` (group selector required)
+  - Required: `position=<1-based-index>` (alias: `to`)
+  - Out-of-range values are clamped to first or last position.
+
+Examples:
+
+```bash
+open "shortcutcycle://create-group?name=Editors"
+open "shortcutcycle://delete-group?group=Editors"
+open "shortcutcycle://rename-group?group=Browsers&to=Web"
+open "shortcutcycle://rename-group?group=Browsers&newName=Web"
+open "shortcutcycle://reorder-group?group=Web&position=1"
+open "shortcutcycle://reorder-group?group=Web&to=2"
+```
+
+### App management
+
+- `add-app` (group selector required)
+  - Required: `bundleId=<bundle-identifier>` (aliases: `app`, `bundle`)
+  - Adds the app to the group. Skips if already present.
+  - The app must be installed on the system.
+- `remove-app` (group selector required)
+  - Required: `bundleId=<bundle-identifier>` (aliases: `app`, `bundle`)
+  - Removes the app from the group.
+
+Examples:
+
+```bash
+open "shortcutcycle://add-app?group=Browsers&bundleId=com.google.Chrome"
+open "shortcutcycle://add-app?group=Browsers&app=com.apple.Safari"
+open "shortcutcycle://remove-app?group=Browsers&bundleId=com.google.Chrome"
+open "shortcutcycle://remove-app?group=Browsers&bundle=com.apple.Safari"
+```
+
+### Query commands
+
+Query commands write JSON results to a file. Default output: `/tmp/shortcutcycle-result.json`.
+
+- `list-groups`
+  - Optional: `output=<path>` (default: `/tmp/shortcutcycle-result.json`)
+  - Returns all groups with id, name, isEnabled, appCount, and 1-based index.
+- `get-group` (group selector required)
+  - Optional: `output=<path>` (default: `/tmp/shortcutcycle-result.json`)
+  - Returns full group details including apps (bundleId and name).
+
+Output format:
+
+```json
+{
+  "command": "list-groups",
+  "success": true,
+  "data": [
+    {"id": "UUID", "name": "Browsers", "isEnabled": true, "appCount": 3, "index": 1}
+  ]
+}
+```
+
+Examples:
+
+```bash
+open "shortcutcycle://list-groups"
+sleep 0.5 && cat /tmp/shortcutcycle-result.json
+
+open "shortcutcycle://list-groups?output=/tmp/groups.json"
+sleep 0.5 && cat /tmp/groups.json
+
+open "shortcutcycle://get-group?group=Browsers"
+sleep 0.5 && cat /tmp/shortcutcycle-result.json
+
+open "shortcutcycle://get-group?group=Browsers&output=/tmp/detail.json"
+sleep 0.5 && cat /tmp/detail.json
 ```
 
 ### Backup actions
@@ -160,6 +245,8 @@ open "shortcutcycle://x-callback-url/enable-group?index=2"
 ## Important notes
 
 - `import-settings` and `restore-backup` replace current groups/settings immediately.
+- `delete-group`, `import-settings`, and `restore-backup` show a confirmation dialog before proceeding.
 - Use absolute paths or `file://` URLs for file-based commands.
 - Relative paths may resolve from the app process working directory, which is not stable.
 - URL-encode special characters and spaces (for example, use `%20`).
+- Query commands (`list-groups`, `get-group`) write results asynchronously. Use `sleep 0.5` before reading the output file in scripts.
