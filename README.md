@@ -98,6 +98,7 @@ We believe tools should be for everyone. ShortcutCycle is built with accessibili
 ## Custom URL Scheme (Automation)
 
 ShortcutCycle supports the custom URL scheme `shortcutcycle://` so automations can trigger app functions.
+For the full command reference, see [URL_SCHEME.md](URL_SCHEME.md).
 
 Examples:
 
