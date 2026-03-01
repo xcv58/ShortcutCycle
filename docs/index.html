@@ -1722,6 +1722,12 @@
                             previous setups in seconds.</p>
                     </div>
                     <div class="feature-card">
+                        <span class="feature-icon">🤖</span>
+                        <h3>Automation Ready</h3>
+                        <p>Control ShortcutCycle with the <code>shortcutcycle://</code> URL scheme from Apple
+                            Shortcuts, Alfred, Raycast, or Keyboard Maestro.</p>
+                    </div>
+                    <div class="feature-card">
                         <span class="feature-icon">🌍</span>
                         <h3>Global Ready</h3>
                         <p>Fully localized interface in 15 languages. Productivity that speaks your language.</p>
@@ -1786,6 +1792,29 @@
                         <summary>Can I customize the shortcuts?</summary>
                         <p>Yes, you have full control. You can assign any global shortcut to activate a specific group.
                             Inside the group, apps are cycled based on the order you arrange them in.</p>
+                    </details>
+
+                    <details class="faq-item">
+                        <summary>Can I automate ShortcutCycle with Shortcuts, Alfred, or Raycast?</summary>
+                        <p>Yes. ShortcutCycle supports the custom URL scheme <code>shortcutcycle://</code>, so you can
+                            trigger actions from automation tools. Example:
+                            <code>open "shortcutcycle://cycle?group=Browsers"</code>.
+                        </p>
+                    </details>
+
+                    <details class="faq-item">
+                        <summary>Can URL commands open a specific settings tab or the backup browser?</summary>
+                        <p>Yes. Use <code>shortcutcycle://open-settings?tab=groups</code>,
+                            <code>shortcutcycle://open-settings?tab=general</code>, or
+                            <code>shortcutcycle://open-backup-browser</code>.
+                        </p>
+                    </details>
+
+                    <details class="faq-item">
+                        <summary>Can URL commands import/export settings or restore backups?</summary>
+                        <p>Yes. You can export/import settings by path and restore backups by latest, index, name, or
+                            path. Example: <code>shortcutcycle://restore-backup?index=2</code>. Import/restore replaces
+                            your current groups and settings immediately.</p>
                     </details>
 
                     <details class="faq-item">
