@@ -34,9 +34,6 @@ struct MainView: View {
         .focusedSceneValue(\.selectedTab, $selectedTab)
         .background(SettingsWindowObserver())
         .onAppear {
-            NSApp.setActivationPolicy(.regular)
-            NSApp.activate(ignoringOtherApps: true)
-
             if let pendingTab = ShortcutCycleURLNavigationState.consumePendingSettingsTab() {
                 selectedTab = pendingTab.rawValue
             }

@@ -127,10 +127,7 @@ class ShortcutManager: @preconcurrency ObservableObject {
     private func handleToggleSettings() {
         // Find if the settings window is already open
         let settingsWindow = NSApp.windows.first { window in
-            // Check by identifier first (if exposed) or title
-            // Note: SwiftUI windows might not expose identifier easily in NSWindow, 
-            // but usually the title matches the WindowGroup title
-            return window.title == "Shortcut Cycle" && window.styleMask.contains(.titled)
+            return window.identifier?.rawValue == "settings"
         }
         
         if let window = settingsWindow {

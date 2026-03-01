@@ -277,7 +277,7 @@ enum ShortcutCycleURLRouter {
         }
 
         if let settingsWindow = NSApp.windows.first(where: { window in
-            window.title == "Shortcut Cycle" && window.styleMask.contains(.titled)
+            window.identifier?.rawValue == "settings"
         }) {
             settingsWindow.makeKeyAndOrderFront(nil)
             NSApp.setActivationPolicy(.regular)
@@ -298,7 +298,7 @@ enum ShortcutCycleURLRouter {
         ShortcutCycleURLNavigationState.requestBackupBrowser()
 
         let windowAlreadyOpen = NSApp.windows.contains(where: { window in
-            window.title == "Shortcut Cycle" && window.styleMask.contains(.titled)
+            window.identifier?.rawValue == "settings"
         })
 
         openSettingsWindow(tab: .general)
@@ -559,18 +559,32 @@ struct ShortcutCycleApp: App {
 }
 
 
+@MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillFinishLaunching(_ notification: Notification) {
         // Run as a menu bar app (no dock icon)
         NSApp.setActivationPolicy(.accessory)
+
+        // Register for URL events directly via Apple Events.
+        // This is more reliable than application(_:open:) or .onOpenURL,
+        // which can fail when a SwiftUI Window is already the key window.
+        NSAppleEventManager.shared().setEventHandler(
+            self,
+            andSelector: #selector(handleURLEvent(_:withReply:)),
+            forEventClass: AEEventClass(kInternetEventClass),
+            andEventID: AEEventID(kAEGetURL)
+        )
     }
 
-    func application(_ application: NSApplication, open urls: [URL]) {
-        Task { @MainActor in
-            for url in urls {
-                ShortcutCycleURLRouter.handle(url)
-            }
+    @objc private func handleURLEvent(
+        _ event: NSAppleEventDescriptor,
+        withReply reply: NSAppleEventDescriptor
+    ) {
+        guard let urlString = event.paramDescriptor(forKeyword: keyDirectObject)?.stringValue,
+              let url = URL(string: urlString) else {
+            return
         }
+        ShortcutCycleURLRouter.handle(url)
     }
 }
 
