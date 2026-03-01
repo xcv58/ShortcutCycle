@@ -97,80 +97,25 @@ We believe tools should be for everyone. ShortcutCycle is built with accessibili
 
 ## Custom URL Scheme (Automation)
 
-ShortcutCycle supports the custom URL scheme `shortcutcycle://` so automations can trigger app functions.
-For the full command reference, see [URL_SCHEME.md](URL_SCHEME.md).
+ShortcutCycle supports the `shortcutcycle://` URL scheme for automation via shell scripts, Shortcuts.app, Hammerspoon, and other tools. Capabilities include:
 
-Examples:
+- **Navigation** — open settings, switch tabs, open backup browser
+- **Group cycling** — cycle, select, enable, disable, or toggle groups
+- **Group CRUD** — create, delete, rename, and reorder groups
+- **App management** — add or remove apps from groups by bundle ID
+- **Settings** — change HUD, theme, language, and launch-at-login preferences
+- **Backup & restore** — manual backup, flush auto-save, restore from backup
+- **Import/export** — export or import settings as JSON files
+- **Query** — list all groups or get group details as JSON
 
 ```bash
-# Open settings
-open "shortcutcycle://open-settings"
-open "shortcutcycle://open-settings?tab=groups"
-open "shortcutcycle://open-settings?tab=general"
-
-# Cycle a group by name (case-insensitive)
 open "shortcutcycle://cycle?group=Browsers"
-
-# Cycle a group by UUID
-open "shortcutcycle://cycle?groupId=9B8E6AA2-3C63-4B63-BF8F-2D95B6E45D59"
-
-# Select, enable, disable, or toggle a group
-open "shortcutcycle://select-group?group=Browsers"
-open "shortcutcycle://enable-group?group=Browsers"
-open "shortcutcycle://disable-group?group=Browsers"
-open "shortcutcycle://toggle-group?group=Browsers"
-
-# Trigger a manual backup
-open "shortcutcycle://backup"
-
-# Flush pending automatic save/backup immediately
-open "shortcutcycle://flush-auto-save"
-
-# Open automatic backup browser directly
-open "shortcutcycle://open-backup-browser"
-
-# Update app settings
-open "shortcutcycle://set-setting?key=showHUD&value=true"
-open "shortcutcycle://set-setting?key=showShortcutInHUD&value=false"
-open "shortcutcycle://set-setting?key=appTheme&value=dark"          # system|light|dark
-open "shortcutcycle://set-setting?key=selectedLanguage&value=ja"    # or system
-open "shortcutcycle://set-setting?key=openAtLogin&value=true"
-
-# Export / import settings by file path
-open "shortcutcycle://export-settings?path=/tmp/ShortcutCycle-Settings.json"
-open "shortcutcycle://import-settings?path=/tmp/ShortcutCycle-Settings.json"
-open "shortcutcycle://export-settings?file=/tmp/ShortcutCycle-Settings.json" # alias for path
-open "shortcutcycle://import-settings?file=/tmp/ShortcutCycle-Settings.json" # alias for path
-
-# Restore automatic backup (defaults to latest if no selector provided)
-open "shortcutcycle://restore-backup"
-open "shortcutcycle://restore-backup?index=2"
-open "shortcutcycle://restore-backup?name=backup%202026-03-01%2000-00-00.json"
-open "shortcutcycle://restore-backup?path=/tmp/backup.json"
-open "shortcutcycle://restore-backup?file=/tmp/backup.json" # alias for path
+open "shortcutcycle://create-group?name=Editors"
+open "shortcutcycle://add-app?group=Editors&bundleId=com.microsoft.VSCode"
+open "shortcutcycle://list-groups"
 ```
 
-Supported group selectors:
-- `group=<name>`
-- `groupId=<uuid>`
-- `index=<1-based-index>`
-
-Supported settings keys for `set-setting`:
-- `showHUD`
-- `showShortcutInHUD`
-- `appTheme`
-- `selectedLanguage`
-- `openAtLogin`
-
-Supported selectors for `restore-backup`:
-- `index=<1-based-index>` (sorted newest first)
-- `name=<backup-file-name>`
-- `path=<absolute-path-or-file-url>`
-
-Notes:
-- `import-settings` and `restore-backup` replace current groups/settings immediately.
-- `path` and `file` are equivalent for `export-settings`, `import-settings`, and `restore-backup`.
-- `restore-backup` selector precedence is `path/file` > `name` > `index` > latest.
+For the full command reference, parameters, and examples, see [URL_SCHEME.md](URL_SCHEME.md).
 
 ## Support
 
