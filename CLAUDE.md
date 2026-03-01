@@ -4,7 +4,7 @@
 
 ShortcutCycle is a native macOS menu bar application built with Swift and SwiftUI. It lets users organize apps into groups and cycle between them using global keyboard shortcuts. A HUD overlay shows the current and next app during cycling.
 
-**Key capabilities:** app group management, global keyboard shortcuts, HUD overlay, multi-profile app support (e.g., Chrome profiles), import/export settings as JSON, automatic GFS backup, 15-language localization, launch at login.
+**Key capabilities:** app group management, global keyboard shortcuts, HUD overlay, multi-profile app support (e.g., Chrome profiles), import/export settings as JSON, automatic GFS backup, custom `shortcutcycle://` URL automation (including settings/backup navigation and backup/import/export actions), 15-language localization, launch at login.
 
 - **Language:** Swift 5.9+
 - **Framework:** SwiftUI + AppKit
@@ -20,7 +20,7 @@ ShortcutCycle/
 │   ├── ShortcutCycle.xcodeproj/        # Xcode project config
 │   ├── Package.swift                   # SPM manifest
 │   ├── ShortcutCycle/                  # Main source code
-│   │   ├── ShortcutCycleApp.swift      # App entry point, menu bar setup
+│   │   ├── ShortcutCycleApp.swift      # App entry point, menu bar setup, URL scheme parser/router
 │   │   ├── Models/                     # Data models (SPM target: ShortcutCycleCore)
 │   │   │   ├── AppGroup.swift          # Group model with apps and shortcut refs
 │   │   │   ├── AppItem.swift           # Individual app (bundle ID, name, icon)
@@ -68,6 +68,7 @@ ShortcutCycle/
 │       ├── LocalizationTests.swift
 │       ├── SettingsExportTests.swift
 │       └── ShortcutCycleTests.swift
+├── URL_SCHEME.md                       # Full `shortcutcycle://` command reference
 ├── .github/workflows/
 │   ├── test.yml                        # CI: swift test on push/PR to master
 │   └── static.yml                      # GitHub Pages deployment
@@ -120,7 +121,7 @@ The Core module is imported via `#if canImport(ShortcutCycleCore)` for compatibi
 - **MVVM with reactive state:** `GroupStore` is the main `@Observable`/`@Published` store. Views bind with `@StateObject` and `@AppStorage`.
 - **Singletons for services:** `ShortcutManager.shared`, `AppSwitcher` instances are created at app scope.
 - **`@MainActor` for thread safety:** All UI-touching classes are `@MainActor`-annotated.
-- **Notification-based communication:** `Notification.Name.shortcutsNeedUpdate`, `.deleteGroupRequested`, etc.
+- **Notification-based communication:** `Notification.Name.shortcutsNeedUpdate`, `.deleteGroupRequested`, `.settingsTabRequested`, `.backupBrowserRequested`.
 - **Isolated test state:** Each test suite uses a dedicated `UserDefaults(suiteName:)` to avoid test pollution.
 
 ### Key Algorithms
@@ -157,6 +158,8 @@ When adding new user-facing strings, add the key to all 15 `Localizable.strings`
 - **HUD overlay:** Custom `NSPanel` at floating window level with 200ms hold-delay
 - **App switching:** Uses `NSRunningApplication` and `NSWorkspace` APIs
 - **Keyboard events:** Carbon event codes for key monitoring
+- **Custom URL scheme automation:** `AppDelegate.application(_:open:)` routes incoming `shortcutcycle://...` URLs to `ShortcutCycleURLRouter`, with parsing in `ShortcutCycleURLParser`.
+- **Deep-link UI navigation:** URL actions can open Settings and switch tabs (`groups`/`general`) or trigger the Automatic Backup Browser via `settingsTabRequested` and `backupBrowserRequested` notifications.
 - **Entitlements:** See `ShortcutCycle.entitlements`
 
 ## Tips for AI Assistants
@@ -165,4 +168,5 @@ When adding new user-facing strings, add the key to all 15 `Localizable.strings`
 - Model files in `Models/` are shared between the `ShortcutCycleCore` and `ShortcutCycle` targets — they are listed explicitly in `Package.swift` sources/excludes. If you add a new model file, update both the `sources` array in the Core target and the `exclude` array in the executable target.
 - The test target depends only on `ShortcutCycleCore`, not the full app. New testable logic should go in Core.
 - HUD and AppSwitcher code uses `@MainActor` — maintain this when adding or modifying service classes.
+- URL automation behavior is implemented in `ShortcutCycleApp.swift` (`ShortcutCycleURLParser`, `ShortcutCycleURLRouter`, and navigation state). Keep `README.md` and `URL_SCHEME.md` in sync when adding/changing commands or aliases.
 - The default branch is `master`, not `main`.
