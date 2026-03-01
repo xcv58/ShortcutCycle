@@ -20,5 +20,16 @@
 		<string>tr</string>
 		<string>ru</string>
 	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.xcv58.shortcutcycle</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>shortcutcycle</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>
