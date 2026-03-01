@@ -1,10 +1,11 @@
 import XCTest
 #if canImport(ShortcutCycleCore)
 @testable import ShortcutCycleCore
-#endif
+#else
 @testable import ShortcutCycle
+#endif
 
-/// Smoke tests for basic type conformances across the Core module
+/// Tests for type conformances and URL scheme parsing across ShortcutCycleCore
 final class ShortcutCycleTests: XCTestCase {
 
     // MARK: - CyclingAppItem

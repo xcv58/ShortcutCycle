@@ -26,6 +26,7 @@ open "shortcutcycle://backup"
 
 - `open-settings` (alias: `settings`)
   - Optional: `tab=groups|general`
+  - Tab aliases: `group` (alias for `groups`), `app` or `application` (alias for `general`)
   - Special backup browser trigger:
     - `tab=backup|backups|backup-browser|automatic-backups`
     - `section=...`, `panel=...`, `view=...` (same values as above)
@@ -96,18 +97,20 @@ open "shortcutcycle://restore-backup?file=/tmp/backup.json"
   - Required key: `key=<setting-key>` (alias: `name=<setting-key>`)
   - Required value: `value=<setting-value>` (alias: `v=<setting-value>`)
 
-Supported keys:
+All keys and values are case-insensitive.
 
-- `showHUD`
-- `showShortcutInHUD`
-- `appTheme`
-- `selectedLanguage`
-- `openAtLogin`
+Supported keys (with aliases):
+
+- `showHUD` (alias: `hud`)
+- `showShortcutInHUD` (aliases: `hudShortcut`, `showShortcut`)
+- `appTheme` (aliases: `theme`, `appearance`)
+- `selectedLanguage` (alias: `language`)
+- `openAtLogin` (alias: `launchAtLogin`)
 
 Supported values:
 
 - Boolean keys accept: `1|true|yes|on|enabled` and `0|false|no|off|disabled`
-- `appTheme`: `system|light|dark`
+- `appTheme`: `system|light|dark` (`default` is an alias for `system`)
 - `selectedLanguage`: `system` or one of:
   - `en`, `de`, `fr`, `es`, `ja`, `pt-BR`, `zh-Hans`, `zh-Hant`, `it`, `ko`, `ar`, `nl`, `pl`, `tr`, `ru`
 

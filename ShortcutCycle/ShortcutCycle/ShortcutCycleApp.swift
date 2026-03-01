@@ -186,205 +186,7 @@ struct SettingsWindowObserver: NSViewRepresentable {
 
 // MARK: - Custom URL Scheme
 
-enum URLGroupTarget: Equatable {
-    case id(UUID)
-    case name(String)
-    case index(Int) // 1-based index for user-facing URLs
-}
-
-enum URLSettingsTab: String, Equatable {
-    case groups
-    case general
-}
-
-enum URLBackupTarget: Equatable {
-    case index(Int) // 1-based index (1 = most recent backup)
-    case name(String)
-    case path(String)
-}
-
-enum ShortcutCycleURLCommand: Equatable {
-    case openSettings(URLSettingsTab?)
-    case openBackupBrowser
-    case cycle(URLGroupTarget?)
-    case selectGroup(URLGroupTarget)
-    case enableGroup(URLGroupTarget)
-    case disableGroup(URLGroupTarget)
-    case toggleGroup(URLGroupTarget)
-    case backup
-    case flushAutoSave
-    case setSetting(key: String, value: String)
-    case exportSettings(path: String)
-    case importSettings(path: String)
-    case restoreBackup(URLBackupTarget?)
-}
-
-enum ShortcutCycleURLParser {
-    static let scheme = "shortcutcycle"
-
-    static func parse(_ url: URL) -> ShortcutCycleURLCommand? {
-        guard url.scheme?.lowercased() == scheme else { return nil }
-        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return nil }
-        guard let action = resolveAction(from: components) else { return nil }
-
-        let query = queryDictionary(from: components)
-        let target = parseGroupTarget(from: query)
-
-        switch action {
-        case "settings", "open-settings":
-            if shouldOpenBackupBrowser(from: query) {
-                return .openBackupBrowser
-            }
-            return .openSettings(parseSettingsTab(from: query))
-        case "open-backup-browser", "backup-browser", "automatic-backups":
-            return .openBackupBrowser
-        case "cycle":
-            return .cycle(target)
-        case "select-group":
-            guard let target else { return nil }
-            return .selectGroup(target)
-        case "enable-group":
-            guard let target else { return nil }
-            return .enableGroup(target)
-        case "disable-group":
-            guard let target else { return nil }
-            return .disableGroup(target)
-        case "toggle-group":
-            guard let target else { return nil }
-            return .toggleGroup(target)
-        case "backup":
-            return .backup
-        case "flush-auto-save", "flush-auto-backup", "trigger-auto-save", "trigger-auto-backup", "autosave":
-            return .flushAutoSave
-        case "set-setting":
-            guard let key = (query["key"] ?? query["name"])?.trimmingCharacters(in: .whitespacesAndNewlines),
-                  !key.isEmpty,
-                  let value = (query["value"] ?? query["v"])?.trimmingCharacters(in: .whitespacesAndNewlines) else {
-                return nil
-            }
-            return .setSetting(key: key.lowercased(), value: value)
-        case "export-settings", "export":
-            guard let path = parsePathValue(from: query) else { return nil }
-            return .exportSettings(path: path)
-        case "import-settings", "import":
-            guard let path = parsePathValue(from: query) else { return nil }
-            return .importSettings(path: path)
-        case "restore-backup", "restore":
-            return .restoreBackup(parseBackupTarget(from: query))
-        default:
-            return nil
-        }
-    }
-
-    private static func resolveAction(from components: URLComponents) -> String? {
-        let host = components.host?.lowercased()
-        let pathComponents = components.path
-            .split(separator: "/")
-            .map { $0.lowercased() }
-
-        // Support x-callback style:
-        // shortcutcycle://x-callback-url/cycle?group=Browsers
-        if host == "x-callback-url" {
-            return pathComponents.first
-        }
-
-        if let host, !host.isEmpty {
-            return host
-        }
-
-        return pathComponents.first
-    }
-
-    private static func queryDictionary(from components: URLComponents) -> [String: String] {
-        var query: [String: String] = [:]
-        for item in components.queryItems ?? [] {
-            guard let value = item.value else { continue }
-            query[item.name.lowercased()] = value
-        }
-        return query
-    }
-
-    private static func parseGroupTarget(from query: [String: String]) -> URLGroupTarget? {
-        if let idText = query["groupid"] ?? query["id"],
-           let uuid = UUID(uuidString: idText) {
-            return .id(uuid)
-        }
-
-        if let indexText = query["index"] ?? query["groupindex"],
-           let index = Int(indexText), index > 0 {
-            return .index(index)
-        }
-
-        if let rawName = query["group"] ?? query["name"] {
-            let name = rawName.trimmingCharacters(in: .whitespacesAndNewlines)
-            if !name.isEmpty {
-                return .name(name)
-            }
-        }
-
-        return nil
-    }
-
-    private static func parseSettingsTab(from query: [String: String]) -> URLSettingsTab? {
-        guard let rawTab = query["tab"]?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
-              !rawTab.isEmpty else {
-            return nil
-        }
-
-        switch rawTab {
-        case "groups", "group":
-            return .groups
-        case "general", "app", "application":
-            return .general
-        default:
-            return nil
-        }
-    }
-
-    private static func shouldOpenBackupBrowser(from query: [String: String]) -> Bool {
-        let candidates = [
-            query["tab"],
-            query["section"],
-            query["panel"],
-            query["view"]
-        ]
-        let value = candidates
-            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
-            .first(where: { !$0.isEmpty })
-
-        guard let value else { return false }
-        return value == "backup" ||
-               value == "backups" ||
-               value == "backup-browser" ||
-               value == "automatic-backups"
-    }
-
-    private static func parsePathValue(from query: [String: String]) -> String? {
-        let raw = query["path"] ?? query["file"]
-        guard let raw else { return nil }
-        let path = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        return path.isEmpty ? nil : path
-    }
-
-    private static func parseBackupTarget(from query: [String: String]) -> URLBackupTarget? {
-        if let path = parsePathValue(from: query) {
-            return .path(path)
-        }
-
-        if let rawName = query["name"]?.trimmingCharacters(in: .whitespacesAndNewlines),
-           !rawName.isEmpty {
-            return .name(rawName)
-        }
-
-        if let rawIndex = query["index"] ?? query["backupindex"],
-           let index = Int(rawIndex), index > 0 {
-            return .index(index)
-        }
-
-        // nil => latest backup
-        return nil
-    }
-}
+// MARK: - URL Navigation State
 
 @MainActor
 enum ShortcutCycleURLNavigationState {
@@ -422,6 +224,8 @@ enum ShortcutCycleURLNavigationState {
         pendingOpenBackupBrowser = false
     }
 }
+
+// MARK: - URL Router
 
 @MainActor
 enum ShortcutCycleURLRouter {
@@ -487,15 +291,21 @@ enum ShortcutCycleURLRouter {
             return
         }
 
-        NSApp.setActivationPolicy(.regular)
-        NSApp.activate(ignoringOtherApps: true)
         NotificationCenter.default.post(name: Notification.Name("ToggleSettingsWindow"), object: nil)
     }
 
     private static func openBackupBrowser() {
         ShortcutCycleURLNavigationState.requestBackupBrowser()
+
+        let windowAlreadyOpen = NSApp.windows.contains(where: { window in
+            window.title == "Shortcut Cycle" && window.styleMask.contains(.titled)
+        })
+
         openSettingsWindow(tab: .general)
-        NotificationCenter.default.post(name: .backupBrowserRequested, object: nil)
+
+        if windowAlreadyOpen {
+            NotificationCenter.default.post(name: .backupBrowserRequested, object: nil)
+        }
     }
 
     private static func setGroupEnabledState(_ isEnabled: Bool, for target: URLGroupTarget, store: GroupStore) {
@@ -595,6 +405,16 @@ enum ShortcutCycleURLRouter {
     private static func exportSettings(to rawPath: String, store: GroupStore) {
         guard let fileURL = fileURL(from: rawPath) else { return }
 
+        if FileManager.default.fileExists(atPath: fileURL.path) {
+            let alert = NSAlert()
+            alert.messageText = "Overwrite Existing File?"
+            alert.informativeText = "A file already exists at \(fileURL.path). Do you want to replace it?"
+            alert.alertStyle = .warning
+            alert.addButton(withTitle: "Overwrite")
+            alert.addButton(withTitle: "Cancel")
+            guard alert.runModal() == .alertFirstButtonReturn else { return }
+        }
+
         do {
             let data = try store.exportData()
             let parentDirectory = fileURL.deletingLastPathComponent()
@@ -608,6 +428,14 @@ enum ShortcutCycleURLRouter {
     private static func importSettings(from rawPath: String, store: GroupStore) {
         guard let fileURL = fileURL(from: rawPath) else { return }
 
+        let alert = NSAlert()
+        alert.messageText = "Import Settings?"
+        alert.informativeText = "This will replace all current groups and settings with the contents of \(fileURL.lastPathComponent)."
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "Import")
+        alert.addButton(withTitle: "Cancel")
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+
         do {
             let data = try Data(contentsOf: fileURL)
             try store.importData(data)
@@ -619,6 +447,14 @@ enum ShortcutCycleURLRouter {
     private static func restoreBackup(target: URLBackupTarget?, store: GroupStore) {
         guard let backupURL = resolveBackupURL(target: target, store: store) else { return }
         guard let data = try? Data(contentsOf: backupURL) else { return }
+
+        let alert = NSAlert()
+        alert.messageText = "Restore Backup?"
+        alert.informativeText = "This will replace all current groups and settings with the backup from \(backupURL.lastPathComponent)."
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "Restore")
+        alert.addButton(withTitle: "Cancel")
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
 
         switch SettingsExport.validate(data: data) {
         case .success(let export):
