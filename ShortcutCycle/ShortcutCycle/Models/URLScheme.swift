@@ -48,6 +48,11 @@ public enum ShortcutCycleURLCommand: Equatable {
 public enum ShortcutCycleURLParser {
     public static let scheme = "shortcutcycle"
     public static let queryResultFileName = "shortcutcycle-result.json"
+    
+    private enum BackupTargetParseResult {
+        case target(URLBackupTarget?)
+        case invalid
+    }
 
     public static func parse(_ url: URL) -> ShortcutCycleURLCommand? {
         guard url.scheme?.lowercased() == scheme else { return nil }
@@ -97,7 +102,12 @@ public enum ShortcutCycleURLParser {
             guard let path = parsePathValue(from: query) else { return nil }
             return .importSettings(path: path)
         case "restore-backup", "restore":
-            return .restoreBackup(parseBackupTarget(from: query))
+            switch parseBackupTarget(from: query) {
+            case .target(let target):
+                return .restoreBackup(target)
+            case .invalid:
+                return nil
+            }
         case "create-group":
             let name = (query["name"] ?? query["group"])?.trimmingCharacters(in: .whitespacesAndNewlines)
             guard let name, !name.isEmpty else { return nil }
@@ -217,23 +227,26 @@ public enum ShortcutCycleURLParser {
         return path.isEmpty ? nil : path
     }
 
-    private static func parseBackupTarget(from query: [String: String]) -> URLBackupTarget? {
+    private static func parseBackupTarget(from query: [String: String]) -> BackupTargetParseResult {
         if let path = parsePathValue(from: query) {
-            return .path(path)
+            return .target(.path(path))
         }
 
         if let rawName = query["name"]?.trimmingCharacters(in: .whitespacesAndNewlines),
            !rawName.isEmpty {
-            return .name(rawName)
+            return .target(.name(rawName))
         }
 
-        if let rawIndex = query["index"] ?? query["backupindex"],
-           let index = Int(rawIndex), index > 0 {
-            return .index(index)
+        if let rawIndex = query["index"] ?? query["backupindex"] {
+            let trimmed = rawIndex.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard let index = Int(trimmed), index > 0 else {
+                return .invalid
+            }
+            return .target(.index(index))
         }
 
         // nil => latest backup
-        return nil
+        return .target(nil)
     }
 
     private static func parseNewName(from query: [String: String]) -> String? {

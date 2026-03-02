@@ -313,7 +313,10 @@ enum ShortcutCycleURLRouter {
             }
             writeQueryResult(groupsData, command: "list-groups")
         case .getGroup(let target):
-            guard let group = resolveGroup(target, in: store) else { return }
+            guard let group = resolveGroup(target, in: store) else {
+                writeQueryFailure("Group not found", command: "get-group")
+                return
+            }
             let appsData = group.apps.map { app in
                 [
                     "bundleId": app.bundleIdentifier,
@@ -584,7 +587,20 @@ enum ShortcutCycleURLRouter {
             "success": true,
             "data": data
         ]
-        guard let jsonData = try? JSONSerialization.data(withJSONObject: result, options: [.prettyPrinted, .sortedKeys]) else {
+        writeQueryPayload(result)
+    }
+
+    private static func writeQueryFailure(_ message: String, command: String) {
+        let result: [String: Any] = [
+            "command": command,
+            "success": false,
+            "error": message
+        ]
+        writeQueryPayload(result)
+    }
+
+    private static func writeQueryPayload(_ payload: [String: Any]) {
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: payload, options: [.prettyPrinted, .sortedKeys]) else {
             return
         }
         let url = queryResultFileURL()

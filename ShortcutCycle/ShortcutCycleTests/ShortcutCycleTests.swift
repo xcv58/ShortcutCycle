@@ -176,6 +176,17 @@ final class ShortcutCycleTests: XCTestCase {
         )
     }
 
+    func testParseRestoreBackupWithInvalidIndexReturnsNil() {
+        let zero = URL(string: "shortcutcycle://restore-backup?index=0")!
+        XCTAssertNil(ShortcutCycleURLParser.parse(zero))
+
+        let negative = URL(string: "shortcutcycle://restore-backup?backupindex=-1")!
+        XCTAssertNil(ShortcutCycleURLParser.parse(negative))
+
+        let nonNumeric = URL(string: "shortcutcycle://restore-backup?index=abc")!
+        XCTAssertNil(ShortcutCycleURLParser.parse(nonNumeric))
+    }
+
     func testParseRestoreBackupByNameURL() {
         let url = URL(string: "shortcutcycle://restore-backup?name=backup%202026-03-01%2000-00-00.json")!
         XCTAssertEqual(
