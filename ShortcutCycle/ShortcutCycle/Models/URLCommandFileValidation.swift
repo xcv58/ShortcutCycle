@@ -128,10 +128,18 @@ public enum URLCommandFileValidation {
         return files
             .filter { $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json" }
             .sorted { lhs, rhs in
-                let leftDate = (try? lhs.resourceValues(forKeys: [.creationDateKey]))?.creationDate ?? .distantPast
-                let rightDate = (try? rhs.resourceValues(forKeys: [.creationDateKey]))?.creationDate ?? .distantPast
+                let leftDate = creationDate(for: lhs)
+                let rightDate = creationDate(for: rhs)
                 return leftDate > rightDate
             }
+    }
+
+    static func creationDate(for url: URL) -> Date {
+        let values = try? url.resourceValues(forKeys: [.creationDateKey])
+        if let date = values?.creationDate {
+            return date
+        }
+        return .distantPast
     }
 
     private static func canonicalURL(_ url: URL) -> URL {

@@ -98,7 +98,7 @@ public enum URLRouterLogic {
         case .pathOutsideContainer:
             return "Invalid export path. Use a location inside this app's container (for example, \(home)/tmp), or omit the path to use the default."
         default:
-            return "Invalid export path: \(error.errorDescription ?? "Unknown error.")"
+            return "Invalid export path: \(error.localizedDescription)"
         }
     }
 
@@ -115,7 +115,7 @@ public enum URLRouterLogic {
         case .pathOutsideContainer:
             return "Invalid import path. Use a location inside this app's container (for example, \(home)/tmp)."
         default:
-            return "Invalid import path: \(error.errorDescription ?? "Unknown error.")"
+            return "Invalid import path: \(error.localizedDescription)"
         }
     }
 

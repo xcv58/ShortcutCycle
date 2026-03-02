@@ -89,6 +89,11 @@ final class ShortcutCycleTests: XCTestCase {
         XCTAssertEqual(ShortcutCycleURLParser.parse(url), .cycle(.id(id)))
     }
 
+    func testParseCycleWithoutTargetReturnsNilGroup() {
+        let url = URL(string: "shortcutcycle://cycle")!
+        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .cycle(nil))
+    }
+
     func testParseCycleWithInvalidGroupIdReturnsNil() {
         let url = URL(string: "shortcutcycle://cycle?groupId=not-a-uuid&group=Browsers")!
         XCTAssertNil(ShortcutCycleURLParser.parse(url))
@@ -188,6 +193,14 @@ final class ShortcutCycleTests: XCTestCase {
     func testParseSetSettingWithInvalidThemeValueReturnsNil() {
         let url = URL(string: "shortcutcycle://set-setting?key=appTheme&value=blue")!
         XCTAssertNil(ShortcutCycleURLParser.parse(url))
+    }
+
+    func testParseSetSettingWithSelectedLanguageValue() {
+        let url = URL(string: "shortcutcycle://set-setting?key=selectedlanguage&value=en")!
+        XCTAssertEqual(
+            ShortcutCycleURLParser.parse(url),
+            .setSetting(key: "selectedlanguage", value: "en")
+        )
     }
 
     func testParseSetSettingWithTooLongKeyOrValueReturnsNil() {
@@ -477,6 +490,11 @@ final class ShortcutCycleTests: XCTestCase {
 
     func testParseListGroupsURL() {
         let url = URL(string: "shortcutcycle://list-groups")!
+        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .listGroups)
+    }
+
+    func testParseListGroupsWithValuelessQueryItem() {
+        let url = URL(string: "shortcutcycle://list-groups?output")!
         XCTAssertEqual(ShortcutCycleURLParser.parse(url), .listGroups)
     }
 

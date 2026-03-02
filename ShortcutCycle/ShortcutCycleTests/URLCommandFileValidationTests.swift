@@ -26,6 +26,53 @@ final class URLCommandFileValidationTests: XCTestCase {
         XCTAssertTrue(URLCommandFileValidation.validateBackupName("backup 2026-03-01 00-00-00.json"))
     }
 
+    func testValidationErrorDescriptionsCoverAllCases() {
+        let cases: [URLCommandFileValidation.ValidationError] = [
+            .emptyPath,
+            .invalidPath,
+            .pathOutsideContainer,
+            .invalidBackupName,
+            .backupOutsideDirectory,
+            .backupIndexOutOfRange,
+            .noBackupsAvailable
+        ]
+
+        for error in cases {
+            XCTAssertFalse((error.errorDescription ?? "").isEmpty)
+        }
+    }
+
+    func testNormalizedFileURLAcceptsFileURLInput() {
+        let home = makeTempDirectory(name: "home")
+        let file = home.appendingPathComponent("tmp/settings.json")
+        makeFile(file, contents: "{}")
+
+        let normalized = URLCommandFileValidation.normalizedFileURL(rawPath: file.absoluteString)
+        guard let normalized else {
+            return XCTFail("Expected normalized URL for file URL input")
+        }
+        XCTAssertEqual(canonicalPath(normalized), canonicalPath(file))
+    }
+
+    func testCreationDateReturnsDistantPastForMissingFile() {
+        let home = makeTempDirectory(name: "home")
+        let missingFile = home.appendingPathComponent("missing.json")
+        XCTAssertEqual(
+            URLCommandFileValidation.creationDate(for: missingFile),
+            .distantPast
+        )
+    }
+
+    func testCreationDateReturnsNonDefaultForExistingFile() {
+        let home = makeTempDirectory(name: "home")
+        let existingFile = home.appendingPathComponent("backup.json")
+        makeFile(existingFile, contents: "{}")
+        XCTAssertNotEqual(
+            URLCommandFileValidation.creationDate(for: existingFile),
+            .distantPast
+        )
+    }
+
     func testValidateImportURLRejectsPathOutsideContainer() {
         let home = makeTempDirectory(name: "home")
         let outside = makeTempDirectory(name: "outside")
@@ -107,6 +154,51 @@ final class URLCommandFileValidationTests: XCTestCase {
             home: home
         )
         XCTAssertFailure(result, expected: .invalidBackupName)
+    }
+
+    func testResolveBackupURLByNameAcceptsSimpleFilename() {
+        let home = makeTempDirectory(name: "home")
+        let backupDir = home.appendingPathComponent("Library/Application Support/ShortcutCycle", isDirectory: true)
+        makeDirectory(backupDir)
+        let backupName = "backup 2026-03-03 00-00-00.json"
+        let backupFile = backupDir.appendingPathComponent(backupName)
+        makeFile(backupFile, contents: "{}")
+
+        let result = URLCommandFileValidation.resolveBackupURL(
+            target: .name(backupName),
+            backupDirectory: backupDir,
+            home: home
+        )
+        guard case .success(let url) = result else {
+            return XCTFail("Expected success for valid backup name")
+        }
+        XCTAssertEqual(canonicalPath(url), canonicalPath(backupFile))
+    }
+
+    func testResolveBackupURLByNameRejectsSymlinkEscapingBackupDirectory() {
+        let home = makeTempDirectory(name: "home")
+        let backupDir = home.appendingPathComponent("Library/Application Support/ShortcutCycle", isDirectory: true)
+        makeDirectory(backupDir)
+        let outside = makeTempDirectory(name: "outside")
+        let outsideFile = outside.appendingPathComponent("backup.json")
+        makeFile(outsideFile, contents: "{}")
+        let symlinkName = "backup-link.json"
+        let symlinkURL = backupDir.appendingPathComponent(symlinkName)
+        do {
+            try FileManager.default.createSymbolicLink(
+                atPath: symlinkURL.path,
+                withDestinationPath: outsideFile.path
+            )
+        } catch {
+            return XCTFail("Expected backup symlink creation to succeed: \(error)")
+        }
+
+        let result = URLCommandFileValidation.resolveBackupURL(
+            target: .name(symlinkName),
+            backupDirectory: backupDir,
+            home: home
+        )
+        XCTAssertFailure(result, expected: .backupOutsideDirectory)
     }
 
     func testResolveBackupURLByPathRejectsOutsideContainer() {
@@ -195,6 +287,32 @@ final class URLCommandFileValidationTests: XCTestCase {
         let result = URLCommandFileValidation.resolveBackupURL(
             target: nil,
             backupDirectory: backupDir,
+            home: home
+        )
+        XCTAssertFailure(result, expected: .noBackupsAvailable)
+    }
+
+    func testResolveBackupURLByIndexReturnsOutOfRangeError() {
+        let home = makeTempDirectory(name: "home")
+        let backupDir = home.appendingPathComponent("Library/Application Support/ShortcutCycle", isDirectory: true)
+        makeDirectory(backupDir)
+
+        let result = URLCommandFileValidation.resolveBackupURL(
+            target: .index(1),
+            backupDirectory: backupDir,
+            home: home
+        )
+        XCTAssertFailure(result, expected: .backupIndexOutOfRange)
+    }
+
+    func testResolveBackupURLReturnsNoBackupsWhenBackupDirectoryUnreadable() {
+        let home = makeTempDirectory(name: "home")
+        let notADirectory = home.appendingPathComponent("backup-file.json", isDirectory: false)
+        makeFile(notADirectory, contents: "{}")
+
+        let result = URLCommandFileValidation.resolveBackupURL(
+            target: nil,
+            backupDirectory: notADirectory,
             home: home
         )
         XCTAssertFailure(result, expected: .noBackupsAvailable)
