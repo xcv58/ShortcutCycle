@@ -48,7 +48,18 @@ public enum ShortcutCycleURLCommand: Equatable {
 public enum ShortcutCycleURLParser {
     public static let scheme = "shortcutcycle"
     public static let queryResultFileName = "shortcutcycle-result.json"
-    
+
+    private enum ParameterParseResult<T> {
+        case value(T)
+        case none
+        case invalid
+    }
+
+    private enum OpenSettingsDestination {
+        case settings(URLSettingsTab?)
+        case backupBrowser
+    }
+
     private enum BackupTargetParseResult {
         case target(URLBackupTarget?)
         case invalid
@@ -64,25 +75,38 @@ public enum ShortcutCycleURLParser {
 
         switch action {
         case "settings", "open-settings":
-            if shouldOpenBackupBrowser(from: query) {
+            switch parseOpenSettingsDestination(from: query) {
+            case .value(.backupBrowser):
                 return .openBackupBrowser
+            case .value(.settings(let tab)):
+                return .openSettings(tab)
+            case .none:
+                return .openSettings(nil)
+            case .invalid:
+                return nil
             }
-            return .openSettings(parseSettingsTab(from: query))
         case "open-backup-browser", "backup-browser", "automatic-backups":
             return .openBackupBrowser
         case "cycle":
-            return .cycle(target)
+            switch target {
+            case .value(let groupTarget):
+                return .cycle(groupTarget)
+            case .none:
+                return .cycle(nil)
+            case .invalid:
+                return nil
+            }
         case "select-group":
-            guard let target else { return nil }
+            guard case .value(let target) = target else { return nil }
             return .selectGroup(target)
         case "enable-group":
-            guard let target else { return nil }
+            guard case .value(let target) = target else { return nil }
             return .enableGroup(target)
         case "disable-group":
-            guard let target else { return nil }
+            guard case .value(let target) = target else { return nil }
             return .disableGroup(target)
         case "toggle-group":
-            guard let target else { return nil }
+            guard case .value(let target) = target else { return nil }
             return .toggleGroup(target)
         case "backup":
             return .backup
@@ -91,15 +115,25 @@ public enum ShortcutCycleURLParser {
         case "set-setting":
             guard let key = (query["key"] ?? query["name"])?.trimmingCharacters(in: .whitespacesAndNewlines),
                   !key.isEmpty,
-                  let value = (query["value"] ?? query["v"])?.trimmingCharacters(in: .whitespacesAndNewlines) else {
+                  let value = (query["value"] ?? query["v"])?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !value.isEmpty else {
                 return nil
             }
-            return .setSetting(key: key.lowercased(), value: value.lowercased())
+            let normalizedKey = key.lowercased()
+            let normalizedValue = value.lowercased()
+            guard isSupportedSettingValue(normalizedValue, for: normalizedKey) else { return nil }
+            return .setSetting(key: normalizedKey, value: normalizedValue)
         case "export-settings", "export":
-            let rawPath = query["path"] ?? query["file"]
-            return .exportSettings(path: rawPath)
+            switch parsePathValue(from: query) {
+            case .value(let path):
+                return .exportSettings(path: path)
+            case .none:
+                return .exportSettings(path: nil)
+            case .invalid:
+                return nil
+            }
         case "import-settings", "import":
-            guard let path = parsePathValue(from: query) else { return nil }
+            guard case .value(let path) = parsePathValue(from: query) else { return nil }
             return .importSettings(path: path)
         case "restore-backup", "restore":
             switch parseBackupTarget(from: query) {
@@ -113,24 +147,24 @@ public enum ShortcutCycleURLParser {
             guard let name, !name.isEmpty else { return nil }
             return .createGroup(name: name)
         case "delete-group":
-            guard let target else { return nil }
+            guard case .value(let target) = target else { return nil }
             return .deleteGroup(target)
         case "rename-group":
-            guard let target, let newName = parseNewName(from: query) else { return nil }
+            guard case .value(let target) = target, let newName = parseNewName(from: query) else { return nil }
             return .renameGroup(target, newName: newName)
         case "reorder-group":
-            guard let target, let position = parsePosition(from: query) else { return nil }
+            guard case .value(let target) = target, let position = parsePosition(from: query) else { return nil }
             return .reorderGroup(target, position: position)
         case "add-app":
-            guard let target, let bundleId = parseBundleId(from: query) else { return nil }
+            guard case .value(let target) = target, let bundleId = parseBundleId(from: query) else { return nil }
             return .addApp(target, bundleId: bundleId)
         case "remove-app":
-            guard let target, let bundleId = parseBundleId(from: query) else { return nil }
+            guard case .value(let target) = target, let bundleId = parseBundleId(from: query) else { return nil }
             return .removeApp(target, bundleId: bundleId)
         case "list-groups":
             return .listGroups
         case "get-group":
-            guard let target else { return nil }
+            guard case .value(let target) = target else { return nil }
             return .getGroup(target)
         default:
             return nil
@@ -159,81 +193,76 @@ public enum ShortcutCycleURLParser {
     private static func queryDictionary(from components: URLComponents) -> [String: String] {
         var query: [String: String] = [:]
         for item in components.queryItems ?? [] {
-            guard let value = item.value else { continue }
-            query[item.name.lowercased()] = value
+            query[item.name.lowercased()] = item.value ?? ""
         }
         return query
     }
 
-    private static func parseGroupTarget(from query: [String: String]) -> URLGroupTarget? {
-        if let idText = query["groupid"] ?? query["id"],
-           let uuid = UUID(uuidString: idText) {
-            return .id(uuid)
+    private static func parseGroupTarget(from query: [String: String]) -> ParameterParseResult<URLGroupTarget> {
+        if let rawId = query["groupid"] ?? query["id"] {
+            let idText = rawId.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !idText.isEmpty, let uuid = UUID(uuidString: idText) else { return .invalid }
+            return .value(.id(uuid))
         }
 
-        if let indexText = query["index"] ?? query["groupindex"],
-           let index = Int(indexText), index > 0 {
-            return .index(index)
+        if let rawIndex = query["index"] ?? query["groupindex"] {
+            let indexText = rawIndex.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard let index = Int(indexText), index > 0 else { return .invalid }
+            return .value(.index(index))
         }
 
         if let rawName = query["group"] ?? query["name"] {
             let name = rawName.trimmingCharacters(in: .whitespacesAndNewlines)
-            if !name.isEmpty {
-                return .name(name)
+            guard !name.isEmpty else { return .invalid }
+            return .value(.name(name))
+        }
+
+        return .none
+    }
+
+    private static func parseOpenSettingsDestination(from query: [String: String]) -> ParameterParseResult<OpenSettingsDestination> {
+        let routingKeys = ["tab", "section", "panel", "view"]
+        for key in routingKeys {
+            guard let rawValue = query[key] else { continue }
+            let value = rawValue.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            guard !value.isEmpty else { return .invalid }
+
+            switch value {
+            case "backup", "backups", "backup-browser", "automatic-backups":
+                return .value(.backupBrowser)
+            case "groups", "group":
+                guard key == "tab" else { return .invalid }
+                return .value(.settings(.groups))
+            case "general", "app", "application":
+                guard key == "tab" else { return .invalid }
+                return .value(.settings(.general))
+            default:
+                return .invalid
             }
         }
-
-        return nil
+        return .none
     }
 
-    private static func parseSettingsTab(from query: [String: String]) -> URLSettingsTab? {
-        guard let rawTab = query["tab"]?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
-              !rawTab.isEmpty else {
-            return nil
-        }
-
-        switch rawTab {
-        case "groups", "group":
-            return .groups
-        case "general", "app", "application":
-            return .general
-        default:
-            return nil
-        }
-    }
-
-    private static func shouldOpenBackupBrowser(from query: [String: String]) -> Bool {
-        let candidates = [
-            query["tab"],
-            query["section"],
-            query["panel"],
-            query["view"]
-        ]
-        let value = candidates
-            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
-            .first(where: { !$0.isEmpty })
-
-        guard let value else { return false }
-        return value == "backup" ||
-               value == "backups" ||
-               value == "backup-browser" ||
-               value == "automatic-backups"
-    }
-
-    private static func parsePathValue(from query: [String: String]) -> String? {
+    private static func parsePathValue(from query: [String: String]) -> ParameterParseResult<String> {
         let raw = query["path"] ?? query["file"]
-        guard let raw else { return nil }
+        guard let raw else { return .none }
         let path = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        return path.isEmpty ? nil : path
+        guard !path.isEmpty else { return .invalid }
+        return .value(path)
     }
 
     private static func parseBackupTarget(from query: [String: String]) -> BackupTargetParseResult {
-        if let path = parsePathValue(from: query) {
+        switch parsePathValue(from: query) {
+        case .value(let path):
             return .target(.path(path))
+        case .invalid:
+            return .invalid
+        case .none:
+            break
         }
 
-        if let rawName = query["name"]?.trimmingCharacters(in: .whitespacesAndNewlines),
-           !rawName.isEmpty {
+        if let rawName = query["name"]?.trimmingCharacters(in: .whitespacesAndNewlines) {
+            guard !rawName.isEmpty else { return .invalid }
             return .target(.name(rawName))
         }
 
@@ -257,7 +286,9 @@ public enum ShortcutCycleURLParser {
 
     private static func parsePosition(from query: [String: String]) -> Int? {
         let raw = query["position"] ?? query["to"]
-        guard let raw, let pos = Int(raw), pos > 0 else { return nil }
+        guard let raw else { return nil }
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let pos = Int(trimmed), pos > 0 else { return nil }
         return pos
     }
 
@@ -265,6 +296,22 @@ public enum ShortcutCycleURLParser {
         let raw = (query["bundleid"] ?? query["app"] ?? query["bundle"])?.trimmingCharacters(in: .whitespacesAndNewlines)
         guard let raw, !raw.isEmpty else { return nil }
         return raw
+    }
+
+    private static func isSupportedSettingValue(_ value: String, for key: String) -> Bool {
+        switch key {
+        case "showhud", "hud", "showshortcutinhud", "hudshortcut", "showshortcut", "openatlogin", "launchatlogin":
+            return [
+                "1", "true", "yes", "on", "enabled",
+                "0", "false", "no", "off", "disabled"
+            ].contains(value)
+        case "apptheme", "theme", "appearance":
+            return ["system", "default", "light", "dark"].contains(value)
+        case "selectedlanguage", "language":
+            return !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        default:
+            return false
+        }
     }
 
 }
