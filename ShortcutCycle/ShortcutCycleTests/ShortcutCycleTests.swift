@@ -190,6 +190,17 @@ final class ShortcutCycleTests: XCTestCase {
         XCTAssertNil(ShortcutCycleURLParser.parse(url))
     }
 
+    func testParseSetSettingWithTooLongKeyOrValueReturnsNil() {
+        let longKey = String(repeating: "k", count: 129)
+        let longValue = String(repeating: "v", count: 129)
+
+        let keyTooLong = URL(string: "shortcutcycle://set-setting?key=\(longKey)&value=true")!
+        XCTAssertNil(ShortcutCycleURLParser.parse(keyTooLong))
+
+        let valueTooLong = URL(string: "shortcutcycle://set-setting?key=showHUD&value=\(longValue)")!
+        XCTAssertNil(ShortcutCycleURLParser.parse(valueTooLong))
+    }
+
     func testParseBackupURL() {
         let url = URL(string: "shortcutcycle://backup")!
         XCTAssertEqual(ShortcutCycleURLParser.parse(url), .backup)
@@ -234,6 +245,12 @@ final class ShortcutCycleTests: XCTestCase {
 
     func testParseImportSettingsWithEmptyPathReturnsNil() {
         let url = URL(string: "shortcutcycle://import-settings?path=")!
+        XCTAssertNil(ShortcutCycleURLParser.parse(url))
+    }
+
+    func testParseImportSettingsWithTooLongPathReturnsNil() {
+        let longPath = "/" + String(repeating: "a", count: 1025)
+        let url = URL(string: "shortcutcycle://import-settings?path=\(longPath)")!
         XCTAssertNil(ShortcutCycleURLParser.parse(url))
     }
 
@@ -298,6 +315,12 @@ final class ShortcutCycleTests: XCTestCase {
         XCTAssertNil(ShortcutCycleURLParser.parse(url))
     }
 
+    func testParseRestoreBackupWithTooLongNameReturnsNil() {
+        let longName = String(repeating: "b", count: 256) + ".json"
+        let url = URL(string: "shortcutcycle://restore-backup?name=\(longName)")!
+        XCTAssertNil(ShortcutCycleURLParser.parse(url))
+    }
+
     // MARK: - URL Parser: Group CRUD
 
     func testParseCreateGroupURL() {
@@ -312,6 +335,12 @@ final class ShortcutCycleTests: XCTestCase {
 
     func testParseCreateGroupNoNameReturnsNil() {
         let url = URL(string: "shortcutcycle://create-group")!
+        XCTAssertNil(ShortcutCycleURLParser.parse(url))
+    }
+
+    func testParseCreateGroupTooLongNameReturnsNil() {
+        let longName = String(repeating: "g", count: 256)
+        let url = URL(string: "shortcutcycle://create-group?name=\(longName)")!
         XCTAssertNil(ShortcutCycleURLParser.parse(url))
     }
 
@@ -412,6 +441,12 @@ final class ShortcutCycleTests: XCTestCase {
 
     func testParseAddAppInvalidGroupIdDoesNotFallBackToName() {
         let url = URL(string: "shortcutcycle://add-app?id=not-a-uuid&group=Browsers&bundleId=com.google.Chrome")!
+        XCTAssertNil(ShortcutCycleURLParser.parse(url))
+    }
+
+    func testParseAddAppWithTooLongBundleIdReturnsNil() {
+        let longBundle = String(repeating: "a", count: 256)
+        let url = URL(string: "shortcutcycle://add-app?group=Browsers&bundleId=\(longBundle)")!
         XCTAssertNil(ShortcutCycleURLParser.parse(url))
     }
 

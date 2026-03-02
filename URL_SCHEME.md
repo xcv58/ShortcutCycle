@@ -152,13 +152,14 @@ sleep 0.5 && cat "$HOME/Library/Containers/com.xcv58.ShortcutCycle/Data/tmp/shor
   - Flushes pending debounced auto-save immediately.
 - `restore-backup` (alias: `restore`)
   - Selectors (all optional):
-    - `path=<absolute-path-or-file-url>`
-    - `file=<absolute-path-or-file-url>` (alias for `path`)
+    - `path=<absolute-path-or-file-url>` (must be inside app container)
+    - `file=<absolute-path-or-file-url>` (alias for `path`, same restriction)
     - `name=<backup-filename>`
     - `index=<1-based-index>` (newest first)
     - `backupindex=<1-based-index>` (alias for `index`)
   - If no selector is provided, the latest backup is restored.
   - Selector precedence: `path/file` > `name` > `index/backupindex` > latest.
+  - `name` must be a plain backup filename (no path separators and no `..`).
 
 Examples:
 
@@ -214,6 +215,7 @@ open "shortcutcycle://set-setting?key=openAtLogin&value=true"
   - For URL automation in sandboxed builds, explicit export paths must be inside the app container.
 - `import-settings` (alias: `import`)
   - Required: `path=<absolute-path-or-file-url>` or `file=<...>`
+  - For URL automation in sandboxed builds, import paths must be inside the app container.
 
 Examples:
 
@@ -250,7 +252,7 @@ open "shortcutcycle://x-callback-url/enable-group?index=2"
 
 - `import-settings` and `restore-backup` replace current groups/settings immediately.
 - `delete-group`, `import-settings`, and `restore-backup` show a confirmation dialog before proceeding.
-- For URL automation in sandboxed builds, `export-settings` explicit paths must stay inside the app container.
+- For URL automation in sandboxed builds, explicit file paths for `export-settings`, `import-settings`, and `restore-backup?path=...` must stay inside the app container.
 - Use absolute paths or `file://` URLs for file-based commands.
 - Relative paths may resolve from the app process working directory, which is not stable.
 - URL-encode special characters and spaces (for example, use `%20`).

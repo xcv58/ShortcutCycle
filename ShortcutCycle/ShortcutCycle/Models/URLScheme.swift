@@ -60,6 +60,13 @@ public enum ShortcutCycleURLParser {
         case backupBrowser
     }
 
+    private enum MaxLength {
+        static let groupOrBackupName = 255
+        static let bundleId = 255
+        static let keyOrValue = 128
+        static let filePath = 1024
+    }
+
     private enum BackupTargetParseResult {
         case target(URLBackupTarget?)
         case invalid
@@ -115,8 +122,10 @@ public enum ShortcutCycleURLParser {
         case "set-setting":
             guard let key = (query["key"] ?? query["name"])?.trimmingCharacters(in: .whitespacesAndNewlines),
                   !key.isEmpty,
+                  fitsWithinLimit(key, max: MaxLength.keyOrValue),
                   let value = (query["value"] ?? query["v"])?.trimmingCharacters(in: .whitespacesAndNewlines),
-                  !value.isEmpty else {
+                  !value.isEmpty,
+                  fitsWithinLimit(value, max: MaxLength.keyOrValue) else {
                 return nil
             }
             let normalizedKey = key.lowercased()
@@ -144,7 +153,7 @@ public enum ShortcutCycleURLParser {
             }
         case "create-group":
             let name = (query["name"] ?? query["group"])?.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard let name, !name.isEmpty else { return nil }
+            guard let name, !name.isEmpty, fitsWithinLimit(name, max: MaxLength.groupOrBackupName) else { return nil }
             return .createGroup(name: name)
         case "delete-group":
             guard case .value(let target) = target else { return nil }
@@ -201,19 +210,24 @@ public enum ShortcutCycleURLParser {
     private static func parseGroupTarget(from query: [String: String]) -> ParameterParseResult<URLGroupTarget> {
         if let rawId = query["groupid"] ?? query["id"] {
             let idText = rawId.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !idText.isEmpty, let uuid = UUID(uuidString: idText) else { return .invalid }
+            guard !idText.isEmpty,
+                  fitsWithinLimit(idText, max: MaxLength.keyOrValue),
+                  let uuid = UUID(uuidString: idText) else { return .invalid }
             return .value(.id(uuid))
         }
 
         if let rawIndex = query["index"] ?? query["groupindex"] {
             let indexText = rawIndex.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard let index = Int(indexText), index > 0 else { return .invalid }
+            guard fitsWithinLimit(indexText, max: MaxLength.keyOrValue),
+                  let index = Int(indexText),
+                  index > 0 else { return .invalid }
             return .value(.index(index))
         }
 
         if let rawName = query["group"] ?? query["name"] {
             let name = rawName.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !name.isEmpty else { return .invalid }
+            guard !name.isEmpty,
+                  fitsWithinLimit(name, max: MaxLength.groupOrBackupName) else { return .invalid }
             return .value(.name(name))
         }
 
@@ -225,8 +239,12 @@ public enum ShortcutCycleURLParser {
         for key in routingKeys {
             guard let rawValue = query[key] else { continue }
             let value = rawValue.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-            guard !value.isEmpty else { return .invalid }
+            guard !value.isEmpty,
+                  fitsWithinLimit(value, max: MaxLength.keyOrValue) else { return .invalid }
 
+            // Tab values require `tab` for specificity; backup values are accepted
+            // across tab/section/panel/view aliases because they unambiguously map
+            // to opening the backup browser.
             switch value {
             case "backup", "backups", "backup-browser", "automatic-backups":
                 return .value(.backupBrowser)
@@ -247,7 +265,8 @@ public enum ShortcutCycleURLParser {
         let raw = query["path"] ?? query["file"]
         guard let raw else { return .none }
         let path = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !path.isEmpty else { return .invalid }
+        guard !path.isEmpty,
+              fitsWithinLimit(path, max: MaxLength.filePath) else { return .invalid }
         return .value(path)
     }
 
@@ -262,13 +281,16 @@ public enum ShortcutCycleURLParser {
         }
 
         if let rawName = query["name"]?.trimmingCharacters(in: .whitespacesAndNewlines) {
-            guard !rawName.isEmpty else { return .invalid }
+            guard !rawName.isEmpty,
+                  fitsWithinLimit(rawName, max: MaxLength.groupOrBackupName) else { return .invalid }
             return .target(.name(rawName))
         }
 
         if let rawIndex = query["index"] ?? query["backupindex"] {
             let trimmed = rawIndex.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard let index = Int(trimmed), index > 0 else {
+            guard fitsWithinLimit(trimmed, max: MaxLength.keyOrValue),
+                  let index = Int(trimmed),
+                  index > 0 else {
                 return .invalid
             }
             return .target(.index(index))
@@ -280,7 +302,9 @@ public enum ShortcutCycleURLParser {
 
     private static func parseNewName(from query: [String: String]) -> String? {
         let raw = (query["newname"] ?? query["to"])?.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let raw, !raw.isEmpty else { return nil }
+        guard let raw,
+              !raw.isEmpty,
+              fitsWithinLimit(raw, max: MaxLength.groupOrBackupName) else { return nil }
         return raw
     }
 
@@ -288,13 +312,17 @@ public enum ShortcutCycleURLParser {
         let raw = query["position"] ?? query["to"]
         guard let raw else { return nil }
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let pos = Int(trimmed), pos > 0 else { return nil }
+        guard fitsWithinLimit(trimmed, max: MaxLength.keyOrValue),
+              let pos = Int(trimmed),
+              pos > 0 else { return nil }
         return pos
     }
 
     private static func parseBundleId(from query: [String: String]) -> String? {
         let raw = (query["bundleid"] ?? query["app"] ?? query["bundle"])?.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let raw, !raw.isEmpty else { return nil }
+        guard let raw,
+              !raw.isEmpty,
+              fitsWithinLimit(raw, max: MaxLength.bundleId) else { return nil }
         return raw
     }
 
@@ -308,10 +336,14 @@ public enum ShortcutCycleURLParser {
         case "apptheme", "theme", "appearance":
             return ["system", "default", "light", "dark"].contains(value)
         case "selectedlanguage", "language":
-            return !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            return !value.isEmpty
         default:
             return false
         }
+    }
+
+    private static func fitsWithinLimit(_ value: String, max: Int) -> Bool {
+        value.count <= max
     }
 
 }

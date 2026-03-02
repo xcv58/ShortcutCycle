@@ -29,6 +29,7 @@ let package = Package(
                 "Models/HUDAppItem.swift",
                 "Models/SettingsExport.swift",
                 "Models/KeyboardShortcutsNames.swift",
+                "Models/URLCommandFileValidation.swift",
                 "Models/URLScheme.swift"
             ]
         ),
@@ -48,6 +49,7 @@ let package = Package(
                 "Models/HUDAppItem.swift",
                 "Models/SettingsExport.swift",
                 "Models/KeyboardShortcutsNames.swift",
+                "Models/URLCommandFileValidation.swift",
                 "Models/URLScheme.swift"
             ]
         ),

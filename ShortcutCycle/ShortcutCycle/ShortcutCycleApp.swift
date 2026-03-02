@@ -467,21 +467,13 @@ enum ShortcutCycleURLRouter {
     private static func exportSettings(to rawPath: String?, store: GroupStore) {
         let destinationURL: URL
         if let rawPath {
-            guard let explicitURL = fileURL(from: rawPath) else {
-                presentURLCommandError(
-                    "Invalid export path. Provide a non-empty file path, or omit the path to use the default container location."
-                )
+            switch URLCommandFileValidation.validateImportURL(rawPath: rawPath, home: sandboxHomeURL()) {
+            case .success(let explicitURL):
+                destinationURL = explicitURL
+            case .failure(let error):
+                presentURLCommandError(exportPathErrorMessage(for: error))
                 return
             }
-
-            guard isInsideSandboxContainer(explicitURL) else {
-                presentURLCommandError(
-                    "Invalid export path. Use a location inside this app's container (for example, \(NSHomeDirectory())/tmp), or omit the path to use the default."
-                )
-                return
-            }
-
-            destinationURL = explicitURL
         } else {
             destinationURL = defaultExportSettingsFileURL()
         }
@@ -508,7 +500,14 @@ enum ShortcutCycleURLRouter {
     }
 
     private static func importSettings(from rawPath: String, store: GroupStore) {
-        guard let fileURL = fileURL(from: rawPath) else { return }
+        let fileURL: URL
+        switch URLCommandFileValidation.validateImportURL(rawPath: rawPath, home: sandboxHomeURL()) {
+        case .success(let validatedURL):
+            fileURL = validatedURL
+        case .failure(let error):
+            presentURLCommandError(importPathErrorMessage(for: error))
+            return
+        }
 
         let alert = NSAlert()
         alert.messageText = "Import Settings?"
@@ -522,13 +521,23 @@ enum ShortcutCycleURLRouter {
             let data = try Data(contentsOf: fileURL)
             try store.importData(data)
         } catch {
-            print("Failed to import settings from \(fileURL.path): \(error)")
+            presentURLCommandError("Failed to import settings from \(fileURL.path): \(error.localizedDescription)")
         }
     }
 
     private static func restoreBackup(target: URLBackupTarget?, store: GroupStore) {
-        guard let backupURL = resolveBackupURL(target: target, store: store) else { return }
-        guard let data = try? Data(contentsOf: backupURL) else { return }
+        let backupURL: URL
+        switch URLCommandFileValidation.resolveBackupURL(
+            target: target,
+            backupDirectory: store.backupDirectory,
+            home: sandboxHomeURL()
+        ) {
+        case .success(let resolvedURL):
+            backupURL = resolvedURL
+        case .failure(let error):
+            presentURLCommandError(backupTargetErrorMessage(for: error))
+            return
+        }
 
         let alert = NSAlert()
         alert.messageText = "Restore Backup?"
@@ -538,47 +547,20 @@ enum ShortcutCycleURLRouter {
         alert.addButton(withTitle: "Cancel")
         guard alert.runModal() == .alertFirstButtonReturn else { return }
 
+        let data: Data
+        do {
+            data = try Data(contentsOf: backupURL)
+        } catch {
+            presentURLCommandError("Failed to read backup file at \(backupURL.path): \(error.localizedDescription)")
+            return
+        }
+
         switch SettingsExport.validate(data: data) {
         case .success(let export):
             store.applyImport(export)
         case .failure(let error):
-            print("Failed to restore backup from \(backupURL.path): \(error.localizedDescription)")
+            presentURLCommandError("Failed to restore backup from \(backupURL.path): \(error.localizedDescription)")
         }
-    }
-
-    private static func resolveBackupURL(target: URLBackupTarget?, store: GroupStore) -> URL? {
-        switch target {
-        case .path(let path):
-            return fileURL(from: path)
-        case .name(let name):
-            return store.backupDirectory.appendingPathComponent(name)
-        case .index(let index):
-            let backups = sortedBackupFiles(in: store.backupDirectory)
-            let resolvedIndex = index - 1
-            guard backups.indices.contains(resolvedIndex) else { return nil }
-            return backups[resolvedIndex]
-        case nil:
-            return sortedBackupFiles(in: store.backupDirectory).first
-        }
-    }
-
-    private static func sortedBackupFiles(in directory: URL) -> [URL] {
-        let fm = FileManager.default
-        guard let files = try? fm.contentsOfDirectory(
-            at: directory,
-            includingPropertiesForKeys: [.creationDateKey],
-            options: [.skipsHiddenFiles]
-        ) else {
-            return []
-        }
-
-        return files
-            .filter { $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json" }
-            .sorted { lhs, rhs in
-                let leftDate = (try? lhs.resourceValues(forKeys: [.creationDateKey]))?.creationDate ?? .distantPast
-                let rightDate = (try? rhs.resourceValues(forKeys: [.creationDateKey]))?.creationDate ?? .distantPast
-                return leftDate > rightDate
-            }
     }
 
     private static func writeQueryResult(_ data: Any, command: String) {
@@ -600,40 +582,40 @@ enum ShortcutCycleURLRouter {
     }
 
     private static func writeQueryPayload(_ payload: [String: Any]) {
-        guard let jsonData = try? JSONSerialization.data(withJSONObject: payload, options: [.prettyPrinted, .sortedKeys]) else {
+        let jsonData: Data
+        do {
+            jsonData = try JSONSerialization.data(withJSONObject: payload, options: [.prettyPrinted, .sortedKeys])
+        } catch {
+            print("URL command failed to serialize query payload: \(error.localizedDescription)")
             return
         }
+
         let url = queryResultFileURL()
         let parentDir = url.deletingLastPathComponent()
-        try? FileManager.default.createDirectory(at: parentDir, withIntermediateDirectories: true)
-        try? jsonData.write(to: url, options: .atomic)
+        do {
+            try FileManager.default.createDirectory(at: parentDir, withIntermediateDirectories: true)
+            try jsonData.write(to: url, options: .atomic)
+        } catch {
+            print("URL command failed to write query payload to \(url.path): \(error.localizedDescription)")
+        }
     }
 
     private static func queryResultFileURL() -> URL {
         // In sandboxed builds, NSHomeDirectory() is the app container's Data directory.
         // Writing under <home>/tmp keeps the output deterministic and writable.
-        let sandboxHome = URL(fileURLWithPath: NSHomeDirectory(), isDirectory: true)
-        return sandboxHome
+        return sandboxHomeURL()
             .appendingPathComponent("tmp", isDirectory: true)
             .appendingPathComponent(ShortcutCycleURLParser.queryResultFileName, isDirectory: false)
     }
 
     private static func defaultExportSettingsFileURL() -> URL {
-        let sandboxHome = URL(fileURLWithPath: NSHomeDirectory(), isDirectory: true)
-        return sandboxHome
+        return sandboxHomeURL()
             .appendingPathComponent("tmp", isDirectory: true)
             .appendingPathComponent("ShortcutCycle-Settings.json", isDirectory: false)
     }
 
-    private static func isInsideSandboxContainer(_ url: URL) -> Bool {
-        let sandboxHome = URL(fileURLWithPath: NSHomeDirectory(), isDirectory: true)
-            .resolvingSymlinksInPath()
-            .standardizedFileURL
-        let candidate = url.resolvingSymlinksInPath().standardizedFileURL
-
-        let homePath = sandboxHome.path
-        let candidatePath = candidate.path
-        return candidatePath == homePath || candidatePath.hasPrefix(homePath + "/")
+    private static func sandboxHomeURL() -> URL {
+        URL(fileURLWithPath: NSHomeDirectory(), isDirectory: true)
     }
 
     private static func presentURLCommandError(_ message: String) {
@@ -647,21 +629,43 @@ enum ShortcutCycleURLRouter {
         _ = alert.runModal()
     }
 
-    private static func fileURL(from rawPath: String) -> URL? {
-        let path = rawPath.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !path.isEmpty else { return nil }
-
-        if let candidate = URL(string: path), candidate.isFileURL {
-            return candidate
+    private static func exportPathErrorMessage(for error: URLCommandFileValidation.ValidationError) -> String {
+        switch error {
+        case .emptyPath, .invalidPath:
+            return "Invalid export path. Provide a non-empty file path, or omit the path to use the default container location."
+        case .pathOutsideContainer:
+            return "Invalid export path. Use a location inside this app's container (for example, \(NSHomeDirectory())/tmp), or omit the path to use the default."
+        default:
+            return "Invalid export path: \(error.errorDescription ?? "Unknown error.")"
         }
+    }
 
-        let expandedPath = (path as NSString).expandingTildeInPath
-        if expandedPath.hasPrefix("/") {
-            return URL(fileURLWithPath: expandedPath)
+    private static func importPathErrorMessage(for error: URLCommandFileValidation.ValidationError) -> String {
+        switch error {
+        case .emptyPath, .invalidPath:
+            return "Invalid import path. Provide a non-empty file path or file URL."
+        case .pathOutsideContainer:
+            return "Invalid import path. Use a location inside this app's container (for example, \(NSHomeDirectory())/tmp)."
+        default:
+            return "Invalid import path: \(error.errorDescription ?? "Unknown error.")"
         }
+    }
 
-        let cwd = FileManager.default.currentDirectoryPath
-        return URL(fileURLWithPath: cwd).appendingPathComponent(expandedPath)
+    private static func backupTargetErrorMessage(for error: URLCommandFileValidation.ValidationError) -> String {
+        switch error {
+        case .emptyPath, .invalidPath:
+            return "Invalid backup path. Provide an absolute file path or file URL."
+        case .pathOutsideContainer:
+            return "Invalid backup path. Use a location inside this app's container (for example, \(NSHomeDirectory())/tmp)."
+        case .invalidBackupName:
+            return "Invalid backup name. Use a backup filename only (no path separators or '..')."
+        case .backupOutsideDirectory:
+            return "Invalid backup target. Backup names must resolve inside the automatic backup directory."
+        case .backupIndexOutOfRange:
+            return "Backup index is out of range."
+        case .noBackupsAvailable:
+            return "No backup files are available to restore."
+        }
     }
 }
 
