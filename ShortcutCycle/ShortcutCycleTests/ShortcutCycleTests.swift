@@ -69,6 +69,10 @@ final class ShortcutCycleTests: XCTestCase {
 
     // MARK: - URL Parser
 
+    func testQueryResultFileNameConstant() {
+        XCTAssertEqual(ShortcutCycleURLParser.queryResultFileName, "shortcutcycle-result.json")
+    }
+
     func testParseOpenSettingsURL() {
         let url = URL(string: "shortcutcycle://open-settings")!
         XCTAssertEqual(ShortcutCycleURLParser.parse(url), .openSettings(nil))
@@ -90,6 +94,11 @@ final class ShortcutCycleTests: XCTestCase {
         XCTAssertNil(ShortcutCycleURLParser.parse(url))
     }
 
+    func testParseSelectGroupByNameURL() {
+        let url = URL(string: "shortcutcycle://select-group?group=Browsers")!
+        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .selectGroup(.name("Browsers")))
+    }
+
     func testParseUnsupportedSchemeReturnsNil() {
         let url = URL(string: "https://cycle?group=Browsers")!
         XCTAssertNil(ShortcutCycleURLParser.parse(url))
@@ -103,6 +112,16 @@ final class ShortcutCycleTests: XCTestCase {
     func testParseOpenSettingsGeneralTabURL() {
         let url = URL(string: "shortcutcycle://open-settings?tab=general")!
         XCTAssertEqual(ShortcutCycleURLParser.parse(url), .openSettings(.general))
+    }
+
+    func testParseOpenSettingsGroupsTabURL() {
+        let url = URL(string: "shortcutcycle://open-settings?tab=group")!
+        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .openSettings(.groups))
+    }
+
+    func testParseOpenSettingsInvalidTabFallsBackToDefault() {
+        let url = URL(string: "shortcutcycle://open-settings?tab=unknown")!
+        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .openSettings(nil))
     }
 
     func testParseOpenBackupBrowserURL() {
@@ -126,6 +145,24 @@ final class ShortcutCycleTests: XCTestCase {
             ShortcutCycleURLParser.parse(url),
             .setSetting(key: "showhud", value: "true")
         )
+    }
+
+    func testParseSetSettingAliasKeyAndValueURL() {
+        let url = URL(string: "shortcutcycle://set-setting?name=showHUD&v=on")!
+        XCTAssertEqual(
+            ShortcutCycleURLParser.parse(url),
+            .setSetting(key: "showhud", value: "on")
+        )
+    }
+
+    func testParseSetSettingMissingValueReturnsNil() {
+        let url = URL(string: "shortcutcycle://set-setting?key=showHUD")!
+        XCTAssertNil(ShortcutCycleURLParser.parse(url))
+    }
+
+    func testParseBackupURL() {
+        let url = URL(string: "shortcutcycle://backup")!
+        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .backup)
     }
 
     func testParseExportSettingsURL() {
@@ -236,6 +273,16 @@ final class ShortcutCycleTests: XCTestCase {
     func testParseDeleteGroupRequiresTarget() {
         let url = URL(string: "shortcutcycle://delete-group")!
         XCTAssertNil(ShortcutCycleURLParser.parse(url))
+    }
+
+    func testParseDisableGroupURL() {
+        let url = URL(string: "shortcutcycle://disable-group?group=Browsers")!
+        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .disableGroup(.name("Browsers")))
+    }
+
+    func testParseToggleGroupURL() {
+        let url = URL(string: "shortcutcycle://toggle-group?group=Browsers")!
+        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .toggleGroup(.name("Browsers")))
     }
 
     func testParseRenameGroupURL() {
@@ -356,5 +403,15 @@ final class ShortcutCycleTests: XCTestCase {
     func testParseGetGroupRequiresTarget() {
         let url = URL(string: "shortcutcycle://get-group")!
         XCTAssertNil(ShortcutCycleURLParser.parse(url))
+    }
+
+    func testParseUnknownActionReturnsNil() {
+        let url = URL(string: "shortcutcycle://not-a-command")!
+        XCTAssertNil(ShortcutCycleURLParser.parse(url))
+    }
+
+    func testParseActionFromPathWhenHostMissing() {
+        let url = URL(string: "shortcutcycle:///cycle?group=Browsers")!
+        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .cycle(.name("Browsers")))
     }
 }
