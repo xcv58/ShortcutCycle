@@ -208,13 +208,17 @@ open "shortcutcycle://set-setting?key=openAtLogin&value=true"
 ### Import and export settings
 
 - `export-settings` (alias: `export`)
-  - Required: `path=<absolute-path-or-file-url>` or `file=<...>`
+  - Optional: `path=<path>` or `file=<path>` (alias)
+  - If omitted, exports to:
+    - `$HOME/Library/Containers/com.xcv58.ShortcutCycle/Data/tmp/ShortcutCycle-Settings.json`
+  - For URL automation in sandboxed builds, explicit export paths must be inside the app container.
 - `import-settings` (alias: `import`)
   - Required: `path=<absolute-path-or-file-url>` or `file=<...>`
 
 Examples:
 
 ```bash
+open "shortcutcycle://export-settings"
 open "shortcutcycle://export-settings?path=$HOME/Library/Containers/com.xcv58.ShortcutCycle/Data/tmp/ShortcutCycle-Settings.json"
 open "shortcutcycle://import-settings?path=$HOME/Library/Containers/com.xcv58.ShortcutCycle/Data/tmp/ShortcutCycle-Settings.json"
 open "shortcutcycle://export-settings?file=$HOME/Library/Containers/com.xcv58.ShortcutCycle/Data/tmp/ShortcutCycle-Settings.json"
@@ -246,6 +250,7 @@ open "shortcutcycle://x-callback-url/enable-group?index=2"
 
 - `import-settings` and `restore-backup` replace current groups/settings immediately.
 - `delete-group`, `import-settings`, and `restore-backup` show a confirmation dialog before proceeding.
+- For URL automation in sandboxed builds, `export-settings` explicit paths must stay inside the app container.
 - Use absolute paths or `file://` URLs for file-based commands.
 - Relative paths may resolve from the app process working directory, which is not stable.
 - URL-encode special characters and spaces (for example, use `%20`).

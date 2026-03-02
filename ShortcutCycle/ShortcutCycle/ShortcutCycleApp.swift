@@ -461,13 +461,33 @@ enum ShortcutCycleURLRouter {
         return nil
     }
 
-    private static func exportSettings(to rawPath: String, store: GroupStore) {
-        guard let fileURL = fileURL(from: rawPath) else { return }
+    private static func exportSettings(to rawPath: String?, store: GroupStore) {
+        let destinationURL: URL
+        if let rawPath {
+            guard let explicitURL = fileURL(from: rawPath) else {
+                presentURLCommandError(
+                    "Invalid export path. Provide a non-empty file path, or omit the path to use the default container location."
+                )
+                return
+            }
 
-        if FileManager.default.fileExists(atPath: fileURL.path) {
+            guard isInsideSandboxContainer(explicitURL) else {
+                presentURLCommandError(
+                    "Invalid export path. Use a location inside this app's container (for example, \(NSHomeDirectory())/tmp), or omit the path to use the default."
+                )
+                return
+            }
+
+            destinationURL = explicitURL
+        } else {
+            destinationURL = defaultExportSettingsFileURL()
+        }
+
+        let shouldPromptForOverwrite = rawPath != nil
+        if shouldPromptForOverwrite && FileManager.default.fileExists(atPath: destinationURL.path) {
             let alert = NSAlert()
             alert.messageText = "Overwrite Existing File?"
-            alert.informativeText = "A file already exists at \(fileURL.path). Do you want to replace it?"
+            alert.informativeText = "A file already exists at \(destinationURL.path). Do you want to replace it?"
             alert.alertStyle = .warning
             alert.addButton(withTitle: "Overwrite")
             alert.addButton(withTitle: "Cancel")
@@ -476,11 +496,11 @@ enum ShortcutCycleURLRouter {
 
         do {
             let data = try store.exportData()
-            let parentDirectory = fileURL.deletingLastPathComponent()
+            let parentDirectory = destinationURL.deletingLastPathComponent()
             try FileManager.default.createDirectory(at: parentDirectory, withIntermediateDirectories: true)
-            try data.write(to: fileURL, options: .atomic)
+            try data.write(to: destinationURL, options: .atomic)
         } catch {
-            print("Failed to export settings to \(fileURL.path): \(error)")
+            presentURLCommandError("Failed to export settings to \(destinationURL.path): \(error.localizedDescription)")
         }
     }
 
@@ -580,6 +600,35 @@ enum ShortcutCycleURLRouter {
         return sandboxHome
             .appendingPathComponent("tmp", isDirectory: true)
             .appendingPathComponent(ShortcutCycleURLParser.queryResultFileName, isDirectory: false)
+    }
+
+    private static func defaultExportSettingsFileURL() -> URL {
+        let sandboxHome = URL(fileURLWithPath: NSHomeDirectory(), isDirectory: true)
+        return sandboxHome
+            .appendingPathComponent("tmp", isDirectory: true)
+            .appendingPathComponent("ShortcutCycle-Settings.json", isDirectory: false)
+    }
+
+    private static func isInsideSandboxContainer(_ url: URL) -> Bool {
+        let sandboxHome = URL(fileURLWithPath: NSHomeDirectory(), isDirectory: true)
+            .resolvingSymlinksInPath()
+            .standardizedFileURL
+        let candidate = url.resolvingSymlinksInPath().standardizedFileURL
+
+        let homePath = sandboxHome.path
+        let candidatePath = candidate.path
+        return candidatePath == homePath || candidatePath.hasPrefix(homePath + "/")
+    }
+
+    private static func presentURLCommandError(_ message: String) {
+        print("URL command failed: \(message)")
+
+        let alert = NSAlert()
+        alert.messageText = "URL Command Failed"
+        alert.informativeText = message
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "OK")
+        _ = alert.runModal()
     }
 
     private static func fileURL(from rawPath: String) -> URL? {

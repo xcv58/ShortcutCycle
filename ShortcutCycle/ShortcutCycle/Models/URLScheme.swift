@@ -30,7 +30,7 @@ public enum ShortcutCycleURLCommand: Equatable {
     case backup
     case flushAutoSave
     case setSetting(key: String, value: String)
-    case exportSettings(path: String)
+    case exportSettings(path: String?)
     case importSettings(path: String)
     case restoreBackup(URLBackupTarget?)
     case createGroup(name: String)
@@ -91,8 +91,8 @@ public enum ShortcutCycleURLParser {
             }
             return .setSetting(key: key.lowercased(), value: value.lowercased())
         case "export-settings", "export":
-            guard let path = parsePathValue(from: query) else { return nil }
-            return .exportSettings(path: path)
+            let rawPath = query["path"] ?? query["file"]
+            return .exportSettings(path: rawPath)
         case "import-settings", "import":
             guard let path = parsePathValue(from: query) else { return nil }
             return .importSettings(path: path)

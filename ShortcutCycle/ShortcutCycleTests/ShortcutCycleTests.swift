@@ -136,6 +136,14 @@ final class ShortcutCycleTests: XCTestCase {
         )
     }
 
+    func testParseExportSettingsWithoutPathUsesDefaultLocation() {
+        let url = URL(string: "shortcutcycle://export-settings")!
+        XCTAssertEqual(
+            ShortcutCycleURLParser.parse(url),
+            .exportSettings(path: nil)
+        )
+    }
+
     func testParseExportSettingsWithFileAliasURL() {
         let url = URL(string: "shortcutcycle://export-settings?file=/tmp/shortcutcycle-export.json")!
         XCTAssertEqual(
