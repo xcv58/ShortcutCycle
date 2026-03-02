@@ -30,6 +30,7 @@ let package = Package(
                 "Models/SettingsExport.swift",
                 "Models/KeyboardShortcutsNames.swift",
                 "Models/URLCommandFileValidation.swift",
+                "Models/URLRouterLogic.swift",
                 "Models/URLScheme.swift"
             ]
         ),
@@ -50,6 +51,7 @@ let package = Package(
                 "Models/SettingsExport.swift",
                 "Models/KeyboardShortcutsNames.swift",
                 "Models/URLCommandFileValidation.swift",
+                "Models/URLRouterLogic.swift",
                 "Models/URLScheme.swift"
             ]
         ),

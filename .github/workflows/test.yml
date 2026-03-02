@@ -71,7 +71,8 @@ jobs:
             'BackupRetention.swift', 'GroupStore.swift',
             'KeyboardShortcutsNames.swift', 'SettingsExport.swift',
             'HUDAppItem.swift', 'URLScheme.swift',
-            'URLCommandFileValidation.swift'
+            'URLCommandFileValidation.swift',
+            'URLRouterLogic.swift'
         ]
         
         # Filter LCOV content

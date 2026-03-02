@@ -240,21 +240,21 @@ enum ShortcutCycleURLRouter {
         case .openBackupBrowser:
             openBackupBrowser()
         case .cycle(let target):
-            guard let group = resolveGroup(target, in: store),
+            guard let group = URLRouterLogic.resolveGroup(target, groups: store.groups, selectedGroup: store.selectedGroup),
                   group.isEnabled else {
                 return
             }
             store.selectedGroupId = group.id
             AppSwitcher.shared.handleShortcut(for: group, store: store)
         case .selectGroup(let target):
-            guard let group = resolveGroup(target, in: store) else { return }
+            guard let group = URLRouterLogic.resolveGroup(target, groups: store.groups, selectedGroup: store.selectedGroup) else { return }
             store.selectedGroupId = group.id
         case .enableGroup(let target):
             setGroupEnabledState(true, for: target, store: store)
         case .disableGroup(let target):
             setGroupEnabledState(false, for: target, store: store)
         case .toggleGroup(let target):
-            guard let group = resolveGroup(target, in: store) else { return }
+            guard let group = URLRouterLogic.resolveGroup(target, groups: store.groups, selectedGroup: store.selectedGroup) else { return }
             store.toggleGroupEnabled(group)
         case .backup:
             _ = store.manualBackup()
@@ -272,7 +272,7 @@ enum ShortcutCycleURLRouter {
             _ = store.addGroup(name: name)
             NotificationCenter.default.post(name: .shortcutsNeedUpdate, object: nil)
         case .deleteGroup(let target):
-            guard let group = resolveGroup(target, in: store) else { return }
+            guard let group = URLRouterLogic.resolveGroup(target, groups: store.groups, selectedGroup: store.selectedGroup) else { return }
             let alert = NSAlert()
             alert.messageText = "Delete '\(group.name)'?"
             alert.informativeText = "This will permanently remove the group and its shortcut."
@@ -282,23 +282,23 @@ enum ShortcutCycleURLRouter {
             guard alert.runModal() == .alertFirstButtonReturn else { return }
             store.deleteGroup(group)
         case .renameGroup(let target, let newName):
-            guard let group = resolveGroup(target, in: store) else { return }
+            guard let group = URLRouterLogic.resolveGroup(target, groups: store.groups, selectedGroup: store.selectedGroup) else { return }
             store.renameGroup(group, newName: newName)
         case .reorderGroup(let target, let position):
-            guard let group = resolveGroup(target, in: store) else { return }
+            guard let group = URLRouterLogic.resolveGroup(target, groups: store.groups, selectedGroup: store.selectedGroup) else { return }
             guard let currentIndex = store.groups.firstIndex(where: { $0.id == group.id }) else { return }
             let clampedDestination = min(max(position - 1, 0), store.groups.count - 1)
             let toOffset = clampedDestination > currentIndex ? clampedDestination + 1 : clampedDestination
             store.moveGroups(from: IndexSet(integer: currentIndex), to: toOffset)
         case .addApp(let target, let bundleId):
-            guard let group = resolveGroup(target, in: store) else { return }
+            guard let group = URLRouterLogic.resolveGroup(target, groups: store.groups, selectedGroup: store.selectedGroup) else { return }
             guard let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleId),
                   let appItem = AppItem.from(appURL: appURL) else {
                 return
             }
             store.addApp(appItem, to: group.id)
         case .removeApp(let target, let bundleId):
-            guard let group = resolveGroup(target, in: store) else { return }
+            guard let group = URLRouterLogic.resolveGroup(target, groups: store.groups, selectedGroup: store.selectedGroup) else { return }
             guard let appItem = group.apps.first(where: { $0.bundleIdentifier == bundleId }) else { return }
             store.removeApp(appItem, from: group.id)
         case .listGroups:
@@ -313,7 +313,7 @@ enum ShortcutCycleURLRouter {
             }
             writeQueryResult(groupsData, command: "list-groups")
         case .getGroup(let target):
-            guard let group = resolveGroup(target, in: store) else {
+            guard let group = URLRouterLogic.resolveGroup(target, groups: store.groups, selectedGroup: store.selectedGroup) else {
                 writeQueryFailure("Group not found", command: "get-group")
                 return
             }
@@ -371,7 +371,7 @@ enum ShortcutCycleURLRouter {
     }
 
     private static func setGroupEnabledState(_ isEnabled: Bool, for target: URLGroupTarget, store: GroupStore) {
-        guard var group = resolveGroup(target, in: store) else { return }
+        guard var group = URLRouterLogic.resolveGroup(target, groups: store.groups, selectedGroup: store.selectedGroup) else { return }
         guard group.isEnabled != isEnabled else { return }
 
         group.isEnabled = isEnabled
@@ -379,89 +379,28 @@ enum ShortcutCycleURLRouter {
         NotificationCenter.default.post(name: .shortcutsNeedUpdate, object: nil)
     }
 
-    private static func resolveGroup(_ target: URLGroupTarget?, in store: GroupStore) -> AppGroup? {
-        guard let target else {
-            if let selectedGroup = store.selectedGroup, selectedGroup.isEnabled {
-                return selectedGroup
-            }
-            return store.groups.first(where: \.isEnabled)
-        }
-
-        switch target {
-        case .id(let id):
-            return store.groups.first(where: { $0.id == id })
-        case .name(let name):
-            return store.groups.first(where: {
-                $0.name.compare(name, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame
-            })
-        case .index(let index):
-            let resolvedIndex = index - 1
-            guard store.groups.indices.contains(resolvedIndex) else { return nil }
-            return store.groups[resolvedIndex]
-        }
-    }
-
     private static func applySetting(key: String, value: String) {
         switch key {
         case "showhud", "hud":
-            guard let boolValue = parseBool(value) else { return }
+            guard let boolValue = URLRouterLogic.parseBool(value) else { return }
             UserDefaults.standard.set(boolValue, forKey: "showHUD")
         case "showshortcutinhud", "hudshortcut", "showshortcut":
-            guard let boolValue = parseBool(value) else { return }
+            guard let boolValue = URLRouterLogic.parseBool(value) else { return }
             UserDefaults.standard.set(boolValue, forKey: "showShortcutInHUD")
         case "apptheme", "theme", "appearance":
-            guard let theme = parseTheme(value) else { return }
+            guard let themeRawValue = URLRouterLogic.parseTheme(value),
+                  let theme = AppTheme(rawValue: themeRawValue) else { return }
             UserDefaults.standard.set(theme.rawValue, forKey: "appTheme")
         case "selectedlanguage", "language":
-            guard let language = parseLanguage(value) else { return }
+            let supportedCodes = LanguageManager.shared.supportedLanguages.map(\.code)
+            guard let language = URLRouterLogic.parseLanguage(value, supportedCodes: supportedCodes) else { return }
             UserDefaults.standard.set(language, forKey: "selectedLanguage")
         case "openatlogin", "launchatlogin":
-            guard let boolValue = parseBool(value) else { return }
+            guard let boolValue = URLRouterLogic.parseBool(value) else { return }
             LaunchAtLoginManager.shared.isEnabled = boolValue
         default:
             break
         }
-    }
-
-    private static func parseBool(_ value: String) -> Bool? {
-        switch value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
-        case "1", "true", "yes", "on", "enabled":
-            return true
-        case "0", "false", "no", "off", "disabled":
-            return false
-        default:
-            return nil
-        }
-    }
-
-    private static func parseTheme(_ value: String) -> AppTheme? {
-        switch value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
-        case "system", "default":
-            return .system
-        case "light":
-            return .light
-        case "dark":
-            return .dark
-        default:
-            return nil
-        }
-    }
-
-    private static func parseLanguage(_ value: String) -> String? {
-        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmed.caseInsensitiveCompare("system") == .orderedSame {
-            return "system"
-        }
-
-        let supported = LanguageManager.shared.supportedLanguages.map { $0.code.lowercased() }
-        let candidate = trimmed.lowercased()
-        if supported.contains(candidate) {
-            // Preserve canonical casing from supported list (e.g., pt-BR, zh-Hans)
-            return LanguageManager.shared.supportedLanguages.first(where: {
-                $0.code.lowercased() == candidate
-            })?.code
-        }
-        return nil
     }
 
     private static func exportSettings(to rawPath: String?, store: GroupStore) {
@@ -471,7 +410,7 @@ enum ShortcutCycleURLRouter {
             case .success(let explicitURL):
                 destinationURL = explicitURL
             case .failure(let error):
-                presentURLCommandError(exportPathErrorMessage(for: error))
+                presentURLCommandError(URLRouterLogic.exportPathErrorMessage(for: error, home: NSHomeDirectory()))
                 return
             }
         } else {
@@ -505,7 +444,7 @@ enum ShortcutCycleURLRouter {
         case .success(let validatedURL):
             fileURL = validatedURL
         case .failure(let error):
-            presentURLCommandError(importPathErrorMessage(for: error))
+            presentURLCommandError(URLRouterLogic.importPathErrorMessage(for: error, home: NSHomeDirectory()))
             return
         }
 
@@ -535,7 +474,7 @@ enum ShortcutCycleURLRouter {
         case .success(let resolvedURL):
             backupURL = resolvedURL
         case .failure(let error):
-            presentURLCommandError(backupTargetErrorMessage(for: error))
+            presentURLCommandError(URLRouterLogic.backupTargetErrorMessage(for: error, home: NSHomeDirectory()))
             return
         }
 
@@ -629,44 +568,6 @@ enum ShortcutCycleURLRouter {
         _ = alert.runModal()
     }
 
-    private static func exportPathErrorMessage(for error: URLCommandFileValidation.ValidationError) -> String {
-        switch error {
-        case .emptyPath, .invalidPath:
-            return "Invalid export path. Provide a non-empty file path, or omit the path to use the default container location."
-        case .pathOutsideContainer:
-            return "Invalid export path. Use a location inside this app's container (for example, \(NSHomeDirectory())/tmp), or omit the path to use the default."
-        default:
-            return "Invalid export path: \(error.errorDescription ?? "Unknown error.")"
-        }
-    }
-
-    private static func importPathErrorMessage(for error: URLCommandFileValidation.ValidationError) -> String {
-        switch error {
-        case .emptyPath, .invalidPath:
-            return "Invalid import path. Provide a non-empty file path or file URL."
-        case .pathOutsideContainer:
-            return "Invalid import path. Use a location inside this app's container (for example, \(NSHomeDirectory())/tmp)."
-        default:
-            return "Invalid import path: \(error.errorDescription ?? "Unknown error.")"
-        }
-    }
-
-    private static func backupTargetErrorMessage(for error: URLCommandFileValidation.ValidationError) -> String {
-        switch error {
-        case .emptyPath, .invalidPath:
-            return "Invalid backup path. Provide an absolute file path or file URL."
-        case .pathOutsideContainer:
-            return "Invalid backup path. Use a location inside this app's container (for example, \(NSHomeDirectory())/tmp)."
-        case .invalidBackupName:
-            return "Invalid backup name. Use a backup filename only (no path separators or '..')."
-        case .backupOutsideDirectory:
-            return "Invalid backup target. Backup names must resolve inside the automatic backup directory."
-        case .backupIndexOutOfRange:
-            return "Backup index is out of range."
-        case .noBackupsAvailable:
-            return "No backup files are available to restore."
-        }
-    }
 }
 
 
