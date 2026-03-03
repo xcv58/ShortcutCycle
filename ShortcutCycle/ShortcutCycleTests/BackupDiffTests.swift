@@ -17,11 +17,16 @@ final class BackupDiffTests: XCTestCase {
         AppGroup(id: id, name: name, apps: apps)
     }
 
+    private func makeShortcut(_ keyCode: Int, _ modifiers: Int) -> ShortcutData {
+        ShortcutData(carbonKeyCode: keyCode, carbonModifiers: modifiers)
+    }
+
     private func makeExport(
         groups: [AppGroup],
-        settings: AppSettings? = nil
+        settings: AppSettings? = nil,
+        shortcuts: [String: ShortcutData]? = nil
     ) -> SettingsExport {
-        SettingsExport(groups: groups, settings: settings)
+        SettingsExport(groups: groups, settings: settings, shortcuts: shortcuts)
     }
 
     // MARK: - No Changes
@@ -136,6 +141,56 @@ final class BackupDiffTests: XCTestCase {
         let appChanges = diff.groupDiffs[0].appChanges
         XCTAssertTrue(appChanges.contains(where: { $0.bundleIdentifier == "com.app.a" && $0.status == .unchanged }))
         XCTAssertTrue(appChanges.contains(where: { $0.bundleIdentifier == "com.app.b" && $0.status == .removed }))
+    }
+
+    func testGroupEnabledToggleDetected() {
+        let groupId = UUID()
+        let before = makeExport(groups: [AppGroup(id: groupId, name: "Group", apps: [], isEnabled: true)])
+        let after = makeExport(groups: [AppGroup(id: groupId, name: "Group", apps: [], isEnabled: false)])
+
+        let diff = BackupDiff.compute(before: before, after: after)
+
+        XCTAssertTrue(diff.hasChanges)
+        XCTAssertEqual(diff.groupDiffs.count, 1)
+        XCTAssertEqual(diff.groupDiffs[0].status, .modified)
+        XCTAssertTrue(
+            diff.groupDiffs[0].groupChanges.contains {
+                $0.key == "Group Enabled" && $0.oldValue == "enabled" && $0.newValue == "disabled"
+            }
+        )
+    }
+
+    func testCyclingModeChangeDetected() {
+        let groupId = UUID()
+        let before = makeExport(groups: [AppGroup(id: groupId, name: "Group", apps: [], openAppIfNeeded: false)])
+        let after = makeExport(groups: [AppGroup(id: groupId, name: "Group", apps: [], openAppIfNeeded: true)])
+
+        let diff = BackupDiff.compute(before: before, after: after)
+
+        XCTAssertTrue(diff.hasChanges)
+        XCTAssertEqual(diff.groupDiffs.count, 1)
+        XCTAssertEqual(diff.groupDiffs[0].status, .modified)
+        XCTAssertTrue(diff.groupDiffs[0].groupChanges.contains { $0.key == "Cycling Mode" })
+    }
+
+    func testGroupShortcutChangeDetected() {
+        let groupId = UUID()
+        let group = makeGroup(id: groupId, name: "Group")
+        let before = makeExport(
+            groups: [group],
+            shortcuts: [groupId.uuidString: makeShortcut(0, 256)]
+        )
+        let after = makeExport(
+            groups: [group],
+            shortcuts: [groupId.uuidString: makeShortcut(6, 256)]
+        )
+
+        let diff = BackupDiff.compute(before: before, after: after)
+
+        XCTAssertTrue(diff.hasChanges)
+        XCTAssertEqual(diff.groupDiffs.count, 1)
+        XCTAssertEqual(diff.groupDiffs[0].status, .modified)
+        XCTAssertTrue(diff.groupDiffs[0].groupChanges.contains { $0.key == "Keyboard Shortcut" })
     }
 
     func testUnchangedGroupAppsAllUnchanged() {
@@ -389,6 +444,45 @@ final class BackupDiffTests: XCTestCase {
         let removed = changes.filter { $0.status == .removed }
         XCTAssertEqual(added.count, 2)
         XCTAssertEqual(removed.count, 2)
+    }
+
+    func testAppOrderChangeDetected() {
+        let groupId = UUID()
+        let appA = makeApp("com.app.a", name: "App A")
+        let appB = makeApp("com.app.b", name: "App B")
+        let before = makeExport(groups: [makeGroup(id: groupId, name: "G", apps: [appA, appB])])
+        let after = makeExport(groups: [makeGroup(id: groupId, name: "G", apps: [appB, appA])])
+
+        let diff = BackupDiff.compute(before: before, after: after)
+
+        XCTAssertTrue(diff.hasChanges)
+        let changes = diff.groupDiffs[0].appChanges
+        XCTAssertEqual(changes.filter { $0.status == .modified }.count, 2)
+    }
+
+    func testAppRenameWithSameBundleIDDetected() {
+        let groupId = UUID()
+        let before = makeExport(groups: [makeGroup(id: groupId, name: "G", apps: [makeApp("com.app.a", name: "Old Name")])])
+        let after = makeExport(groups: [makeGroup(id: groupId, name: "G", apps: [makeApp("com.app.a", name: "New Name")])])
+
+        let diff = BackupDiff.compute(before: before, after: after)
+
+        XCTAssertTrue(diff.hasChanges)
+        guard let rename = diff.groupDiffs[0].appChanges.first(where: { $0.status == .modified }) else {
+            return XCTFail("Expected a modified app change for rename")
+        }
+        XCTAssertEqual(rename.oldAppName, "Old Name")
+        XCTAssertEqual(rename.appName, "New Name")
+    }
+
+    func testInvalidShortcutKeysIgnored() {
+        let group = makeGroup(name: "G")
+        let before = makeExport(groups: [group], shortcuts: ["not-a-uuid": makeShortcut(0, 256)])
+        let after = makeExport(groups: [group], shortcuts: nil)
+
+        let diff = BackupDiff.compute(before: before, after: after)
+
+        XCTAssertFalse(diff.hasChanges)
     }
 
     // MARK: - AppChange and GroupDiff Properties
