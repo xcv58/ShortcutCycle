@@ -346,11 +346,38 @@ struct BackupBrowserView: View {
                                 .foregroundColor(statusColor(gd.status))
                                 .font(.caption)
                         }
+                        ForEach(gd.groupChanges) { gc in
+                            let oldValue = groupChangeDisplayValue(gc.oldValue, key: gc.key)
+                            let newValue = groupChangeDisplayValue(gc.newValue, key: gc.key)
+                            HStack(spacing: 4) {
+                                Text(gc.key + ":")
+                                    .fontWeight(.medium)
+                                Text(oldValue)
+                                    .foregroundColor(.red)
+                                    .strikethrough()
+                                Text("→")
+                                Text(newValue)
+                                    .foregroundColor(.green)
+                            }
+                            .font(.caption)
+                            .padding(.leading, 20)
+                        }
                         let changedApps = gd.appChanges.filter { $0.status != .unchanged }
                         ForEach(changedApps) { ac in
                             HStack(spacing: 4) {
                                 statusIcon(ac.status)
-                                Text(ac.appName)
+                                if ac.status == .modified,
+                                   let oldAppName = ac.oldAppName,
+                                   oldAppName != ac.appName {
+                                    Text(oldAppName)
+                                        .foregroundColor(.red)
+                                        .strikethrough()
+                                    Text("→")
+                                    Text(ac.appName)
+                                        .foregroundColor(.green)
+                                } else {
+                                    Text(ac.appName)
+                                }
                                 Text("(\(statusLabel(ac.status)))")
                                     .foregroundColor(statusColor(ac.status))
                                     .font(.caption)
@@ -408,6 +435,13 @@ struct BackupBrowserView: View {
         case .modified: return .orange
         case .unchanged: return .secondary
         }
+    }
+
+    private func groupChangeDisplayValue(_ value: String, key: String) -> String {
+        if key == "Keyboard Shortcut", value == "none" {
+            return "No shortcut".localized(language: selectedLanguage)
+        }
+        return value
     }
 
     // MARK: - Data Loading
