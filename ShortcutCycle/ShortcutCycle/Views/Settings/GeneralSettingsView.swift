@@ -240,6 +240,15 @@ struct GeneralSettingsView: View {
             BackupBrowserView()
                 .environmentObject(store)
         }
+        .onAppear {
+            if ShortcutCycleURLNavigationState.consumePendingBackupBrowser() {
+                showBackupBrowser = true
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .backupBrowserRequested)) { _ in
+            showBackupBrowser = true
+            ShortcutCycleURLNavigationState.markBackupBrowserHandled()
+        }
         .alert("Import Successful".localized(language: selectedLanguage), isPresented: $showClipboardImportSuccess) {
             Button("OK", role: .cancel) {}
         } message: {

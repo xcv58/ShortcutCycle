@@ -95,6 +95,28 @@ We believe tools should be for everyone. ShortcutCycle is built with accessibili
 
 > **Tip:** Hold the shortcut key to peek at the HUD and automatically cycle through your apps!
 
+## Custom URL Scheme (Automation)
+
+ShortcutCycle supports the `shortcutcycle://` URL scheme for automation via shell scripts, Shortcuts.app, Hammerspoon, and other tools. Capabilities include:
+
+- **Navigation** — open settings, switch tabs, open backup browser
+- **Group cycling** — cycle, select, enable, disable, or toggle groups
+- **Group CRUD** — create, delete, rename, and reorder groups
+- **App management** — add or remove apps from groups by bundle ID
+- **Settings** — change HUD, theme, language, and launch-at-login preferences
+- **Backup & restore** — manual backup, flush auto-save, restore from backup
+- **Import/export** — export or import settings as JSON files
+- **Query** — list all groups or get group details as JSON
+
+```bash
+open "shortcutcycle://cycle?group=Browsers"
+open "shortcutcycle://create-group?name=Editors"
+open "shortcutcycle://add-app?group=Editors&bundleId=com.microsoft.VSCode"
+open "shortcutcycle://list-groups"
+```
+
+For the full command reference, parameters, and examples, see [URL_SCHEME.md](URL_SCHEME.md).
+
 ## Support
 
 Found a bug or have a feature request? Please [open an issue](https://github.com/xcv58/ShortcutCycle/issues) on GitHub.

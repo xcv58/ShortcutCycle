@@ -28,7 +28,10 @@ let package = Package(
                 "Models/GroupStore.swift",
                 "Models/HUDAppItem.swift",
                 "Models/SettingsExport.swift",
-                "Models/KeyboardShortcutsNames.swift"
+                "Models/KeyboardShortcutsNames.swift",
+                "Models/URLCommandFileValidation.swift",
+                "Models/URLRouterLogic.swift",
+                "Models/URLScheme.swift"
             ]
         ),
         .executableTarget(
@@ -46,7 +49,10 @@ let package = Package(
                 "Models/GroupStore.swift",
                 "Models/HUDAppItem.swift",
                 "Models/SettingsExport.swift",
-                "Models/KeyboardShortcutsNames.swift"
+                "Models/KeyboardShortcutsNames.swift",
+                "Models/URLCommandFileValidation.swift",
+                "Models/URLRouterLogic.swift",
+                "Models/URLScheme.swift"
             ]
         ),
         .testTarget(

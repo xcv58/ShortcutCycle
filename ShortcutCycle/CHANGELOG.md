@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5] - 2026-03-01
+
+### Added
+- **Custom URL Scheme Automation**: Added `shortcutcycle://` commands so external tools can control the app (e.g., Apple Shortcuts, Alfred, Raycast, Keyboard Maestro).
+- **Deep-Link Navigation**: Added URL commands to open Settings directly, jump to specific tabs, and open the Automatic Backup Browser.
+- **Settings & Backup URL Actions**: Added URL actions to update app settings, flush pending auto-save, export/import settings by file path, and restore backups (latest/index/name/path selectors).
+- **Automation Test Coverage**: Added parser tests for the new URL command surface, including alias handling and selector precedence.
+
+### Changed
+- **Documentation**: Expanded README command reference for URL automation and added website feature/FAQ content to improve discoverability.
+
 ## [1.4] - 2026-02-12
 
 ### Added

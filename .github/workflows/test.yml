@@ -70,7 +70,9 @@ jobs:
             'AppGroup.swift', 'AppItem.swift', 'BackupDiff.swift',
             'BackupRetention.swift', 'GroupStore.swift',
             'KeyboardShortcutsNames.swift', 'SettingsExport.swift',
-            'HUDAppItem.swift'
+            'HUDAppItem.swift', 'URLScheme.swift',
+            'URLCommandFileValidation.swift',
+            'URLRouterLogic.swift'
         ]
         
         # Filter LCOV content

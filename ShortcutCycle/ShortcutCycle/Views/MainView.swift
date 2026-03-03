@@ -34,11 +34,20 @@ struct MainView: View {
         .focusedSceneValue(\.selectedTab, $selectedTab)
         .background(SettingsWindowObserver())
         .onAppear {
-            NSApp.setActivationPolicy(.regular)
-            NSApp.activate(ignoringOtherApps: true)
+            if let pendingTab = ShortcutCycleURLNavigationState.consumePendingSettingsTab() {
+                selectedTab = pendingTab.rawValue
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .deleteGroupRequested)) { _ in
             showDeleteConfirmation = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .settingsTabRequested)) { notification in
+            guard let raw = notification.object as? String,
+                  let tab = URLSettingsTab(rawValue: raw) else {
+                return
+            }
+            selectedTab = tab.rawValue
+            ShortcutCycleURLNavigationState.markSettingsTabHandled(tab)
         }
         .confirmationDialog(
             "Delete '\(store.selectedGroup?.name ?? "")'?",

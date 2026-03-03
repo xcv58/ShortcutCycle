@@ -66,6 +66,12 @@
 		DF88A3B12F300CB00042E749 /* BackupDiff.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3AE2F300CB00042E749 /* BackupDiff.swift */; };
 		DF88A3B22F300CB10042E749 /* BackupBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3AF2F300CB10042E749 /* BackupBrowserView.swift */; };
 		DF88A3B32F300CB10042E749 /* BackupBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3AF2F300CB10042E749 /* BackupBrowserView.swift */; };
+		DF88A3B42F300CB20042E749 /* URLScheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3B72F300CB20042E749 /* URLScheme.swift */; };
+		DF88A3B52F300CB20042E749 /* URLScheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3B72F300CB20042E749 /* URLScheme.swift */; };
+		E1F4B0012F40000100C0DE01 /* URLCommandFileValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F4B0032F40000100C0DE01 /* URLCommandFileValidation.swift */; };
+		E1F4B0022F40000100C0DE01 /* URLCommandFileValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F4B0032F40000100C0DE01 /* URLCommandFileValidation.swift */; };
+		E1F4B0042F40000100C0DE01 /* URLRouterLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F4B0062F40000100C0DE01 /* URLRouterLogic.swift */; };
+		E1F4B0052F40000100C0DE01 /* URLRouterLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F4B0062F40000100C0DE01 /* URLRouterLogic.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -124,7 +130,10 @@
 		DF88A3AB2F300CA20042E749 /* BackupRetention.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupRetention.swift; sourceTree = "<group>"; };
 		DF88A3AE2F300CB00042E749 /* BackupDiff.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupDiff.swift; sourceTree = "<group>"; };
 		DF88A3AF2F300CB10042E749 /* BackupBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupBrowserView.swift; sourceTree = "<group>"; };
+		DF88A3B72F300CB20042E749 /* URLScheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLScheme.swift; sourceTree = "<group>"; };
 		DF8B47D72F2F090100C473F8 /* ShortcutCycleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ShortcutCycleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E1F4B0032F40000100C0DE01 /* URLCommandFileValidation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLCommandFileValidation.swift; sourceTree = "<group>"; };
+		E1F4B0062F40000100C0DE01 /* URLRouterLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLRouterLogic.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -187,6 +196,9 @@
 				DF88A33C2F300B110042E749 /* HUDAppItem.swift */,
 				DF88A33D2F300B110042E749 /* KeyboardShortcutsNames.swift */,
 				DF88A33E2F300B110042E749 /* SettingsExport.swift */,
+				E1F4B0032F40000100C0DE01 /* URLCommandFileValidation.swift */,
+				E1F4B0062F40000100C0DE01 /* URLRouterLogic.swift */,
+				DF88A3B72F300CB20042E749 /* URLScheme.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -519,6 +531,9 @@
 				DF88A3902F300C3B0042E749 /* ShortcutCycleApp.swift in Sources */,
 				DF88A3992F300C7A0042E749 /* String+Localization.swift in Sources */,
 				DF88A3A42F300C960042E749 /* LanguageManager.swift in Sources */,
+				E1F4B0012F40000100C0DE01 /* URLCommandFileValidation.swift in Sources */,
+				E1F4B0042F40000100C0DE01 /* URLRouterLogic.swift in Sources */,
+				DF88A3B42F300CB20042E749 /* URLScheme.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -553,6 +568,9 @@
 				DF88A38B2F300B110042E749 /* KeyboardShortcutsNames.swift in Sources */,
 				DF88A38C2F300B110042E749 /* ShortcutManager.swift in Sources */,
 				DF88A38D2F300B110042E749 /* SettingsExport.swift in Sources */,
+				E1F4B0022F40000100C0DE01 /* URLCommandFileValidation.swift in Sources */,
+				E1F4B0052F40000100C0DE01 /* URLRouterLogic.swift in Sources */,
+				DF88A3B52F300CB20042E749 /* URLScheme.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
