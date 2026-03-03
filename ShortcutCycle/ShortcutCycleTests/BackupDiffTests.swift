@@ -1,4 +1,5 @@
 import XCTest
+import KeyboardShortcuts
 #if canImport(ShortcutCycleCore)
 @testable import ShortcutCycleCore
 #else
@@ -191,6 +192,45 @@ final class BackupDiffTests: XCTestCase {
         XCTAssertEqual(diff.groupDiffs.count, 1)
         XCTAssertEqual(diff.groupDiffs[0].status, .modified)
         XCTAssertTrue(diff.groupDiffs[0].groupChanges.contains { $0.key == "Keyboard Shortcut" })
+    }
+
+    func testGroupShortcutChangeUsesModifierAndKeyCodeFallbackForUnmappedKey() {
+        let groupId = UUID()
+        let group = makeGroup(id: groupId, name: "Group")
+        let unmappedKeyCode = KeyboardShortcuts.Key.leftBracket.rawValue
+        let before = makeExport(groups: [group], shortcuts: nil)
+        let after = makeExport(
+            groups: [group],
+            shortcuts: [groupId.uuidString: makeShortcut(unmappedKeyCode, 256)]
+        )
+
+        let diff = BackupDiff.compute(before: before, after: after)
+
+        XCTAssertTrue(diff.hasChanges)
+        guard let shortcutChange = diff.groupDiffs[0].groupChanges.first(where: { $0.key == "Keyboard Shortcut" }) else {
+            return XCTFail("Expected keyboard shortcut change")
+        }
+        XCTAssertEqual(shortcutChange.oldValue, "none")
+        XCTAssertEqual(shortcutChange.newValue, "⌘keyCode:\(unmappedKeyCode)")
+    }
+
+    func testGroupShortcutChangeUsesKeyCodeFallbackWithoutModifiersForUnmappedKey() {
+        let groupId = UUID()
+        let group = makeGroup(id: groupId, name: "Group")
+        let unmappedKeyCode = KeyboardShortcuts.Key.rightBracket.rawValue
+        let before = makeExport(groups: [group], shortcuts: nil)
+        let after = makeExport(
+            groups: [group],
+            shortcuts: [groupId.uuidString: makeShortcut(unmappedKeyCode, 0)]
+        )
+
+        let diff = BackupDiff.compute(before: before, after: after)
+
+        XCTAssertTrue(diff.hasChanges)
+        guard let shortcutChange = diff.groupDiffs[0].groupChanges.first(where: { $0.key == "Keyboard Shortcut" }) else {
+            return XCTFail("Expected keyboard shortcut change")
+        }
+        XCTAssertEqual(shortcutChange.newValue, "keyCode:\(unmappedKeyCode)")
     }
 
     func testUnchangedGroupAppsAllUnchanged() {
