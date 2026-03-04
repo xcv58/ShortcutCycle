@@ -334,9 +334,20 @@ public class GroupStore: ObservableObject {
               let eb = try? decoder.decode(SettingsExport.self, from: b) else {
             return a == b
         }
-        return ea.groups == eb.groups &&
+        return normalizedGroupsForBackupComparison(ea.groups) == normalizedGroupsForBackupComparison(eb.groups) &&
                ea.settings == eb.settings &&
                ea.shortcuts == eb.shortcuts
+    }
+
+    /// Runtime-only fields are preserved in backup payloads, but ignored for
+    /// backup dedupe so app switching activity does not create backup churn.
+    private func normalizedGroupsForBackupComparison(_ groups: [AppGroup]) -> [AppGroup] {
+        groups.map { group in
+            var normalized = group
+            normalized.lastActiveAppBundleId = nil
+            normalized.mruOrder = nil
+            return normalized
+        }
     }
 
     // MARK: - Export/Import

@@ -429,6 +429,18 @@ final class GroupStoreTests: XCTestCase {
         XCTAssertEqual(second, .noChange)
     }
 
+    func testManualBackupSkipsWhenOnlyRuntimeStateChanges() {
+        _ = store.addGroup(name: "RuntimeOnly")
+        let first = store.manualBackup()
+        XCTAssertEqual(first, .saved)
+
+        let groupId = store.groups.first!.id
+        store.updateLastActiveApp(bundleId: "com.runtime.app::1", for: groupId)
+
+        let second = store.manualBackup()
+        XCTAssertEqual(second, .noChange)
+    }
+
     func testPerformAutoBackupSkipsDuplicate() {
         _ = store.addGroup(name: "AutoBackupTest")
         store.flushPendingBackup()
