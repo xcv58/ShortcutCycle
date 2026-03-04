@@ -12,6 +12,11 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - **Documentation**: Expanded README command reference for URL automation and added website feature/FAQ content to improve discoverability.
+- **Auto-Backup Triggering**: Runtime-only switching metadata updates now persist without scheduling automatic backups.
+
+### Fixed
+- **Cold-Start URL Navigation**: Fixed an issue where `shortcutcycle://open-settings...` and related settings-open URL commands could fail when the app had just launched and Settings had not been opened yet.
+- **Backup Dedupe Semantics**: Backup equality checks now ignore runtime-only switching metadata (`lastActiveAppBundleId`, `mruOrder`) so manual/auto backups do not create extra files for runtime-only state drift.
 
 ## [1.4] - 2026-02-12
 

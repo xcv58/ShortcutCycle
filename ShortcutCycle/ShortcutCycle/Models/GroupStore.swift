@@ -144,8 +144,9 @@ public class GroupStore: ObservableObject {
     
     public func updateLastActiveApp(bundleId: String, for groupId: UUID) {
         if let index = groups.firstIndex(where: { $0.id == groupId }) {
+            guard groups[index].lastActiveAppBundleId != bundleId else { return }
             groups[index].lastActiveAppBundleId = bundleId
-            saveGroups()
+            saveGroups(triggerAutoBackup: false)
         }
     }
 
@@ -161,17 +162,19 @@ public class GroupStore: ObservableObject {
         )
         if groups[index].mruOrder != newOrder {
             groups[index].mruOrder = newOrder
-            saveGroups()
+            saveGroups(triggerAutoBackup: false)
         }
     }
 
     // MARK: - Persistence
     
-    private func saveGroups() {
+    private func saveGroups(triggerAutoBackup: Bool = true) {
         // JSONEncoder.encode cannot fail for [AppGroup] since all types are trivially Codable
         let data = try! JSONEncoder().encode(groups)
         userDefaults.set(data, forKey: saveKey)
-        scheduleAutoBackup()
+        if triggerAutoBackup {
+            scheduleAutoBackup()
+        }
     }
 
     /// Schedule a debounced auto-backup (resets timer on each call)
@@ -331,9 +334,20 @@ public class GroupStore: ObservableObject {
               let eb = try? decoder.decode(SettingsExport.self, from: b) else {
             return a == b
         }
-        return ea.groups == eb.groups &&
+        return normalizedGroupsForBackupComparison(ea.groups) == normalizedGroupsForBackupComparison(eb.groups) &&
                ea.settings == eb.settings &&
                ea.shortcuts == eb.shortcuts
+    }
+
+    /// Runtime-only fields are preserved in backup payloads, but ignored for
+    /// backup dedupe so app switching activity does not create backup churn.
+    private func normalizedGroupsForBackupComparison(_ groups: [AppGroup]) -> [AppGroup] {
+        groups.map { group in
+            var normalized = group
+            normalized.lastActiveAppBundleId = nil
+            normalized.mruOrder = nil
+            return normalized
+        }
     }
 
     // MARK: - Export/Import

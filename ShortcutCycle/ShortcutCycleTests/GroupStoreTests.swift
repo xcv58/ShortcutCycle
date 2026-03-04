@@ -280,6 +280,24 @@ final class GroupStoreTests: XCTestCase {
         store.updateLastActiveApp(bundleId: "com.test.app", for: UUID())
     }
 
+    func testUpdateLastActiveAppDoesNotScheduleAutoBackup() {
+        let fm = FileManager.default
+        let groupId = store.groups.first!.id
+
+        let countBefore = ((try? fm.contentsOfDirectory(at: store.backupDirectory, includingPropertiesForKeys: nil))?.filter {
+            $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json"
+        } ?? []).count
+
+        store.updateLastActiveApp(bundleId: "com.runtime.app::1", for: groupId)
+        store.flushPendingBackup()
+
+        let countAfter = ((try? fm.contentsOfDirectory(at: store.backupDirectory, includingPropertiesForKeys: nil))?.filter {
+            $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json"
+        } ?? []).count
+
+        XCTAssertEqual(countAfter, countBefore)
+    }
+
     // MARK: - Toggle Group Enabled
 
     func testToggleGroupEnabled() {
@@ -406,6 +424,18 @@ final class GroupStoreTests: XCTestCase {
         _ = store.addGroup(name: "BackupTest2")
         let first = store.manualBackup()
         XCTAssertEqual(first, .saved)
+
+        let second = store.manualBackup()
+        XCTAssertEqual(second, .noChange)
+    }
+
+    func testManualBackupSkipsWhenOnlyRuntimeStateChanges() {
+        _ = store.addGroup(name: "RuntimeOnly")
+        let first = store.manualBackup()
+        XCTAssertEqual(first, .saved)
+
+        let groupId = store.groups.first!.id
+        store.updateLastActiveApp(bundleId: "com.runtime.app::1", for: groupId)
 
         let second = store.manualBackup()
         XCTAssertEqual(second, .noChange)
@@ -680,6 +710,29 @@ final class GroupStoreTests: XCTestCase {
 
         let group = store.groups.first(where: { $0.id == groupId })
         XCTAssertEqual(group?.mruOrder, ["com.test.2"])
+    }
+
+    func testUpdateMRUOrderDoesNotScheduleAutoBackup() {
+        let fm = FileManager.default
+        let groupId = store.groups.first!.id
+
+        let countBefore = ((try? fm.contentsOfDirectory(at: store.backupDirectory, includingPropertiesForKeys: nil))?.filter {
+            $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json"
+        } ?? []).count
+
+        store.updateMRUOrder(
+            activatedId: "com.runtime.app::1",
+            activatedBundleId: "com.runtime.app",
+            for: groupId,
+            liveItemIds: Set(["com.runtime.app::1"])
+        )
+        store.flushPendingBackup()
+
+        let countAfter = ((try? fm.contentsOfDirectory(at: store.backupDirectory, includingPropertiesForKeys: nil))?.filter {
+            $0.lastPathComponent.hasPrefix("backup ") && $0.pathExtension == "json"
+        } ?? []).count
+
+        XCTAssertEqual(countAfter, countBefore)
     }
 
     func testUpdateMRUOrderMovesToFront() {

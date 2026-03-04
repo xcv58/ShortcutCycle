@@ -353,7 +353,7 @@ enum ShortcutCycleURLRouter {
             return
         }
 
-        NotificationCenter.default.post(name: Notification.Name("ToggleSettingsWindow"), object: nil)
+        requestSettingsWindowOpen()
     }
 
     private static func openBackupBrowser() {
@@ -367,6 +367,23 @@ enum ShortcutCycleURLRouter {
 
         if windowAlreadyOpen {
             NotificationCenter.default.post(name: .backupBrowserRequested, object: nil)
+        }
+    }
+
+    private static func requestSettingsWindowOpen() {
+        NSApp.setActivationPolicy(.regular)
+        NSApp.activate(ignoringOtherApps: true)
+
+        let showSettingsSelector = Selector(("showSettingsWindow:"))
+        if NSApp.sendAction(showSettingsSelector, to: nil, from: nil) {
+            return
+        }
+
+        NotificationCenter.default.post(name: Notification.Name("ToggleSettingsWindow"), object: nil)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            guard !NSApp.windows.contains(where: { $0.identifier?.rawValue == "settings" }) else { return }
+            _ = NSApp.sendAction(showSettingsSelector, to: nil, from: nil)
         }
     }
 
