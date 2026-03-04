@@ -7,6 +7,7 @@ import KeyboardShortcuts
 /// Menu bar popover view showing quick access to groups
 struct MenuBarView: View {
     @EnvironmentObject var store: GroupStore
+    @Environment(\.openWindow) private var openWindow
     @StateObject private var launchAtLogin = LaunchAtLoginManager.shared
     @AppStorage("appTheme") private var appTheme: AppTheme = .system
 
@@ -100,7 +101,7 @@ struct MenuBarView: View {
             MenuBarButton(title: "Settings...".localized(language: selectedLanguage), icon: "gear") {
                 NSApp.setActivationPolicy(.regular)
                 NSApp.activate(ignoringOtherApps: true)
-                _ = NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                openWindow(id: "settings")
             }
             
             MenuBarButton(title: "Quit".localized(language: selectedLanguage), icon: "power") {
@@ -110,6 +111,11 @@ struct MenuBarView: View {
         .frame(width: 280)
         .background(VisualEffectView(material: .popover, blendingMode: .behindWindow))
         .background(WindowAppearanceApplier(colorScheme: appTheme.colorScheme))
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("ToggleSettingsWindow"))) { _ in
+            NSApp.setActivationPolicy(.regular)
+            NSApp.activate(ignoringOtherApps: true)
+            openWindow(id: "settings")
+        }
         .preferredColorScheme(appTheme.colorScheme)
     }
 }
@@ -264,4 +270,3 @@ struct HeightPreferenceKey: PreferenceKey {
         value = nextValue()
     }
 }
-

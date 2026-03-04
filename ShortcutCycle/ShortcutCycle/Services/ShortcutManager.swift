@@ -142,7 +142,7 @@ class ShortcutManager: @preconcurrency ObservableObject {
         } else {
             // Window is closed/not in memory.
             NSApp.activate(ignoringOtherApps: true)
-            _ = NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+            NotificationCenter.default.post(name: Notification.Name("ToggleSettingsWindow"), object: nil)
         }
     }
     

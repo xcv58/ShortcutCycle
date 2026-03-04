@@ -397,6 +397,8 @@ enum ShortcutCycleURLRouter {
             return
         }
 
+        NotificationCenter.default.post(name: Notification.Name("ToggleSettingsWindow"), object: nil)
+
         // The app can still be wiring up scenes at launch time. Retry briefly.
         let retryDelays: [TimeInterval] = [0.10, 0.20, 0.40]
         for (index, delay) in retryDelays.enumerated() {
@@ -639,7 +641,7 @@ struct ShortcutCycleApp: App {
         .menuBarExtraStyle(.window)
 
         // Settings window
-        Settings {
+        Window("Shortcut Cycle", id: "settings") {
             MainView()
                 .environmentObject(store)
                 .environmentObject(localeObserver)
