@@ -898,6 +898,15 @@
             font-size: 0.95rem;
         }
 
+        .feature-card a {
+            color: var(--accent);
+            text-decoration: underline;
+        }
+
+        .feature-card a:hover {
+            color: var(--accent-hover);
+        }
+
         /* --- FOOTER --- */
         footer {
             border-top: 1px solid var(--border);
@@ -998,6 +1007,22 @@
             margin: 0 auto;
         }
 
+        .faq-group {
+            margin-bottom: 28px;
+        }
+
+        .faq-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .faq-group-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0 0 12px 2px;
+            letter-spacing: 0.01em;
+        }
+
         .faq-item {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -1057,6 +1082,59 @@
             line-height: 1.7;
         }
 
+        .faq-item .faq-answer-intro {
+            padding: 0 24px 12px 24px;
+        }
+
+        .faq-item .faq-answer-tail {
+            padding: 12px 24px 24px 24px;
+        }
+
+        .faq-command-list {
+            display: grid;
+            gap: 10px;
+            padding: 0 24px;
+        }
+
+        .faq-command {
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .faq-command code {
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            overflow-wrap: anywhere;
+        }
+
+        .copy-command-btn {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 6px 10px;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+        }
+
+        .copy-command-btn:hover {
+            background: var(--surface-hover);
+            border-color: var(--accent);
+        }
+
+        .copy-command-btn:active {
+            transform: scale(0.98);
+        }
+
         .faq-item a {
             color: var(--accent);
             text-decoration: underline;
@@ -1091,6 +1169,17 @@
             color: var(--text-primary);
             border-color: var(--accent);
             /* Subtle accent on hover */
+        }
+
+        @media (max-width: 640px) {
+            .faq-command {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .copy-command-btn {
+                width: 100%;
+            }
         }
 
         @media (max-width: 768px) {
@@ -1725,7 +1814,9 @@
                         <span class="feature-icon">🤖</span>
                         <h3>Automation Ready</h3>
                         <p>Control ShortcutCycle with the <code>shortcutcycle://</code> URL scheme from Apple
-                            Shortcuts, Alfred, Raycast, or Keyboard Maestro.</p>
+                            Shortcuts, Alfred, Raycast, or Keyboard Maestro. <a
+                                href="https://github.com/xcv58/ShortcutCycle/blob/master/URL_SCHEME.md"
+                                target="_blank" rel="noopener noreferrer">See URL command docs</a>.</p>
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">🌍</span>
@@ -1781,93 +1872,138 @@
                     <button id="faq-toggle-btn" class="faq-toggle-btn" onclick="toggleAllFAQ()">Expand All</button>
                 </div>
                 <div class="faq-container">
-                    <details class="faq-item">
-                        <summary>How do I create a group?</summary>
-                        <p>It's simple. Open the settings, click the <strong>+</strong> button to create a new group
-                            (like "Social" or "Dev"), and assign a global hotkey (e.g., <code>Option+1</code>). Then,
-                            just drag and drop the apps you want into that group.</p>
-                    </details>
+                    <div class="faq-group">
+                        <h3 class="faq-group-title">Getting Started</h3>
+                        <details class="faq-item">
+                            <summary>How do I create a group?</summary>
+                            <p>It's simple. Open the settings, click the <strong>+</strong> button to create a new group
+                                (like "Social" or "Dev"), and assign a global hotkey (e.g., <code>Option+1</code>). Then,
+                                just drag and drop the apps you want into that group.</p>
+                        </details>
 
-                    <details class="faq-item">
-                        <summary>Can I customize the shortcuts?</summary>
-                        <p>Yes, you have full control. You can assign any global shortcut to activate a specific group.
-                            Inside the group, apps are cycled based on the order you arrange them in.</p>
-                    </details>
+                        <details class="faq-item">
+                            <summary>Can I customize the shortcuts?</summary>
+                            <p>Yes, you have full control. You can assign any global shortcut to activate a specific group.
+                                Inside the group, apps are cycled based on the order you arrange them in.</p>
+                        </details>
 
-                    <details class="faq-item">
-                        <summary>Can I automate ShortcutCycle with Shortcuts, Alfred, or Raycast?</summary>
-                        <p>Yes. ShortcutCycle supports the custom URL scheme <code>shortcutcycle://</code>, so you can
-                            trigger actions from automation tools. Example:
-                            <code>open "shortcutcycle://cycle?group=Browsers"</code>.
-                        </p>
-                    </details>
+                        <details class="faq-item">
+                            <summary>What happens if an app isn't open?</summary>
+                            <p>ShortcutCycle acts as a launcher too. If you cycle to an app that isn't running, we'll
+                                <strong>automatically launch it</strong> for you instantly.
+                            </p>
+                        </details>
+                    </div>
 
-                    <details class="faq-item">
-                        <summary>Can URL commands open a specific settings tab or the backup browser?</summary>
-                        <p>Yes. Use <code>shortcutcycle://open-settings?tab=groups</code>,
-                            <code>shortcutcycle://open-settings?tab=general</code>, or
-                            <code>shortcutcycle://open-backup-browser</code>.
-                        </p>
-                    </details>
+                    <div class="faq-group">
+                        <h3 class="faq-group-title">Automation &amp; URL Commands</h3>
+                        <details class="faq-item">
+                            <summary>Can I automate ShortcutCycle with Shortcuts, Alfred, or Raycast?</summary>
+                            <p class="faq-answer-intro">Yes. ShortcutCycle supports the custom URL scheme
+                                <code>shortcutcycle://</code>, so you can trigger actions from automation tools. Example
+                                command:</p>
+                            <div class="faq-command-list">
+                                <div class="faq-command">
+                                    <code>open "shortcutcycle://cycle?group=Browsers"</code>
+                                    <button class="copy-command-btn" type="button"
+                                        data-copy-text='open "shortcutcycle://cycle?group=Browsers"'>Copy</button>
+                                </div>
+                            </div>
+                            <p class="faq-answer-tail"><a
+                                    href="https://github.com/xcv58/ShortcutCycle/blob/master/URL_SCHEME.md"
+                                    target="_blank" rel="noopener noreferrer">See full URL command docs</a>.</p>
+                        </details>
 
-                    <details class="faq-item">
-                        <summary>Can URL commands import/export settings or restore backups?</summary>
-                        <p>Yes. You can export/import settings by path and restore backups by latest, index, name, or
-                            path. Example: <code>shortcutcycle://restore-backup?index=2</code>. Import/restore replaces
-                            your current groups and settings immediately.</p>
-                    </details>
+                        <details class="faq-item">
+                            <summary>Can URL commands open a specific settings tab or the backup browser?</summary>
+                            <p class="faq-answer-intro">Yes. Use these <code>open</code> commands:</p>
+                            <div class="faq-command-list">
+                                <div class="faq-command">
+                                    <code>open "shortcutcycle://open-settings?tab=groups"</code>
+                                    <button class="copy-command-btn" type="button"
+                                        data-copy-text='open "shortcutcycle://open-settings?tab=groups"'>Copy</button>
+                                </div>
+                                <div class="faq-command">
+                                    <code>open "shortcutcycle://open-settings?tab=general"</code>
+                                    <button class="copy-command-btn" type="button"
+                                        data-copy-text='open "shortcutcycle://open-settings?tab=general"'>Copy</button>
+                                </div>
+                                <div class="faq-command">
+                                    <code>open "shortcutcycle://open-backup-browser"</code>
+                                    <button class="copy-command-btn" type="button"
+                                        data-copy-text='open "shortcutcycle://open-backup-browser"'>Copy</button>
+                                </div>
+                            </div>
+                            <p class="faq-answer-tail"><a
+                                    href="https://github.com/xcv58/ShortcutCycle/blob/master/URL_SCHEME.md"
+                                    target="_blank" rel="noopener noreferrer">See full URL command docs</a>.</p>
+                        </details>
 
-                    <details class="faq-item">
-                        <summary>What happens if an app isn't open?</summary>
-                        <p>ShortcutCycle acts as a launcher too. If you cycle to an app that isn't running, we'll
-                            <strong>automatically launch it</strong> for you instantly.
-                        </p>
-                    </details>
+                        <details class="faq-item">
+                            <summary>Can URL commands import/export settings or restore backups?</summary>
+                            <p class="faq-answer-intro">Yes. You can export/import settings by path and restore backups by
+                                latest, index, name, or path. Example command:</p>
+                            <div class="faq-command-list">
+                                <div class="faq-command">
+                                    <code>open "shortcutcycle://restore-backup?index=2"</code>
+                                    <button class="copy-command-btn" type="button"
+                                        data-copy-text='open "shortcutcycle://restore-backup?index=2"'>Copy</button>
+                                </div>
+                            </div>
+                            <p class="faq-answer-tail">Import/restore replaces your current groups and settings immediately.
+                                <a href="https://github.com/xcv58/ShortcutCycle/blob/master/URL_SCHEME.md" target="_blank"
+                                    rel="noopener noreferrer">See full URL command docs</a>.
+                            </p>
+                        </details>
+                    </div>
 
+                    <div class="faq-group">
+                        <h3 class="faq-group-title">Backups &amp; Privacy</h3>
+                        <details class="faq-item">
+                            <summary>Can I backup my configuration?</summary>
+                            <p>Yes! ShortcutCycle automatically creates backups using GFS (Grandfather-Father-Son)
+                                retention. You can also manually export your entire configuration to a JSON file for
+                                safekeeping or to transfer to another Mac.</p>
+                        </details>
 
+                        <details class="faq-item">
+                            <summary>Is my data private?</summary>
+                            <p>Absolutely. ShortcutCycle runs entirely on your Mac with <strong>zero analytics or
+                                    tracking</strong>. Your app groups and shortcuts are stored locally in your user
+                                defaults. We never see or collect any of your data.</p>
+                        </details>
+                    </div>
 
+                    <div class="faq-group">
+                        <h3 class="faq-group-title">Compatibility &amp; Project</h3>
+                        <details class="faq-item">
+                            <summary>What macOS versions are supported?</summary>
+                            <p>ShortcutCycle requires <strong>macOS 14.0 (Sonoma) or later</strong>. It's optimized for
+                                Apple Silicon but also works great on Intel Macs.</p>
+                        </details>
 
-                    <details class="faq-item">
-                        <summary>Is my data private?</summary>
-                        <p>Absolutely. ShortcutCycle runs entirely on your Mac with <strong>zero analytics or
-                                tracking</strong>. Your app groups and shortcuts are stored locally in your user
-                            defaults. We never see or collect any of your data.</p>
-                    </details>
+                        <details class="faq-item">
+                            <summary>Does it work with multiple monitors?</summary>
+                            <p>Yes, ShortcutCycle works seamlessly across multiple monitors. The HUD overlay appears on your
+                                active display, and app switching works regardless of which monitor the app is on.</p>
+                        </details>
 
-                    <details class="faq-item">
-                        <summary>What macOS versions are supported?</summary>
-                        <p>ShortcutCycle requires <strong>macOS 14.0 (Sonoma) or later</strong>. It's optimized for
-                            Apple Silicon but also works great on Intel Macs.</p>
-                    </details>
+                        <details class="faq-item">
+                            <summary>Why doesn't ShortcutCycle switch to a specific window?</summary>
+                            <p>ShortcutCycle is designed to be privacy-first. Reliable per-window switching would require much
+                                broader accessibility access to control other apps in deeper ways. We intentionally keep
+                                permissions narrower and focus on fast, dependable app switching.</p>
+                        </details>
 
-                    <details class="faq-item">
-                        <summary>Can I backup my configuration?</summary>
-                        <p>Yes! ShortcutCycle automatically creates backups using GFS (Grandfather-Father-Son)
-                            retention. You can also manually export your entire configuration to a JSON file for
-                            safekeeping or to transfer to another Mac.</p>
-                    </details>
-
-                    <details class="faq-item">
-                        <summary>Does it work with multiple monitors?</summary>
-                        <p>Yes, ShortcutCycle works seamlessly across multiple monitors. The HUD overlay appears on your
-                            active display, and app switching works regardless of which monitor the app is on.</p>
-                    </details>
-
-                    <details class="faq-item">
-                        <summary>Why doesn't ShortcutCycle switch to a specific window?</summary>
-                        <p>ShortcutCycle is designed to be privacy-first. Reliable per-window switching would require much
-                            broader accessibility access to control other apps in deeper ways. We intentionally keep
-                            permissions narrower and focus on fast, dependable app switching.</p>
-                    </details>
-
-                    <details class="faq-item">
-                        <summary>Is it open source?</summary>
-                        <p>Yes! ShortcutCycle is <strong>100% open source</strong> under the MIT license. You can view
-                            the code, contribute, or build it yourself on <a
-                                href="https://github.com/xcv58/ShortcutCycle" target="_blank"
-                                rel="noopener noreferrer">GitHub</a>.
-                        </p>
-                    </details>
+                        <details class="faq-item">
+                            <summary>Is it open source?</summary>
+                            <p>Yes! ShortcutCycle is <strong>100% open source</strong> under the MIT license. You can view
+                                the code, contribute, or build it yourself on <a
+                                    href="https://github.com/xcv58/ShortcutCycle" target="_blank"
+                                    rel="noopener noreferrer">GitHub</a>.
+                            </p>
+                        </details>
+                    </div>
                 </div>
             </section>
         </main>
@@ -2015,6 +2151,60 @@
 
             btn.innerText = isExpanding ? 'Collapse All' : 'Expand All';
         }
+
+        async function copyTextToClipboard(text) {
+            if (!text) return false;
+
+            if (navigator.clipboard && window.isSecureContext) {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    return true;
+                } catch (error) {
+                    // Fall through to legacy copy method.
+                }
+            }
+
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.setAttribute('readonly', '');
+            textArea.style.position = 'fixed';
+            textArea.style.top = '-9999px';
+            textArea.style.opacity = '0';
+            document.body.appendChild(textArea);
+            textArea.select();
+            textArea.setSelectionRange(0, textArea.value.length);
+
+            let copied = false;
+            try {
+                copied = document.execCommand('copy');
+            } catch (error) {
+                copied = false;
+            }
+
+            document.body.removeChild(textArea);
+            return copied;
+        }
+
+        document.querySelectorAll('.copy-command-btn').forEach((button) => {
+            button.addEventListener('click', async () => {
+                const command = button.dataset.copyText;
+                if (!command) return;
+
+                const defaultLabel = button.dataset.defaultLabel || button.textContent.trim() || 'Copy';
+                button.dataset.defaultLabel = defaultLabel;
+
+                const copied = await copyTextToClipboard(command);
+                button.textContent = copied ? 'Copied' : 'Copy failed';
+
+                if (button._copyResetTimer) {
+                    window.clearTimeout(button._copyResetTimer);
+                }
+
+                button._copyResetTimer = window.setTimeout(() => {
+                    button.textContent = defaultLabel;
+                }, 1400);
+            });
+        });
 
         // Initialize Theme
         const initialTheme = getStoredTheme();
