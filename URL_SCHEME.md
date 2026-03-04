@@ -147,6 +147,7 @@ sleep 0.5 && cat "$HOME/Library/Containers/com.xcv58.ShortcutCycle/Data/tmp/shor
 
 - `backup`
   - Triggers manual backup now.
+  - If only runtime switching metadata changed since the latest backup (`lastActiveAppBundleId`, `mruOrder`), no new backup file is created.
 - `flush-auto-save`
   - Aliases: `flush-auto-backup`, `trigger-auto-save`, `trigger-auto-backup`, `autosave`
   - Flushes pending debounced auto-save immediately.

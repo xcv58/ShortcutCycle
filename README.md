@@ -104,7 +104,7 @@ ShortcutCycle supports the `shortcutcycle://` URL scheme for automation via shel
 - **Group CRUD** — create, delete, rename, and reorder groups
 - **App management** — add or remove apps from groups by bundle ID
 - **Settings** — change HUD, theme, language, and launch-at-login preferences
-- **Backup & restore** — manual backup, flush auto-save, restore from backup
+- **Backup & restore** — manual backup (runtime-only state drift is deduped), flush auto-save, restore from backup
 - **Import/export** — export or import settings as JSON files
 - **Query** — list all groups or get group details as JSON
 
