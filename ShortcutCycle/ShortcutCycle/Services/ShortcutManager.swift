@@ -141,8 +141,7 @@ class ShortcutManager: @preconcurrency ObservableObject {
             }
         } else {
             // Window is closed/not in memory.
-            NSApp.activate(ignoringOtherApps: true)
-            NotificationCenter.default.post(name: Notification.Name("ToggleSettingsWindow"), object: nil)
+            ShortcutCycleURLRouter.openSettingsFromOutsideView()
         }
     }
     

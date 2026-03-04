@@ -111,11 +111,6 @@ struct MenuBarView: View {
         .frame(width: 280)
         .background(VisualEffectView(material: .popover, blendingMode: .behindWindow))
         .background(WindowAppearanceApplier(colorScheme: appTheme.colorScheme))
-        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("ToggleSettingsWindow"))) { _ in
-            NSApp.setActivationPolicy(.regular)
-            NSApp.activate(ignoringOtherApps: true)
-            openWindow(id: "settings")
-        }
         .preferredColorScheme(appTheme.colorScheme)
     }
 }

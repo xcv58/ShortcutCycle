@@ -24,17 +24,36 @@ extension Notification.Name {
     static let backupBrowserRequested = Notification.Name("backupBrowserRequested")
 }
 
+@MainActor
+enum SettingsWindowBridge {
+    private static var openWindowAction: OpenWindowAction?
+
+    static func register(openWindow: OpenWindowAction) {
+        openWindowAction = openWindow
+    }
+
+    static func openSettingsWindow() -> Bool {
+        guard let openWindowAction else { return false }
+        openWindowAction(id: "settings")
+        return true
+    }
+}
+
 
 // MARK: - App Commands
 
 struct AppCommands: Commands {
     @FocusedBinding(\.selectedTab) private var selectedTab
+    @Environment(\.openWindow) private var openWindow
 
     private var groupsDisabled: Bool {
         selectedTab != "groups" || GroupStore.shared.groups.count < 2
     }
 
     var body: some Commands {
+        // Keep a non-lazy reference to openWindow for URL/shortcut cold-start requests.
+        let _ = SettingsWindowBridge.register(openWindow: openWindow)
+
         CommandGroup(replacing: .newItem) {
             Button("Add Group") {
                 selectedTab = "groups"
@@ -247,6 +266,10 @@ enum ShortcutCycleURLNavigationState {
 
 @MainActor
 enum ShortcutCycleURLRouter {
+    static func openSettingsFromOutsideView(tab: URLSettingsTab? = nil) {
+        openSettingsWindow(tab: tab)
+    }
+
     static func handle(_ url: URL) {
         guard let command = ShortcutCycleURLParser.parse(url) else { return }
 
@@ -392,18 +415,24 @@ enum ShortcutCycleURLRouter {
         NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
 
+        if SettingsWindowBridge.openSettingsWindow() {
+            return
+        }
+
         let showSettingsSelector = Selector(("showSettingsWindow:"))
         if NSApp.sendAction(showSettingsSelector, to: nil, from: nil) {
             return
         }
-
-        NotificationCenter.default.post(name: Notification.Name("ToggleSettingsWindow"), object: nil)
 
         // The app can still be wiring up scenes at launch time. Retry briefly.
         let retryDelays: [TimeInterval] = [0.10, 0.20, 0.40]
         for (index, delay) in retryDelays.enumerated() {
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
                 guard !NSApp.windows.contains(where: { $0.identifier?.rawValue == "settings" }) else { return }
+
+                if SettingsWindowBridge.openSettingsWindow() {
+                    return
+                }
                 _ = NSApp.sendAction(showSettingsSelector, to: nil, from: nil)
 
                 // Keep app visible while retries are in progress.
