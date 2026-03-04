@@ -141,25 +141,8 @@ class ShortcutManager: @preconcurrency ObservableObject {
             }
         } else {
             // Window is closed/not in memory.
-            // There is no easy way to "open" a SwiftUI WindowGroup from here 
-            // without an environment handle to openWindow.
-            // However, we can use the URL scheme if we had one, or rely on NSApp.
-            // A workaround for SwiftUI lifecycle apps is hard.
-            // Let's try to activate the app, which might bring the default window (Settings) up if it's the only one.
             NSApp.activate(ignoringOtherApps: true)
-            
-            // If the app is activation policy accessory, activating it might not show a window if it was closed.
-            // We might need to rely on the user keeping it open or minimize behavior.
-            // Alternatively, in `ShortcutCycleApp`, we have the Window.
-            // NOTE: A common workaround is to use `NSApp.sendAction`.
-            // But strict SwiftUI lifecycle makes this hard.
-            
-            // Let's just try activating for now. If it doesn't work, we might need a more complex solution
-            // involving passing a closure or notification to the App struct.
-            
-            // Send a notification that the App struct can listen to?
-            // Or simpler: NotificationCenter
-            NotificationCenter.default.post(name: Notification.Name("ToggleSettingsWindow"), object: nil)
+            _ = NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
         }
     }
     

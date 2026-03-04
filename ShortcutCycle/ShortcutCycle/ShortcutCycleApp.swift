@@ -151,9 +151,8 @@ struct SettingsWindowObserver: NSViewRepresentable {
     func makeCoordinator() -> Coordinator { Coordinator() }
 
     func makeNSView(context: Context) -> NSView {
-        let view = NSView()
-        DispatchQueue.main.async {
-            guard let window = view.window else { return }
+        let view = ObserverView()
+        view.onWindowReady = { window in
             context.coordinator.observe(window: window)
         }
         return view
@@ -161,10 +160,29 @@ struct SettingsWindowObserver: NSViewRepresentable {
 
     func updateNSView(_ nsView: NSView, context: Context) {}
 
+    final class ObserverView: NSView {
+        var onWindowReady: ((NSWindow) -> Void)?
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            guard let window else { return }
+            onWindowReady?(window)
+        }
+    }
+
     class Coordinator {
         private var observer: NSObjectProtocol?
+        private weak var observedWindow: NSWindow?
 
         func observe(window: NSWindow) {
+            guard observedWindow !== window else { return }
+            observedWindow = window
+
+            window.identifier = NSUserInterfaceItemIdentifier("settings")
+
+            if let observer {
+                NotificationCenter.default.removeObserver(observer)
+            }
             observer = NotificationCenter.default.addObserver(
                 forName: NSWindow.willCloseNotification,
                 object: window,
@@ -379,11 +397,18 @@ enum ShortcutCycleURLRouter {
             return
         }
 
-        NotificationCenter.default.post(name: Notification.Name("ToggleSettingsWindow"), object: nil)
+        // The app can still be wiring up scenes at launch time. Retry briefly.
+        let retryDelays: [TimeInterval] = [0.10, 0.20, 0.40]
+        for (index, delay) in retryDelays.enumerated() {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                guard !NSApp.windows.contains(where: { $0.identifier?.rawValue == "settings" }) else { return }
+                _ = NSApp.sendAction(showSettingsSelector, to: nil, from: nil)
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-            guard !NSApp.windows.contains(where: { $0.identifier?.rawValue == "settings" }) else { return }
-            _ = NSApp.sendAction(showSettingsSelector, to: nil, from: nil)
+                // Keep app visible while retries are in progress.
+                if index == retryDelays.count - 1 {
+                    NSApp.activate(ignoringOtherApps: true)
+                }
+            }
         }
     }
 
@@ -614,7 +639,7 @@ struct ShortcutCycleApp: App {
         .menuBarExtraStyle(.window)
 
         // Settings window
-        Window("Shortcut Cycle", id: "settings") {
+        Settings {
             MainView()
                 .environmentObject(store)
                 .environmentObject(localeObserver)
