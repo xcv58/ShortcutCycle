@@ -5,18 +5,15 @@ All notable changes to this project will be documented in this file.
 ## [1.5] - 2026-03-01
 
 ### Added
-- **Custom URL Scheme Automation**: Added `shortcutcycle://` commands so external tools can control the app (e.g., Apple Shortcuts, Alfred, Raycast, Keyboard Maestro).
-- **Deep-Link Navigation**: Added URL commands to open Settings directly, jump to specific tabs, and open the Automatic Backup Browser.
-- **Settings & Backup URL Actions**: Added URL actions to update app settings, flush pending auto-save, export/import settings by file path, and restore backups (latest/index/name/path selectors).
-- **Automation Test Coverage**: Added parser tests for the new URL command surface, including alias handling and selector precedence.
+- **Automation with `shortcutcycle://`**: ShortcutCycle can now be controlled from Apple Shortcuts, Alfred, Raycast, Keyboard Maestro, shell scripts, and other tools.
+- **Direct links into the app**: URL commands can open Settings to a specific tab, open the Automatic Backup Browser, change settings, flush pending auto-save, export or import settings, and restore a backup by latest item, index, name, or path.
 
 ### Changed
-- **Documentation**: Expanded README command reference for URL automation and added website feature/FAQ content to improve discoverability.
-- **Auto-Backup Triggering**: Runtime-only switching metadata updates now persist without scheduling automatic backups.
+- **Smarter auto-backups**: Temporary switching-state updates now persist without triggering unnecessary automatic backups.
 
 ### Fixed
-- **Cold-Start URL Navigation**: Fixed an issue where `shortcutcycle://open-settings...` and related settings-open URL commands could fail when the app had just launched and Settings had not been opened yet.
-- **Backup Dedupe Semantics**: Backup equality checks now ignore runtime-only switching metadata (`lastActiveAppBundleId`, `mruOrder`) so manual/auto backups do not create extra files for runtime-only state drift.
+- **Settings links after launch**: URL commands for opening Settings and related views now work reliably even right after the app starts.
+- **Duplicate backup files**: Manual and automatic backups no longer create extra files when only temporary switching state has changed.
 
 ## [1.4] - 2026-02-12
 
