@@ -155,6 +155,7 @@ hs.hotkey.bind({"cmd", "alt", "ctrl"}, "R", function()
     hs.alert.show("No focused window found")
   end
 end)
+```
 
 ### Shot List
 
