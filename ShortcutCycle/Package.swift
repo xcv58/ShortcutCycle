@@ -19,19 +19,19 @@ let package = Package(
             dependencies: [
                 .product(name: "KeyboardShortcuts", package: "KeyboardShortcuts")
             ],
-            path: "ShortcutCycle",
+            path: "ShortcutCycle/Models",
             sources: [
-                "Models/AppGroup.swift",
-                "Models/AppItem.swift",
-                "Models/BackupDiff.swift",
-                "Models/BackupRetention.swift",
-                "Models/GroupStore.swift",
-                "Models/HUDAppItem.swift",
-                "Models/SettingsExport.swift",
-                "Models/KeyboardShortcutsNames.swift",
-                "Models/URLCommandFileValidation.swift",
-                "Models/URLRouterLogic.swift",
-                "Models/URLScheme.swift"
+                "AppGroup.swift",
+                "AppItem.swift",
+                "BackupDiff.swift",
+                "BackupRetention.swift",
+                "GroupStore.swift",
+                "HUDAppItem.swift",
+                "SettingsExport.swift",
+                "KeyboardShortcutsNames.swift",
+                "URLCommandFileValidation.swift",
+                "URLRouterLogic.swift",
+                "URLScheme.swift"
             ]
         ),
         .executableTarget(
@@ -42,17 +42,13 @@ let package = Package(
             ],
             path: "ShortcutCycle",
             exclude: [
-                "Models/AppGroup.swift",
-                "Models/AppItem.swift",
-                "Models/BackupDiff.swift",
-                "Models/BackupRetention.swift",
-                "Models/GroupStore.swift",
-                "Models/HUDAppItem.swift",
-                "Models/SettingsExport.swift",
-                "Models/KeyboardShortcutsNames.swift",
-                "Models/URLCommandFileValidation.swift",
-                "Models/URLRouterLogic.swift",
-                "Models/URLScheme.swift"
+                "Info.plist",
+                "Models",
+                "ShortcutCycle.entitlements"
+            ],
+            resources: [
+                .process("Assets.xcassets"),
+                .process("Resources")
             ]
         ),
         .testTarget(
