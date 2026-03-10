@@ -254,20 +254,41 @@
             font-size: 1.3rem;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 9px;
         }
 
         .logo img {
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: auto;
             display: block;
             flex-shrink: 0;
+        }
+
+        .logo-wordmark {
+            letter-spacing: -0.03em;
+            line-height: 1;
         }
 
         .nav-wrapper {
             display: flex;
             align-items: center;
             gap: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 1.18rem;
+                gap: 8px;
+            }
+
+            .logo img {
+                width: 33px;
+                height: auto;
+            }
+
+            .nav-wrapper {
+                gap: 16px;
+            }
         }
 
         .nav-links {
@@ -1447,8 +1468,8 @@
     <div class="container">
         <header role="banner">
             <a href="index.html" class="logo">
-                <img src="assets/images/app-icon.png" width="40" height="40" alt="ShortcutCycle Icon">
-                ShortcutCycle
+                <img src="assets/images/brand-mark.png" width="36" height="24" alt="">
+                <span class="logo-wordmark">ShortcutCycle</span>
             </a>
 
             <div class="nav-wrapper">
