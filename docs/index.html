@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/webp" href="assets/images/app-icon.webp">
+    <link rel="icon" type="image/png" href="assets/images/app-icon.png">
 
     <!-- Prevent FOUC by setting theme before CSS loads -->
     <script>
@@ -258,8 +258,8 @@
         .logo img {
             width: 40px;
             height: 40px;
-            border-radius: 9px;
-            box-shadow: 0 2px 5px var(--shadow);
+            display: block;
+            flex-shrink: 0;
         }
 
         .nav-wrapper {
@@ -1445,7 +1445,7 @@
     <div class="container">
         <header role="banner">
             <a href="index.html" class="logo">
-                <img src="assets/images/app-icon.webp" width="40" height="40" alt="ShortcutCycle Icon" decoding="async">
+                <img src="assets/images/app-icon.png" width="40" height="40" alt="ShortcutCycle Icon">
                 ShortcutCycle
             </a>
 
