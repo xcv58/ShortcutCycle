@@ -18,29 +18,45 @@
 3. Choose the **Lifetime** flair.
 4. Use this title:
 
-> **[OS] I built a native Mac app switcher to fix Command+Tab. It lets you cycle groups of apps with one key (for example, Option+1 for browsers). Giving away 20 promo codes.**
+> **[OS] I built a native Mac app switcher to fix Command+Tab. It lets you cycle app groups with one shortcut. Giving away 20 promo codes.**
 
-5. Post it.
-
-## Phase 3: First Comment
-
-Post this immediately after the thread goes live:
+5. If the composer allows body text on the video post, use this body:
 
 ```md
-Hey r/macapps, I’m the developer of **ShortcutCycle**, an open-source Mac app switcher for people who keep too many apps open.
+Hey r/macapps, I built **ShortcutCycle**, an open-source Mac app switcher for people who keep too many apps open.
 
-The idea is simple: instead of using `Command+Tab` to cycle through everything, you can bind one shortcut to a group of apps. For example, `Option+1` can cycle your browsers in MRU order, while another shortcut can cycle chat apps or dev tools.
+`Command+Tab` works until you have too many windows and contexts open. I wanted a faster way to switch by context instead of scanning one long list.
 
-**What’s new in v1.5**
-- `shortcutcycle://` automation support for Shortcuts, Raycast, Alfred, Keyboard Maestro, and scripts
-- Better backup handling
-- More reliable settings links right after launch
+ShortcutCycle lets you bind one shortcut to a group of apps, so `Option+1` can cycle a daily set of apps and `Option+3` can cycle chats.
 
-It’s **$3.99 lifetime**, with **no subscriptions**, **no telemetry**, and you can also build it yourself from source.
+Compared with AltTab or Contexts, it narrows switching to the group you choose instead of showing everything. Compared with Raycast, it is for switching with muscle memory instead of typing to launch.
+
+It is **$3.99 lifetime** on the Mac App Store, with **no subscriptions**, **no telemetry**, and the source is available on GitHub under MIT.
 
 App Store: https://apps.apple.com/us/app/shortcutcycle/id6758281578
 GitHub: https://github.com/xcv58/ShortcutCycle
 Website: https://s.jenny.media/
+
+If you want a promo code, leave a question or some feedback and I will work through the queue in DMs.
+```
+
+6. Post it.
+
+## Phase 3: Optional Comment Fallback
+
+If `r/macapps` does **not** allow body text on the video post, paste this as a top-level comment right after posting:
+
+```md
+Hey r/macapps, I built **ShortcutCycle**, an open-source Mac app switcher for people who keep too many apps open.
+
+`Command+Tab` works until you have too many windows and contexts open. ShortcutCycle lets you bind one shortcut to a group of apps, so `Option+1` can cycle a daily set of apps and `Option+3` can cycle chats.
+
+Compared with AltTab or Contexts, it narrows switching to the group you choose instead of showing everything. Compared with Raycast, it is for switching with muscle memory instead of typing to launch.
+
+It is **$3.99 lifetime**, with **no subscriptions**, **no telemetry**, and the source is on GitHub under MIT.
+
+App Store: https://apps.apple.com/us/app/shortcutcycle/id6758281578
+GitHub: https://github.com/xcv58/ShortcutCycle
 
 I have **20 promo codes** for launch week. If you want one, leave a question or some feedback and I’ll work through the queue in DMs.
 ```
@@ -101,7 +117,7 @@ Treat pacing as a **safety heuristic**, not a Reddit rule:
 ### If Reddit Starts Rate-Limiting DMs
 
 1. Stop sending DMs for a while.
-2. Edit the first comment with a short update:
+2. Add a short top-level update comment:
 
 > _Update: Reddit is rate-limiting my chats right now, so I’m pausing DMs and will keep working through the queue._
 
@@ -111,7 +127,7 @@ Treat pacing as a **safety heuristic**, not a Reddit rule:
 
 Only do this as a last resort.
 
-1. Add a short update to the first comment.
+1. Add a short top-level update comment.
 2. Release only **2 to 3 codes at a time**, not the whole remainder.
 3. Wait to see which ones are claimed before posting more.
 4. Mark claimed codes immediately in your tracker.
