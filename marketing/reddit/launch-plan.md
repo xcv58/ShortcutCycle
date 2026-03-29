@@ -57,6 +57,7 @@ It is **$3.99 lifetime**, with **no subscriptions**, **no telemetry**, and the s
 
 App Store: https://apps.apple.com/us/app/shortcutcycle/id6758281578
 GitHub: https://github.com/xcv58/ShortcutCycle
+Website: https://s.jenny.media/
 
 I have **20 promo codes** for launch week. If you want one, leave a question or some feedback and I’ll work through the queue in DMs.
 ```
@@ -117,7 +118,9 @@ Treat pacing as a **safety heuristic**, not a Reddit rule:
 ### If Reddit Starts Rate-Limiting DMs
 
 1. Stop sending DMs for a while.
-2. Add a short top-level update comment:
+2. Add the update where people are already looking:
+   - If Phase 2 worked, edit the main post body.
+   - If Phase 3 was used, edit that fallback comment.
 
 > _Update: Reddit is rate-limiting my chats right now, so I’m pausing DMs and will keep working through the queue._
 
@@ -127,7 +130,9 @@ Treat pacing as a **safety heuristic**, not a Reddit rule:
 
 Only do this as a last resort.
 
-1. Add a short top-level update comment.
+1. Add the update to the same visible place:
+   - If Phase 2 worked, edit the main post body.
+   - If Phase 3 was used, edit that fallback comment.
 2. Release only **2 to 3 codes at a time**, not the whole remainder.
 3. Wait to see which ones are claimed before posting more.
 4. Mark claimed codes immediately in your tracker.
