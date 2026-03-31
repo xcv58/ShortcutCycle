@@ -18,20 +18,18 @@
 3. Choose the **Lifetime** flair.
 4. Use this title:
 
-> **[OS] I built a native Mac app switcher to fix Command+Tab. It lets you cycle app groups with one shortcut. Giving away 20 promo codes.**
+> **[OS] I built a Mac app switcher that fixes Command+Tab — cycle app groups with one shortcut. 20 promo codes inside.**
 
 5. If the composer allows body text on the video post, use this body:
 
 ```md
-Hey r/macapps, I built **ShortcutCycle**, an open-source Mac app switcher for people who keep too many apps open.
+Hey r/macapps, I built **ShortcutCycle**, an open-source Mac app switcher.
 
-`Command+Tab` works until you have too many windows and contexts open. I wanted a faster way to switch by context instead of scanning one long list.
+**Problem:** `Command+Tab` breaks down when you have too many apps open. You end up scanning a flat list instead of switching by context.
 
-ShortcutCycle lets you bind one shortcut to a group of apps, so `Option+1` can cycle a daily set of apps and `Option+3` can cycle chats.
+**Comparison:** AltTab and Contexts show every window at once. Raycast requires typing to launch. ShortcutCycle is different — you bind one shortcut to a group of apps, so `Option+1` cycles your browsers and `Option+3` cycles your chats. Muscle memory switching, not scanning.
 
-Compared with AltTab or Contexts, it narrows switching to the group you choose instead of showing everything. Compared with Raycast, it is for switching with muscle memory instead of typing to launch.
-
-It is **$3.99 lifetime** on the Mac App Store, with **no subscriptions**, **no telemetry**, and the source is available on GitHub under MIT.
+**Pricing:** **$3.99 lifetime** — no subscriptions, no telemetry. Source on GitHub (MIT).
 
 App Store: https://apps.apple.com/us/app/shortcutcycle/id6758281578
 GitHub: https://github.com/xcv58/ShortcutCycle
@@ -47,13 +45,13 @@ If you want a promo code, leave a question or some feedback and I will work thro
 If `r/macapps` does **not** allow body text on the video post, paste this as a top-level comment right after posting:
 
 ```md
-Hey r/macapps, I built **ShortcutCycle**, an open-source Mac app switcher for people who keep too many apps open.
+Hey r/macapps, I built **ShortcutCycle**, an open-source Mac app switcher.
 
-`Command+Tab` works until you have too many windows and contexts open. ShortcutCycle lets you bind one shortcut to a group of apps, so `Option+1` can cycle a daily set of apps and `Option+3` can cycle chats.
+**Problem:** `Command+Tab` breaks down when you have too many apps open. You end up scanning a flat list instead of switching by context.
 
-Compared with AltTab or Contexts, it narrows switching to the group you choose instead of showing everything. Compared with Raycast, it is for switching with muscle memory instead of typing to launch.
+**Comparison:** AltTab and Contexts show every window at once. Raycast requires typing to launch. ShortcutCycle is different — you bind one shortcut to a group of apps, so `Option+1` cycles your browsers and `Option+3` cycles your chats. Muscle memory switching, not scanning.
 
-It is **$3.99 lifetime**, with **no subscriptions**, **no telemetry**, and the source is on GitHub under MIT.
+**Pricing:** **$3.99 lifetime** — no subscriptions, no telemetry. Source on GitHub (MIT).
 
 App Store: https://apps.apple.com/us/app/shortcutcycle/id6758281578
 GitHub: https://github.com/xcv58/ShortcutCycle
