@@ -83,7 +83,24 @@ Treat pacing as a **safety heuristic**, not a Reddit rule:
 - About **60% DM follow-ups** is fine when someone is clearly asking for a code.
 - About **40% public replies** is fine when someone asks a product question or starts a real discussion.
 
-### DM Rotation
+### DM Template
+
+When sending a promo code, use this as the DM body:
+
+```
+Hey! Here’s your promo code for ShortcutCycle:
+
+[CODE]
+
+Redeem it on the Mac App Store:
+https://apps.apple.com/us/app/shortcutcycle/id6758281578
+
+Please let me know how it goes or if you run into anything. Curious what app groups you end up setting up.
+```
+
+### DM Rotation (public acknowledgment)
+
+After sending a DM, reply publicly on the thread with one of these to close the loop:
 
 - "Sent via DM. Let me know if anything feels off."
 - "Sent. Check your chat requests."
