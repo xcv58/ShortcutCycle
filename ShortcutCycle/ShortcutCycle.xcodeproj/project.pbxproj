@@ -22,6 +22,7 @@
 		DF88A3812F300B110042E749 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A36F2F300B110042E749 /* MainView.swift */; };
 		DF88A3822F300B110042E749 /* AppSwitcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A35A2F300B110042E749 /* AppSwitcher.swift */; };
 		DF88A3832F300B110042E749 /* HUDAppItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A33C2F300B110042E749 /* HUDAppItem.swift */; };
+		DF88A3BA2F300CB20042E749 /* HUDItemFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3B82F300CB20042E749 /* HUDItemFilter.swift */; };
 		DF88A3842F300B110042E749 /* AppItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A33A2F300B110042E749 /* AppItem.swift */; };
 		DF88A3852F300B110042E749 /* LaunchAtLoginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A35B2F300B110042E749 /* LaunchAtLoginManager.swift */; };
 		DF88A3862F300B110042E749 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3702F300B110042E749 /* MenuBarView.swift */; };
@@ -45,6 +46,7 @@
 		DF88A3982F300C6A0042E749 /* GroupListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A36E2F300B110042E749 /* GroupListView.swift */; };
 		DF88A3992F300C7A0042E749 /* String+Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3372F300B110042E749 /* String+Localization.swift */; };
 		DF88A39A2F300C800042E749 /* HUDAppItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A33C2F300B110042E749 /* HUDAppItem.swift */; };
+		DF88A3B92F300CB20042E749 /* HUDItemFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3B82F300CB20042E749 /* HUDItemFilter.swift */; };
 		DF88A39B2F300C800042E749 /* SettingsExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A33E2F300B110042E749 /* SettingsExport.swift */; };
 		DF88A39C2F300C800042E749 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3392F300B110042E749 /* AppGroup.swift */; };
 		DF88A39D2F300C800042E749 /* KeyboardShortcutsNames.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A33D2F300B110042E749 /* KeyboardShortcutsNames.swift */; };
@@ -91,6 +93,7 @@
 		DF88A33A2F300B110042E749 /* AppItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppItem.swift; sourceTree = "<group>"; };
 		DF88A33B2F300B110042E749 /* GroupStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupStore.swift; sourceTree = "<group>"; };
 		DF88A33C2F300B110042E749 /* HUDAppItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDAppItem.swift; sourceTree = "<group>"; };
+		DF88A3B82F300CB20042E749 /* HUDItemFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDItemFilter.swift; sourceTree = "<group>"; };
 		DF88A33D2F300B110042E749 /* KeyboardShortcutsNames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcutsNames.swift; sourceTree = "<group>"; };
 		DF88A33E2F300B110042E749 /* SettingsExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsExport.swift; sourceTree = "<group>"; };
 		DF88A3402F300B110042E749 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -194,6 +197,7 @@
 				DF88A3AB2F300CA20042E749 /* BackupRetention.swift */,
 				DF88A33B2F300B110042E749 /* GroupStore.swift */,
 				DF88A33C2F300B110042E749 /* HUDAppItem.swift */,
+				DF88A3B82F300CB20042E749 /* HUDItemFilter.swift */,
 				DF88A33D2F300B110042E749 /* KeyboardShortcutsNames.swift */,
 				DF88A33E2F300B110042E749 /* SettingsExport.swift */,
 				E1F4B0032F40000100C0DE01 /* URLCommandFileValidation.swift */,
@@ -506,6 +510,7 @@
 			files = (
 				DF88A3912F300C640042E749 /* HUDPreviewView.swift in Sources */,
 				DF88A39A2F300C800042E749 /* HUDAppItem.swift in Sources */,
+				DF88A3B92F300CB20042E749 /* HUDItemFilter.swift in Sources */,
 				DF88A39B2F300C800042E749 /* SettingsExport.swift in Sources */,
 				DF88A39C2F300C800042E749 /* AppGroup.swift in Sources */,
 				DF88A3A62F300CA00042E749 /* LaunchAtLoginManager.swift in Sources */,
@@ -558,6 +563,7 @@
 				DF88A3812F300B110042E749 /* MainView.swift in Sources */,
 				DF88A3822F300B110042E749 /* AppSwitcher.swift in Sources */,
 				DF88A3832F300B110042E749 /* HUDAppItem.swift in Sources */,
+				DF88A3BA2F300CB20042E749 /* HUDItemFilter.swift in Sources */,
 				DF88A3842F300B110042E749 /* AppItem.swift in Sources */,
 				DF88A3852F300B110042E749 /* LaunchAtLoginManager.swift in Sources */,
 				DF88A3862F300B110042E749 /* MenuBarView.swift in Sources */,

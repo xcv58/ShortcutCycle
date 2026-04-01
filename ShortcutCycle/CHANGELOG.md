@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.6] - Unreleased
+
+### Fixed
+- **Minimized multi-profile windows**: Multi-profile app instances (e.g., two Firefox profiles) that are minimized with Cmd+M are now hidden from the HUD, since macOS cannot reliably restore a specific minimized instance without Accessibility permission. Instances hidden with Cmd+H are unaffected and continue to appear — they are reliably restored by `unhide()+activate()`. If all instances of a multi-profile app are minimized, one entry is preserved in the HUD so the app remains reachable.
+
 ## [1.5] - 2026-03-01
 
 ### Added

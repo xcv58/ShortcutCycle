@@ -26,7 +26,7 @@ ShortcutCycle helps you switch between your favorite apps with just one keyboard
 - **One Key Magic**: Press your global shortcut to cycle through apps in the group. Press it again to switch to the next one.
 - **Smart Order**: Apps are automatically ordered by most recently used — the app you want is always available, just like macOS's Command+Tab.
 - **Press and Hold**: Hold the shortcut to peek at the HUD without switching immediately, just like macOS's native Command+Tab behavior.
-- **Multi-Profile Support**: Apps with multiple instances (like Firefox profiles) are shown separately and can be cycled through individually.
+- **Multi-Profile Support**: Apps with multiple instances (like Firefox profiles) are shown separately in the HUD and can be cycled through individually. Instances hidden with Cmd+H are kept in the HUD and restored on activation. Minimized instances (Cmd+M) are hidden from the HUD for multi-profile apps because macOS cannot reliably restore a specific minimized instance without Accessibility permission — if all instances of an app are minimized, one entry is kept so the app remains reachable.
 - **See What's Happening**: A beautiful, native-looking HUD overlay shows you which app is active and what's coming up next.
 - **Instant Access**: Automatically launches apps if they aren't running when you switch to them.
 - **Multi-language**: Fully localized in 15 languages: English, Arabic, Chinese (Simplified & Traditional), Dutch, French, German, Italian, Japanese, Korean, Polish, Portuguese (Brazil), Russian, Spanish, and Turkish.
