@@ -141,3 +141,9 @@
 
 /* Share */
 "Share" = "Udostępnij";
+
+/* Welcome banner */
+"Show welcome again" = "Pokaż ponownie powitanie";
+"ShortcutCycle is running in your menu bar" = "ShortcutCycle działa na pasku menu";
+"Look for the ShortcutCycle icon in the top-right menu bar whenever you want to open the app again." = "Szukaj ikony ShortcutCycle na pasku menu w prawym górnym rogu, gdy chcesz ponownie otworzyć aplikację.";
+"Create your first group here, or turn on Open at Login so ShortcutCycle is always ready." = "Utwórz tutaj pierwszą grupę lub włącz „Otwieraj przy logowaniu", aby ShortcutCycle był zawsze gotowy.";

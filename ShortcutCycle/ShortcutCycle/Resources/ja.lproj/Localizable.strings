@@ -141,3 +141,9 @@
 
 /* Share */
 "Share" = "共有";
+
+/* Welcome banner */
+"Show welcome again" = "ようこそ画面を再表示";
+"ShortcutCycle is running in your menu bar" = "ShortcutCycleはメニューバーで動作しています";
+"Look for the ShortcutCycle icon in the top-right menu bar whenever you want to open the app again." = "アプリをもう一度開くには、右上のメニューバーにある ShortcutCycle アイコンを探してください。";
+"Create your first group here, or turn on Open at Login so ShortcutCycle is always ready." = "ここで最初のグループを作成するか、「ログイン時に開く」をオンにして ShortcutCycle をいつでも使えるようにしましょう。";

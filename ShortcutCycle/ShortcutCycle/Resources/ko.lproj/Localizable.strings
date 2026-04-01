@@ -141,3 +141,9 @@
 
 /* Share */
 "Share" = "공유";
+
+/* Welcome banner */
+"Show welcome again" = "환영 메시지 다시 보기";
+"ShortcutCycle is running in your menu bar" = "ShortcutCycle이 메뉴 막대에서 실행 중입니다";
+"Look for the ShortcutCycle icon in the top-right menu bar whenever you want to open the app again." = "앱을 다시 열고 싶을 때는 오른쪽 상단 메뉴 막대에서 ShortcutCycle 아이콘을 찾으세요.";
+"Create your first group here, or turn on Open at Login so ShortcutCycle is always ready." = "여기서 첫 번째 그룹을 만들거나 '로그인 시 열기'를 켜서 ShortcutCycle을 항상 준비 상태로 유지하세요.";
