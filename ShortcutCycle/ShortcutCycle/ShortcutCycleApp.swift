@@ -702,6 +702,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
     }
 
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        // On the very first manual launch, auto-open Settings to the Groups tab
+        // so new users can see where to configure their shortcuts.
+        if WelcomeCoordinator.shared.prepareAutomaticWelcomeIfNeeded() != nil {
+            ShortcutCycleURLRouter.openSettingsFromOutsideView(tab: .groups)
+        }
+    }
+
     @objc private func handleURLEvent(
         _ event: NSAppleEventDescriptor,
         withReply reply: NSAppleEventDescriptor

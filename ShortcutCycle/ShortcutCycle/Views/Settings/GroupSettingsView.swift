@@ -4,6 +4,7 @@ import ShortcutCycleCore
 #endif
 
 struct GroupSettingsView: View {
+    let welcomeRequestID: UUID?
     @EnvironmentObject var store: GroupStore
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
 
