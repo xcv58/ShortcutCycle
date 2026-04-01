@@ -376,15 +376,19 @@ class AppSwitcher: @preconcurrency ObservableObject {
             }
         }
 
-        // For apps with multiple running instances (profiles), hide minimized entries —
-        // we can't reliably restore them without Accessibility permission. For apps with
-        // only one instance, keep it even if minimized so the user can still attempt to
-        // switch to it.
+        // For apps with multiple running instances (profiles), hide entries whose windows
+        // are all minimized — we can't reliably restore them without Accessibility permission.
+        // Hidden apps (Cmd+H) are NOT filtered: isHidden==true means unhide()+activate()
+        // will restore them reliably. Only minimized windows (isHidden==false, no on-screen
+        // windows) are excluded. Single-instance apps are always kept.
         let instancesPerBundleId = Dictionary(grouping: items, by: { $0.bundleId }).mapValues { $0.count }
         items = items.filter { item in
             guard let pid = item.pid, instancesPerBundleId[item.bundleId, default: 0] > 1 else {
                 return true
             }
+            let runningApp = NSRunningApplication.runningApplications(withBundleIdentifier: item.bundleId)
+                .first { $0.processIdentifier == pid }
+            if runningApp?.isHidden == true { return true }
             return hasVisibleWindows(pid: pid)
         }
 
