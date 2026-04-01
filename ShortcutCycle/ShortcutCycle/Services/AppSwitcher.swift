@@ -471,37 +471,12 @@ class AppSwitcher: @preconcurrency ObservableObject {
         }
     }
 
-    private func unminimizeWindows(for app: NSRunningApplication) {
-        let axApp = AXUIElementCreateApplication(app.processIdentifier)
-        var windowsValue: CFTypeRef?
-        guard AXUIElementCopyAttributeValue(axApp, kAXWindowsAttribute as CFString, &windowsValue) == .success,
-              let windows = windowsValue as? [AXUIElement] else { return }
-        for window in windows {
-            var minimizedValue: CFTypeRef?
-            guard AXUIElementCopyAttributeValue(window, kAXMinimizedAttribute as CFString, &minimizedValue) == .success,
-                  minimizedValue as? Bool == true else { continue }
-            AXUIElementSetAttributeValue(window, kAXMinimizedAttribute as CFString, false as CFTypeRef)
-        }
-    }
-
     private func activateRunningApp(_ app: NSRunningApplication, bundleId: String) {
         yieldFocusIfNeeded()
-        app.unhide()
-        unminimizeWindows(for: app)
-        let activated = app.activate(options: .activateAllWindows)
-        // Some apps can visually update windows without becoming frontmost.
-        // Verify frontmost shortly after activation and retry via NSWorkspace if needed.
-        if !activated {
-            relaunchToFront(bundleId: bundleId)
-            return
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
-            guard let self = self else { return }
-            let frontmostBundleId = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
-            if frontmostBundleId != bundleId {
-                self.relaunchToFront(bundleId: bundleId)
-            }
-        }
+        // Use openApplication instead of app.activate() so that minimized windows
+        // are restored without requiring Accessibility permission. This behaves like
+        // clicking the app's Dock icon — hidden and minimized windows are brought up.
+        relaunchToFront(bundleId: bundleId)
     }
 
     private func relaunchToFront(bundleId: String) {
