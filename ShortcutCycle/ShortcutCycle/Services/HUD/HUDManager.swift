@@ -133,9 +133,21 @@ class HUDManager: @preconcurrency ObservableObject {
         
         // Activate our app so we can receive local events when running under AppKit.
         if let app = NSApp {
+            // Before activating, order out any ShortcutCycle windows that live on a
+            // different Space. If we call activate() while a window (e.g. Settings) is
+            // on another Space, macOS jumps to that Space before switching to the target
+            // app. orderOut hides the window without destroying it, so the user can
+            // re-open Settings normally from the menu bar.
+            app.windows.forEach { win in
+                if win !== self.window && win.isVisible && !win.isOnActiveSpace {
+                    win.orderOut(nil)
+                }
+            }
+
             app.activate(ignoringOtherApps: true)
 
-            // Fix for "Splash" issue:
+            // Fix for "Splash" issue: push any remaining same-Space windows behind
+            // the HUD after activation.
             DispatchQueue.main.async {
                 app.windows.forEach { win in
                     if win !== self.window && win.isVisible {
