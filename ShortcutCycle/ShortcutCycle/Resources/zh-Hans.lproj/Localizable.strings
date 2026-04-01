@@ -143,9 +143,3 @@
 /* Share */
 "Share" = "共享";
 
-/* Permissions section */
-"Permissions" = "Permissions";
-"Accessibility" = "Accessibility";
-"Required to restore minimized windows when switching apps." = "Required to restore minimized windows when switching apps.";
-"Granted" = "Granted";
-"Grant Access" = "Grant Access";
