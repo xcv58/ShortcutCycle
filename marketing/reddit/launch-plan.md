@@ -2,6 +2,15 @@
 
 **Target Launch Window:** Tuesday, March 31, 2026, between **7:30 AM and 9:00 AM Eastern Time**
 
+## Pre-Post Reminders (for every new post)
+
+Before publishing any future Reddit post, verify these two things:
+
+1. **Promo codes are valid for the current version.** Codes generated against an older build expire and cannot be redeemed. Always generate a fresh batch tied to the latest App Store version before posting.
+2. **Post copy explicitly mentions custom groups.** A recurring question from readers is whether they can create their own groups. Make sure the body text makes it clear: users create their own groups, add any apps they want, and assign a custom shortcut to each group.
+
+---
+
 ## Phase 1: Pre-Flight Checklist
 
 - [x] Final Reddit upload video is ready at `marketing/reddit/output/shortcutcycle-reddit-cut.mp4`.
