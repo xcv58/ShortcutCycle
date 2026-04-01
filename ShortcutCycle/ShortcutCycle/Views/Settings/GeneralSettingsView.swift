@@ -101,14 +101,14 @@ struct GeneralSettingsView: View {
             Section {
                 Toggle("Open at Login".localized(language: selectedLanguage), isOn: $launchAtLogin.isEnabled)
                     .toggleStyle(.switch)
-                
+
                 Picker("Appearance".localized(language: selectedLanguage), selection: $appTheme) {
                     ForEach(AppTheme.allCases) { theme in
                         Text(theme.displayName.localized(language: selectedLanguage)).tag(theme)
                     }
                 }
                 .pickerStyle(.segmented)
-                
+
                 Picker("Language".localized(language: selectedLanguage), selection: Binding(
                     get: { UserDefaults.standard.string(forKey: "selectedLanguage") ?? "system" },
                     set: { newValue in
@@ -121,7 +121,12 @@ struct GeneralSettingsView: View {
                     }
                 }
                 .pickerStyle(.menu)
-                
+
+                Button("Show welcome again".localized(language: selectedLanguage)) {
+                    WelcomeCoordinator.shared.requestReplay()
+                    ShortcutCycleURLRouter.openSettingsFromOutsideView(tab: .groups)
+                }
+
             } header: {
                 Text("Application".localized(language: selectedLanguage))
             }

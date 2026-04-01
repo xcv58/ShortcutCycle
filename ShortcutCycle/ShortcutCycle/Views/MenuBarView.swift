@@ -103,7 +103,12 @@ struct MenuBarView: View {
                 NSApp.activate(ignoringOtherApps: true)
                 openWindow(id: "settings")
             }
-            
+
+            MenuBarButton(title: "Show welcome again".localized(language: selectedLanguage), icon: "sparkles") {
+                WelcomeCoordinator.shared.requestReplay()
+                ShortcutCycleURLRouter.openSettingsFromOutsideView(tab: .groups)
+            }
+
             MenuBarButton(title: "Quit".localized(language: selectedLanguage), icon: "power") {
                 NSApplication.shared.terminate(nil)
             }
