@@ -25,7 +25,7 @@
 ```md
 Hey r/macapps, I built **ShortcutCycle**, an open-source Mac app switcher.
 
-**Problem:** `Command+Tab` breaks down when you have too many apps open. You end up scanning a flat list instead of switching by context.
+**Problem:** `Command+Tab` breaks down when you have too many apps open. You end up scanning a flat list instead of switching by context. ShortcutCycle lets you create your own groups, assign whatever apps you want, and bind each group to a shortcut of your choice.
 
 **Comparison:** AltTab and Contexts show every window at once. Raycast requires typing to launch. ShortcutCycle is different — you bind one shortcut to a group of apps, so `Option+1` cycles your browsers and `Option+3` cycles your chats. Muscle memory switching, not scanning.
 
@@ -47,7 +47,7 @@ If `r/macapps` does **not** allow body text on the video post, paste this as a t
 ```md
 Hey r/macapps, I built **ShortcutCycle**, an open-source Mac app switcher.
 
-**Problem:** `Command+Tab` breaks down when you have too many apps open. You end up scanning a flat list instead of switching by context.
+**Problem:** `Command+Tab` breaks down when you have too many apps open. You end up scanning a flat list instead of switching by context. ShortcutCycle lets you create your own groups, assign whatever apps you want, and bind each group to a shortcut of your choice.
 
 **Comparison:** AltTab and Contexts show every window at once. Raycast requires typing to launch. ShortcutCycle is different — you bind one shortcut to a group of apps, so `Option+1` cycles your browsers and `Option+3` cycles your chats. Muscle memory switching, not scanning.
 
@@ -107,6 +107,13 @@ After sending a DM, reply publicly on the thread with one of these to close the 
 - "Sent. Curious what groups you’d set up first."
 - "DM’d you a code. Let me know how the switching feels."
 - "You got it. Check your inbox."
+- "Sent! Hope it clicks for your workflow."
+- "On its way. Let me know what you think after a day or two."
+- "Sent. Would love to hear what groups you end up building."
+- "DM’d. Enjoy it — and let me know if anything’s confusing."
+- "Headed your way. Curious if the HUD feels natural right away or takes a bit."
+- "Sent — check your chat requests if it doesn’t show up in the main inbox."
+- "Done. Let me know if anything feels off after you try it."
 
 ### Public Replies for Common Questions
 
