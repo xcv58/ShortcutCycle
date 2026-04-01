@@ -376,6 +376,18 @@ class AppSwitcher: @preconcurrency ObservableObject {
             }
         }
 
+        // For apps with multiple running instances (profiles), hide minimized entries —
+        // we can't reliably restore them without Accessibility permission. For apps with
+        // only one instance, keep it even if minimized so the user can still attempt to
+        // switch to it.
+        let instancesPerBundleId = Dictionary(grouping: items, by: { $0.bundleId }).mapValues { $0.count }
+        items = items.filter { item in
+            guard let pid = item.pid, instancesPerBundleId[item.bundleId, default: 0] > 1 else {
+                return true
+            }
+            return hasVisibleWindows(pid: pid)
+        }
+
         // Apply MRU sort
         let itemIds = items.map { $0.id }
         let itemBundleIds = items.map { $0.bundleId }
