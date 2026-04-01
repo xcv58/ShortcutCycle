@@ -74,6 +74,10 @@
 		E1F4B0022F40000100C0DE01 /* URLCommandFileValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F4B0032F40000100C0DE01 /* URLCommandFileValidation.swift */; };
 		E1F4B0042F40000100C0DE01 /* URLRouterLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F4B0062F40000100C0DE01 /* URLRouterLogic.swift */; };
 		E1F4B0052F40000100C0DE01 /* URLRouterLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F4B0062F40000100C0DE01 /* URLRouterLogic.swift */; };
+		DF88A3C22F300CE00042E749 /* WelcomeBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3C02F300CE00042E749 /* WelcomeBannerView.swift */; };
+		DF88A3C32F300CE00042E749 /* WelcomeBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3C02F300CE00042E749 /* WelcomeBannerView.swift */; };
+		DF88A3C42F300CE00042E749 /* WelcomeCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3C12F300CE00042E749 /* WelcomeCoordinator.swift */; };
+		DF88A3C52F300CE00042E749 /* WelcomeCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3C12F300CE00042E749 /* WelcomeCoordinator.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -133,6 +137,8 @@
 		DF88A3AB2F300CA20042E749 /* BackupRetention.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupRetention.swift; sourceTree = "<group>"; };
 		DF88A3AE2F300CB00042E749 /* BackupDiff.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupDiff.swift; sourceTree = "<group>"; };
 		DF88A3AF2F300CB10042E749 /* BackupBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupBrowserView.swift; sourceTree = "<group>"; };
+		DF88A3C02F300CE00042E749 /* WelcomeBannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeBannerView.swift; sourceTree = "<group>"; };
+		DF88A3C12F300CE00042E749 /* WelcomeCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeCoordinator.swift; sourceTree = "<group>"; };
 		DF88A3B72F300CB20042E749 /* URLScheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLScheme.swift; sourceTree = "<group>"; };
 		DF8B47D72F2F090100C473F8 /* ShortcutCycleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ShortcutCycleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E1F4B0032F40000100C0DE01 /* URLCommandFileValidation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLCommandFileValidation.swift; sourceTree = "<group>"; };
@@ -248,6 +254,14 @@
 			path = Overlay;
 			sourceTree = "<group>";
 		};
+		DF88A3C62F300CE00042E749 /* Welcome */ = {
+			isa = PBXGroup;
+			children = (
+				DF88A3C12F300CE00042E749 /* WelcomeCoordinator.swift */,
+			);
+			path = Welcome;
+			sourceTree = "<group>";
+		};
 		DF88A35D2F300B110042E749 /* Services */ = {
 			isa = PBXGroup;
 			children = (
@@ -255,6 +269,7 @@
 				DF88A3552F300B110042E749 /* HUD */,
 				DF88A3572F300B110042E749 /* Managers */,
 				DF88A3592F300B110042E749 /* Overlay */,
+				DF88A3C62F300CE00042E749 /* Welcome */,
 				DF88A35A2F300B110042E749 /* AppSwitcher.swift */,
 				DF88A35B2F300B110042E749 /* LaunchAtLoginManager.swift */,
 				DF88A35C2F300B110042E749 /* ShortcutManager.swift */,
@@ -347,6 +362,7 @@
 				DF88A3682F300B110042E749 /* GeneralSettingsView.swift */,
 				DF88A3692F300B110042E749 /* GroupSettingsView.swift */,
 				DF88A36A2F300B110042E749 /* HUDPreviewView.swift */,
+				DF88A3C02F300CE00042E749 /* WelcomeBannerView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -539,6 +555,8 @@
 				E1F4B0012F40000100C0DE01 /* URLCommandFileValidation.swift in Sources */,
 				E1F4B0042F40000100C0DE01 /* URLRouterLogic.swift in Sources */,
 				DF88A3B42F300CB20042E749 /* URLScheme.swift in Sources */,
+				DF88A3C22F300CE00042E749 /* WelcomeBannerView.swift in Sources */,
+				DF88A3C42F300CE00042E749 /* WelcomeCoordinator.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -577,6 +595,8 @@
 				E1F4B0022F40000100C0DE01 /* URLCommandFileValidation.swift in Sources */,
 				E1F4B0052F40000100C0DE01 /* URLRouterLogic.swift in Sources */,
 				DF88A3B52F300CB20042E749 /* URLScheme.swift in Sources */,
+				DF88A3C32F300CE00042E749 /* WelcomeBannerView.swift in Sources */,
+				DF88A3C52F300CE00042E749 /* WelcomeCoordinator.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
