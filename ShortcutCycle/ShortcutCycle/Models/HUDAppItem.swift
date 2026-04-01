@@ -34,6 +34,16 @@ public struct HUDAppItem: Identifiable, Equatable, @unchecked Sendable {
         self.isRunning = false
     }
 
+    /// Internal initializer for tests — allows setting bundleId and pid independently.
+    init(bundleId: String, pid: pid_t, name: String = "App") {
+        self.bundleId = bundleId
+        self.pid = pid
+        self.id = "\(bundleId)::\(pid)"
+        self.name = name
+        self.icon = nil
+        self.isRunning = true
+    }
+
     /// Legacy initializer for compatibility (creates non-running style ID)
     public init(id: String, name: String, icon: NSImage?, isRunning: Bool) {
         self.id = id

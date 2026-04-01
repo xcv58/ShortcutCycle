@@ -376,6 +376,19 @@ class AppSwitcher: @preconcurrency ObservableObject {
             }
         }
 
+        // For apps with multiple running instances (profiles), hide entries whose windows
+        // are all minimized — we can't reliably restore them without Accessibility permission.
+        // Hidden apps (Cmd+H) are NOT filtered: isHidden==true means unhide()+activate()
+        // will restore them reliably. Only minimized windows (isHidden==false, no on-screen
+        // windows) are excluded. Single-instance apps are always kept.
+        // If ALL instances of a multi-profile app are minimized, keep one so the app
+        // doesn't disappear from the HUD entirely.
+        items = HUDItemFilter.filter(
+            items,
+            isHidden: { pid in NSRunningApplication(processIdentifier: pid)?.isHidden == true },
+            hasVisibleWindows: { [self] pid in self.hasVisibleWindows(pid: pid) }
+        )
+
         // Apply MRU sort
         let itemIds = items.map { $0.id }
         let itemBundleIds = items.map { $0.bundleId }
@@ -471,12 +484,26 @@ class AppSwitcher: @preconcurrency ObservableObject {
         }
     }
 
+    private func hasVisibleWindows(pid: pid_t) -> Bool {
+        guard let list = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] else {
+            return true
+        }
+        return list.contains { ($0[kCGWindowOwnerPID as String] as? Int32) == pid }
+    }
+
     private func activateRunningApp(_ app: NSRunningApplication, bundleId: String) {
         yieldFocusIfNeeded()
-        // Use openApplication instead of app.activate() so that minimized windows
-        // are restored without requiring Accessibility permission. This behaves like
-        // clicking the app's Dock icon — hidden and minimized windows are brought up.
-        relaunchToFront(bundleId: bundleId)
+        app.unhide()
+        app.activate(options: .activateAllWindows)
+        let pid = app.processIdentifier
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            guard let self else { return }
+            guard !self.hasVisibleWindows(pid: pid) else { return }
+            app.activate(options: .activateAllWindows)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
+                self?.relaunchToFront(bundleId: bundleId)
+            }
+        }
     }
 
     private func relaunchToFront(bundleId: String) {

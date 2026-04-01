@@ -27,6 +27,7 @@ let package = Package(
                 "BackupRetention.swift",
                 "GroupStore.swift",
                 "HUDAppItem.swift",
+                "HUDItemFilter.swift",
                 "SettingsExport.swift",
                 "KeyboardShortcutsNames.swift",
                 "URLCommandFileValidation.swift",

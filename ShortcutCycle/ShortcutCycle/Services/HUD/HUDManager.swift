@@ -574,30 +574,39 @@ class HUDManager: @preconcurrency ObservableObject {
         }
     }
     
+    private func hasVisibleWindows(pid: pid_t) -> Bool {
+        guard let list = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] else {
+            return true
+        }
+        return list.contains { ($0[kCGWindowOwnerPID as String] as? Int32) == pid }
+    }
+
     private func activateOrLaunch(bundleId: String) {
-        // Try to find the item in currentItems to get PID and real bundle ID.
-        // `bundleId` parameter may be a composite "bundleId::pid" string, so we
-        // resolve the real bundle identifier via currentItems to ensure macOS
-        // APIs receive a valid bundle identifier in all fallback paths.
+        // Resolve the real bundle ID from currentItems (bundleId may be a composite "bundleId::pid")
         let item = currentItems.first(where: { $0.id == bundleId || $0.bundleId == bundleId })
         let realBundleId = item?.bundleId ?? bundleId
 
-        if let pid = item?.pid {
-            // Activate specific instance by PID
-            let runningApps = NSRunningApplication.runningApplications(withBundleIdentifier: realBundleId)
-            if let app = runningApps.first(where: { $0.processIdentifier == pid }) {
-                app.unhide()
+        if let pid = item?.pid,
+           let app = NSRunningApplication.runningApplications(withBundleIdentifier: realBundleId)
+               .first(where: { $0.processIdentifier == pid }) {
+            app.unhide()
+            app.activate(options: .activateAllWindows)
+            // If all windows are minimized, activate() succeeds but nothing appears on screen.
+            // After a short delay, check via CGWindowList (no Accessibility permission needed);
+            // if no visible windows exist, re-activate the specific instance to ensure it is
+            // frontmost, then call openApplication so that instance receives
+            // applicationShouldHandleReopen and restores its minimized windows.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+                guard let self else { return }
+                guard !self.hasVisibleWindows(pid: pid) else { return }
                 app.activate(options: .activateAllWindows)
-                return
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
+                    self?.launchApp(bundleIdentifier: realBundleId)
+                }
             }
+            return
         }
-        // Fallback: activate by real bundle ID (first match) or launch
-        if let app = NSRunningApplication.runningApplications(withBundleIdentifier: realBundleId).first {
-             app.unhide()
-             app.activate(options: .activateAllWindows)
-        } else {
-             launchApp(bundleIdentifier: realBundleId)
-        }
+        launchApp(bundleIdentifier: realBundleId)
     }
     
     private func launchApp(bundleIdentifier: String) {
