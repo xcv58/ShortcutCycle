@@ -471,9 +471,24 @@ class AppSwitcher: @preconcurrency ObservableObject {
         }
     }
 
+    private func hasVisibleWindows(pid: pid_t) -> Bool {
+        guard let list = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] else {
+            return true
+        }
+        return list.contains { ($0[kCGWindowOwnerPID as String] as? Int32) == pid }
+    }
+
     private func activateRunningApp(_ app: NSRunningApplication, bundleId: String) {
         yieldFocusIfNeeded()
-        relaunchToFront(bundleId: bundleId)
+        app.unhide()
+        app.activate(options: .activateAllWindows)
+        let pid = app.processIdentifier
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            guard let self else { return }
+            if !self.hasVisibleWindows(pid: pid) {
+                self.relaunchToFront(bundleId: bundleId)
+            }
+        }
     }
 
     private func relaunchToFront(bundleId: String) {

@@ -574,10 +574,35 @@ class HUDManager: @preconcurrency ObservableObject {
         }
     }
     
+    private func hasVisibleWindows(pid: pid_t) -> Bool {
+        guard let list = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] else {
+            return true
+        }
+        return list.contains { ($0[kCGWindowOwnerPID as String] as? Int32) == pid }
+    }
+
     private func activateOrLaunch(bundleId: String) {
         // Resolve the real bundle ID from currentItems (bundleId may be a composite "bundleId::pid")
         let item = currentItems.first(where: { $0.id == bundleId || $0.bundleId == bundleId })
         let realBundleId = item?.bundleId ?? bundleId
+
+        if let pid = item?.pid,
+           let app = NSRunningApplication.runningApplications(withBundleIdentifier: realBundleId)
+               .first(where: { $0.processIdentifier == pid }) {
+            app.unhide()
+            app.activate(options: .activateAllWindows)
+            // If all windows are minimized, activate() succeeds but nothing appears on screen.
+            // After a short delay, check via CGWindowList (no Accessibility permission needed);
+            // if no visible windows exist, call openApplication so the now-frontmost instance
+            // receives applicationShouldHandleReopen and restores its minimized windows.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+                guard let self else { return }
+                if !self.hasVisibleWindows(pid: pid) {
+                    self.launchApp(bundleIdentifier: realBundleId)
+                }
+            }
+            return
+        }
         launchApp(bundleIdentifier: realBundleId)
     }
     
