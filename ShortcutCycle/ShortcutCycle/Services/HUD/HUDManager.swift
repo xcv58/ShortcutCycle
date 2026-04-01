@@ -593,12 +593,15 @@ class HUDManager: @preconcurrency ObservableObject {
             app.activate(options: .activateAllWindows)
             // If all windows are minimized, activate() succeeds but nothing appears on screen.
             // After a short delay, check via CGWindowList (no Accessibility permission needed);
-            // if no visible windows exist, call openApplication so the now-frontmost instance
-            // receives applicationShouldHandleReopen and restores its minimized windows.
+            // if no visible windows exist, re-activate the specific instance to ensure it is
+            // frontmost, then call openApplication so that instance receives
+            // applicationShouldHandleReopen and restores its minimized windows.
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
                 guard let self else { return }
-                if !self.hasVisibleWindows(pid: pid) {
-                    self.launchApp(bundleIdentifier: realBundleId)
+                guard !self.hasVisibleWindows(pid: pid) else { return }
+                app.activate(options: .activateAllWindows)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
+                    self?.launchApp(bundleIdentifier: realBundleId)
                 }
             }
             return
