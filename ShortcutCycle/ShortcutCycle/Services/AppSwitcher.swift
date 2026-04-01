@@ -381,15 +381,22 @@ class AppSwitcher: @preconcurrency ObservableObject {
         // Hidden apps (Cmd+H) are NOT filtered: isHidden==true means unhide()+activate()
         // will restore them reliably. Only minimized windows (isHidden==false, no on-screen
         // windows) are excluded. Single-instance apps are always kept.
-        let instancesPerBundleId = Dictionary(grouping: items, by: { $0.bundleId }).mapValues { $0.count }
+        // If ALL instances of a multi-profile app are minimized, keep one so the app
+        // doesn't disappear from the HUD entirely.
+        let itemsByBundleId = Dictionary(grouping: items, by: { $0.bundleId })
         items = items.filter { item in
-            guard let pid = item.pid, instancesPerBundleId[item.bundleId, default: 0] > 1 else {
+            guard let pid = item.pid, itemsByBundleId[item.bundleId, default: []].count > 1 else {
                 return true
             }
             let runningApp = NSRunningApplication.runningApplications(withBundleIdentifier: item.bundleId)
                 .first { $0.processIdentifier == pid }
             if runningApp?.isHidden == true { return true }
             return hasVisibleWindows(pid: pid)
+        }
+        for (bundleId, originals) in itemsByBundleId where originals.count > 1 {
+            if !items.contains(where: { $0.bundleId == bundleId }), let first = originals.first {
+                items.append(first)
+            }
         }
 
         // Apply MRU sort
