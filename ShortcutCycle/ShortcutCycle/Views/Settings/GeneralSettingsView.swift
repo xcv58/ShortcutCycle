@@ -1,6 +1,7 @@
 import SwiftUI
 import KeyboardShortcuts
 import UniformTypeIdentifiers
+import ApplicationServices
 #if canImport(ShortcutCycleCore)
 import ShortcutCycleCore
 #endif
@@ -26,6 +27,9 @@ struct GeneralSettingsView: View {
     // Backup browser state
     @State private var showBackupBrowser = false
     @State private var manualBackupFeedback: String?
+
+    // Accessibility permission state
+    @State private var accessibilityGranted = AXIsProcessTrusted()
 
     // Clipboard state
     @State private var showClipboardImportConfirmation = false
@@ -98,6 +102,31 @@ struct GeneralSettingsView: View {
             }
             #endif
             
+            Section {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Accessibility".localized(language: selectedLanguage))
+                        Text("Required to restore minimized windows when switching apps.".localized(language: selectedLanguage))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                    if accessibilityGranted {
+                        Label("Granted".localized(language: selectedLanguage), systemImage: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                            .font(.caption)
+                    } else {
+                        Button("Grant Access".localized(language: selectedLanguage)) {
+                            requestAccessibilityPermission()
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.small)
+                    }
+                }
+            } header: {
+                Text("Permissions".localized(language: selectedLanguage))
+            }
+
             Section {
                 Toggle("Open at Login".localized(language: selectedLanguage), isOn: $launchAtLogin.isEnabled)
                     .toggleStyle(.switch)
@@ -241,6 +270,7 @@ struct GeneralSettingsView: View {
                 .environmentObject(store)
         }
         .onAppear {
+            accessibilityGranted = AXIsProcessTrusted()
             if ShortcutCycleURLNavigationState.consumePendingBackupBrowser() {
                 showBackupBrowser = true
             }
@@ -253,6 +283,20 @@ struct GeneralSettingsView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text("Your settings have been imported from clipboard.".localized(language: selectedLanguage))
+        }
+    }
+
+    // MARK: - Accessibility Permission
+
+    private func requestAccessibilityPermission() {
+        let options = [(kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String): true] as CFDictionary
+        let trusted = AXIsProcessTrustedWithOptions(options)
+        if trusted {
+            accessibilityGranted = true
+        } else {
+            // Sandboxed apps may not be able to show the prompt directly;
+            // open System Settings as a reliable fallback.
+            NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
         }
     }
 
