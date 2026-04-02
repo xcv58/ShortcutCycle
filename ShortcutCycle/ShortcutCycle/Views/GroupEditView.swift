@@ -160,7 +160,7 @@ private struct GroupShortcutEditor: View {
     let groupId: UUID
 
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
-    @State private var assignedShortcut: KeyboardShortcuts.Shortcut?
+    @State private var shortcutRefreshToken = 0
 
     private var shortcutName: KeyboardShortcuts.Name {
         .forGroup(groupId)
@@ -175,7 +175,7 @@ private struct GroupShortcutEditor: View {
     }
 
     private var shouldShowSuggestions: Bool {
-        assignedShortcut == nil && !suggestionShortcuts.isEmpty
+        currentShortcut == nil && !suggestionShortcuts.isEmpty
     }
 
     var body: some View {
@@ -186,7 +186,6 @@ private struct GroupShortcutEditor: View {
             VStack(alignment: .leading, spacing: 8) {
                 KeyboardShortcuts.Recorder(for: shortcutName)
                     .onChange(of: currentShortcut) { _, _ in
-                        syncAssignedShortcut()
                         ShortcutManager.shared.registerAllShortcuts()
                     }
 
@@ -223,26 +222,12 @@ private struct GroupShortcutEditor: View {
             .foregroundColor(.secondary)
             .padding(.top, 2)
         }
-        .onAppear {
-            syncAssignedShortcut()
-        }
-        .onChange(of: groupId) { _, _ in
-            syncAssignedShortcut()
-        }
-        .onChange(of: store.groups) { _, _ in
-            syncAssignedShortcut()
-        }
-    }
-
-    @MainActor
-    private func syncAssignedShortcut() {
-        assignedShortcut = currentShortcut
     }
 
     @MainActor
     private func assignShortcut(_ shortcut: KeyboardShortcuts.Shortcut) {
         KeyboardShortcuts.setShortcut(shortcut, for: shortcutName)
-        assignedShortcut = shortcut
+        shortcutRefreshToken += 1
         ShortcutManager.shared.registerAllShortcuts()
     }
 }
