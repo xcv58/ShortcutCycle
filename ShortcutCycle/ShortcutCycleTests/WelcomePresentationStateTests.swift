@@ -1,4 +1,7 @@
 import XCTest
+#if canImport(ShortcutCycleCore)
+import ShortcutCycleCore
+#endif
 @testable import ShortcutCycle
 
 @MainActor

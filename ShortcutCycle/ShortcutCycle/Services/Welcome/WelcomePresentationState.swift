@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(ShortcutCycleCore)
+import ShortcutCycleCore
+#endif
 
 @MainActor
 struct WelcomePresentationState {
