@@ -44,8 +44,8 @@ final class ShortcutSuggestionTests: XCTestCase {
 
     @MainActor
     func testAvailableReturnsFewerThanLimitWhenNotEnoughCandidatesRemain() {
-        let optionKeys: [KeyboardShortcuts.Key] = [.one, .two, .three, .four, .five, .six, .seven]
-        let groups = (1...7).map { index in
+        let optionKeys: [KeyboardShortcuts.Key] = [.one, .two, .three, .four, .five, .six, .seven, .eight, .nine]
+        let groups = (1...9).map { index in
             AppGroup(id: UUID(), name: "Group \(index)")
         }
 
@@ -61,8 +61,6 @@ final class ShortcutSuggestionTests: XCTestCase {
 
         let expected: [KeyboardShortcuts.Shortcut] = [
             .init(.one, modifiers: [.option]),
-            .init(.eight, modifiers: [.option]),
-            .init(.nine, modifiers: [.option])
         ]
         let suggestions = ShortcutSuggestions.available(
             for: groups,
