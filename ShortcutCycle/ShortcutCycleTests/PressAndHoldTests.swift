@@ -9,6 +9,7 @@ import KeyboardShortcuts
 
 @MainActor
 final class PressAndHoldTests: XCTestCase {
+    final class DummyEventMonitorToken {}
 
     // Mocks
     class MockTimeProvider: TimeProvider {
@@ -49,16 +50,39 @@ final class PressAndHoldTests: XCTestCase {
     var manager: HUDManager!
     var timeMock: MockTimeProvider!
     var timerMock: MockTimerScheduler!
+    var activationCount: Int!
+    var localMonitorMasks: [NSEvent.EventTypeMask]!
+    var globalMonitorMasks: [NSEvent.EventTypeMask]!
+    var removedMonitorCount: Int!
 
     override func setUp() async throws {
         // Setup mocks
         manager = HUDManager.shared
         timeMock = MockTimeProvider()
         timerMock = MockTimerScheduler()
+        activationCount = 0
+        localMonitorMasks = []
+        globalMonitorMasks = []
+        removedMonitorCount = 0
 
         // Inject mocks
         manager.timeProvider = timeMock
         manager.timerScheduler = timerMock
+        manager.activateHUDApp = { [weak self] in
+            self?.activationCount += 1
+        }
+        manager.addLocalEventMonitor = { [weak self] mask, _ in
+            self?.localMonitorMasks.append(mask)
+            return DummyEventMonitorToken()
+        }
+        manager.addGlobalEventMonitor = { [weak self] mask, _ in
+            self?.globalMonitorMasks.append(mask)
+            return DummyEventMonitorToken()
+        }
+        manager.removeEventMonitor = { [weak self] _ in
+            self?.removedMonitorCount += 1
+        }
+        manager.currentModifierFlags = { [] }
 
         // Reset state
         manager.hide() // Ensure clean state
@@ -112,6 +136,29 @@ final class PressAndHoldTests: XCTestCase {
 
         // The timer block calls presentHUD. In unit tests without a real window loop,
         // we verify the timer was scheduled and fired — the delay mechanism is correct.
+    }
+
+    @MainActor
+    func testDelayedShowDefersActivationUntilHUDAppears() async {
+        manager.scheduleShow(
+            items: [HUDAppItem(bundleId: "com.test.1", name: "Test 1", icon: nil)],
+            activeAppId: "com.test.current",
+            modifierFlags: [.option],
+            shortcut: "Opt+1",
+            activeKey: .a
+        )
+
+        XCTAssertEqual(activationCount, 0, "Delayed HUD path should not activate the app before the HUD appears")
+        XCTAssertTrue(globalMonitorMasks.contains(.flagsChanged), "Delayed HUD path should start with global modifier monitoring")
+        XCTAssertEqual(localMonitorMasks, [], "Delayed HUD path should not install local monitors before activation")
+
+        timerMock.fireLastNonRepeatingTimer()
+        await Task.yield()
+        await Task.yield()
+
+        XCTAssertEqual(activationCount, 1, "Showing the HUD should activate the app exactly once")
+        XCTAssertTrue(localMonitorMasks.contains(.flagsChanged), "HUD presentation should switch to local modifier monitoring")
+        XCTAssertTrue(removedMonitorCount > 0, "Transitioning to the visible HUD should remove pre-show monitors")
     }
 
     @MainActor
