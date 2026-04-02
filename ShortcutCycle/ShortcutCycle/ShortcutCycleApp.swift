@@ -167,7 +167,13 @@ struct AppCommands: Commands {
 /// Switches activation policy back to .accessory when the settings window closes,
 /// restoring the menu-bar-only appearance.
 struct SettingsWindowObserver: NSViewRepresentable {
-    func makeCoordinator() -> Coordinator { Coordinator() }
+    let onWindowWillClose: () -> Void
+
+    init(onWindowWillClose: @escaping () -> Void = {}) {
+        self.onWindowWillClose = onWindowWillClose
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(onWindowWillClose: onWindowWillClose) }
 
     func makeNSView(context: Context) -> NSView {
         let view = ObserverView()
@@ -190,8 +196,13 @@ struct SettingsWindowObserver: NSViewRepresentable {
     }
 
     class Coordinator {
+        private let onWindowWillClose: () -> Void
         private var observer: NSObjectProtocol?
         private weak var observedWindow: NSWindow?
+
+        init(onWindowWillClose: @escaping () -> Void = {}) {
+            self.onWindowWillClose = onWindowWillClose
+        }
 
         func observe(window: NSWindow) {
             guard observedWindow !== window else { return }
@@ -207,6 +218,7 @@ struct SettingsWindowObserver: NSViewRepresentable {
                 object: window,
                 queue: .main
             ) { _ in
+                self.onWindowWillClose()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                     NSApp.setActivationPolicy(.accessory)
                 }

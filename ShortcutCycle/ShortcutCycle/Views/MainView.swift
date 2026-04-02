@@ -1,5 +1,6 @@
 
 import SwiftUI
+import Combine
 import KeyboardShortcuts
 import UniformTypeIdentifiers
 #if canImport(ShortcutCycleCore)
@@ -14,29 +15,39 @@ struct MainView: View {
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
     @AppStorage("appTheme") private var appTheme: AppTheme = .system
     @EnvironmentObject var localeObserver: LocaleObserver
-    @State private var selectedTab = "groups"
+    @State private var selectedTab = URLSettingsTab.groups.rawValue
     @State private var showDeleteConfirmation = false
     // Observed (not owned) — WelcomeCoordinator.shared is an app-scoped singleton.
     @ObservedObject private var welcomeCoordinator = WelcomeCoordinator.shared
-    // Transient welcome session: set on window open, cleared when the window closes.
-    @State private var activeWelcomeRequestID: UUID?
+    @State private var welcomePresentation = WelcomePresentationState()
 
     var body: some View {
-        TabView(selection: $selectedTab) {
-            GroupSettingsView(welcomeRequestID: activeWelcomeRequestID)
-                .tabItem {
-                    Label("Groups".localized(language: selectedLanguage), systemImage: "rectangle.stack.3.hexagon")
+        VStack(spacing: 0) {
+            if welcomePresentation.isShowingCallout {
+                WelcomeBannerView(selectedLanguage: selectedLanguage) {
+                    welcomePresentation.dismiss()
                 }
-                .tag("groups")
+                .padding([.horizontal, .top])
+            }
 
-            GeneralSettingsView()
-                .tabItem {
-                    Label("General".localized(language: selectedLanguage), systemImage: "gear")
-                }
-                .tag("general")
+            TabView(selection: $selectedTab) {
+                GroupSettingsView()
+                    .tabItem {
+                        Label("Groups".localized(language: selectedLanguage), systemImage: "rectangle.stack.3.hexagon")
+                    }
+                    .tag(URLSettingsTab.groups.rawValue)
+
+                GeneralSettingsView()
+                    .tabItem {
+                        Label("General".localized(language: selectedLanguage), systemImage: "gear")
+                    }
+                    .tag(URLSettingsTab.general.rawValue)
+            }
         }
         .focusedSceneValue(\.selectedTab, $selectedTab)
-        .background(SettingsWindowObserver())
+        .background(SettingsWindowObserver {
+            welcomePresentation.endWindowSession()
+        })
         .onAppear {
             if let pendingTab = ShortcutCycleURLNavigationState.consumePendingSettingsTab() {
                 selectedTab = pendingTab.rawValue
@@ -82,8 +93,9 @@ struct MainView: View {
 
     private func consumeWelcomeRequest() {
         guard let requestID = welcomeCoordinator.pendingRequestID else { return }
-        selectedTab = "groups"
-        activeWelcomeRequestID = requestID
+        if let nextTab = welcomePresentation.consumePendingRequest(requestID) {
+            selectedTab = nextTab
+        }
         welcomeCoordinator.markRequestHandled(requestID)
     }
 }
