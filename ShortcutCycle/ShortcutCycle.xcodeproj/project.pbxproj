@@ -78,6 +78,8 @@
 		E1F4B0022F40000100C0DE01 /* URLCommandFileValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F4B0032F40000100C0DE01 /* URLCommandFileValidation.swift */; };
 		E1F4B0042F40000100C0DE01 /* URLRouterLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F4B0062F40000100C0DE01 /* URLRouterLogic.swift */; };
 		E1F4B0052F40000100C0DE01 /* URLRouterLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F4B0062F40000100C0DE01 /* URLRouterLogic.swift */; };
+		E2B200022F50000100C0DE01 /* SettingsWindowPresentationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2B200012F50000100C0DE01 /* SettingsWindowPresentationState.swift */; };
+		E2B200032F50000100C0DE01 /* SettingsWindowPresentationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2B200012F50000100C0DE01 /* SettingsWindowPresentationState.swift */; };
 		E2A100022F50000100C0DE01 /* WelcomePresentationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2A100012F50000100C0DE01 /* WelcomePresentationState.swift */; };
 		E2A100032F50000100C0DE01 /* WelcomePresentationState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2A100012F50000100C0DE01 /* WelcomePresentationState.swift */; };
 /* End PBXBuildFile section */
@@ -145,6 +147,7 @@
 		DF8B47D72F2F090100C473F8 /* ShortcutCycleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ShortcutCycleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E1F4B0032F40000100C0DE01 /* URLCommandFileValidation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLCommandFileValidation.swift; sourceTree = "<group>"; };
 		E1F4B0062F40000100C0DE01 /* URLRouterLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLRouterLogic.swift; sourceTree = "<group>"; };
+		E2B200012F50000100C0DE01 /* SettingsWindowPresentationState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowPresentationState.swift; sourceTree = "<group>"; };
 		E2A100012F50000100C0DE01 /* WelcomePresentationState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomePresentationState.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -265,6 +268,7 @@
 				DF88A3572F300B110042E749 /* Managers */,
 				DF88A3592F300B110042E749 /* Overlay */,
 				DF88A3C62F300CE00042E749 /* Welcome */,
+				E2B200012F50000100C0DE01 /* SettingsWindowPresentationState.swift */,
 				DF88A35A2F300B110042E749 /* AppSwitcher.swift */,
 				DF88A35B2F300B110042E749 /* LaunchAtLoginManager.swift */,
 				DF88A35C2F300B110042E749 /* ShortcutManager.swift */,
@@ -559,6 +563,7 @@
 				E1F4B0012F40000100C0DE01 /* URLCommandFileValidation.swift in Sources */,
 				E1F4B0042F40000100C0DE01 /* URLRouterLogic.swift in Sources */,
 				DF88A3B42F300CB20042E749 /* URLScheme.swift in Sources */,
+				E2B200022F50000100C0DE01 /* SettingsWindowPresentationState.swift in Sources */,
 				DF88A3C22F300CE00042E749 /* WelcomeBannerView.swift in Sources */,
 				DF88A3C42F300CE00042E749 /* WelcomeCoordinator.swift in Sources */,
 				E2A100022F50000100C0DE01 /* WelcomePresentationState.swift in Sources */,
@@ -600,6 +605,7 @@
 				E1F4B0022F40000100C0DE01 /* URLCommandFileValidation.swift in Sources */,
 				E1F4B0052F40000100C0DE01 /* URLRouterLogic.swift in Sources */,
 				DF88A3B52F300CB20042E749 /* URLScheme.swift in Sources */,
+				E2B200032F50000100C0DE01 /* SettingsWindowPresentationState.swift in Sources */,
 				DF88A3C32F300CE00042E749 /* WelcomeBannerView.swift in Sources */,
 				DF88A3C52F300CE00042E749 /* WelcomeCoordinator.swift in Sources */,
 				E2A100032F50000100C0DE01 /* WelcomePresentationState.swift in Sources */,

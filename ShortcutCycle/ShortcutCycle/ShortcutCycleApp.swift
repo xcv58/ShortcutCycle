@@ -218,7 +218,10 @@ struct SettingsWindowObserver: NSViewRepresentable {
                 object: window,
                 queue: .main
             ) { _ in
-                self.onWindowWillClose()
+                Task { @MainActor in
+                    SettingsWindowLifecycleCoordinator.windowDidClose()
+                    self.onWindowWillClose()
+                }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                     NSApp.setActivationPolicy(.accessory)
                 }
@@ -394,8 +397,15 @@ enum ShortcutCycleURLRouter {
         if let settingsWindow = NSApp.windows.first(where: { window in
             window.identifier?.rawValue == "settings"
         }) {
-            settingsWindow.makeKeyAndOrderFront(nil)
             NSApp.setActivationPolicy(.regular)
+            switch SettingsWindowLifecycleCoordinator.presentationAction(for: settingsWindow) {
+            case .bringToFront:
+                settingsWindow.makeKeyAndOrderFront(nil)
+            case .restoreHiddenWindow:
+                NSApp.unhide(nil)
+                settingsWindow.orderFrontRegardless()
+                settingsWindow.makeKeyAndOrderFront(nil)
+            }
             NSApp.activate(ignoringOtherApps: true)
             if let tab {
                 NotificationCenter.default.post(
@@ -720,6 +730,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if WelcomeCoordinator.shared.prepareAutomaticWelcomeIfNeeded() != nil {
             ShortcutCycleURLRouter.openSettingsFromOutsideView(tab: .groups)
         }
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        guard SettingsWindowLifecycleCoordinator.shouldHandleDockReopen(hasVisibleWindows: flag) else {
+            return false
+        }
+
+        ShortcutCycleURLRouter.openSettingsFromOutsideView()
+        return true
     }
 
     @objc private func handleURLEvent(

@@ -133,6 +133,8 @@ class HUDManager: @preconcurrency ObservableObject {
         
         // Activate our app so we can receive local events when running under AppKit.
         if let app = NSApp {
+            var hidSettingsWindow = false
+
             // Before activating, order out any ShortcutCycle windows that live on a
             // different Space. If we call activate() while a window (e.g. Settings) is
             // on another Space, macOS jumps to that Space before switching to the target
@@ -140,8 +142,16 @@ class HUDManager: @preconcurrency ObservableObject {
             // re-open Settings normally from the menu bar.
             app.windows.forEach { win in
                 if win !== self.window && win.isVisible && !win.isOnActiveSpace {
+                    if SettingsWindowLifecycleCoordinator.isSettingsWindow(win) {
+                        SettingsWindowLifecycleCoordinator.markTemporarilyHidden()
+                        hidSettingsWindow = true
+                    }
                     win.orderOut(nil)
                 }
+            }
+
+            if hidSettingsWindow {
+                app.setActivationPolicy(.accessory)
             }
 
             app.activate(ignoringOtherApps: true)
