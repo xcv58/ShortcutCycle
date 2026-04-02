@@ -78,6 +78,9 @@ class HUDManager: @preconcurrency ObservableObject {
     var currentModifierFlags: () -> NSEvent.ModifierFlags = {
         NSEvent.modifierFlags
     }
+    var hideHUDApp: () -> Void = {
+        NSApp?.hide(nil)
+    }
     
     private var window: HUDWindow?
     private var hideTimer: Timer?
@@ -739,10 +742,9 @@ class HUDManager: @preconcurrency ObservableObject {
             pendingActiveAppId = nil
         }
         
-        if let app = NSApp, app.isActive {
-            app.hide(nil) // Yield focus back
-        }
-        
+        // Activating the target app is enough to yield focus back. Hiding the
+        // menu-bar app itself can leave the status item visible but non-interactive.
+
         hideTimer?.invalidate()
         hideTimer = nil
         showTimer?.invalidate()

@@ -54,6 +54,7 @@ final class PressAndHoldTests: XCTestCase {
     var localMonitorMasks: [NSEvent.EventTypeMask]!
     var globalMonitorMasks: [NSEvent.EventTypeMask]!
     var removedMonitorCount: Int!
+    var hideAppCount: Int!
 
     override func setUp() async throws {
         // Setup mocks
@@ -64,6 +65,7 @@ final class PressAndHoldTests: XCTestCase {
         localMonitorMasks = []
         globalMonitorMasks = []
         removedMonitorCount = 0
+        hideAppCount = 0
 
         // Inject mocks
         manager.timeProvider = timeMock
@@ -83,6 +85,9 @@ final class PressAndHoldTests: XCTestCase {
             self?.removedMonitorCount += 1
         }
         manager.currentModifierFlags = { [] }
+        manager.hideHUDApp = { [weak self] in
+            self?.hideAppCount += 1
+        }
 
         // Reset state
         manager.hide() // Ensure clean state
@@ -159,6 +164,23 @@ final class PressAndHoldTests: XCTestCase {
         XCTAssertEqual(activationCount, 1, "Showing the HUD should activate the app exactly once")
         XCTAssertTrue(localMonitorMasks.contains(.flagsChanged), "HUD presentation should switch to local modifier monitoring")
         XCTAssertTrue(removedMonitorCount > 0, "Transitioning to the visible HUD should remove pre-show monitors")
+    }
+
+    @MainActor
+    func testHidingVisibleHUDDoesNotHideTheApp() {
+        manager.scheduleShow(
+            items: [HUDAppItem(bundleId: "com.test.1", name: "Test 1", icon: nil)],
+            activeAppId: "com.test.current",
+            modifierFlags: [.option],
+            shortcut: "Opt+1",
+            activeKey: .a,
+            shouldActivate: false,
+            immediate: true
+        )
+
+        manager.hide()
+
+        XCTAssertEqual(hideAppCount, 0, "Closing the HUD should not hide the app itself")
     }
 
     @MainActor
