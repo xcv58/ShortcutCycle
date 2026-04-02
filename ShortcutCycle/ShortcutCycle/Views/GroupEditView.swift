@@ -184,10 +184,7 @@ private struct GroupShortcutEditor: View {
                 .font(.headline)
 
             VStack(alignment: .leading, spacing: 8) {
-                KeyboardShortcuts.Recorder(for: shortcutName)
-                    .onChange(of: currentShortcut) { _, _ in
-                        ShortcutManager.shared.registerAllShortcuts()
-                    }
+                KeyboardShortcuts.Recorder(for: shortcutName, onChange: handleShortcutChange)
 
                 if shouldShowSuggestions {
                     ShortcutSuggestionRow(
@@ -227,6 +224,16 @@ private struct GroupShortcutEditor: View {
     @MainActor
     private func assignShortcut(_ shortcut: KeyboardShortcuts.Shortcut) {
         KeyboardShortcuts.setShortcut(shortcut, for: shortcutName)
+        refreshShortcutState()
+    }
+
+    @MainActor
+    private func handleShortcutChange(_ shortcut: KeyboardShortcuts.Shortcut?) {
+        refreshShortcutState()
+    }
+
+    @MainActor
+    private func refreshShortcutState() {
         shortcutRefreshToken += 1
         ShortcutManager.shared.registerAllShortcuts()
     }
