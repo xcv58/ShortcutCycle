@@ -219,7 +219,6 @@ struct SettingsWindowObserver: NSViewRepresentable {
                 queue: .main
             ) { _ in
                 Task { @MainActor in
-                    SettingsWindowLifecycleCoordinator.windowDidClose()
                     self.onWindowWillClose()
                 }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
@@ -398,14 +397,11 @@ enum ShortcutCycleURLRouter {
             window.identifier?.rawValue == "settings"
         }) {
             NSApp.setActivationPolicy(.regular)
-            switch SettingsWindowLifecycleCoordinator.presentationAction(for: settingsWindow) {
-            case .bringToFront:
-                settingsWindow.makeKeyAndOrderFront(nil)
-            case .restoreHiddenWindow:
+            if !settingsWindow.isVisible {
                 NSApp.unhide(nil)
                 settingsWindow.orderFrontRegardless()
-                settingsWindow.makeKeyAndOrderFront(nil)
             }
+            settingsWindow.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
             if let tab {
                 NotificationCenter.default.post(

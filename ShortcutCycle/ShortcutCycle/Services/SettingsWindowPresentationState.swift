@@ -7,11 +7,6 @@ struct SettingsWindowSnapshot: Equatable {
     let isOnActiveSpace: Bool
 }
 
-enum SettingsWindowPresentationAction: Equatable {
-    case bringToFront
-    case restoreHiddenWindow
-}
-
 enum SettingsWindowHUDPresentationPolicy {
     static func shouldUseDeferredActivation(windows: [SettingsWindowSnapshot]) -> Bool {
         windows.contains { snapshot in
@@ -21,22 +16,6 @@ enum SettingsWindowHUDPresentationPolicy {
 
     static func shouldHandleDockReopen(hasVisibleWindows: Bool) -> Bool {
         !hasVisibleWindows
-    }
-
-    static func shouldTemporarilyHideSettingsWindow(
-        isVisible: Bool,
-        isOnActiveSpace: Bool,
-        targetHasVisibleWindowsOnCurrentSpace _: Bool
-    ) -> Bool {
-        shouldUseDeferredActivation(
-            windows: [
-                SettingsWindowSnapshot(
-                    isSettingsWindow: true,
-                    isVisible: isVisible,
-                    isOnActiveSpace: isOnActiveSpace
-                )
-            ]
-        )
     }
 }
 
@@ -63,12 +42,4 @@ enum SettingsWindowLifecycleCoordinator {
             hasVisibleWindows: hasVisibleWindows
         )
     }
-
-    static func markTemporarilyHidden() {}
-
-    static func presentationAction(for window: NSWindow) -> SettingsWindowPresentationAction {
-        window.isVisible ? .bringToFront : .restoreHiddenWindow
-    }
-
-    static func windowDidClose() {}
 }

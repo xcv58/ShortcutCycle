@@ -188,7 +188,6 @@ class HUDManager: @preconcurrency ObservableObject {
         guard let app = NSApp else { return }
 
         var hidSettingsWindow = false
-        let targetHasVisibleWindowsOnCurrentSpace = pendingTargetHasVisibleWindowsOnCurrentSpace()
 
         // Before activating, order out any ShortcutCycle windows that live on a
         // different Space. If we call activate() while a window (e.g. Settings) is
@@ -198,13 +197,7 @@ class HUDManager: @preconcurrency ObservableObject {
         app.windows.forEach { win in
             guard win !== self.window, win.isVisible else { return }
 
-            if SettingsWindowLifecycleCoordinator.isSettingsWindow(win),
-               SettingsWindowHUDPresentationPolicy.shouldTemporarilyHideSettingsWindow(
-                isVisible: win.isVisible,
-                isOnActiveSpace: win.isOnActiveSpace,
-                targetHasVisibleWindowsOnCurrentSpace: targetHasVisibleWindowsOnCurrentSpace
-               ) {
-                SettingsWindowLifecycleCoordinator.markTemporarilyHidden()
+            if SettingsWindowLifecycleCoordinator.isSettingsWindow(win), !win.isOnActiveSpace {
                 hidSettingsWindow = true
                 win.orderOut(nil)
                 return
