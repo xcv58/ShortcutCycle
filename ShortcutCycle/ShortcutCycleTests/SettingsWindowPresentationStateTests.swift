@@ -40,6 +40,37 @@ final class SettingsWindowPresentationStateTests: XCTestCase {
         )
     }
 
+    func testVisibleSettingsWindowReturnsCurrentSpaceSettingsWindow() {
+        let window = MockWindow(
+            identifier: NSUserInterfaceItemIdentifier("settings"),
+            isVisible: true,
+            isOnActiveSpace: true
+        )
+
+        XCTAssertTrue(
+            SettingsWindowLifecycleCoordinator.visibleSettingsWindow(in: [window]) === window
+        )
+    }
+
+    func testVisibleSettingsWindowIgnoresHiddenAndNonSettingsWindows() {
+        XCTAssertNil(
+            SettingsWindowLifecycleCoordinator.visibleSettingsWindow(
+                in: [
+                    MockWindow(
+                        identifier: NSUserInterfaceItemIdentifier("settings"),
+                        isVisible: false,
+                        isOnActiveSpace: true
+                    ),
+                    MockWindow(
+                        identifier: NSUserInterfaceItemIdentifier("other"),
+                        isVisible: true,
+                        isOnActiveSpace: true
+                    )
+                ]
+            )
+        )
+    }
+
     func testAppPolicyDockReopenDependsOnlyOnVisibleWindows() {
         XCTAssertTrue(
             SettingsWindowAppPolicy.shouldHandleDockReopen(
