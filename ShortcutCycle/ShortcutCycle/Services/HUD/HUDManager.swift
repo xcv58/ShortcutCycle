@@ -90,6 +90,13 @@ class HUDManager: @preconcurrency ObservableObject {
     lazy var activatePendingTargetApp: (String) -> Void = { [weak self] bundleId in
         self?.activateOrLaunch(bundleId: bundleId)
     }
+    lazy var targetLeavesCurrentSpace: (HUDAppItem) -> Bool = { [weak self] item in
+        guard let self, let pid = item.pid else {
+            return false
+        }
+
+        return !self.hasVisibleWindows(pid: pid)
+    }
     
     private var window: HUDWindow?
     private var hideTimer: Timer?
@@ -197,6 +204,22 @@ class HUDManager: @preconcurrency ObservableObject {
 
     private func closeOffSpaceSettingsWindowIfNeeded() {
         guard let settingsWindow = SettingsWindowLifecycleCoordinator.visibleOffSpaceSettingsWindow(
+            in: settingsWindowsProvider()
+        ) else {
+            return
+        }
+
+        closeWindow(settingsWindow)
+    }
+
+    private func closeVisibleSettingsWindowIfNeeded(beforeActivating appId: String) {
+        guard let target = currentItems.first(where: { $0.id == appId || $0.bundleId == appId }) else {
+            return
+        }
+        guard targetLeavesCurrentSpace(target) else {
+            return
+        }
+        guard let settingsWindow = SettingsWindowLifecycleCoordinator.visibleSettingsWindow(
             in: settingsWindowsProvider()
         ) else {
             return
@@ -648,6 +671,7 @@ class HUDManager: @preconcurrency ObservableObject {
 
         // Fast switch: user released keys before HUD appeared or while it was visible
         if let pendingId = pendingActiveAppId {
+            closeVisibleSettingsWindowIfNeeded(beforeActivating: pendingId)
             activatePendingTargetApp(pendingId)
             pendingActiveAppId = nil
         }

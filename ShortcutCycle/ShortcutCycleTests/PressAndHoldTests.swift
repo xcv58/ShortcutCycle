@@ -82,6 +82,8 @@ final class PressAndHoldTests: XCTestCase {
     var activationCount: Int!
     var localMonitorMasks: [NSEvent.EventTypeMask]!
     var globalMonitorMasks: [NSEvent.EventTypeMask]!
+    var localMonitorHandlers: [(NSEvent.EventTypeMask, (NSEvent) -> NSEvent?)]!
+    var globalMonitorHandlers: [(NSEvent.EventTypeMask, (NSEvent) -> Void)]!
     var removedMonitorCount: Int!
     var hideAppCount: Int!
 
@@ -93,6 +95,8 @@ final class PressAndHoldTests: XCTestCase {
         activationCount = 0
         localMonitorMasks = []
         globalMonitorMasks = []
+        localMonitorHandlers = []
+        globalMonitorHandlers = []
         removedMonitorCount = 0
         hideAppCount = 0
 
@@ -102,12 +106,14 @@ final class PressAndHoldTests: XCTestCase {
         manager.activateHUDApp = { [weak self] in
             self?.activationCount += 1
         }
-        manager.addLocalEventMonitor = { [weak self] mask, _ in
+        manager.addLocalEventMonitor = { [weak self] mask, handler in
             self?.localMonitorMasks.append(mask)
+            self?.localMonitorHandlers.append((mask, handler))
             return DummyEventMonitorToken()
         }
-        manager.addGlobalEventMonitor = { [weak self] mask, _ in
+        manager.addGlobalEventMonitor = { [weak self] mask, handler in
             self?.globalMonitorMasks.append(mask)
+            self?.globalMonitorHandlers.append((mask, handler))
             return DummyEventMonitorToken()
         }
         manager.removeEventMonitor = { [weak self] _ in
@@ -118,6 +124,7 @@ final class PressAndHoldTests: XCTestCase {
         manager.closeWindow = { window in
             window.close()
         }
+        manager.targetLeavesCurrentSpace = { _ in false }
         manager.hideHUDApp = { [weak self] in
             self?.hideAppCount += 1
         }
@@ -129,6 +136,31 @@ final class PressAndHoldTests: XCTestCase {
         manager.currentLoopKey = nil
         manager.isRepeatingLoopActive = false
         removedMonitorCount = 0
+    }
+
+    private func latestLocalMonitorHandler(
+        for mask: NSEvent.EventTypeMask
+    ) -> ((NSEvent) -> NSEvent?)? {
+        localMonitorHandlers.last(where: { $0.0 == mask })?.1
+    }
+
+    private func makeFlagsChangedEvent(
+        modifierFlags: NSEvent.ModifierFlags
+    ) throws -> NSEvent {
+        try XCTUnwrap(
+            NSEvent.keyEvent(
+                with: .flagsChanged,
+                location: .zero,
+                modifierFlags: modifierFlags,
+                timestamp: 0,
+                windowNumber: 0,
+                context: nil,
+                characters: "",
+                charactersIgnoringModifiers: "",
+                isARepeat: false,
+                keyCode: 58
+            )
+        )
     }
 
     // MARK: - Basic HUD Timing Tests
@@ -256,6 +288,80 @@ final class PressAndHoldTests: XCTestCase {
         )
 
         XCTAssertEqual(closeCount, 0)
+    }
+
+    @MainActor
+    func testFinalizeClosesCurrentSpaceSettingsWhenSelectedTargetLeavesCurrentSpace() async throws {
+        let settingsWindow = MockWindow(
+            identifier: NSUserInterfaceItemIdentifier("settings"),
+            isVisible: true,
+            isOnActiveSpace: true
+        )
+        var events: [String] = []
+
+        manager.currentModifierFlags = { [.option] }
+        manager.settingsWindowsProvider = { [settingsWindow] }
+        manager.closeWindow = { _ in
+            events.append("close")
+        }
+        manager.targetLeavesCurrentSpace = { item in
+            item.id == "com.test.other-space::42"
+        }
+        manager.activatePendingTargetApp = { _ in
+            events.append("activate")
+        }
+
+        manager.scheduleShow(
+            items: [HUDAppItem(bundleId: "com.test.other-space", pid: 42, name: "Other Space")],
+            activeAppId: "com.test.other-space::42",
+            modifierFlags: [.option],
+            shortcut: "Opt+1",
+            immediate: true
+        )
+
+        let flagsHandler = try XCTUnwrap(latestLocalMonitorHandler(for: .flagsChanged))
+        _ = flagsHandler(try makeFlagsChangedEvent(modifierFlags: []))
+        await Task.yield()
+        await Task.yield()
+
+        XCTAssertEqual(Array(events.prefix(2)), ["close", "activate"])
+    }
+
+    @MainActor
+    func testFinalizeKeepsCurrentSpaceSettingsOpenWhenSelectedTargetStaysOnCurrentSpace() async throws {
+        let settingsWindow = MockWindow(
+            identifier: NSUserInterfaceItemIdentifier("settings"),
+            isVisible: true,
+            isOnActiveSpace: true
+        )
+        var closeCount = 0
+        var activateCount = 0
+
+        manager.currentModifierFlags = { [.option] }
+        manager.settingsWindowsProvider = { [settingsWindow] }
+        manager.closeWindow = { _ in
+            closeCount += 1
+        }
+        manager.targetLeavesCurrentSpace = { _ in false }
+        manager.activatePendingTargetApp = { _ in
+            activateCount += 1
+        }
+
+        manager.scheduleShow(
+            items: [HUDAppItem(bundleId: "com.test.current-space", pid: 24, name: "Current Space")],
+            activeAppId: "com.test.current-space::24",
+            modifierFlags: [.option],
+            shortcut: "Opt+1",
+            immediate: true
+        )
+
+        let flagsHandler = try XCTUnwrap(latestLocalMonitorHandler(for: .flagsChanged))
+        _ = flagsHandler(try makeFlagsChangedEvent(modifierFlags: []))
+        await Task.yield()
+        await Task.yield()
+
+        XCTAssertEqual(closeCount, 0)
+        XCTAssertEqual(activateCount, 1)
     }
 
     @MainActor
