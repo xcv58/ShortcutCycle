@@ -197,7 +197,7 @@ class HUDManager: @preconcurrency ObservableObject {
         app.windows.forEach { win in
             guard win !== self.window, win.isVisible else { return }
 
-            if SettingsWindowLifecycleCoordinator.isSettingsWindow(win), !win.isOnActiveSpace {
+            if SettingsWindowLifecycleCoordinator.hasOffSpaceSettingsWindow(in: [win]) {
                 hidSettingsWindow = true
                 win.orderOut(nil)
                 return
