@@ -31,11 +31,6 @@ class SystemTimerScheduler: TimerScheduler {
 typealias LocalEventMonitorRegistrar = (NSEvent.EventTypeMask, @escaping (NSEvent) -> NSEvent?) -> Any?
 typealias GlobalEventMonitorRegistrar = (NSEvent.EventTypeMask, @escaping (NSEvent) -> Void) -> Any?
 
-enum HUDPresentationMode {
-    case standard
-    case deferredActivation
-}
-
 // MARK: - HUD Window
 
 class HUDWindow: NSPanel {
@@ -68,10 +63,6 @@ class HUDManager: @preconcurrency ObservableObject {
     // Dependencies
     var timeProvider: TimeProvider = SystemTimeProvider()
     var timerScheduler: TimerScheduler = SystemTimerScheduler()
-    var hudPresentationModeResolver: () -> HUDPresentationMode = {
-        guard let app = NSApp else { return .standard }
-        return SettingsWindowLifecycleCoordinator.hasOffSpaceSettingsWindow(in: app.windows) ? .deferredActivation : .standard
-    }
     var activateHUDApp: () -> Void = {
         NSApp?.activate(ignoringOtherApps: true)
     }
@@ -149,7 +140,6 @@ class HUDManager: @preconcurrency ObservableObject {
         
         let now = timeProvider.now
         let isRepeated = lastRequestTime != nil && now.timeIntervalSince(lastRequestTime!) < 0.5
-        let presentationMode = hudPresentationModeResolver()
 
         lastRequestTime = now
         
@@ -169,11 +159,9 @@ class HUDManager: @preconcurrency ObservableObject {
         if (window?.isVisible == true) || isRepeated || immediate {
             showTimer?.invalidate()
             showTimer = nil
-            if presentationMode == .standard {
-                prepareAppForHUDPresentation()
-            }
+            prepareAppForHUDPresentation()
             presentHUD(items: items, activeAppId: activeAppId, shortcut: shortcut)
-            continueMonitoringAfterHUDPresentation(mode: presentationMode, requiredModifiers: modifierFlags, activeKey: activeKey)
+            startMonitoringModifiers(requiredModifiers: modifierFlags, activeKey: activeKey)
             // Start loop AFTER monitoring is set up so isLoopKeyHeld is fresh
             if activeKey != nil {
                 scheduleLoopStart()
@@ -185,11 +173,9 @@ class HUDManager: @preconcurrency ObservableObject {
         showTimer?.invalidate()
         showTimer = timerScheduler.schedule(timeInterval: 0.2, repeats: false) { [weak self] _ in // 200ms delay
             Task { @MainActor in
-                if presentationMode == .standard {
-                    self?.prepareAppForHUDPresentation()
-                }
+                self?.prepareAppForHUDPresentation()
                 self?.presentHUD(items: items, activeAppId: activeAppId, shortcut: shortcut)
-                self?.continueMonitoringAfterHUDPresentation(mode: presentationMode, requiredModifiers: modifierFlags, activeKey: activeKey)
+                self?.startMonitoringModifiers(requiredModifiers: modifierFlags, activeKey: activeKey)
                 // Start loop AFTER monitoring is set up so isLoopKeyHeld is fresh
                 if activeKey != nil {
                     self?.scheduleLoopStart()
@@ -199,26 +185,6 @@ class HUDManager: @preconcurrency ObservableObject {
 
         // Monitor release globally while we wait to decide whether the HUD should appear.
         startPreShowMonitoring(requiredModifiers: modifierFlags, activeKey: activeKey)
-    }
-
-    private func continueMonitoringAfterHUDPresentation(mode: HUDPresentationMode, requiredModifiers: NSEvent.ModifierFlags?, activeKey: KeyboardShortcuts.Key?) {
-        switch mode {
-        case .standard:
-            startMonitoringModifiers(requiredModifiers: requiredModifiers, activeKey: activeKey)
-        case .deferredActivation:
-            configureDeferredLoopState(activeKey: activeKey)
-            startPreShowMonitoring(requiredModifiers: requiredModifiers, activeKey: activeKey)
-        }
-    }
-
-    private func configureDeferredLoopState(activeKey: KeyboardShortcuts.Key?) {
-        if let activeKey {
-            currentLoopKey = activeKey.rawValue
-            isLoopKeyHeld = true
-        } else {
-            currentLoopKey = nil
-            isLoopKeyHeld = false
-        }
     }
 
     private func prepareAppForHUDPresentation() {
