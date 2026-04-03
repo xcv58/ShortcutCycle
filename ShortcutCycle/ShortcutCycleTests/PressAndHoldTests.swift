@@ -55,6 +55,7 @@ final class PressAndHoldTests: XCTestCase {
     var globalMonitorMasks: [NSEvent.EventTypeMask]!
     var removedMonitorCount: Int!
     var hideAppCount: Int!
+    var pendingTargetActivations: [String]!
 
     override func setUp() async throws {
         // Setup mocks
@@ -66,12 +67,17 @@ final class PressAndHoldTests: XCTestCase {
         globalMonitorMasks = []
         removedMonitorCount = 0
         hideAppCount = 0
+        pendingTargetActivations = []
 
         // Inject mocks
         manager.timeProvider = timeMock
         manager.timerScheduler = timerMock
+        manager.hudPresentationModeResolver = { .standard }
         manager.activateHUDApp = { [weak self] in
             self?.activationCount += 1
+        }
+        manager.activatePendingTargetApp = { [weak self] bundleId in
+            self?.pendingTargetActivations.append(bundleId)
         }
         manager.addLocalEventMonitor = { [weak self] mask, _ in
             self?.localMonitorMasks.append(mask)
@@ -95,6 +101,7 @@ final class PressAndHoldTests: XCTestCase {
         manager.isLoopKeyHeld = false
         manager.currentLoopKey = nil
         manager.isRepeatingLoopActive = false
+        pendingTargetActivations.removeAll()
     }
 
     // MARK: - Basic HUD Timing Tests
@@ -164,6 +171,54 @@ final class PressAndHoldTests: XCTestCase {
         XCTAssertEqual(activationCount, 1, "Showing the HUD should activate the app exactly once")
         XCTAssertTrue(localMonitorMasks.contains(.flagsChanged), "HUD presentation should switch to local modifier monitoring")
         XCTAssertTrue(removedMonitorCount > 0, "Transitioning to the visible HUD should remove pre-show monitors")
+    }
+
+    @MainActor
+    func testDeferredActivationShowDoesNotActivateShortcutCycleBeforeOrWhenHUDAppears() async {
+        manager.hudPresentationModeResolver = { .deferredActivation }
+
+        manager.scheduleShow(
+            items: [HUDAppItem(bundleId: "com.test.1", name: "Test 1", icon: nil)],
+            activeAppId: "com.test.current",
+            modifierFlags: [.option],
+            shortcut: "Opt+1",
+            activeKey: .a
+        )
+
+        XCTAssertEqual(activationCount, 0, "Deferred HUD path should not activate the app before the HUD appears")
+        XCTAssertTrue(globalMonitorMasks.contains(.flagsChanged), "Deferred HUD path should keep global monitoring active before the HUD appears")
+        XCTAssertEqual(localMonitorMasks, [], "Deferred HUD path should not install local monitors before activation")
+
+        timerMock.fireLastNonRepeatingTimer()
+        await Task.yield()
+        await Task.yield()
+
+        XCTAssertEqual(activationCount, 0, "Deferred HUD path should not activate the app when the HUD appears")
+        XCTAssertEqual(localMonitorMasks, [], "Deferred HUD path should keep using global monitoring after the HUD appears")
+        XCTAssertTrue(globalMonitorMasks.contains(.keyUp), "Deferred HUD path should keep the global release monitor active")
+    }
+
+    @MainActor
+    func testDeferredActivationPendingTargetWaitsUntilInteractionEnds() async {
+        manager.hudPresentationModeResolver = { .deferredActivation }
+
+        manager.scheduleShow(
+            items: [HUDAppItem(bundleId: "com.test.1", name: "Test 1", icon: nil)],
+            activeAppId: "com.test.current",
+            modifierFlags: [.option],
+            shortcut: "Opt+1",
+            activeKey: .a
+        )
+
+        timerMock.fireLastNonRepeatingTimer()
+        await Task.yield()
+        await Task.yield()
+
+        XCTAssertEqual(pendingTargetActivations, [], "Deferred HUD path should not activate the pending target when the HUD appears")
+
+        manager.hide()
+
+        XCTAssertEqual(pendingTargetActivations, ["com.test.current"], "Deferred HUD path should activate the pending target when the interaction ends")
     }
 
     @MainActor
