@@ -206,7 +206,18 @@ class HUDManager: @preconcurrency ObservableObject {
         case .standard:
             startMonitoringModifiers(requiredModifiers: requiredModifiers, activeKey: activeKey)
         case .deferredActivation:
+            configureDeferredLoopState(activeKey: activeKey)
             startPreShowMonitoring(requiredModifiers: requiredModifiers, activeKey: activeKey)
+        }
+    }
+
+    private func configureDeferredLoopState(activeKey: KeyboardShortcuts.Key?) {
+        if let activeKey {
+            currentLoopKey = activeKey.rawValue
+            isLoopKeyHeld = true
+        } else {
+            currentLoopKey = nil
+            isLoopKeyHeld = false
         }
     }
 

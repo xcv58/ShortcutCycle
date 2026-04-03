@@ -101,6 +101,7 @@ final class PressAndHoldTests: XCTestCase {
         manager.isLoopKeyHeld = false
         manager.currentLoopKey = nil
         manager.isRepeatingLoopActive = false
+        removedMonitorCount = 0
         pendingTargetActivations.removeAll()
     }
 
@@ -219,6 +220,35 @@ final class PressAndHoldTests: XCTestCase {
         manager.hide()
 
         XCTAssertEqual(pendingTargetActivations, ["com.test.current"], "Deferred HUD path should activate the pending target when the interaction ends")
+    }
+
+    @MainActor
+    func testDeferredActivationPreservesLoopSetupForHoldToCycle() async {
+        manager.hudPresentationModeResolver = { .deferredActivation }
+
+        manager.scheduleShow(
+            items: [
+                HUDAppItem(bundleId: "com.test.1", name: "Test 1", icon: nil),
+                HUDAppItem(bundleId: "com.test.2", name: "Test 2", icon: nil)
+            ],
+            activeAppId: "com.test.current",
+            modifierFlags: [.option],
+            shortcut: "Opt+1",
+            activeKey: .a
+        )
+
+        let initialTimerCount = timerMock.scheduledTimers.count
+
+        timerMock.fireLastNonRepeatingTimer()
+        await Task.yield()
+        await Task.yield()
+
+        XCTAssertEqual(manager.currentLoopKey, KeyboardShortcuts.Key.a.rawValue, "Deferred HUD path should capture the active loop key once the HUD is visible")
+        XCTAssertTrue(manager.isLoopKeyHeld, "Deferred HUD path should preserve held-loop state after showing the HUD")
+
+        let newTimers = timerMock.scheduledTimers.dropFirst(initialTimerCount)
+        let delayTimers = newTimers.filter { !$0.1 && $0.0 == 0.2 }
+        XCTAssertFalse(delayTimers.isEmpty, "Deferred HUD path should still schedule the post-show loop delay")
     }
 
     @MainActor
