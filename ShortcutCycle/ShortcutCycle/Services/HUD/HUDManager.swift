@@ -114,6 +114,7 @@ class HUDManager: @preconcurrency ObservableObject {
 
     private var previousFrontmostApp: NSRunningApplication?
     private var pendingActiveAppId: String?
+    private var didPresentHUDThisSession = false
     
     // Track the currently selected app in the HUD
     public private(set) var currentSelectedAppId: String?
@@ -155,6 +156,7 @@ class HUDManager: @preconcurrency ObservableObject {
         let isRepeated = lastRequestTime != nil && now.timeIntervalSince(lastRequestTime!) < 0.5
 
         lastRequestTime = now
+        didPresentHUDThisSession = false
         
         // Store pending active app for fast switching
         self.pendingActiveAppId = shouldActivate ? activeAppId : nil
@@ -252,6 +254,7 @@ class HUDManager: @preconcurrency ObservableObject {
 
         self.currentItems = items
         currentSelectedAppId = activeAppId
+        didPresentHUDThisSession = true
 
         if let shortcut = shortcut {
             self.currentShortcut = shortcut
@@ -671,7 +674,9 @@ class HUDManager: @preconcurrency ObservableObject {
 
         // Fast switch: user released keys before HUD appeared or while it was visible
         if let pendingId = pendingActiveAppId {
-            closeVisibleSettingsWindowIfNeeded(beforeActivating: pendingId)
+            if didPresentHUDThisSession {
+                closeVisibleSettingsWindowIfNeeded(beforeActivating: pendingId)
+            }
             activatePendingTargetApp(pendingId)
             pendingActiveAppId = nil
         }
@@ -759,6 +764,7 @@ class HUDManager: @preconcurrency ObservableObject {
         window = nil
         currentSelectedAppId = nil
         currentShortcut = nil
+        didPresentHUDThisSession = false
         
         // Ensure we activate the pending app if it exists (fallback)
         if let pendingId = pendingActiveAppId {

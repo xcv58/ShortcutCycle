@@ -144,6 +144,12 @@ final class PressAndHoldTests: XCTestCase {
         localMonitorHandlers.last(where: { $0.0 == mask })?.1
     }
 
+    private func latestGlobalMonitorHandler(
+        for mask: NSEvent.EventTypeMask
+    ) -> ((NSEvent) -> Void)? {
+        globalMonitorHandlers.last(where: { $0.0 == mask })?.1
+    }
+
     private func makeFlagsChangedEvent(
         modifierFlags: NSEvent.ModifierFlags
     ) throws -> NSEvent {
@@ -357,6 +363,41 @@ final class PressAndHoldTests: XCTestCase {
 
         let flagsHandler = try XCTUnwrap(latestLocalMonitorHandler(for: .flagsChanged))
         _ = flagsHandler(try makeFlagsChangedEvent(modifierFlags: []))
+        await Task.yield()
+        await Task.yield()
+
+        XCTAssertEqual(closeCount, 0)
+        XCTAssertEqual(activateCount, 1)
+    }
+
+    @MainActor
+    func testBlindSwitchBeforeHUDPresentationKeepsSettingsOpen() async throws {
+        let settingsWindow = MockWindow(
+            identifier: NSUserInterfaceItemIdentifier("settings"),
+            isVisible: true,
+            isOnActiveSpace: true
+        )
+        var closeCount = 0
+        var activateCount = 0
+
+        manager.settingsWindowsProvider = { [settingsWindow] }
+        manager.closeWindow = { _ in
+            closeCount += 1
+        }
+        manager.targetLeavesCurrentSpace = { _ in true }
+        manager.activatePendingTargetApp = { _ in
+            activateCount += 1
+        }
+
+        manager.scheduleShow(
+            items: [HUDAppItem(bundleId: "com.test.quick-target", pid: 24, name: "Quick Target")],
+            activeAppId: "com.test.quick-target::24",
+            modifierFlags: [.option],
+            shortcut: "Opt+1"
+        )
+
+        let flagsHandler = try XCTUnwrap(latestGlobalMonitorHandler(for: .flagsChanged))
+        flagsHandler(try makeFlagsChangedEvent(modifierFlags: []))
         await Task.yield()
         await Task.yield()
 
