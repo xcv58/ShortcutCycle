@@ -6,6 +6,22 @@ enum SettingsWindowPresentationAction: Equatable {
     case restoreHiddenWindow
 }
 
+enum SettingsWindowHUDPresentationPolicy {
+    static func shouldTemporarilyHideSettingsWindow(
+        isVisible: Bool,
+        isOnActiveSpace: Bool,
+        targetHasVisibleWindowsOnCurrentSpace: Bool
+    ) -> Bool {
+        guard isVisible else { return false }
+
+        if !isOnActiveSpace {
+            return true
+        }
+
+        return !targetHasVisibleWindowsOnCurrentSpace
+    }
+}
+
 @MainActor
 struct SettingsWindowPresentationState {
     private(set) var isTemporarilyHidden = false

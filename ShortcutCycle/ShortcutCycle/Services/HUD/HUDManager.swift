@@ -188,6 +188,7 @@ class HUDManager: @preconcurrency ObservableObject {
         guard let app = NSApp else { return }
 
         var hidSettingsWindow = false
+        let targetHasVisibleWindowsOnCurrentSpace = pendingTargetHasVisibleWindowsOnCurrentSpace()
 
         // Before activating, order out any ShortcutCycle windows that live on a
         // different Space. If we call activate() while a window (e.g. Settings) is
@@ -195,11 +196,21 @@ class HUDManager: @preconcurrency ObservableObject {
         // app. orderOut hides the window without destroying it, so the user can
         // re-open Settings normally from the menu bar.
         app.windows.forEach { win in
-            if win !== self.window && win.isVisible && !win.isOnActiveSpace {
-                if SettingsWindowLifecycleCoordinator.isSettingsWindow(win) {
-                    SettingsWindowLifecycleCoordinator.markTemporarilyHidden()
-                    hidSettingsWindow = true
-                }
+            guard win !== self.window, win.isVisible else { return }
+
+            if SettingsWindowLifecycleCoordinator.isSettingsWindow(win),
+               SettingsWindowHUDPresentationPolicy.shouldTemporarilyHideSettingsWindow(
+                isVisible: win.isVisible,
+                isOnActiveSpace: win.isOnActiveSpace,
+                targetHasVisibleWindowsOnCurrentSpace: targetHasVisibleWindowsOnCurrentSpace
+               ) {
+                SettingsWindowLifecycleCoordinator.markTemporarilyHidden()
+                hidSettingsWindow = true
+                win.orderOut(nil)
+                return
+            }
+
+            if !win.isOnActiveSpace {
                 win.orderOut(nil)
             }
         }
@@ -673,6 +684,24 @@ class HUDManager: @preconcurrency ObservableObject {
             return true
         }
         return list.contains { ($0[kCGWindowOwnerPID as String] as? Int32) == pid }
+    }
+
+    private func pendingTargetHasVisibleWindowsOnCurrentSpace() -> Bool {
+        guard let pendingId = pendingActiveAppId else {
+            return true
+        }
+
+        let item = currentItems.first(where: { $0.id == pendingId || $0.bundleId == pendingId })
+        if let pid = item?.pid {
+            return hasVisibleWindows(pid: pid)
+        }
+
+        let bundleId = item?.bundleId ?? pendingId
+        if let app = NSRunningApplication.runningApplications(withBundleIdentifier: bundleId).first {
+            return hasVisibleWindows(pid: app.processIdentifier)
+        }
+
+        return false
     }
 
     private func activateOrLaunch(bundleId: String) {

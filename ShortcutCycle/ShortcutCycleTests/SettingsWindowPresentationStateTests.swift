@@ -43,4 +43,34 @@ final class SettingsWindowPresentationStateTests: XCTestCase {
 
         XCTAssertTrue(state.shouldHandleDockReopen(hasVisibleWindows: false))
     }
+
+    func testHUDPresentationHidesVisibleSettingsWindowWhenTargetAppHasNoVisibleWindows() {
+        XCTAssertTrue(
+            SettingsWindowHUDPresentationPolicy.shouldTemporarilyHideSettingsWindow(
+                isVisible: true,
+                isOnActiveSpace: true,
+                targetHasVisibleWindowsOnCurrentSpace: false
+            )
+        )
+    }
+
+    func testHUDPresentationKeepsVisibleSettingsWindowWhenTargetAppIsVisibleOnCurrentSpace() {
+        XCTAssertFalse(
+            SettingsWindowHUDPresentationPolicy.shouldTemporarilyHideSettingsWindow(
+                isVisible: true,
+                isOnActiveSpace: true,
+                targetHasVisibleWindowsOnCurrentSpace: true
+            )
+        )
+    }
+
+    func testHUDPresentationStillHidesSettingsWindowWhenItIsOffActiveSpace() {
+        XCTAssertTrue(
+            SettingsWindowHUDPresentationPolicy.shouldTemporarilyHideSettingsWindow(
+                isVisible: true,
+                isOnActiveSpace: false,
+                targetHasVisibleWindowsOnCurrentSpace: true
+            )
+        )
+    }
 }
