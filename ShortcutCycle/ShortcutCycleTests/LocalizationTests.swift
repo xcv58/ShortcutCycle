@@ -191,8 +191,7 @@ final class LocalizationTests: XCTestCase {
             "Rename",
             "Delete",
             "Appearance",
-            "Language",
-            "If Settings is open on another Space, macOS may briefly switch Spaces while showing the HUD."
+            "Language"
         ]
         
         let resourcesDir = try XCTUnwrap(findResourcesDirectory(), "Could not find Resources directory containing localization files")
@@ -205,5 +204,16 @@ final class LocalizationTests: XCTestCase {
         if !missingCriticalKeys.isEmpty {
             XCTFail("Critical UI strings missing from English localization:\n" + missingCriticalKeys.map { "  - \"\($0)\"" }.joined(separator: "\n"))
         }
+    }
+
+    func testSpaceJumpWarningStringIsRemovedFromEnglishLocalization() throws {
+        let resourcesDir = try XCTUnwrap(findResourcesDirectory(), "Could not find Resources directory containing localization files")
+
+        let enURL = resourcesDir.appendingPathComponent("en.lproj/Localizable.strings")
+        let englishKeys = parseLocalizationKeys(from: enURL)
+
+        XCTAssertFalse(
+            englishKeys.contains("If Settings is open on another Space, macOS may briefly switch Spaces while showing the HUD.")
+        )
     }
 }

@@ -102,7 +102,6 @@
 "Running apps only" = "Yalnızca çalışan uygulamalar";
 "All apps (open if needed)" = "Tüm uygulamalar (gerekirse aç)";
 "Displays the keyboard shortcut used to trigger the switch." = "Geçişi tetiklemek için kullanılan klavye kısayolunu gösterir.";
-"If Settings is open on another Space, macOS may briefly switch Spaces while showing the HUD." = "Ayarlar başka bir Space'te açıksa, macOS HUD'yi gösterirken kısa süreliğine Space değiştirebilir.";
 "Opening…" = "Açılıyor…";
 "Cycle through all apps in the group. Non-running apps will be launched when selected." = "Gruptaki tüm uygulamalarda gezin. Çalışmayan uygulamalar seçildiğinde açılır.";
 "Cycle through running apps only. If no app is running, the first app in the group will be launched." = "Yalnızca çalışan uygulamalarda gezin. Hiçbir uygulama çalışmıyorsa gruptaki ilk uygulama açılır.";

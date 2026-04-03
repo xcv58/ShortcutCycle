@@ -102,7 +102,6 @@
 "Running apps only" = "Alleen actieve apps";
 "All apps (open if needed)" = "Alle apps (openen indien nodig)";
 "Displays the keyboard shortcut used to trigger the switch." = "Toont de sneltoets die wordt gebruikt om te schakelen.";
-"If Settings is open on another Space, macOS may briefly switch Spaces while showing the HUD." = "Als Instellingen op een andere Space open is, kan macOS tijdens het tonen van de HUD kort van Space wisselen.";
 "Opening…" = "Openen…";
 "Cycle through all apps in the group. Non-running apps will be launched when selected." = "Alle apps in de groep doorlopen. Niet-actieve apps worden geopend bij selectie.";
 "Cycle through running apps only. If no app is running, the first app in the group will be launched." = "Alleen actieve apps doorlopen. Als geen app actief is, wordt de eerste app van de groep geopend.";

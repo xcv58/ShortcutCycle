@@ -103,7 +103,6 @@
 "Running apps only" = "仅运行中的应用";
 "All apps (open if needed)" = "所有应用（必要时打开）";
 "Displays the keyboard shortcut used to trigger the switch." = "显示用于触发切换的键盘快捷键。";
-"If Settings is open on another Space, macOS may briefly switch Spaces while showing the HUD." = "如果“设置”在另一个空间中打开，macOS 在显示 HUD 时可能会短暂切换空间。";
 "Opening…" = "正在打开…";
 "Cycle through all apps in the group. Non-running apps will be launched when selected." = "循环组内所有应用。未运行的应用在选中时将被启动。";
 "Cycle through running apps only. If no app is running, the first app in the group will be launched." = "仅循环运行中的应用。如果没有应用在运行，将启动组内的第一个应用。";
