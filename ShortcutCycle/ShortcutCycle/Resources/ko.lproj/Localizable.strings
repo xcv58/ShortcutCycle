@@ -102,6 +102,7 @@
 "Running apps only" = "실행 중인 앱만";
 "All apps (open if needed)" = "모든 앱 (필요시 열기)";
 "Displays the keyboard shortcut used to trigger the switch." = "전환을 트리거하는 데 사용되는 키보드 단축키를 표시합니다.";
+"If Settings is open on another Space, macOS may briefly switch Spaces while showing the HUD." = "설정이 다른 Space에서 열려 있으면 HUD를 표시하는 동안 macOS가 잠시 Space를 전환할 수 있습니다.";
 "Opening…" = "여는 중…";
 "Cycle through all apps in the group. Non-running apps will be launched when selected." = "그룹의 모든 앱을 순환합니다. 실행 중이 아닌 앱은 선택 시 실행됩니다.";
 "Cycle through running apps only. If no app is running, the first app in the group will be launched." = "실행 중인 앱만 순환합니다. 실행 중인 앱이 없으면 그룹의 첫 번째 앱이 실행됩니다.";

@@ -79,6 +79,18 @@ struct GeneralSettingsView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .padding(.leading)
+
+                    if let warningText = Self.spaceJumpWarningText(showHUD: showHUD, language: selectedLanguage) {
+                        Label {
+                            Text(warningText)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        } icon: {
+                            Image(systemName: "info.circle")
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.leading)
+                    }
                 }
             } header: {
                 Text("HUD Behavior".localized(language: selectedLanguage))
@@ -381,5 +393,16 @@ struct GeneralSettingsView: View {
         store.applyImport(export)
         showClipboardImportSuccess = true
         pendingClipboardExport = nil
+    }
+}
+
+extension GeneralSettingsView {
+    static func spaceJumpWarningText(showHUD: Bool, language: String) -> String? {
+        guard showHUD else {
+            return nil
+        }
+
+        return "If Settings is open on another Space, macOS may briefly switch Spaces while showing the HUD."
+            .localized(language: language)
     }
 }

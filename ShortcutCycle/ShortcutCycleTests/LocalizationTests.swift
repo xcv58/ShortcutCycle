@@ -191,7 +191,8 @@ final class LocalizationTests: XCTestCase {
             "Rename",
             "Delete",
             "Appearance",
-            "Language"
+            "Language",
+            "If Settings is open on another Space, macOS may briefly switch Spaces while showing the HUD."
         ]
         
         let resourcesDir = try XCTUnwrap(findResourcesDirectory(), "Could not find Resources directory containing localization files")
