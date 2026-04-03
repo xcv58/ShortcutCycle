@@ -4,6 +4,42 @@ import XCTest
 
 @MainActor
 final class SettingsWindowPresentationStateTests: XCTestCase {
+    func testVisibleOffSpaceSettingsWindowReturnsMatchingWindow() {
+        let window = MockWindow(
+            identifier: NSUserInterfaceItemIdentifier("settings"),
+            isVisible: true,
+            isOnActiveSpace: false
+        )
+
+        XCTAssertTrue(
+            SettingsWindowLifecycleCoordinator.visibleOffSpaceSettingsWindow(in: [window]) === window
+        )
+    }
+
+    func testVisibleOffSpaceSettingsWindowIgnoresCurrentSpaceHiddenAndNonSettingsWindows() {
+        XCTAssertNil(
+            SettingsWindowLifecycleCoordinator.visibleOffSpaceSettingsWindow(
+                in: [
+                    MockWindow(
+                        identifier: NSUserInterfaceItemIdentifier("settings"),
+                        isVisible: true,
+                        isOnActiveSpace: true
+                    ),
+                    MockWindow(
+                        identifier: NSUserInterfaceItemIdentifier("settings"),
+                        isVisible: false,
+                        isOnActiveSpace: false
+                    ),
+                    MockWindow(
+                        identifier: NSUserInterfaceItemIdentifier("other"),
+                        isVisible: true,
+                        isOnActiveSpace: false
+                    )
+                ]
+            )
+        )
+    }
+
     func testAppPolicyDockReopenDependsOnlyOnVisibleWindows() {
         XCTAssertTrue(
             SettingsWindowAppPolicy.shouldHandleDockReopen(
@@ -40,5 +76,35 @@ final class SettingsWindowPresentationStateTests: XCTestCase {
                 hasVisibleWindows: true
             )
         )
+    }
+}
+
+@MainActor
+private final class MockWindow: NSWindow {
+    private let mockIsVisible: Bool
+    private let mockIsOnActiveSpace: Bool
+
+    init(
+        identifier: NSUserInterfaceItemIdentifier?,
+        isVisible: Bool,
+        isOnActiveSpace: Bool
+    ) {
+        self.mockIsVisible = isVisible
+        self.mockIsOnActiveSpace = isOnActiveSpace
+        super.init(
+            contentRect: .zero,
+            styleMask: [],
+            backing: .buffered,
+            defer: false
+        )
+        self.identifier = identifier
+    }
+
+    override var isVisible: Bool {
+        mockIsVisible
+    }
+
+    override var isOnActiveSpace: Bool {
+        mockIsOnActiveSpace
     }
 }

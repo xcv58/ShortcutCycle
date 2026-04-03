@@ -13,6 +13,12 @@ enum SettingsWindowLifecycleCoordinator {
         window.identifier?.rawValue == "settings"
     }
 
+    static func visibleOffSpaceSettingsWindow(in windows: [NSWindow]) -> NSWindow? {
+        windows.first { window in
+            isSettingsWindow(window) && window.isVisible && !window.isOnActiveSpace
+        }
+    }
+
     static func shouldHandleDockReopen(hasVisibleWindows: Bool) -> Bool {
         SettingsWindowAppPolicy.shouldHandleDockReopen(
             hasVisibleWindows: hasVisibleWindows
