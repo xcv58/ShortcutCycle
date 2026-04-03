@@ -158,6 +158,7 @@ The note should use secondary/caption styling so it reads like contextual help, 
   - should return to the standard presentation path only
 - `SettingsWindowPresentationState`
   - should no longer participate in HUD presentation decisions
+  - may remain only if it is still needed for non-HUD behavior such as Dock reopen handling; otherwise it should be removed
 
 ## Error Handling and Edge Cases
 
@@ -179,3 +180,4 @@ Add or update tests for:
 - This change intentionally removes the off-space Settings handling added on the current branch
 - Prefer deleting special-case logic rather than leaving dormant helpers behind
 - Add the minimum new localized copy needed for the inline note
+- Add the new inline-note string to all supported localizations
