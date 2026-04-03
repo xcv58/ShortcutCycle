@@ -78,6 +78,12 @@ class HUDManager: @preconcurrency ObservableObject {
     var currentModifierFlags: () -> NSEvent.ModifierFlags = {
         NSEvent.modifierFlags
     }
+    var settingsWindowsProvider: () -> [NSWindow] = {
+        NSApp?.windows ?? []
+    }
+    var closeWindow: (NSWindow) -> Void = { window in
+        window.close()
+    }
     var hideHUDApp: () -> Void = {
         NSApp?.hide(nil)
     }
@@ -159,6 +165,7 @@ class HUDManager: @preconcurrency ObservableObject {
         if (window?.isVisible == true) || isRepeated || immediate {
             showTimer?.invalidate()
             showTimer = nil
+            closeOffSpaceSettingsWindowIfNeeded()
             prepareAppForHUDPresentation()
             presentHUD(items: items, activeAppId: activeAppId, shortcut: shortcut)
             startMonitoringModifiers(requiredModifiers: modifierFlags, activeKey: activeKey)
@@ -173,6 +180,7 @@ class HUDManager: @preconcurrency ObservableObject {
         showTimer?.invalidate()
         showTimer = timerScheduler.schedule(timeInterval: 0.2, repeats: false) { [weak self] _ in // 200ms delay
             Task { @MainActor in
+                self?.closeOffSpaceSettingsWindowIfNeeded()
                 self?.prepareAppForHUDPresentation()
                 self?.presentHUD(items: items, activeAppId: activeAppId, shortcut: shortcut)
                 self?.startMonitoringModifiers(requiredModifiers: modifierFlags, activeKey: activeKey)
@@ -185,6 +193,16 @@ class HUDManager: @preconcurrency ObservableObject {
 
         // Monitor release globally while we wait to decide whether the HUD should appear.
         startPreShowMonitoring(requiredModifiers: modifierFlags, activeKey: activeKey)
+    }
+
+    private func closeOffSpaceSettingsWindowIfNeeded() {
+        guard let settingsWindow = SettingsWindowLifecycleCoordinator.visibleOffSpaceSettingsWindow(
+            in: settingsWindowsProvider()
+        ) else {
+            return
+        }
+
+        closeWindow(settingsWindow)
     }
 
     private func prepareAppForHUDPresentation() {
