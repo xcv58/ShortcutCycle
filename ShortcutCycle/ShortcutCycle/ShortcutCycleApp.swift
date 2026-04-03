@@ -164,8 +164,7 @@ struct AppCommands: Commands {
 
 // MARK: - Settings Window Observer
 
-/// Switches activation policy back to .accessory when the settings window closes,
-/// restoring the menu-bar-only appearance.
+/// Observes the settings window so close callbacks can react to dismissal.
 struct SettingsWindowObserver: NSViewRepresentable {
     let onWindowWillClose: () -> Void
 
@@ -220,9 +219,6 @@ struct SettingsWindowObserver: NSViewRepresentable {
             ) { _ in
                 Task { @MainActor in
                     self.onWindowWillClose()
-                }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    NSApp.setActivationPolicy(.accessory)
                 }
             }
         }
