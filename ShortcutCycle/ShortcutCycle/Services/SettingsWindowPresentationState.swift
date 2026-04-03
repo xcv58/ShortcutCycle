@@ -1,75 +1,74 @@
 import Foundation
 import AppKit
 
+struct SettingsWindowSnapshot: Equatable {
+    let isSettingsWindow: Bool
+    let isVisible: Bool
+    let isOnActiveSpace: Bool
+}
+
 enum SettingsWindowPresentationAction: Equatable {
     case bringToFront
     case restoreHiddenWindow
 }
 
 enum SettingsWindowHUDPresentationPolicy {
+    static func shouldUseDeferredActivation(windows: [SettingsWindowSnapshot]) -> Bool {
+        windows.contains { snapshot in
+            snapshot.isSettingsWindow && snapshot.isVisible && !snapshot.isOnActiveSpace
+        }
+    }
+
+    static func shouldHandleDockReopen(hasVisibleWindows: Bool) -> Bool {
+        !hasVisibleWindows
+    }
+
     static func shouldTemporarilyHideSettingsWindow(
         isVisible: Bool,
         isOnActiveSpace: Bool,
-        targetHasVisibleWindowsOnCurrentSpace: Bool
+        targetHasVisibleWindowsOnCurrentSpace _: Bool
     ) -> Bool {
-        guard isVisible else { return false }
-
-        if !isOnActiveSpace {
-            return true
-        }
-
-        return !targetHasVisibleWindowsOnCurrentSpace
-    }
-}
-
-@MainActor
-struct SettingsWindowPresentationState {
-    private(set) var isTemporarilyHidden = false
-
-    mutating func markTemporarilyHidden() {
-        isTemporarilyHidden = true
-    }
-
-    mutating func presentationActionForExistingWindow(isVisible: Bool) -> SettingsWindowPresentationAction {
-        defer { isTemporarilyHidden = false }
-
-        if isTemporarilyHidden || !isVisible {
-            return .restoreHiddenWindow
-        }
-
-        return .bringToFront
-    }
-
-    mutating func windowDidClose() {
-        isTemporarilyHidden = false
-    }
-
-    func shouldHandleDockReopen(hasVisibleWindows: Bool) -> Bool {
-        isTemporarilyHidden || !hasVisibleWindows
+        shouldUseDeferredActivation(
+            windows: [
+                SettingsWindowSnapshot(
+                    isSettingsWindow: true,
+                    isVisible: isVisible,
+                    isOnActiveSpace: isOnActiveSpace
+                )
+            ]
+        )
     }
 }
 
 @MainActor
 enum SettingsWindowLifecycleCoordinator {
-    private static var presentationState = SettingsWindowPresentationState()
-
     static func isSettingsWindow(_ window: NSWindow) -> Bool {
         window.identifier?.rawValue == "settings"
     }
 
-    static func markTemporarilyHidden() {
-        presentationState.markTemporarilyHidden()
-    }
-
-    static func presentationAction(for window: NSWindow) -> SettingsWindowPresentationAction {
-        presentationState.presentationActionForExistingWindow(isVisible: window.isVisible)
-    }
-
-    static func windowDidClose() {
-        presentationState.windowDidClose()
+    static func hasOffSpaceSettingsWindow(in windows: [NSWindow]) -> Bool {
+        SettingsWindowHUDPresentationPolicy.shouldUseDeferredActivation(
+            windows: windows.map { window in
+                SettingsWindowSnapshot(
+                    isSettingsWindow: isSettingsWindow(window),
+                    isVisible: window.isVisible,
+                    isOnActiveSpace: window.isOnActiveSpace
+                )
+            }
+        )
     }
 
     static func shouldHandleDockReopen(hasVisibleWindows: Bool) -> Bool {
-        presentationState.shouldHandleDockReopen(hasVisibleWindows: hasVisibleWindows)
+        SettingsWindowHUDPresentationPolicy.shouldHandleDockReopen(
+            hasVisibleWindows: hasVisibleWindows
+        )
     }
+
+    static func markTemporarilyHidden() {}
+
+    static func presentationAction(for window: NSWindow) -> SettingsWindowPresentationAction {
+        window.isVisible ? .bringToFront : .restoreHiddenWindow
+    }
+
+    static func windowDidClose() {}
 }
