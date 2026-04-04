@@ -143,3 +143,8 @@
 
 /* Share */
 "Share" = "مشاركة";
+
+/* Welcome banner */
+"Show welcome again" = "عرض الترحيب مجدداً";
+"ShortcutCycle is running in your menu bar" = "ShortcutCycle يعمل في شريط القوائم";
+"Look for the ShortcutCycle icon in the top-right menu bar whenever you want to open the app again." = "ابحث عن أيقونة ShortcutCycle في شريط القوائم أعلى اليمين عندما تريد فتح التطبيق مجدداً.";

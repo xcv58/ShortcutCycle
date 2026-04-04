@@ -142,3 +142,8 @@
 
 /* Share */
 "Share" = "Deel";
+
+/* Welcome banner */
+"Show welcome again" = "Welkomst opnieuw tonen";
+"ShortcutCycle is running in your menu bar" = "ShortcutCycle wordt uitgevoerd in de menubalk";
+"Look for the ShortcutCycle icon in the top-right menu bar whenever you want to open the app again." = "Zoek het ShortcutCycle-pictogram in de menubalk rechtsboven wanneer u de app opnieuw wilt openen.";
