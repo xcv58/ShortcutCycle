@@ -218,6 +218,26 @@ final class AppItemTests: XCTestCase {
         )
     }
 
+    func testRunningAppQuickAddTieBreaksByBundleIdentifierWhenNamesMatch() throws {
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        // "Café" and "Cafe" fold to the same string under .diacriticInsensitive,
+        // triggering the bundle-ID tie-breaker in the sort.
+        let appAURL = try makeAppBundle(name: "Café", bundleIdentifier: "com.test.aaa", in: tempDir)
+        let appZURL = try makeAppBundle(name: "Cafe", bundleIdentifier: "com.test.zzz", in: tempDir)
+
+        let candidates = RunningAppQuickAdd.candidates(
+            for: [],
+            runningApps: [
+                RunningAppQuickAddSource(bundleIdentifier: "com.test.zzz", bundleURL: appZURL),
+                RunningAppQuickAddSource(bundleIdentifier: "com.test.aaa", bundleURL: appAURL)
+            ]
+        )
+
+        XCTAssertEqual(candidates.map(\.bundleIdentifier), ["com.test.aaa", "com.test.zzz"])
+    }
+
     func testRunningAppQuickAddSkipsCandidatesWithoutResolvableBundles() {
         let candidates = RunningAppQuickAdd.candidates(
             for: [],
