@@ -9,6 +9,7 @@ struct MenuBarView: View {
     @EnvironmentObject var store: GroupStore
     @StateObject private var launchAtLogin = LaunchAtLoginManager.shared
     @AppStorage("appTheme") private var appTheme: AppTheme = .system
+    @AppStorage("hasDismissedWelcome") private var hasDismissedWelcome = false
 
     
     var selectedLanguage: String = "system"
@@ -102,7 +103,7 @@ struct MenuBarView: View {
             }
 
             MenuBarButton(title: "Show welcome again".localized(language: selectedLanguage), icon: "sparkles") {
-                WelcomeCoordinator.shared.requestReplay()
+                hasDismissedWelcome = false
                 ShortcutCycleURLRouter.openSettingsFromOutsideView(tab: .groups)
             }
 

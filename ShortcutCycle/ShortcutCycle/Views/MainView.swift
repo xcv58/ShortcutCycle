@@ -17,15 +17,13 @@ struct MainView: View {
     @EnvironmentObject var localeObserver: LocaleObserver
     @State private var selectedTab = URLSettingsTab.groups.rawValue
     @State private var showDeleteConfirmation = false
-    // Observed (not owned) — WelcomeCoordinator.shared is an app-scoped singleton.
-    @ObservedObject private var welcomeCoordinator = WelcomeCoordinator.shared
-    @State private var welcomePresentation = WelcomePresentationState()
+    @AppStorage("hasDismissedWelcome") private var hasDismissedWelcome = false
 
     var body: some View {
         VStack(spacing: 0) {
-            if welcomePresentation.isShowingCallout {
+            if !hasDismissedWelcome {
                 WelcomeBannerView(selectedLanguage: selectedLanguage) {
-                    welcomePresentation.dismiss()
+                    hasDismissedWelcome = true
                 }
                 .padding([.horizontal, .top])
             }
@@ -45,19 +43,11 @@ struct MainView: View {
             }
         }
         .focusedSceneValue(\.selectedTab, $selectedTab)
-        .background(SettingsWindowObserver {
-            welcomePresentation.endWindowSession()
-        })
+        .background(SettingsWindowObserver())
         .onAppear {
             if let pendingTab = ShortcutCycleURLNavigationState.consumePendingSettingsTab() {
                 selectedTab = pendingTab.rawValue
             }
-            // Consume a pending welcome request queued before the window opened.
-            consumeWelcomeRequest()
-        }
-        .onReceive(welcomeCoordinator.$pendingRequestID.compactMap { $0 }) { _ in
-            // Consume a welcome request that arrived while the window is already open.
-            consumeWelcomeRequest()
         }
         .onReceive(NotificationCenter.default.publisher(for: .deleteGroupRequested)) { _ in
             showDeleteConfirmation = true
@@ -89,15 +79,6 @@ struct MainView: View {
         .id("\(selectedLanguage)-\(localeObserver.id)") // Force full redraw when language or system locale changes
     }
 
-    // MARK: - Private
-
-    private func consumeWelcomeRequest() {
-        guard let requestID = welcomeCoordinator.pendingRequestID else { return }
-        if let nextTab = welcomePresentation.consumePendingRequest(requestID) {
-            selectedTab = nextTab
-        }
-        welcomeCoordinator.markRequestHandled(requestID)
-    }
 }
 
 #Preview {

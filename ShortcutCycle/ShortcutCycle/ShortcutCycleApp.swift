@@ -719,14 +719,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
     }
 
-    func applicationDidFinishLaunching(_ notification: Notification) {
-        // On the very first manual launch, auto-open Settings to the Groups tab
-        // so new users can see where to configure their shortcuts.
-        if WelcomeCoordinator.shared.prepareAutomaticWelcomeIfNeeded() != nil {
-            ShortcutCycleURLRouter.openSettingsFromOutsideView(tab: .groups)
-        }
-    }
-
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         guard SettingsWindowLifecycleCoordinator.shouldHandleDockReopen(hasVisibleWindows: flag) else {
             return false

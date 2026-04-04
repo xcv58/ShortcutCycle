@@ -10,6 +10,7 @@ struct GeneralSettingsView: View {
     @AppStorage("showHUD") private var showHUD = true
     @AppStorage("showShortcutInHUD") private var showShortcutInHUD = true
     @AppStorage("appTheme") private var appTheme: AppTheme = .system
+    @AppStorage("hasDismissedWelcome") private var hasDismissedWelcome = false
     @StateObject private var launchAtLogin = LaunchAtLoginManager.shared
     
     // Derived language for localization updates
@@ -123,8 +124,7 @@ struct GeneralSettingsView: View {
                 .pickerStyle(.menu)
 
                 Button("Show welcome again".localized(language: selectedLanguage)) {
-                    WelcomeCoordinator.shared.requestReplay()
-                    ShortcutCycleURLRouter.openSettingsFromOutsideView(tab: .groups)
+                    hasDismissedWelcome = false
                 }
 
             } header: {
