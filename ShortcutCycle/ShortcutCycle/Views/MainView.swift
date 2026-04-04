@@ -30,7 +30,7 @@ struct MainView: View {
             TabView(selection: $selectedTab) {
                 GroupSettingsView()
                     .tabItem {
-                        Label("Groups".localized(language: selectedLanguage), systemImage: "rectangle.stack.3.hexagon")
+                        Label("Groups".localized(language: selectedLanguage), systemImage: "square.grid.2x2")
                     }
                     .tag(URLSettingsTab.groups.rawValue)
 
@@ -73,7 +73,7 @@ struct MainView: View {
             Text("This action cannot be undone.".localized(language: selectedLanguage))
         }
         .preferredColorScheme(appTheme.colorScheme)
-        .frame(minWidth: 600, minHeight: 400)
+        .frame(minWidth: 720, minHeight: 460)
         .environment(\.locale, LanguageManager.shared.locale)
         .id("\(selectedLanguage)-\(localeObserver.id)") // Force full redraw when language or system locale changes
     }

@@ -164,4 +164,101 @@ final class AppItemTests: XCTestCase {
 
         XCTAssertNil(item)
     }
+
+    // MARK: - RunningAppQuickAdd
+
+    func testRunningAppQuickAddFiltersSelfExistingAppsAndNonRegularApps() throws {
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let finderURL = try makeAppBundle(name: "Finder", bundleIdentifier: "com.apple.finder", in: tempDir)
+        let mailURL = try makeAppBundle(name: "Mail", bundleIdentifier: "com.test.mail", in: tempDir)
+        let browserURL = try makeAppBundle(name: "Browser", bundleIdentifier: "com.test.browser", in: tempDir)
+        let helperURL = try makeAppBundle(name: "Helper", bundleIdentifier: "com.test.helper", in: tempDir)
+        let shortcutCycleURL = try makeAppBundle(name: "ShortcutCycle", bundleIdentifier: "com.xcv58.ShortcutCycle", in: tempDir)
+
+        let groupApps = [AppItem(bundleIdentifier: "com.test.browser", name: "Browser")]
+        let candidates = RunningAppQuickAdd.candidates(
+            for: groupApps,
+            runningApps: [
+                RunningAppQuickAddSource(bundleIdentifier: "com.xcv58.ShortcutCycle", bundleURL: shortcutCycleURL),
+                RunningAppQuickAddSource(bundleIdentifier: "com.apple.finder", bundleURL: finderURL),
+                RunningAppQuickAddSource(bundleIdentifier: "com.test.mail", bundleURL: mailURL),
+                RunningAppQuickAddSource(bundleIdentifier: "com.test.helper", bundleURL: helperURL, isRegularApp: false),
+                RunningAppQuickAddSource(bundleIdentifier: "com.test.browser", bundleURL: browserURL)
+            ],
+            excludedBundleIdentifiers: ["com.xcv58.ShortcutCycle"]
+        )
+
+        XCTAssertEqual(candidates.map(\.bundleIdentifier), ["com.apple.finder", "com.test.mail"])
+        XCTAssertEqual(candidates.map(\.name), ["Finder", "Mail"])
+    }
+
+    func testRunningAppQuickAddDedupesBundleIdentifiersAndSortsAlphabetically() throws {
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let zebraURL = try makeAppBundle(name: "zebra", bundleIdentifier: "com.test.zebra", in: tempDir)
+        let editorURL = try makeAppBundle(name: "Editor", bundleIdentifier: "com.test.editor", in: tempDir)
+        let archiveURL = try makeAppBundle(name: "Archive", bundleIdentifier: "com.test.archive", in: tempDir)
+
+        let candidates = RunningAppQuickAdd.candidates(
+            for: [],
+            runningApps: [
+                RunningAppQuickAddSource(bundleIdentifier: "com.test.zebra", bundleURL: zebraURL),
+                RunningAppQuickAddSource(bundleIdentifier: "com.test.editor", bundleURL: editorURL),
+                RunningAppQuickAddSource(bundleIdentifier: "com.test.archive", bundleURL: archiveURL),
+                RunningAppQuickAddSource(bundleIdentifier: "com.test.editor", bundleURL: editorURL)
+            ]
+        )
+
+        XCTAssertEqual(
+            candidates.map(\.bundleIdentifier),
+            ["com.test.archive", "com.test.editor", "com.test.zebra"]
+        )
+    }
+
+    func testRunningAppQuickAddTieBreaksByBundleIdentifierWhenNamesMatch() throws {
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        // "Café" and "Cafe" fold to the same string under .diacriticInsensitive,
+        // triggering the bundle-ID tie-breaker in the sort.
+        let appAURL = try makeAppBundle(name: "Café", bundleIdentifier: "com.test.aaa", in: tempDir)
+        let appZURL = try makeAppBundle(name: "Cafe", bundleIdentifier: "com.test.zzz", in: tempDir)
+
+        let candidates = RunningAppQuickAdd.candidates(
+            for: [],
+            runningApps: [
+                RunningAppQuickAddSource(bundleIdentifier: "com.test.zzz", bundleURL: appZURL),
+                RunningAppQuickAddSource(bundleIdentifier: "com.test.aaa", bundleURL: appAURL)
+            ]
+        )
+
+        XCTAssertEqual(candidates.map(\.bundleIdentifier), ["com.test.aaa", "com.test.zzz"])
+    }
+
+    func testRunningAppQuickAddSkipsCandidatesWithoutResolvableBundles() {
+        let candidates = RunningAppQuickAdd.candidates(
+            for: [],
+            runningApps: [RunningAppQuickAddSource(bundleIdentifier: "com.test.missing", bundleURL: nil)]
+        )
+
+        XCTAssertTrue(candidates.isEmpty)
+    }
+
+    private func makeAppBundle(name: String, bundleIdentifier: String, in root: URL) throws -> URL {
+        let appDir = root.appendingPathComponent("\(name).app")
+        let contentsDir = appDir.appendingPathComponent("Contents")
+        try FileManager.default.createDirectory(at: contentsDir, withIntermediateDirectories: true)
+
+        let plist: [String: Any] = [
+            "CFBundleIdentifier": bundleIdentifier,
+            "CFBundleName": name
+        ]
+        let plistData = try PropertyListSerialization.data(fromPropertyList: plist, format: .xml, options: 0)
+        try plistData.write(to: contentsDir.appendingPathComponent("Info.plist"))
+
+        return appDir
+    }
 }

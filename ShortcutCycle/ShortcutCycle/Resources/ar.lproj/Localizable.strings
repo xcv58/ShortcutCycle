@@ -18,6 +18,11 @@
 "Enter group name" = "أدخل اسم المجموعة";
 "Keyboard Shortcut" = "اختصار لوحة المفاتيح";
 "Applications" = "التطبيقات";
+"Add Apps" = "إضافة تطبيقات";
+"Browse or drag from Finder" = "تصفح أو اسحب من Finder";
+"Click to add currently open apps to this group." = "انقر لإضافة التطبيقات المفتوحة حالياً إلى هذه المجموعة.";
+"No apps in this group yet." = "لا توجد تطبيقات في هذه المجموعة بعد.";
+"Running Apps" = "التطبيقات قيد التشغيل";
 "app" = "تطبيق";
 "apps" = "تطبيقات";
 "No apps added yet. Drag apps here or click the drop zone below." = "لم يتم إضافة تطبيقات بعد. اسحب التطبيقات هنا أو انقر فوق المنطقة أدناه.";

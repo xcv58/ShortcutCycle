@@ -59,7 +59,17 @@ final class GroupEditViewTests: XCTestCase {
         )
     }
 
-    private func hostGroupEditView(width: CGFloat, height: CGFloat = 600) -> NSHostingView<AnyView> {
+    func testRunningAppsQuickAddSectionVisibilityDependsOnCandidates() {
+        XCTAssertTrue(
+            GroupEditView.shouldShowRunningAppQuickAddSection([AppItem(bundleIdentifier: "com.test.mail", name: "Mail")])
+        )
+        XCTAssertFalse(GroupEditView.shouldShowRunningAppQuickAddSection([]))
+    }
+
+    private func hostGroupEditView(
+        width: CGFloat,
+        height: CGFloat = 600
+    ) -> NSHostingView<AnyView> {
         let groupId = try! XCTUnwrap(store.groups.first?.id)
         let rootView = AnyView(
             GroupEditView(groupId: groupId)

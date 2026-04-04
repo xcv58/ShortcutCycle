@@ -18,6 +18,11 @@
 "Enter group name" = "输入群组名称";
 "Keyboard Shortcut" = "键盘快捷键";
 "Applications" = "应用程序";
+"Add Apps" = "添加应用";
+"Browse or drag from Finder" = "从 Finder 浏览或拖入";
+"Click to add currently open apps to this group." = "点击以将当前打开的应用添加到此群组。";
+"No apps in this group yet." = "此群组中还没有应用。";
+"Running Apps" = "正在运行的应用";
 "app" = "个应用";
 "apps" = "个应用";
 "No apps added yet. Drag apps here or click the drop zone below." = "尚未添加应用。将应用拖到此处或点击下方的放置区域。";

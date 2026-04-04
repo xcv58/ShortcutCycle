@@ -67,19 +67,19 @@ struct AppGridItemView: View {
     @State private var isHovered = false
     
     var body: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 8) {
             ZStack(alignment: .topTrailing) {
                 // App icon
                 Group {
                     if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: app.bundleIdentifier) {
                         Image(nsImage: NSWorkspace.shared.icon(forFile: appURL.path))
                             .resizable()
-                            .frame(width: 48, height: 48)
+                            .frame(width: 56, height: 56)
                     } else {
                         Image(systemName: "app.fill")
-                            .font(.system(size: 36))
+                            .font(.system(size: 42))
                             .foregroundColor(.secondary)
-                            .frame(width: 48, height: 48)
+                            .frame(width: 56, height: 56)
                     }
                 }
                 
@@ -100,9 +100,9 @@ struct AppGridItemView: View {
                 .font(.caption)
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
-                .frame(width: 80)
+                .frame(width: 88)
         }
-        .padding(8)
+        .padding(10)
         .background(
             RoundedRectangle(cornerRadius: 8)
                 .fill(isHovered ? Color.accentColor.opacity(0.1) : Color.clear)
@@ -122,9 +122,9 @@ struct AppDropZoneView: View {
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
     
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 10) {
             Image(systemName: "plus.app")
-                .font(.system(size: 24))
+                .font(.system(size: 28))
                 .foregroundColor(isTargeted ? .accentColor : .secondary)
             
             Text("Drop or click to add apps".localized(language: selectedLanguage))
@@ -132,7 +132,7 @@ struct AppDropZoneView: View {
                 .foregroundColor(isTargeted ? .accentColor : .secondary)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 80)
+        .frame(height: 112)
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .strokeBorder(
