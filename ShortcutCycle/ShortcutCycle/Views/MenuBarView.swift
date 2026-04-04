@@ -9,7 +9,7 @@ struct MenuBarView: View {
     @EnvironmentObject var store: GroupStore
     @StateObject private var launchAtLogin = LaunchAtLoginManager.shared
     @AppStorage("appTheme") private var appTheme: AppTheme = .system
-    @AppStorage("hasDismissedWelcome") private var hasDismissedWelcome = false
+    @AppStorage(WelcomeExperiencePolicy.hasDismissedWelcomeKey) private var hasDismissedWelcome = false
 
     
     var selectedLanguage: String = "system"
@@ -102,9 +102,11 @@ struct MenuBarView: View {
                 ShortcutCycleURLRouter.openSettingsFromOutsideView()
             }
 
-            MenuBarButton(title: "Show welcome again".localized(language: selectedLanguage), icon: "sparkles") {
-                hasDismissedWelcome = false
-                ShortcutCycleURLRouter.openSettingsFromOutsideView(tab: .groups)
+            if WelcomeExperiencePolicy.shouldShowReplayControl(hasDismissedWelcome: hasDismissedWelcome) {
+                MenuBarButton(title: "Show welcome again".localized(language: selectedLanguage), icon: "sparkles") {
+                    WelcomeExperiencePolicy.prepareReplay()
+                    ShortcutCycleURLRouter.openSettingsFromOutsideView(tab: .groups)
+                }
             }
 
             MenuBarButton(title: "Quit".localized(language: selectedLanguage), icon: "power") {

@@ -17,11 +17,11 @@ struct MainView: View {
     @EnvironmentObject var localeObserver: LocaleObserver
     @State private var selectedTab = URLSettingsTab.groups.rawValue
     @State private var showDeleteConfirmation = false
-    @AppStorage("hasDismissedWelcome") private var hasDismissedWelcome = false
+    @AppStorage(WelcomeExperiencePolicy.hasDismissedWelcomeKey) private var hasDismissedWelcome = false
 
     var body: some View {
         VStack(spacing: 0) {
-            if !hasDismissedWelcome {
+            if WelcomeExperiencePolicy.shouldShowBanner(hasDismissedWelcome: hasDismissedWelcome) {
                 WelcomeBannerView(selectedLanguage: selectedLanguage) {
                     hasDismissedWelcome = true
                 }

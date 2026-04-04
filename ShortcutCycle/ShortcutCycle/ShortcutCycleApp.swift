@@ -661,6 +661,48 @@ enum ShortcutCycleURLRouter {
 }
 
 
+enum WelcomeExperiencePolicy {
+    static let hasDismissedWelcomeKey = "hasDismissedWelcome"
+    static let hasAutoOpenedWelcomeSettingsKey = "hasAutoOpenedWelcomeSettings"
+
+    static func shouldShowBanner(hasDismissedWelcome: Bool) -> Bool {
+        !hasDismissedWelcome
+    }
+
+    static func shouldShowReplayControl(hasDismissedWelcome: Bool) -> Bool {
+        hasDismissedWelcome
+    }
+
+    static func prepareReplay(userDefaults: UserDefaults = .standard) {
+        userDefaults.set(false, forKey: hasDismissedWelcomeKey)
+    }
+
+    static func shouldAutoOpenSettingsOnFirstManualLaunch(
+        hasAutoOpenedWelcomeSettings: Bool,
+        suppressForCurrentLaunch: Bool
+    ) -> Bool {
+        !hasAutoOpenedWelcomeSettings && !suppressForCurrentLaunch
+    }
+
+    @discardableResult
+    static func prepareAutomaticSettingsOpenIfNeeded(
+        userDefaults: UserDefaults = .standard,
+        suppressForCurrentLaunch: Bool
+    ) -> Bool {
+        let hasAutoOpened = userDefaults.bool(forKey: hasAutoOpenedWelcomeSettingsKey)
+        guard shouldAutoOpenSettingsOnFirstManualLaunch(
+            hasAutoOpenedWelcomeSettings: hasAutoOpened,
+            suppressForCurrentLaunch: suppressForCurrentLaunch
+        ) else {
+            return false
+        }
+
+        userDefaults.set(true, forKey: hasAutoOpenedWelcomeSettingsKey)
+        return true
+    }
+}
+
+
 @main
 struct ShortcutCycleApp: App {
     @StateObject private var store = GroupStore.shared
@@ -704,6 +746,9 @@ struct ShortcutCycleApp: App {
 
 @MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
+    private var hasEvaluatedInitialManualActivation = false
+    private var suppressAutomaticWelcomeForCurrentLaunch = false
+
     func applicationWillFinishLaunching(_ notification: Notification) {
         // Run as a menu bar app (no dock icon)
         NSApp.setActivationPolicy(.accessory)
@@ -719,6 +764,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
     }
 
+    func applicationDidBecomeActive(_ notification: Notification) {
+        guard !hasEvaluatedInitialManualActivation else { return }
+        hasEvaluatedInitialManualActivation = true
+
+        if WelcomeExperiencePolicy.prepareAutomaticSettingsOpenIfNeeded(
+            suppressForCurrentLaunch: suppressAutomaticWelcomeForCurrentLaunch
+        ) {
+            ShortcutCycleURLRouter.openSettingsFromOutsideView(tab: .groups)
+        }
+    }
+
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         guard SettingsWindowLifecycleCoordinator.shouldHandleDockReopen(hasVisibleWindows: flag) else {
             return false
@@ -732,6 +788,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         _ event: NSAppleEventDescriptor,
         withReply reply: NSAppleEventDescriptor
     ) {
+        suppressAutomaticWelcomeForCurrentLaunch = true
         guard let urlString = event.paramDescriptor(forKeyword: keyDirectObject)?.stringValue,
               let url = URL(string: urlString) else {
             return
