@@ -127,7 +127,7 @@ class ShortcutManager: @preconcurrency ObservableObject {
     private func handleToggleSettings() {
         // Find if the settings window is already open
         let settingsWindow = NSApp.windows.first { window in
-            return window.identifier?.rawValue == "settings"
+            SettingsWindowLifecycleCoordinator.isSettingsWindow(window)
         }
         
         if let window = settingsWindow, window.isVisible {

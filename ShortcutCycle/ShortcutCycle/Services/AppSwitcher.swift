@@ -504,7 +504,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
             guard let self else { return }
             guard !self.hasVisibleWindows(pid: pid) else { return }
-            app.activate(options: .activateAllWindows)
+            _ = self.activateRunningAppInstance(app)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
                 self?.relaunchToFront(bundleId: bundleId)
             }

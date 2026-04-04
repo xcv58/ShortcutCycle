@@ -1,6 +1,5 @@
 
 import SwiftUI
-import Combine
 import KeyboardShortcuts
 import UniformTypeIdentifiers
 #if canImport(ShortcutCycleCore)
