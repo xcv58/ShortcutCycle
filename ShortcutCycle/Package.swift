@@ -28,6 +28,7 @@ let package = Package(
                 "GroupStore.swift",
                 "HUDAppItem.swift",
                 "HUDItemFilter.swift",
+                "ShortcutSuggestion.swift",
                 "SettingsExport.swift",
                 "KeyboardShortcutsNames.swift",
                 "URLCommandFileValidation.swift",

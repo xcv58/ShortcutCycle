@@ -70,6 +70,8 @@
 		DF88A3B52F300CB20042E749 /* URLScheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3B72F300CB20042E749 /* URLScheme.swift */; };
 		DF88A3B92F300CB20042E749 /* HUDItemFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3B82F300CB20042E749 /* HUDItemFilter.swift */; };
 		DF88A3BA2F300CB20042E749 /* HUDItemFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3B82F300CB20042E749 /* HUDItemFilter.swift */; };
+		A1B200022F70000100C0DE01 /* ShortcutSuggestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B200012F70000100C0DE01 /* ShortcutSuggestion.swift */; };
+		A1B200032F70000100C0DE01 /* ShortcutSuggestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B200012F70000100C0DE01 /* ShortcutSuggestion.swift */; };
 		DF88A3C22F300CE00042E749 /* WelcomeBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3C02F300CE00042E749 /* WelcomeBannerView.swift */; };
 		DF88A3C32F300CE00042E749 /* WelcomeBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3C02F300CE00042E749 /* WelcomeBannerView.swift */; };
 		E1F4B0012F40000100C0DE01 /* URLCommandFileValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F4B0032F40000100C0DE01 /* URLCommandFileValidation.swift */; };
@@ -140,6 +142,7 @@
 		DF88A3AF2F300CB10042E749 /* BackupBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupBrowserView.swift; sourceTree = "<group>"; };
 		DF88A3B72F300CB20042E749 /* URLScheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLScheme.swift; sourceTree = "<group>"; };
 		DF88A3B82F300CB20042E749 /* HUDItemFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HUDItemFilter.swift; sourceTree = "<group>"; };
+		A1B200012F70000100C0DE01 /* ShortcutSuggestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutSuggestion.swift; sourceTree = "<group>"; };
 		DF88A3C02F300CE00042E749 /* WelcomeBannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeBannerView.swift; sourceTree = "<group>"; };
 		DF8B47D72F2F090100C473F8 /* ShortcutCycleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ShortcutCycleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E1F4B0032F40000100C0DE01 /* URLCommandFileValidation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLCommandFileValidation.swift; sourceTree = "<group>"; };
@@ -207,6 +210,7 @@
 				DF88A33B2F300B110042E749 /* GroupStore.swift */,
 				DF88A33C2F300B110042E749 /* HUDAppItem.swift */,
 				DF88A3B82F300CB20042E749 /* HUDItemFilter.swift */,
+				A1B200012F70000100C0DE01 /* ShortcutSuggestion.swift */,
 				DF88A33D2F300B110042E749 /* KeyboardShortcutsNames.swift */,
 				DF88A33E2F300B110042E749 /* SettingsExport.swift */,
 				E1F4B0032F40000100C0DE01 /* URLCommandFileValidation.swift */,
@@ -523,6 +527,7 @@
 				DF88A3912F300C640042E749 /* HUDPreviewView.swift in Sources */,
 				DF88A39A2F300C800042E749 /* HUDAppItem.swift in Sources */,
 				DF88A3B92F300CB20042E749 /* HUDItemFilter.swift in Sources */,
+				A1B200022F70000100C0DE01 /* ShortcutSuggestion.swift in Sources */,
 				DF88A39B2F300C800042E749 /* SettingsExport.swift in Sources */,
 				DF88A39C2F300C800042E749 /* AppGroup.swift in Sources */,
 				DF88A3A62F300CA00042E749 /* LaunchAtLoginManager.swift in Sources */,
@@ -579,6 +584,7 @@
 				DF88A3822F300B110042E749 /* AppSwitcher.swift in Sources */,
 				DF88A3832F300B110042E749 /* HUDAppItem.swift in Sources */,
 				DF88A3BA2F300CB20042E749 /* HUDItemFilter.swift in Sources */,
+				A1B200032F70000100C0DE01 /* ShortcutSuggestion.swift in Sources */,
 				DF88A3842F300B110042E749 /* AppItem.swift in Sources */,
 				DF88A3852F300B110042E749 /* LaunchAtLoginManager.swift in Sources */,
 				DF88A3862F300B110042E749 /* MenuBarView.swift in Sources */,
