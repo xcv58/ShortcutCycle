@@ -87,30 +87,31 @@ struct GroupEditView: View {
                             }
                     }
 
-                    Text("Cycling Mode".localized(language: selectedLanguage))
-                        .font(.caption.weight(.medium))
-                        .foregroundColor(.secondary)
-                        .padding(.top, 4)
+                    HStack {
+                        Text("Cycling Mode".localized(language: selectedLanguage))
+                            .font(.caption.weight(.medium))
+                            .foregroundColor(.secondary)
 
-                    ViewThatFits(in: .horizontal) {
-                        Picker("Cycling Mode".localized(language: selectedLanguage), selection: cyclingModeSelection) {
-                            Text("Running apps only".localized(language: selectedLanguage)).tag(false)
-                            Text("All apps (open if needed)".localized(language: selectedLanguage)).tag(true)
-                        }
-                        .pickerStyle(.segmented)
-                        .font(.caption)
-                        .labelsHidden()
-                        .fixedSize(horizontal: true, vertical: false)
+                        ViewThatFits(in: .horizontal) {
+                            Picker("Cycling Mode".localized(language: selectedLanguage), selection: cyclingModeSelection) {
+                                Text("Running apps only".localized(language: selectedLanguage)).tag(false)
+                                Text("All apps (open if needed)".localized(language: selectedLanguage)).tag(true)
+                            }
+                            .pickerStyle(.segmented)
+                            .font(.caption)
+                            .labelsHidden()
+                            .fixedSize(horizontal: true, vertical: false)
 
-                        Picker("Cycling Mode".localized(language: selectedLanguage), selection: cyclingModeSelection) {
-                            Text("Running apps only".localized(language: selectedLanguage)).tag(false)
-                            Text("All apps (open if needed)".localized(language: selectedLanguage)).tag(true)
+                            Picker("Cycling Mode".localized(language: selectedLanguage), selection: cyclingModeSelection) {
+                                Text("Running apps only".localized(language: selectedLanguage)).tag(false)
+                                Text("All apps (open if needed)".localized(language: selectedLanguage)).tag(true)
+                            }
+                            .pickerStyle(.menu)
+                            .font(.caption)
+                            .labelsHidden()
                         }
-                        .pickerStyle(.menu)
-                        .font(.caption)
-                        .labelsHidden()
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 4)
 
                     Text(cyclingModeHelpText)
                     .font(.caption)
