@@ -114,6 +114,11 @@ final class PressAndHoldTests: XCTestCase {
     }
 
     override func tearDown() async throws {
+        // Flush any DummyEventMonitorTokens out of eventMonitors using the
+        // stub removeEventMonitor (safe no-op), before we restore the real
+        // NSEvent.removeMonitor — which would crash on non-monitor objects.
+        manager.hide()
+
         manager.timeProvider = SystemTimeProvider()
         manager.timerScheduler = SystemTimerScheduler()
         manager.activateHUDApp = { NSApp?.activate(ignoringOtherApps: true) }
