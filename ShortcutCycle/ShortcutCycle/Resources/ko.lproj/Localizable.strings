@@ -141,3 +141,8 @@
 
 /* Share */
 "Share" = "공유";
+
+/* Welcome banner */
+"Show welcome again" = "환영 메시지 다시 보기";
+"ShortcutCycle is running in your menu bar" = "ShortcutCycle이 메뉴 막대에서 실행 중입니다";
+"Look for the ShortcutCycle icon in the top-right menu bar whenever you want to open the app again." = "앱을 다시 열고 싶을 때는 오른쪽 상단 메뉴 막대에서 ShortcutCycle 아이콘을 찾으세요.";

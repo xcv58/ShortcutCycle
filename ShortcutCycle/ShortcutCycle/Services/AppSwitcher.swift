@@ -18,6 +18,12 @@ class AppSwitcher: @preconcurrency ObservableObject {
     static let shared = AppSwitcher()
     
     let objectWillChange = ObservableObjectPublisher()
+    var unhideRunningApp: (NSRunningApplication) -> Void = { app in
+        app.unhide()
+    }
+    var activateRunningAppInstance: (NSRunningApplication) -> Bool = { app in
+        app.activate(options: .activateAllWindows)
+    }
     private var lastInvokedGroupId: UUID?
     private var cycleSessionState: CycleSessionState?
     private let cycleSessionTimeout: TimeInterval = 1.2
@@ -492,14 +498,13 @@ class AppSwitcher: @preconcurrency ObservableObject {
     }
 
     private func activateRunningApp(_ app: NSRunningApplication, bundleId: String) {
-        yieldFocusIfNeeded()
-        app.unhide()
-        app.activate(options: .activateAllWindows)
+        unhideRunningApp(app)
+        _ = activateRunningAppInstance(app)
         let pid = app.processIdentifier
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
             guard let self else { return }
             guard !self.hasVisibleWindows(pid: pid) else { return }
-            app.activate(options: .activateAllWindows)
+            _ = self.activateRunningAppInstance(app)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
                 self?.relaunchToFront(bundleId: bundleId)
             }
@@ -520,12 +525,6 @@ class AppSwitcher: @preconcurrency ObservableObject {
         }
     }
 
-    private func yieldFocusIfNeeded() {
-        if let app = NSApp, app.isActive {
-            app.hide(nil)
-        }
-    }
-    
     /// Launch an app by bundle identifier
     func launchApp(bundleIdentifier: String) {
         guard let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier) else {

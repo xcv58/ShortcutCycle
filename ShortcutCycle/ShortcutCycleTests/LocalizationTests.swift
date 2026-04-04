@@ -177,6 +177,11 @@ final class LocalizationTests: XCTestCase {
             // Group Edit View
             "All apps (open if needed)",
             
+            // Welcome banner
+            "Show welcome again",
+            "ShortcutCycle is running in your menu bar",
+            "Look for the ShortcutCycle icon in the top-right menu bar whenever you want to open the app again.",
+
             // General UI
             "Backup & Restore",
             "Export Settings...",
@@ -204,5 +209,16 @@ final class LocalizationTests: XCTestCase {
         if !missingCriticalKeys.isEmpty {
             XCTFail("Critical UI strings missing from English localization:\n" + missingCriticalKeys.map { "  - \"\($0)\"" }.joined(separator: "\n"))
         }
+    }
+
+    func testSpaceJumpWarningStringIsRemovedFromEnglishLocalization() throws {
+        let resourcesDir = try XCTUnwrap(findResourcesDirectory(), "Could not find Resources directory containing localization files")
+
+        let enURL = resourcesDir.appendingPathComponent("en.lproj/Localizable.strings")
+        let englishKeys = parseLocalizationKeys(from: enURL)
+
+        XCTAssertFalse(
+            englishKeys.contains("If Settings is open on another Space, macOS may briefly switch Spaces while showing the HUD.")
+        )
     }
 }

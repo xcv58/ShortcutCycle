@@ -7,9 +7,9 @@ import KeyboardShortcuts
 /// Menu bar popover view showing quick access to groups
 struct MenuBarView: View {
     @EnvironmentObject var store: GroupStore
-    @Environment(\.openWindow) private var openWindow
     @StateObject private var launchAtLogin = LaunchAtLoginManager.shared
     @AppStorage("appTheme") private var appTheme: AppTheme = .system
+    @AppStorage(WelcomeExperiencePolicy.hasDismissedWelcomeKey) private var hasDismissedWelcome = false
 
     
     var selectedLanguage: String = "system"
@@ -99,11 +99,16 @@ struct MenuBarView: View {
             
             // Settings button
             MenuBarButton(title: "Settings...".localized(language: selectedLanguage), icon: "gear") {
-                NSApp.setActivationPolicy(.regular)
-                NSApp.activate(ignoringOtherApps: true)
-                openWindow(id: "settings")
+                ShortcutCycleURLRouter.openSettingsFromOutsideView()
             }
-            
+
+            if WelcomeExperiencePolicy.shouldShowReplayControl(hasDismissedWelcome: hasDismissedWelcome) {
+                MenuBarButton(title: "Show welcome again".localized(language: selectedLanguage), icon: "sparkles") {
+                    WelcomeExperiencePolicy.prepareReplay()
+                    ShortcutCycleURLRouter.openSettingsFromOutsideView(tab: .groups)
+                }
+            }
+
             MenuBarButton(title: "Quit".localized(language: selectedLanguage), icon: "power") {
                 NSApplication.shared.terminate(nil)
             }

@@ -127,20 +127,19 @@ class ShortcutManager: @preconcurrency ObservableObject {
     private func handleToggleSettings() {
         // Find if the settings window is already open
         let settingsWindow = NSApp.windows.first { window in
-            return window.identifier?.rawValue == "settings"
+            SettingsWindowLifecycleCoordinator.isSettingsWindow(window)
         }
         
-        if let window = settingsWindow {
+        if let window = settingsWindow, window.isVisible {
             if window.isKeyWindow {
                 // If it's already the key window, close it to toggle off
                 window.close()
             } else {
-                // If it's open but not key, bring it to front
-                window.makeKeyAndOrderFront(nil)
-                NSApp.activate(ignoringOtherApps: true)
+                // If it's open but not key, bring it to front through the shared restore path.
+                ShortcutCycleURLRouter.openSettingsFromOutsideView()
             }
         } else {
-            // Window is closed/not in memory.
+            // Window is closed, ordered out, or not in memory.
             ShortcutCycleURLRouter.openSettingsFromOutsideView()
         }
     }
