@@ -164,10 +164,15 @@ struct AppCommands: Commands {
 
 // MARK: - Settings Window Observer
 
-/// Switches activation policy back to .accessory when the settings window closes,
-/// restoring the menu-bar-only appearance.
+/// Observes the settings window so close callbacks can react to dismissal.
 struct SettingsWindowObserver: NSViewRepresentable {
-    func makeCoordinator() -> Coordinator { Coordinator() }
+    let onWindowWillClose: () -> Void
+
+    init(onWindowWillClose: @escaping () -> Void = {}) {
+        self.onWindowWillClose = onWindowWillClose
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(onWindowWillClose: onWindowWillClose) }
 
     func makeNSView(context: Context) -> NSView {
         let view = ObserverView()
@@ -190,8 +195,13 @@ struct SettingsWindowObserver: NSViewRepresentable {
     }
 
     class Coordinator {
+        private let onWindowWillClose: () -> Void
         private var observer: NSObjectProtocol?
         private weak var observedWindow: NSWindow?
+
+        init(onWindowWillClose: @escaping () -> Void = {}) {
+            self.onWindowWillClose = onWindowWillClose
+        }
 
         func observe(window: NSWindow) {
             guard observedWindow !== window else { return }
@@ -207,6 +217,9 @@ struct SettingsWindowObserver: NSViewRepresentable {
                 object: window,
                 queue: .main
             ) { _ in
+                Task { @MainActor in
+                    self.onWindowWillClose()
+                }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                     NSApp.setActivationPolicy(.accessory)
                 }
@@ -382,8 +395,12 @@ enum ShortcutCycleURLRouter {
         if let settingsWindow = NSApp.windows.first(where: { window in
             window.identifier?.rawValue == "settings"
         }) {
-            settingsWindow.makeKeyAndOrderFront(nil)
             NSApp.setActivationPolicy(.regular)
+            if !settingsWindow.isVisible {
+                NSApp.unhide(nil)
+                settingsWindow.orderFrontRegardless()
+            }
+            settingsWindow.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
             if let tab {
                 NotificationCenter.default.post(
@@ -687,6 +704,9 @@ struct ShortcutCycleApp: App {
 
 @MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
+    private var hasEvaluatedInitialManualActivation = false
+    private var suppressAutomaticWelcomeForCurrentLaunch = false
+
     func applicationWillFinishLaunching(_ notification: Notification) {
         // Run as a menu bar app (no dock icon)
         NSApp.setActivationPolicy(.accessory)
@@ -702,10 +722,31 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
     }
 
+    func applicationDidBecomeActive(_ notification: Notification) {
+        guard !hasEvaluatedInitialManualActivation else { return }
+        hasEvaluatedInitialManualActivation = true
+
+        if WelcomeExperiencePolicy.prepareAutomaticSettingsOpenIfNeeded(
+            suppressForCurrentLaunch: suppressAutomaticWelcomeForCurrentLaunch
+        ) {
+            ShortcutCycleURLRouter.openSettingsFromOutsideView(tab: .groups)
+        }
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        guard !flag else { return false }
+        ShortcutCycleURLRouter.openSettingsFromOutsideView()
+        return true
+    }
+
     @objc private func handleURLEvent(
         _ event: NSAppleEventDescriptor,
         withReply reply: NSAppleEventDescriptor
     ) {
+        // Apple Events are delivered before applicationDidBecomeActive on a URL-scheme
+        // cold launch, so setting this flag here reliably prevents auto-open of Settings
+        // when the launch was triggered externally (e.g. shortcutcycle:// URL).
+        suppressAutomaticWelcomeForCurrentLaunch = true
         guard let urlString = event.paramDescriptor(forKeyword: keyDirectObject)?.stringValue,
               let url = URL(string: urlString) else {
             return

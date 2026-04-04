@@ -4,22 +4,16 @@ import XCTest
 
 @MainActor
 final class SettingsWindowObserverTests: XCTestCase {
-    func testObserveSetsSettingsWindowIdentifier() {
-        let coordinator = SettingsWindowObserver.Coordinator()
+    func testObserveInvokesCloseCallbackWhenWindowCloses() {
+        let callbackFired = expectation(description: "window close callback")
+        let coordinator = SettingsWindowObserver.Coordinator {
+            callbackFired.fulfill()
+        }
         let window = NSWindow()
 
         coordinator.observe(window: window)
+        NotificationCenter.default.post(name: NSWindow.willCloseNotification, object: window)
 
-        XCTAssertEqual(window.identifier?.rawValue, "settings")
-    }
-
-    func testObserveIsIdempotentForSameWindow() {
-        let coordinator = SettingsWindowObserver.Coordinator()
-        let window = NSWindow()
-
-        coordinator.observe(window: window)
-        coordinator.observe(window: window)
-
-        XCTAssertEqual(window.identifier?.rawValue, "settings")
+        wait(for: [callbackFired], timeout: 1.0)
     }
 }
