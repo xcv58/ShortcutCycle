@@ -19,7 +19,4 @@ enum SettingsWindowLifecycleCoordinator {
         }
     }
 
-    static func shouldHandleDockReopen(hasVisibleWindows: Bool) -> Bool {
-        !hasVisibleWindows
-    }
 }

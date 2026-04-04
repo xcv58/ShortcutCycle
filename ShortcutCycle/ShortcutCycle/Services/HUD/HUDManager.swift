@@ -759,15 +759,18 @@ class HUDManager: @preconcurrency ObservableObject {
     /// Hide the HUD
     func hide() {
         fireOnFinalizeIfNeeded()
+        let hadPresentedHUD = didPresentHUDThisSession
         window?.orderOut(nil)
         window = nil
         currentSelectedAppId = nil
         currentShortcut = nil
         didPresentHUDThisSession = false
-        
+
         // Ensure we activate the pending app if it exists (fallback)
         if let pendingId = pendingActiveAppId {
-            closeVisibleSettingsWindowIfNeeded(beforeActivating: pendingId)
+            if hadPresentedHUD {
+                closeVisibleSettingsWindowIfNeeded(beforeActivating: pendingId)
+            }
             activatePendingTargetApp(pendingId)
             pendingActiveAppId = nil
         }

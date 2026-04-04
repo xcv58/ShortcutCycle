@@ -23,6 +23,9 @@ final class AppSwitcherTests: XCTestCase {
             UserDefaults.standard.removeObject(forKey: "showHUD")
         }
 
+        // Restore default closures on the shared singleton so in-flight
+        // DispatchQueue.main.asyncAfter blocks in activateRunningApp (fired 0.1s
+        // after handleShortcut) call the real APIs rather than test stubs.
         switcher.unhideRunningApp = { app in
             app.unhide()
         }

@@ -6,7 +6,7 @@ import ShortcutCycleCore
 // MARK: - Welcome Banner
 
 /// A one-time welcome callout shown at the top of the Settings window on first launch (and on replay).
-/// The banner is dismissed manually (×) or when the Settings window closes.
+/// The banner persists across Settings window sessions until the user explicitly dismisses it with ×.
 struct WelcomeBannerView: View {
     let selectedLanguage: String
     let onDismiss: () -> Void

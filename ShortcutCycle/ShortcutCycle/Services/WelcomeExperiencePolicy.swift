@@ -15,6 +15,10 @@ enum WelcomeExperiencePolicy {
         hasDismissedWelcome
     }
 
+    /// Resets the banner-dismissed flag so the welcome banner reappears on the next
+    /// Settings window open. Intentionally does not reset `hasAutoOpenedWelcomeSettingsKey`:
+    /// replay shows the banner again but does not re-trigger the automatic Settings open
+    /// on the next cold launch.
     static func prepareReplay(userDefaults: UserDefaults = .standard) {
         userDefaults.set(false, forKey: hasDismissedWelcomeKey)
     }

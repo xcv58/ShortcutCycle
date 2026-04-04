@@ -734,10 +734,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        guard SettingsWindowLifecycleCoordinator.shouldHandleDockReopen(hasVisibleWindows: flag) else {
-            return false
-        }
-
+        guard !flag else { return false }
         ShortcutCycleURLRouter.openSettingsFromOutsideView()
         return true
     }

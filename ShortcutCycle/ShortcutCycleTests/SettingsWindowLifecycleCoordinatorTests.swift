@@ -81,17 +81,4 @@ final class SettingsWindowLifecycleCoordinatorTests: XCTestCase {
         XCTAssertFalse(SettingsWindowLifecycleCoordinator.isSettingsWindow(otherWindow))
     }
 
-    func testDockReopenDependsOnlyOnVisibleWindows() {
-        XCTAssertTrue(
-            SettingsWindowLifecycleCoordinator.shouldHandleDockReopen(
-                hasVisibleWindows: false
-            )
-        )
-
-        XCTAssertFalse(
-            SettingsWindowLifecycleCoordinator.shouldHandleDockReopen(
-                hasVisibleWindows: true
-            )
-        )
-    }
 }

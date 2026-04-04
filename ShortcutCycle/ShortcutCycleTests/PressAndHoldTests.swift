@@ -435,6 +435,37 @@ final class PressAndHoldTests: XCTestCase {
     }
 
     @MainActor
+    func testHideKeepsSettingsOpenOnBlindSwitchWhenHUDWasNeverPresented() {
+        let settingsWindow = MockWindow(
+            identifier: NSUserInterfaceItemIdentifier("settings"),
+            isVisible: true,
+            isOnActiveSpace: true
+        )
+        var closeCount = 0
+        var activateCount = 0
+
+        manager.settingsWindowsProvider = { [settingsWindow] }
+        manager.closeWindow = { _ in closeCount += 1 }
+        manager.targetLeavesCurrentSpace = { _ in true }
+        manager.activatePendingTargetApp = { _ in activateCount += 1 }
+
+        // Schedule without immediate — HUD is pending but never shown before hide()
+        manager.scheduleShow(
+            items: [HUDAppItem(bundleId: "com.test.blind", pid: 7, name: "Blind Target")],
+            activeAppId: "com.test.blind::7",
+            modifierFlags: [.option],
+            shortcut: "Opt+1"
+        )
+
+        // Cancel the show timer without firing it, then call hide() directly (blind switch)
+        manager.hide()
+
+        // Settings must not be closed: HUD was never presented this session
+        XCTAssertEqual(closeCount, 0)
+        XCTAssertEqual(activateCount, 1)
+    }
+
+    @MainActor
     func testRapidBlindSwitchDoesNotShowHUD() {
         // 1. First Press
         manager.scheduleShow(
