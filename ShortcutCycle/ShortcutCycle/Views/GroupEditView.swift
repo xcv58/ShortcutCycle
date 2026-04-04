@@ -20,6 +20,26 @@ struct GroupEditView: View {
     private var group: AppGroup? {
         store.groups.first { $0.id == groupId }
     }
+
+    private var cyclingModeSelection: Binding<Bool> {
+        Binding(
+            get: { group?.shouldOpenAppIfNeeded ?? false },
+            set: { newValue in
+                DispatchQueue.main.async {
+                    guard var updatedGroup = group else { return }
+                    updatedGroup.openAppIfNeeded = newValue
+                    store.updateGroup(updatedGroup)
+                }
+            }
+        )
+    }
+
+    private var cyclingModeHelpText: String {
+        guard let group else { return "" }
+        return group.shouldOpenAppIfNeeded
+            ? "Cycle through all apps in the group. Non-running apps will be launched when selected.".localized(language: selectedLanguage)
+            : "Cycle through running apps only. If no app is running, the first app in the group will be launched.".localized(language: selectedLanguage)
+    }
     
     var body: some View {
         ScrollView {
@@ -66,28 +86,34 @@ struct GroupEditView: View {
                                 ShortcutManager.shared.registerAllShortcuts()
                             }
                     }
-                    
-                    Picker("Cycling Mode".localized(language: selectedLanguage), selection: Binding(
-                        get: { group.shouldOpenAppIfNeeded },
-                        set: { newValue in
-                            DispatchQueue.main.async {
-                                var updatedGroup = group
-                                updatedGroup.openAppIfNeeded = newValue
-                                store.updateGroup(updatedGroup)
+
+                    HStack {
+                        Text("Cycling Mode".localized(language: selectedLanguage))
+                            .font(.caption.weight(.medium))
+                            .foregroundColor(.secondary)
+
+                        ViewThatFits(in: .horizontal) {
+                            Picker("Cycling Mode".localized(language: selectedLanguage), selection: cyclingModeSelection) {
+                                Text("Running apps only".localized(language: selectedLanguage)).tag(false)
+                                Text("All apps (open if needed)".localized(language: selectedLanguage)).tag(true)
                             }
+                            .pickerStyle(.segmented)
+                            .font(.caption)
+                            .labelsHidden()
+                            .fixedSize(horizontal: true, vertical: false)
+
+                            Picker("Cycling Mode".localized(language: selectedLanguage), selection: cyclingModeSelection) {
+                                Text("Running apps only".localized(language: selectedLanguage)).tag(false)
+                                Text("All apps (open if needed)".localized(language: selectedLanguage)).tag(true)
+                            }
+                            .pickerStyle(.menu)
+                            .font(.caption)
+                            .labelsHidden()
                         }
-                    )) {
-                        Text("Running apps only".localized(language: selectedLanguage)).tag(false)
-                        Text("All apps (open if needed)".localized(language: selectedLanguage)).tag(true)
                     }
-                    .pickerStyle(.segmented)
-                    .font(.caption)
                     .padding(.top, 4)
 
-                    Text(group.shouldOpenAppIfNeeded
-                        ? "Cycle through all apps in the group. Non-running apps will be launched when selected.".localized(language: selectedLanguage)
-                        : "Cycle through running apps only. If no app is running, the first app in the group will be launched.".localized(language: selectedLanguage)
-                    )
+                    Text(cyclingModeHelpText)
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .padding(.top, 2)
