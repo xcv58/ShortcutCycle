@@ -18,6 +18,11 @@
 "Enter group name" = "Gruppenname eingeben";
 "Keyboard Shortcut" = "Tastenkürzel";
 "Applications" = "Anwendungen";
+"Add Apps" = "Apps hinzufügen";
+"Browse or drag from Finder" = "Im Finder auswählen oder hineinziehen";
+"Click to add currently open apps to this group." = "Klicken Sie, um aktuell geöffnete Apps zu dieser Gruppe hinzuzufügen.";
+"No apps in this group yet." = "Noch keine Apps in dieser Gruppe.";
+"Running Apps" = "Laufende Apps";
 "app" = "App";
 "apps" = "Apps";
 "No apps added yet. Drag apps here or click the drop zone below." = "Noch keine Apps hinzugefügt. Ziehen Sie Apps hierher oder klicken Sie auf den Ablagebereich unten.";

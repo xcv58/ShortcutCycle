@@ -18,6 +18,11 @@
 "Enter group name" = "Voer groepsnaam in";
 "Keyboard Shortcut" = "Sneltoets";
 "Applications" = "Applicaties";
+"Add Apps" = "Apps toevoegen";
+"Browse or drag from Finder" = "Bladeren of slepen vanuit Finder";
+"Click to add currently open apps to this group." = "Klik om momenteel geopende apps aan deze groep toe te voegen.";
+"No apps in this group yet." = "Er zitten nog geen apps in deze groep.";
+"Running Apps" = "Actieve apps";
 "app" = "app";
 "apps" = "apps";
 "No apps added yet. Drag apps here or click the drop zone below." = "Nog geen apps toegevoegd. Sleep apps hierheen of klik op het gebied hieronder.";

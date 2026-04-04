@@ -18,6 +18,11 @@
 "Enter group name" = "Grup adı girin";
 "Keyboard Shortcut" = "Klavye Kısayolu";
 "Applications" = "Uygulamalar";
+"Add Apps" = "Uygulama ekle";
+"Browse or drag from Finder" = "Finder'dan göz at veya sürükle";
+"Click to add currently open apps to this group." = "Şu anda açık olan uygulamaları bu gruba eklemek için tıklayın.";
+"No apps in this group yet." = "Bu grupta henüz uygulama yok.";
+"Running Apps" = "Çalışan uygulamalar";
 "app" = "uygulama";
 "apps" = "uygulamalar";
 "No apps added yet. Drag apps here or click the drop zone below." = "Henüz uygulama eklenmedi. Uygulamaları buraya sürükleyin veya aşağıdaki alana tıklayın.";

@@ -18,6 +18,11 @@
 "Enter group name" = "グループ名を入力";
 "Keyboard Shortcut" = "キーボードショートカット";
 "Applications" = "アプリケーション";
+"Add Apps" = "アプリを追加";
+"Browse or drag from Finder" = "Finder から選択またはドラッグ";
+"Click to add currently open apps to this group." = "クリックして現在開いているアプリをこのグループに追加します。";
+"No apps in this group yet." = "このグループにはまだアプリがありません。";
+"Running Apps" = "実行中のアプリ";
 "app" = "アプリ";
 "apps" = "アプリ";
 "No apps added yet. Drag apps here or click the drop zone below." = "アプリはまだ追加されていません。ここにアプリをドラッグするか、下のドロップゾーンをクリックしてください。";

@@ -2,6 +2,7 @@ import SwiftUI
 #if canImport(ShortcutCycleCore)
 import ShortcutCycleCore
 #endif
+import AppKit
 import UniformTypeIdentifiers
 import KeyboardShortcuts
 
@@ -9,6 +10,7 @@ import KeyboardShortcuts
 struct GroupEditView: View {
     @EnvironmentObject var store: GroupStore
     let groupId: UUID
+    private let runningAppCandidatesProvider: ([AppItem]) -> [AppItem]
 
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
     @State private var groupName: String = ""
@@ -16,6 +18,15 @@ struct GroupEditView: View {
     @State private var isHovering: Bool = false
     @FocusState private var isNameFocused: Bool
     @State private var suppressAutoFocus = true
+    @State private var runningAppsRefreshToken = 0
+
+    init(
+        groupId: UUID,
+        runningAppCandidatesProvider: @escaping ([AppItem]) -> [AppItem] = GroupEditView.defaultRunningAppCandidates(for:)
+    ) {
+        self.groupId = groupId
+        self.runningAppCandidatesProvider = runningAppCandidatesProvider
+    }
 
     private var group: AppGroup? {
         store.groups.first { $0.id == groupId }
@@ -45,6 +56,12 @@ struct GroupEditView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 suppressAutoFocus = false
             }
+        }
+        .onReceive(NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didLaunchApplicationNotification)) { _ in
+            runningAppsRefreshToken += 1
+        }
+        .onReceive(NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didTerminateApplicationNotification)) { _ in
+            runningAppsRefreshToken += 1
         }
     }
 
@@ -100,7 +117,9 @@ struct GroupEditView: View {
     }
 
     private func appsSection(for group: AppGroup) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        let quickAddCandidates = runningAppCandidates(for: group)
+
+        return VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Applications".localized(language: selectedLanguage))
                     .font(.headline)
@@ -113,10 +132,12 @@ struct GroupEditView: View {
             }
 
             if group.apps.isEmpty {
-                Text("No apps added yet. Drag apps here or click the drop zone below.".localized(language: selectedLanguage))
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .padding(.vertical, 8)
+                if Self.shouldShowEmptyAppsState(groupApps: group.apps) {
+                    Text("No apps in this group yet.".localized(language: selectedLanguage))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .padding(.vertical, 8)
+                }
             } else {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 80, maximum: 100))], spacing: 16) {
                     ForEach(group.apps) { app in
@@ -140,6 +161,76 @@ struct GroupEditView: View {
                 .animation(.default, value: group.apps)
             }
 
+            addAppsPanel(for: group, quickAddCandidates: quickAddCandidates)
+        }
+    }
+
+    private func addAppsPanel(for group: AppGroup, quickAddCandidates: [AppItem]) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Add Apps".localized(language: selectedLanguage))
+                .font(.caption.weight(.semibold))
+                .foregroundColor(.secondary)
+
+            if Self.shouldShowRunningAppQuickAddSection(quickAddCandidates) {
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .top, spacing: 12) {
+                        runningAppsOptionCard(quickAddCandidates)
+                            .frame(minWidth: 360, maxWidth: .infinity, alignment: .leading)
+
+                        Divider()
+                            .padding(.vertical, 4)
+
+                        browseAppsOptionCard(for: group)
+                            .frame(minWidth: 220, idealWidth: 240, maxWidth: 280, alignment: .leading)
+                    }
+
+                    VStack(alignment: .leading, spacing: 12) {
+                        runningAppsOptionCard(quickAddCandidates)
+                        browseAppsOptionCard(for: group)
+                    }
+                }
+            } else {
+                browseAppsOptionCard(for: group)
+            }
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(Color(nsColor: .controlBackgroundColor).opacity(0.75))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(Color.secondary.opacity(0.08), lineWidth: 1)
+        )
+    }
+
+    private func runningAppsOptionCard(_ quickAddCandidates: [AppItem]) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Running Apps".localized(language: selectedLanguage))
+                .font(.caption.weight(.medium))
+                .foregroundColor(.secondary)
+
+            Text("Click to add currently open apps to this group.".localized(language: selectedLanguage))
+                .font(.caption2)
+                .foregroundColor(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 78, maximum: 90))], spacing: 10) {
+                ForEach(quickAddCandidates) { app in
+                    RunningAppQuickAddButton(app: app) {
+                        store.addApp(app, to: groupId)
+                    }
+                }
+            }
+        }
+    }
+
+    private func browseAppsOptionCard(for group: AppGroup) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Browse or drag from Finder".localized(language: selectedLanguage))
+                .font(.caption.weight(.medium))
+                .foregroundColor(.secondary)
+
             AppDropZoneView(apps: .constant(group.apps)) { app in
                 store.addApp(app, to: groupId)
             }
@@ -150,6 +241,88 @@ struct GroupEditView: View {
         if let group = group {
             groupName = group.name
         }
+    }
+
+    private func runningAppCandidates(for group: AppGroup) -> [AppItem] {
+        _ = runningAppsRefreshToken
+        return runningAppCandidatesProvider(group.apps)
+    }
+
+    private static func defaultRunningAppCandidates(for groupApps: [AppItem]) -> [AppItem] {
+        let runningApps = NSWorkspace.shared.runningApplications.compactMap(RunningAppQuickAddSource.init(runningApplication:))
+        let excludedBundleIdentifiers = Set(["com.xcv58.ShortcutCycle", Bundle.main.bundleIdentifier].compactMap { $0 })
+        return RunningAppQuickAdd.candidates(
+            for: groupApps,
+            runningApps: runningApps,
+            excludedBundleIdentifiers: excludedBundleIdentifiers
+        )
+    }
+
+    static func shouldShowRunningAppQuickAddSection(_ quickAddCandidates: [AppItem]) -> Bool {
+        !quickAddCandidates.isEmpty
+    }
+
+    static func shouldShowEmptyAppsState(groupApps: [AppItem]) -> Bool {
+        groupApps.isEmpty
+    }
+}
+
+private struct RunningAppQuickAddButton: View {
+    let app: AppItem
+    let onAdd: () -> Void
+
+    @AppStorage("selectedLanguage") private var selectedLanguage = "system"
+    @State private var isHovered = false
+
+    var body: some View {
+        Button(action: onAdd) {
+            VStack(spacing: 6) {
+                ZStack(alignment: .topTrailing) {
+                    Group {
+                        if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: app.bundleIdentifier) {
+                            Image(nsImage: NSWorkspace.shared.icon(forFile: appURL.path))
+                                .resizable()
+                                .frame(width: 30, height: 30)
+                        } else {
+                            Image(systemName: "app.fill")
+                                .font(.system(size: 24))
+                                .foregroundColor(.secondary)
+                                .frame(width: 30, height: 30)
+                        }
+                    }
+
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 12, weight: .semibold))
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(.white, Color.accentColor)
+                        .background(Color(nsColor: .controlBackgroundColor), in: Circle())
+                        .offset(x: 4, y: -4)
+                }
+
+                Text(app.name)
+                    .font(.caption2)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+                    .frame(width: 64)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 6)
+            .padding(.horizontal, 4)
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(isHovered ? Color.accentColor.opacity(0.10) : Color.clear)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(isHovered ? Color.accentColor.opacity(0.28) : Color.clear, lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            isHovered = hovering
+        }
+        .accessibilityLabel("\("Add".localized(language: selectedLanguage)) \(app.name)")
+        .help(app.name)
     }
 }
 

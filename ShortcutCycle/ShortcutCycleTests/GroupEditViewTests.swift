@@ -59,7 +59,26 @@ final class GroupEditViewTests: XCTestCase {
         )
     }
 
-    private func hostGroupEditView(width: CGFloat, height: CGFloat = 600) -> NSHostingView<AnyView> {
+    func testRunningAppsQuickAddSectionVisibilityDependsOnCandidates() {
+        XCTAssertTrue(
+            GroupEditView.shouldShowRunningAppQuickAddSection([AppItem(bundleIdentifier: "com.test.mail", name: "Mail")])
+        )
+        XCTAssertFalse(GroupEditView.shouldShowRunningAppQuickAddSection([]))
+    }
+
+    func testEmptyAppsStateHidesWhenQuickAddCandidatesExist() {
+        XCTAssertTrue(GroupEditView.shouldShowEmptyAppsState(groupApps: []))
+        XCTAssertFalse(
+            GroupEditView.shouldShowEmptyAppsState(
+                groupApps: [AppItem(bundleIdentifier: "com.test.mail", name: "Mail")]
+            )
+        )
+    }
+
+    private func hostGroupEditView(
+        width: CGFloat,
+        height: CGFloat = 600
+    ) -> NSHostingView<AnyView> {
         let groupId = try! XCTUnwrap(store.groups.first?.id)
         let rootView = AnyView(
             GroupEditView(groupId: groupId)
