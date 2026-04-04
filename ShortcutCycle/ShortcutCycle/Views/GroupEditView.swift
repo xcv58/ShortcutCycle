@@ -170,6 +170,19 @@ private struct GroupShortcutEditor: View {
         KeyboardShortcuts.getShortcut(for: shortcutName)
     }
 
+    private var cyclingModeSelection: Binding<Bool> {
+        Binding(
+            get: { group.shouldOpenAppIfNeeded },
+            set: { newValue in
+                DispatchQueue.main.async {
+                    var updatedGroup = group
+                    updatedGroup.openAppIfNeeded = newValue
+                    store.updateGroup(updatedGroup)
+                }
+            }
+        )
+    }
+
     private var suggestionShortcuts: [KeyboardShortcuts.Shortcut] {
         ShortcutSuggestions.available(for: store.groups, excluding: groupId)
     }
@@ -185,6 +198,7 @@ private struct GroupShortcutEditor: View {
 
             VStack(alignment: .leading, spacing: 8) {
                 KeyboardShortcuts.Recorder(for: shortcutName, onChange: handleShortcutChange)
+                    .padding(.leading, 4)
 
                 if shouldShowSuggestions {
                     ShortcutSuggestionRow(
@@ -194,22 +208,32 @@ private struct GroupShortcutEditor: View {
                 }
             }
 
-            Picker("Cycling Mode".localized(language: selectedLanguage), selection: Binding(
-                get: { group.shouldOpenAppIfNeeded },
-                set: { newValue in
-                    DispatchQueue.main.async {
-                        var updatedGroup = group
-                        updatedGroup.openAppIfNeeded = newValue
-                        store.updateGroup(updatedGroup)
+            Divider()
+
+            HStack {
+                Text("Cycling Mode".localized(language: selectedLanguage))
+                    .font(.caption.weight(.medium))
+                    .foregroundColor(.secondary)
+
+                ViewThatFits(in: .horizontal) {
+                    Picker("Cycling Mode".localized(language: selectedLanguage), selection: cyclingModeSelection) {
+                        Text("Running apps only".localized(language: selectedLanguage)).tag(false)
+                        Text("All apps (open if needed)".localized(language: selectedLanguage)).tag(true)
                     }
+                    .pickerStyle(.segmented)
+                    .font(.caption)
+                    .labelsHidden()
+                    .fixedSize(horizontal: true, vertical: false)
+
+                    Picker("Cycling Mode".localized(language: selectedLanguage), selection: cyclingModeSelection) {
+                        Text("Running apps only".localized(language: selectedLanguage)).tag(false)
+                        Text("All apps (open if needed)".localized(language: selectedLanguage)).tag(true)
+                    }
+                    .pickerStyle(.menu)
+                    .font(.caption)
+                    .labelsHidden()
                 }
-            )) {
-                Text("Running apps only".localized(language: selectedLanguage)).tag(false)
-                Text("All apps (open if needed)".localized(language: selectedLanguage)).tag(true)
             }
-            .pickerStyle(.segmented)
-            .font(.caption)
-            .padding(.top, 4)
 
             Text(group.shouldOpenAppIfNeeded
                 ? "Cycle through all apps in the group. Non-running apps will be launched when selected.".localized(language: selectedLanguage)
