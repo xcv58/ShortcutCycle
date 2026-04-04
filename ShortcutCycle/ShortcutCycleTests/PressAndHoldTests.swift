@@ -58,6 +58,10 @@ final class PressAndHoldTests: XCTestCase {
     var globalMonitorHandlers: [(NSEvent.EventTypeMask, (NSEvent) -> Void)]!
     var removedMonitorCount: Int!
 
+    // Saved originals for restoration in tearDown
+    private var savedActivatePendingTargetApp: ((String) -> Void)!
+    private var savedTargetLeavesCurrentSpace: ((HUDAppItem) -> Bool)!
+
     override func setUp() async throws {
         // Setup mocks
         manager = HUDManager.shared
@@ -69,6 +73,10 @@ final class PressAndHoldTests: XCTestCase {
         localMonitorHandlers = []
         globalMonitorHandlers = []
         removedMonitorCount = 0
+
+        // Save originals before overriding (these use private methods, so restore by value)
+        savedActivatePendingTargetApp = manager.activatePendingTargetApp
+        savedTargetLeavesCurrentSpace = manager.targetLeavesCurrentSpace
 
         // Inject mocks
         manager.timeProvider = timeMock
@@ -103,6 +111,24 @@ final class PressAndHoldTests: XCTestCase {
         manager.currentLoopKey = nil
         manager.isRepeatingLoopActive = false
         removedMonitorCount = 0
+    }
+
+    override func tearDown() async throws {
+        manager.timeProvider = SystemTimeProvider()
+        manager.timerScheduler = SystemTimerScheduler()
+        manager.activateHUDApp = { NSApp?.activate(ignoringOtherApps: true) }
+        manager.addLocalEventMonitor = { mask, handler in
+            NSEvent.addLocalMonitorForEvents(matching: mask, handler: handler)
+        }
+        manager.addGlobalEventMonitor = { mask, handler in
+            NSEvent.addGlobalMonitorForEvents(matching: mask, handler: handler)
+        }
+        manager.removeEventMonitor = { NSEvent.removeMonitor($0) }
+        manager.currentModifierFlags = { NSEvent.modifierFlags }
+        manager.settingsWindowsProvider = { NSApp?.windows ?? [] }
+        manager.closeWindow = { $0.close() }
+        manager.activatePendingTargetApp = savedActivatePendingTargetApp
+        manager.targetLeavesCurrentSpace = savedTargetLeavesCurrentSpace
     }
 
     private func latestLocalMonitorHandler(

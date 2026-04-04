@@ -217,8 +217,8 @@ struct SettingsWindowObserver: NSViewRepresentable {
                 object: window,
                 queue: .main
             ) { _ in
-                Task { @MainActor in
-                    self.onWindowWillClose()
+                Task { @MainActor [weak self] in
+                    self?.onWindowWillClose()
                 }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                     NSApp.setActivationPolicy(.accessory)

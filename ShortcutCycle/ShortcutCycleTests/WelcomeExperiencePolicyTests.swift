@@ -63,4 +63,55 @@ final class WelcomeExperiencePolicyTests: XCTestCase {
             )
         )
     }
+
+    func testPrepareAutomaticSettingsOpenReturnsTrueAndSetsFlag() {
+        let suite = "WelcomeExperiencePolicyTests.prepareAutoOpen.\(UUID().uuidString)"
+        let defaults = makeDefaults(suite)
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        let result = WelcomeExperiencePolicy.prepareAutomaticSettingsOpenIfNeeded(
+            userDefaults: defaults,
+            suppressForCurrentLaunch: false
+        )
+
+        XCTAssertTrue(result, "Should return true on first call (not yet opened)")
+        XCTAssertTrue(
+            defaults.bool(forKey: WelcomeExperiencePolicy.hasAutoOpenedWelcomeSettingsKey),
+            "Should persist the flag so subsequent launches do not auto-open again"
+        )
+    }
+
+    func testPrepareAutomaticSettingsOpenReturnsFalseOnSubsequentCall() {
+        let suite = "WelcomeExperiencePolicyTests.prepareAutoOpenRepeat.\(UUID().uuidString)"
+        let defaults = makeDefaults(suite)
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        _ = WelcomeExperiencePolicy.prepareAutomaticSettingsOpenIfNeeded(
+            userDefaults: defaults,
+            suppressForCurrentLaunch: false
+        )
+        let result = WelcomeExperiencePolicy.prepareAutomaticSettingsOpenIfNeeded(
+            userDefaults: defaults,
+            suppressForCurrentLaunch: false
+        )
+
+        XCTAssertFalse(result, "Should return false after the flag is already set")
+    }
+
+    func testPrepareAutomaticSettingsOpenReturnsFalseWhenSuppressed() {
+        let suite = "WelcomeExperiencePolicyTests.prepareAutoOpenSuppressed.\(UUID().uuidString)"
+        let defaults = makeDefaults(suite)
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        let result = WelcomeExperiencePolicy.prepareAutomaticSettingsOpenIfNeeded(
+            userDefaults: defaults,
+            suppressForCurrentLaunch: true
+        )
+
+        XCTAssertFalse(result, "Should return false when suppressed")
+        XCTAssertFalse(
+            defaults.bool(forKey: WelcomeExperiencePolicy.hasAutoOpenedWelcomeSettingsKey),
+            "Suppressed call should not set the flag"
+        )
+    }
 }

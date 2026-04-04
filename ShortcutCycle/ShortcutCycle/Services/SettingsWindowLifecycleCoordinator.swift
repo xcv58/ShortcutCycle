@@ -7,7 +7,7 @@ enum SettingsWindowLifecycleCoordinator {
         window.identifier?.rawValue == "settings"
     }
 
-    static func visibleSettingsWindow(in windows: [NSWindow]) -> NSWindow? {
+    static func anyVisibleSettingsWindow(in windows: [NSWindow]) -> NSWindow? {
         windows.first { window in
             isSettingsWindow(window) && window.isVisible
         }

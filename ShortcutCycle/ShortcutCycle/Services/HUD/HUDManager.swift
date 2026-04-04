@@ -220,7 +220,7 @@ class HUDManager: @preconcurrency ObservableObject {
         guard targetLeavesCurrentSpace(target) else {
             return
         }
-        guard let settingsWindow = SettingsWindowLifecycleCoordinator.visibleSettingsWindow(
+        guard let settingsWindow = SettingsWindowLifecycleCoordinator.anyVisibleSettingsWindow(
             in: settingsWindowsProvider()
         ) else {
             return

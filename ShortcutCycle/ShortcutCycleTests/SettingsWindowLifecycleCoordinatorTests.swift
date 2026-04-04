@@ -40,7 +40,7 @@ final class SettingsWindowLifecycleCoordinatorTests: XCTestCase {
         )
     }
 
-    func testVisibleSettingsWindowReturnsCurrentSpaceSettingsWindow() {
+    func testAnyVisibleSettingsWindowReturnsWindowOnAnySpace() {
         let window = MockWindow(
             identifier: NSUserInterfaceItemIdentifier("settings"),
             isVisible: true,
@@ -48,13 +48,13 @@ final class SettingsWindowLifecycleCoordinatorTests: XCTestCase {
         )
 
         XCTAssertTrue(
-            SettingsWindowLifecycleCoordinator.visibleSettingsWindow(in: [window]) === window
+            SettingsWindowLifecycleCoordinator.anyVisibleSettingsWindow(in: [window]) === window
         )
     }
 
-    func testVisibleSettingsWindowIgnoresHiddenAndNonSettingsWindows() {
+    func testAnyVisibleSettingsWindowIgnoresHiddenAndNonSettingsWindows() {
         XCTAssertNil(
-            SettingsWindowLifecycleCoordinator.visibleSettingsWindow(
+            SettingsWindowLifecycleCoordinator.anyVisibleSettingsWindow(
                 in: [
                     MockWindow(
                         identifier: NSUserInterfaceItemIdentifier("settings"),
