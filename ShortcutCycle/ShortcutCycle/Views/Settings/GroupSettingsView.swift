@@ -18,13 +18,13 @@ struct GroupSettingsView: View {
             } else {
                 VStack(spacing: 16) {
                     Image(systemName: "folder")
-                    .font(.system(size: 48))
-                    .foregroundStyle(.secondary)
-                    
+                        .font(.system(size: 48))
+                        .foregroundStyle(.secondary)
+
                     Text("No Group Selected".localized(language: selectedLanguage))
                         .font(.title2)
                         .fontWeight(.bold)
-                    
+
                     Text("Select a group from the sidebar or create a new one.".localized(language: selectedLanguage))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
