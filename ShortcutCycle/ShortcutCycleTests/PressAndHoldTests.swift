@@ -373,6 +373,68 @@ final class PressAndHoldTests: XCTestCase {
     }
 
     @MainActor
+    func testHideClosesCurrentSpaceSettingsWhenSelectedTargetLeavesCurrentSpace() {
+        let settingsWindow = MockWindow(
+            identifier: NSUserInterfaceItemIdentifier("settings"),
+            isVisible: true,
+            isOnActiveSpace: true
+        )
+        var events: [String] = []
+
+        manager.settingsWindowsProvider = { [settingsWindow] }
+        manager.closeWindow = { _ in
+            events.append("close")
+        }
+        manager.targetLeavesCurrentSpace = { item in
+            item.id == "com.test.other-space::99"
+        }
+        manager.activatePendingTargetApp = { _ in
+            events.append("activate")
+        }
+
+        manager.scheduleShow(
+            items: [HUDAppItem(bundleId: "com.test.other-space", pid: 99, name: "Other Space")],
+            activeAppId: "com.test.other-space::99",
+            modifierFlags: [.option],
+            shortcut: "Opt+1",
+            immediate: true
+        )
+
+        manager.hide()
+
+        XCTAssertEqual(Array(events.prefix(2)), ["close", "activate"])
+    }
+
+    @MainActor
+    func testHideKeepsCurrentSpaceSettingsOpenWhenSelectedTargetStaysOnCurrentSpace() {
+        let settingsWindow = MockWindow(
+            identifier: NSUserInterfaceItemIdentifier("settings"),
+            isVisible: true,
+            isOnActiveSpace: true
+        )
+        var closeCount = 0
+        var activateCount = 0
+
+        manager.settingsWindowsProvider = { [settingsWindow] }
+        manager.closeWindow = { _ in closeCount += 1 }
+        manager.targetLeavesCurrentSpace = { _ in false }
+        manager.activatePendingTargetApp = { _ in activateCount += 1 }
+
+        manager.scheduleShow(
+            items: [HUDAppItem(bundleId: "com.test.current-space", pid: 24, name: "Current Space")],
+            activeAppId: "com.test.current-space::24",
+            modifierFlags: [.option],
+            shortcut: "Opt+1",
+            immediate: true
+        )
+
+        manager.hide()
+
+        XCTAssertEqual(closeCount, 0)
+        XCTAssertEqual(activateCount, 1)
+    }
+
+    @MainActor
     func testRapidBlindSwitchDoesNotShowHUD() {
         // 1. First Press
         manager.scheduleShow(

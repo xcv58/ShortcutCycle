@@ -236,9 +236,9 @@ class HUDManager: @preconcurrency ObservableObject {
 
         // Fix for "Splash" issue: push any remaining same-Space windows behind
         // the HUD after activation.
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
             app.windows.forEach { win in
-                if win !== self.window && win.isVisible {
+                if win !== self?.window && win.isVisible {
                     win.orderBack(nil)
                 }
             }
@@ -767,6 +767,7 @@ class HUDManager: @preconcurrency ObservableObject {
         
         // Ensure we activate the pending app if it exists (fallback)
         if let pendingId = pendingActiveAppId {
+            closeVisibleSettingsWindowIfNeeded(beforeActivating: pendingId)
             activatePendingTargetApp(pendingId)
             pendingActiveAppId = nil
         }

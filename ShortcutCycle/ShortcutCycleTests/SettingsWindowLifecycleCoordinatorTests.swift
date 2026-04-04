@@ -71,20 +71,6 @@ final class SettingsWindowLifecycleCoordinatorTests: XCTestCase {
         )
     }
 
-    func testAppPolicyDockReopenDependsOnlyOnVisibleWindows() {
-        XCTAssertTrue(
-            SettingsWindowAppPolicy.shouldHandleDockReopen(
-                hasVisibleWindows: false
-            )
-        )
-
-        XCTAssertFalse(
-            SettingsWindowAppPolicy.shouldHandleDockReopen(
-                hasVisibleWindows: true
-            )
-        )
-    }
-
     func testCoordinatorIdentifiesSettingsWindowByIdentifier() {
         let settingsWindow = NSWindow()
         settingsWindow.identifier = NSUserInterfaceItemIdentifier("settings")
@@ -95,7 +81,7 @@ final class SettingsWindowLifecycleCoordinatorTests: XCTestCase {
         XCTAssertFalse(SettingsWindowLifecycleCoordinator.isSettingsWindow(otherWindow))
     }
 
-    func testCoordinatorDockReopenWrapperDependsOnlyOnVisibleWindows() {
+    func testDockReopenDependsOnlyOnVisibleWindows() {
         XCTAssertTrue(
             SettingsWindowLifecycleCoordinator.shouldHandleDockReopen(
                 hasVisibleWindows: false
