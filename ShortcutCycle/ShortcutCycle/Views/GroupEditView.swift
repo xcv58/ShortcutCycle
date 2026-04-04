@@ -132,12 +132,10 @@ struct GroupEditView: View {
             }
 
             if group.apps.isEmpty {
-                if Self.shouldShowEmptyAppsState(groupApps: group.apps) {
-                    Text("No apps in this group yet.".localized(language: selectedLanguage))
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .padding(.vertical, 8)
-                }
+                Text("No apps in this group yet.".localized(language: selectedLanguage))
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.vertical, 8)
             } else {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 80, maximum: 100))], spacing: 16) {
                     ForEach(group.apps) { app in
@@ -249,7 +247,14 @@ struct GroupEditView: View {
     }
 
     private static func defaultRunningAppCandidates(for groupApps: [AppItem]) -> [AppItem] {
-        let runningApps = NSWorkspace.shared.runningApplications.compactMap(RunningAppQuickAddSource.init(runningApplication:))
+        let runningApps: [RunningAppQuickAddSource] = NSWorkspace.shared.runningApplications.compactMap { app in
+            guard let bundleIdentifier = app.bundleIdentifier else { return nil }
+            return RunningAppQuickAddSource(
+                bundleIdentifier: bundleIdentifier,
+                bundleURL: app.bundleURL ?? NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier),
+                isRegularApp: app.activationPolicy == .regular
+            )
+        }
         let excludedBundleIdentifiers = Set(["com.xcv58.ShortcutCycle", Bundle.main.bundleIdentifier].compactMap { $0 })
         return RunningAppQuickAdd.candidates(
             for: groupApps,
@@ -260,10 +265,6 @@ struct GroupEditView: View {
 
     static func shouldShowRunningAppQuickAddSection(_ quickAddCandidates: [AppItem]) -> Bool {
         !quickAddCandidates.isEmpty
-    }
-
-    static func shouldShowEmptyAppsState(groupApps: [AppItem]) -> Bool {
-        groupApps.isEmpty
     }
 }
 

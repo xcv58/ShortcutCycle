@@ -73,7 +73,7 @@ struct MainView: View {
             Text("This action cannot be undone.".localized(language: selectedLanguage))
         }
         .preferredColorScheme(appTheme.colorScheme)
-        .frame(minWidth: 880, minHeight: 540)
+        .frame(minWidth: 720, minHeight: 460)
         .environment(\.locale, LanguageManager.shared.locale)
         .id("\(selectedLanguage)-\(localeObserver.id)") // Force full redraw when language or system locale changes
     }

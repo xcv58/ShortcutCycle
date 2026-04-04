@@ -1,4 +1,3 @@
-import AppKit
 import Foundation
 
 /// Represents a single application that can be part of a group
@@ -36,29 +35,16 @@ public struct AppItem: Identifiable, Codable, Equatable, Hashable {
 public struct RunningAppQuickAddSource: Equatable {
     public let bundleIdentifier: String
     public let bundleURL: URL?
-    public let activationPolicy: NSApplication.ActivationPolicy
+    public let isRegularApp: Bool
 
     public init(
         bundleIdentifier: String,
         bundleURL: URL?,
-        activationPolicy: NSApplication.ActivationPolicy = .regular
+        isRegularApp: Bool = true
     ) {
         self.bundleIdentifier = bundleIdentifier
         self.bundleURL = bundleURL
-        self.activationPolicy = activationPolicy
-    }
-
-    public init?(runningApplication: NSRunningApplication) {
-        guard let bundleIdentifier = runningApplication.bundleIdentifier else {
-            return nil
-        }
-
-        self.init(
-            bundleIdentifier: bundleIdentifier,
-            bundleURL: runningApplication.bundleURL
-                ?? NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier),
-            activationPolicy: runningApplication.activationPolicy
-        )
+        self.isRegularApp = isRegularApp
     }
 }
 
@@ -73,7 +59,7 @@ public enum RunningAppQuickAdd {
         var seenBundleIdentifiers = Set<String>()
 
         let candidates = runningApps.compactMap { runningApp -> AppItem? in
-            guard runningApp.activationPolicy == .regular else { return nil }
+            guard runningApp.isRegularApp else { return nil }
             guard !excluded.contains(runningApp.bundleIdentifier) else { return nil }
             guard seenBundleIdentifiers.insert(runningApp.bundleIdentifier).inserted else { return nil }
             guard let appURL = runningApp.bundleURL else { return nil }

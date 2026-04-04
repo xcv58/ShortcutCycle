@@ -66,15 +66,6 @@ final class GroupEditViewTests: XCTestCase {
         XCTAssertFalse(GroupEditView.shouldShowRunningAppQuickAddSection([]))
     }
 
-    func testEmptyAppsStateHidesWhenQuickAddCandidatesExist() {
-        XCTAssertTrue(GroupEditView.shouldShowEmptyAppsState(groupApps: []))
-        XCTAssertFalse(
-            GroupEditView.shouldShowEmptyAppsState(
-                groupApps: [AppItem(bundleIdentifier: "com.test.mail", name: "Mail")]
-            )
-        )
-    }
-
     private func hostGroupEditView(
         width: CGFloat,
         height: CGFloat = 600

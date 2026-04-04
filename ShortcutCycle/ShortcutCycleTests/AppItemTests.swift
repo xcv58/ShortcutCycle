@@ -1,4 +1,3 @@
-import AppKit
 import XCTest
 #if canImport(ShortcutCycleCore)
 @testable import ShortcutCycleCore
@@ -185,7 +184,7 @@ final class AppItemTests: XCTestCase {
                 RunningAppQuickAddSource(bundleIdentifier: "com.xcv58.ShortcutCycle", bundleURL: shortcutCycleURL),
                 RunningAppQuickAddSource(bundleIdentifier: "com.apple.finder", bundleURL: finderURL),
                 RunningAppQuickAddSource(bundleIdentifier: "com.test.mail", bundleURL: mailURL),
-                RunningAppQuickAddSource(bundleIdentifier: "com.test.helper", bundleURL: helperURL, activationPolicy: .accessory),
+                RunningAppQuickAddSource(bundleIdentifier: "com.test.helper", bundleURL: helperURL, isRegularApp: false),
                 RunningAppQuickAddSource(bundleIdentifier: "com.test.browser", bundleURL: browserURL)
             ],
             excludedBundleIdentifiers: ["com.xcv58.ShortcutCycle"]
