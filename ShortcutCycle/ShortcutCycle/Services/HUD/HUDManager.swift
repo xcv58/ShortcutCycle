@@ -84,12 +84,11 @@ class HUDManager: @preconcurrency ObservableObject {
     var closeWindow: (NSWindow) -> Void = { window in
         window.close()
     }
-    var hideHUDApp: () -> Void = {
-        NSApp?.hide(nil)
-    }
+    // `lazy` because the default captures `self` to call the private `activateOrLaunch` method.
     lazy var activatePendingTargetApp: (String) -> Void = { [weak self] bundleId in
         self?.activateOrLaunch(bundleId: bundleId)
     }
+    // `lazy` because the default captures `self` to call the private `hasVisibleWindows` method.
     lazy var targetLeavesCurrentSpace: (HUDAppItem) -> Bool = { [weak self] item in
         guard let self, let pid = item.pid else {
             return false

@@ -18,9 +18,6 @@ class AppSwitcher: @preconcurrency ObservableObject {
     static let shared = AppSwitcher()
     
     let objectWillChange = ObservableObjectPublisher()
-    var isSwitcherAppActive: () -> Bool = {
-        NSApp?.isActive == true
-    }
     var unhideRunningApp: (NSRunningApplication) -> Void = { app in
         app.unhide()
     }
@@ -501,7 +498,6 @@ class AppSwitcher: @preconcurrency ObservableObject {
     }
 
     private func activateRunningApp(_ app: NSRunningApplication, bundleId: String) {
-        yieldFocusIfNeeded()
         unhideRunningApp(app)
         _ = activateRunningAppInstance(app)
         let pid = app.processIdentifier
@@ -529,13 +525,6 @@ class AppSwitcher: @preconcurrency ObservableObject {
         }
     }
 
-    private func yieldFocusIfNeeded() {
-        guard isSwitcherAppActive() else { return }
-        // Activating the target app is enough to yield focus away from the
-        // menu bar app. Hiding the app itself can leave the status item visible
-        // but non-interactive after switching.
-    }
-    
     /// Launch an app by bundle identifier
     func launchApp(bundleIdentifier: String) {
         guard let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier) else {

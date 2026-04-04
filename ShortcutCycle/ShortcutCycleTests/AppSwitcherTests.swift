@@ -23,9 +23,6 @@ final class AppSwitcherTests: XCTestCase {
             UserDefaults.standard.removeObject(forKey: "showHUD")
         }
 
-        switcher.isSwitcherAppActive = {
-            NSApp?.isActive == true
-        }
         switcher.unhideRunningApp = { app in
             app.unhide()
         }
@@ -64,7 +61,6 @@ final class AppSwitcherTests: XCTestCase {
 
         UserDefaults.standard.set(false, forKey: "showHUD")
 
-        switcher.isSwitcherAppActive = { true }
         switcher.unhideRunningApp = { _ in }
         switcher.activateRunningAppInstance = { _ in true }
 

@@ -11,34 +11,6 @@ import KeyboardShortcuts
 @MainActor
 final class PressAndHoldTests: XCTestCase {
     final class DummyEventMonitorToken {}
-    final class MockWindow: NSWindow {
-        private let mockIsVisible: Bool
-        private let mockIsOnActiveSpace: Bool
-
-        init(
-            identifier: NSUserInterfaceItemIdentifier?,
-            isVisible: Bool,
-            isOnActiveSpace: Bool
-        ) {
-            self.mockIsVisible = isVisible
-            self.mockIsOnActiveSpace = isOnActiveSpace
-            super.init(
-                contentRect: .zero,
-                styleMask: [],
-                backing: .buffered,
-                defer: false
-            )
-            self.identifier = identifier
-        }
-
-        override var isVisible: Bool {
-            mockIsVisible
-        }
-
-        override var isOnActiveSpace: Bool {
-            mockIsOnActiveSpace
-        }
-    }
 
     // Mocks
     class MockTimeProvider: TimeProvider {
@@ -85,7 +57,6 @@ final class PressAndHoldTests: XCTestCase {
     var localMonitorHandlers: [(NSEvent.EventTypeMask, (NSEvent) -> NSEvent?)]!
     var globalMonitorHandlers: [(NSEvent.EventTypeMask, (NSEvent) -> Void)]!
     var removedMonitorCount: Int!
-    var hideAppCount: Int!
 
     override func setUp() async throws {
         // Setup mocks
@@ -98,7 +69,6 @@ final class PressAndHoldTests: XCTestCase {
         localMonitorHandlers = []
         globalMonitorHandlers = []
         removedMonitorCount = 0
-        hideAppCount = 0
 
         // Inject mocks
         manager.timeProvider = timeMock
@@ -125,9 +95,6 @@ final class PressAndHoldTests: XCTestCase {
             window.close()
         }
         manager.targetLeavesCurrentSpace = { _ in false }
-        manager.hideHUDApp = { [weak self] in
-            self?.hideAppCount += 1
-        }
 
         // Reset state
         manager.hide() // Ensure clean state
@@ -403,23 +370,6 @@ final class PressAndHoldTests: XCTestCase {
 
         XCTAssertEqual(closeCount, 0)
         XCTAssertEqual(activateCount, 1)
-    }
-
-    @MainActor
-    func testHidingVisibleHUDDoesNotHideTheApp() {
-        manager.scheduleShow(
-            items: [HUDAppItem(bundleId: "com.test.1", name: "Test 1", icon: nil)],
-            activeAppId: "com.test.current",
-            modifierFlags: [.option],
-            shortcut: "Opt+1",
-            activeKey: .a,
-            shouldActivate: false,
-            immediate: true
-        )
-
-        manager.hide()
-
-        XCTAssertEqual(hideAppCount, 0, "Closing the HUD should not hide the app itself")
     }
 
     @MainActor
