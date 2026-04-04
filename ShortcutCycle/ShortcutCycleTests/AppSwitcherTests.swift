@@ -39,13 +39,14 @@ final class AppSwitcherTests: XCTestCase {
 
         app.unhide(nil)
 
-        let targetApp = try XCTUnwrap(
-            NSWorkspace.shared.frontmostApplication?.activationPolicy == .regular
-                ? NSWorkspace.shared.frontmostApplication
-                : NSWorkspace.shared.runningApplications.first(where: {
-                    $0.activationPolicy == .regular && $0.bundleIdentifier != nil
-                })
-        )
+        guard let targetApp = NSWorkspace.shared.frontmostApplication?.activationPolicy == .regular
+            ? NSWorkspace.shared.frontmostApplication
+            : NSWorkspace.shared.runningApplications.first(where: {
+                $0.activationPolicy == .regular && $0.bundleIdentifier != nil
+            })
+        else {
+            throw XCTSkip("Requires at least one regular-policy app to be running")
+        }
         let bundleId = try XCTUnwrap(targetApp.bundleIdentifier)
 
         let suiteName = "AppSwitcherTests-\(UUID().uuidString)"

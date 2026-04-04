@@ -3,7 +3,7 @@ import XCTest
 @testable import ShortcutCycle
 
 @MainActor
-final class SettingsWindowPresentationStateTests: XCTestCase {
+final class SettingsWindowLifecycleCoordinatorTests: XCTestCase {
     func testVisibleOffSpaceSettingsWindowReturnsMatchingWindow() {
         let window = MockWindow(
             identifier: NSUserInterfaceItemIdentifier("settings"),

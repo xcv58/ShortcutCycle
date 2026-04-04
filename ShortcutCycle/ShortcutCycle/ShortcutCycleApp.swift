@@ -661,48 +661,6 @@ enum ShortcutCycleURLRouter {
 }
 
 
-enum WelcomeExperiencePolicy {
-    static let hasDismissedWelcomeKey = "hasDismissedWelcome"
-    static let hasAutoOpenedWelcomeSettingsKey = "hasAutoOpenedWelcomeSettings"
-
-    static func shouldShowBanner(hasDismissedWelcome: Bool) -> Bool {
-        !hasDismissedWelcome
-    }
-
-    static func shouldShowReplayControl(hasDismissedWelcome: Bool) -> Bool {
-        hasDismissedWelcome
-    }
-
-    static func prepareReplay(userDefaults: UserDefaults = .standard) {
-        userDefaults.set(false, forKey: hasDismissedWelcomeKey)
-    }
-
-    static func shouldAutoOpenSettingsOnFirstManualLaunch(
-        hasAutoOpenedWelcomeSettings: Bool,
-        suppressForCurrentLaunch: Bool
-    ) -> Bool {
-        !hasAutoOpenedWelcomeSettings && !suppressForCurrentLaunch
-    }
-
-    @discardableResult
-    static func prepareAutomaticSettingsOpenIfNeeded(
-        userDefaults: UserDefaults = .standard,
-        suppressForCurrentLaunch: Bool
-    ) -> Bool {
-        let hasAutoOpened = userDefaults.bool(forKey: hasAutoOpenedWelcomeSettingsKey)
-        guard shouldAutoOpenSettingsOnFirstManualLaunch(
-            hasAutoOpenedWelcomeSettings: hasAutoOpened,
-            suppressForCurrentLaunch: suppressForCurrentLaunch
-        ) else {
-            return false
-        }
-
-        userDefaults.set(true, forKey: hasAutoOpenedWelcomeSettingsKey)
-        return true
-    }
-}
-
-
 @main
 struct ShortcutCycleApp: App {
     @StateObject private var store = GroupStore.shared
@@ -788,6 +746,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         _ event: NSAppleEventDescriptor,
         withReply reply: NSAppleEventDescriptor
     ) {
+        // Apple Events are delivered before applicationDidBecomeActive on a URL-scheme
+        // cold launch, so setting this flag here reliably prevents auto-open of Settings
+        // when the launch was triggered externally (e.g. shortcutcycle:// URL).
         suppressAutomaticWelcomeForCurrentLaunch = true
         guard let urlString = event.paramDescriptor(forKeyword: keyDirectObject)?.stringValue,
               let url = URL(string: urlString) else {
