@@ -10,7 +10,6 @@ struct GeneralSettingsView: View {
     @AppStorage("showHUD") private var showHUD = true
     @AppStorage("showShortcutInHUD") private var showShortcutInHUD = true
     @AppStorage("appTheme") private var appTheme: AppTheme = .system
-    @AppStorage(WelcomeExperiencePolicy.hasDismissedWelcomeKey) private var hasDismissedWelcome = false
     @StateObject private var launchAtLogin = LaunchAtLoginManager.shared
     
     // Derived language for localization updates
@@ -102,14 +101,14 @@ struct GeneralSettingsView: View {
             Section {
                 Toggle("Open at Login".localized(language: selectedLanguage), isOn: $launchAtLogin.isEnabled)
                     .toggleStyle(.switch)
-
+                
                 Picker("Appearance".localized(language: selectedLanguage), selection: $appTheme) {
                     ForEach(AppTheme.allCases) { theme in
                         Text(theme.displayName.localized(language: selectedLanguage)).tag(theme)
                     }
                 }
                 .pickerStyle(.segmented)
-
+                
                 Picker("Language".localized(language: selectedLanguage), selection: Binding(
                     get: { UserDefaults.standard.string(forKey: "selectedLanguage") ?? "system" },
                     set: { newValue in
@@ -122,14 +121,7 @@ struct GeneralSettingsView: View {
                     }
                 }
                 .pickerStyle(.menu)
-
-                if WelcomeExperiencePolicy.shouldShowReplayControl(hasDismissedWelcome: hasDismissedWelcome) {
-                    Button("Show welcome again".localized(language: selectedLanguage)) {
-                        WelcomeExperiencePolicy.prepareReplay()
-                        ShortcutCycleURLRouter.openSettingsFromOutsideView(tab: .groups)
-                    }
-                }
-
+                
             } header: {
                 Text("Application".localized(language: selectedLanguage))
             }

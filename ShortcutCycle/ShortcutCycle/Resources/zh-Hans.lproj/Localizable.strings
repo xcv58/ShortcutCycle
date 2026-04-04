@@ -142,8 +142,3 @@
 
 /* Share */
 "Share" = "共享";
-
-/* Welcome banner */
-"Show welcome again" = "再次显示欢迎信息";
-"ShortcutCycle is running in your menu bar" = "ShortcutCycle 正在菜单栏中运行";
-"Look for the ShortcutCycle icon in the top-right menu bar whenever you want to open the app again." = "每当您想再次打开应用时，请在右上角菜单栏中找到 ShortcutCycle 图标。";

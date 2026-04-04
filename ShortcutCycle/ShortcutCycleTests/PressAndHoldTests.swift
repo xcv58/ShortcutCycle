@@ -1,4 +1,3 @@
-import AppKit
 import XCTest
 
 import Combine
@@ -10,7 +9,6 @@ import KeyboardShortcuts
 
 @MainActor
 final class PressAndHoldTests: XCTestCase {
-    final class DummyEventMonitorToken {}
 
     // Mocks
     class MockTimeProvider: TimeProvider {
@@ -51,50 +49,16 @@ final class PressAndHoldTests: XCTestCase {
     var manager: HUDManager!
     var timeMock: MockTimeProvider!
     var timerMock: MockTimerScheduler!
-    var activationCount: Int!
-    var localMonitorMasks: [NSEvent.EventTypeMask]!
-    var globalMonitorMasks: [NSEvent.EventTypeMask]!
-    var localMonitorHandlers: [(NSEvent.EventTypeMask, (NSEvent) -> NSEvent?)]!
-    var globalMonitorHandlers: [(NSEvent.EventTypeMask, (NSEvent) -> Void)]!
-    var removedMonitorCount: Int!
 
     override func setUp() async throws {
         // Setup mocks
         manager = HUDManager.shared
         timeMock = MockTimeProvider()
         timerMock = MockTimerScheduler()
-        activationCount = 0
-        localMonitorMasks = []
-        globalMonitorMasks = []
-        localMonitorHandlers = []
-        globalMonitorHandlers = []
-        removedMonitorCount = 0
 
         // Inject mocks
         manager.timeProvider = timeMock
         manager.timerScheduler = timerMock
-        manager.activateHUDApp = { [weak self] in
-            self?.activationCount += 1
-        }
-        manager.addLocalEventMonitor = { [weak self] mask, handler in
-            self?.localMonitorMasks.append(mask)
-            self?.localMonitorHandlers.append((mask, handler))
-            return DummyEventMonitorToken()
-        }
-        manager.addGlobalEventMonitor = { [weak self] mask, handler in
-            self?.globalMonitorMasks.append(mask)
-            self?.globalMonitorHandlers.append((mask, handler))
-            return DummyEventMonitorToken()
-        }
-        manager.removeEventMonitor = { [weak self] _ in
-            self?.removedMonitorCount += 1
-        }
-        manager.currentModifierFlags = { [] }
-        manager.settingsWindowsProvider = { [] }
-        manager.closeWindow = { window in
-            window.close()
-        }
-        manager.targetLeavesCurrentSpace = { _ in false }
 
         // Reset state
         manager.hide() // Ensure clean state
@@ -102,38 +66,6 @@ final class PressAndHoldTests: XCTestCase {
         manager.isLoopKeyHeld = false
         manager.currentLoopKey = nil
         manager.isRepeatingLoopActive = false
-        removedMonitorCount = 0
-    }
-
-    private func latestLocalMonitorHandler(
-        for mask: NSEvent.EventTypeMask
-    ) -> ((NSEvent) -> NSEvent?)? {
-        localMonitorHandlers.last(where: { $0.0 == mask })?.1
-    }
-
-    private func latestGlobalMonitorHandler(
-        for mask: NSEvent.EventTypeMask
-    ) -> ((NSEvent) -> Void)? {
-        globalMonitorHandlers.last(where: { $0.0 == mask })?.1
-    }
-
-    private func makeFlagsChangedEvent(
-        modifierFlags: NSEvent.ModifierFlags
-    ) throws -> NSEvent {
-        try XCTUnwrap(
-            NSEvent.keyEvent(
-                with: .flagsChanged,
-                location: .zero,
-                modifierFlags: modifierFlags,
-                timestamp: 0,
-                windowNumber: 0,
-                context: nil,
-                characters: "",
-                charactersIgnoringModifiers: "",
-                isARepeat: false,
-                keyCode: 58
-            )
-        )
     }
 
     // MARK: - Basic HUD Timing Tests
@@ -180,289 +112,6 @@ final class PressAndHoldTests: XCTestCase {
 
         // The timer block calls presentHUD. In unit tests without a real window loop,
         // we verify the timer was scheduled and fired — the delay mechanism is correct.
-    }
-
-    @MainActor
-    func testDelayedShowDefersActivationUntilHUDAppears() async {
-        manager.scheduleShow(
-            items: [HUDAppItem(bundleId: "com.test.1", name: "Test 1", icon: nil)],
-            activeAppId: "com.test.current",
-            modifierFlags: [.option],
-            shortcut: "Opt+1",
-            activeKey: .a
-        )
-
-        XCTAssertEqual(activationCount, 0, "Delayed HUD path should not activate the app before the HUD appears")
-        XCTAssertTrue(globalMonitorMasks.contains(.flagsChanged), "Delayed HUD path should start with global modifier monitoring")
-        XCTAssertEqual(localMonitorMasks, [], "Delayed HUD path should not install local monitors before activation")
-
-        timerMock.fireLastNonRepeatingTimer()
-        await Task.yield()
-        await Task.yield()
-
-        XCTAssertEqual(activationCount, 1, "Showing the HUD should activate the app exactly once")
-        XCTAssertTrue(localMonitorMasks.contains(.flagsChanged), "HUD presentation should switch to local modifier monitoring")
-        XCTAssertTrue(removedMonitorCount > 0, "Transitioning to the visible HUD should remove pre-show monitors")
-    }
-
-    @MainActor
-    func testDelayedShowClosesOffSpaceSettingsWindowBeforeHUDActivation() async {
-        let settingsWindow = MockWindow(
-            identifier: NSUserInterfaceItemIdentifier("settings"),
-            isVisible: true,
-            isOnActiveSpace: false
-        )
-        var events: [String] = []
-
-        manager.settingsWindowsProvider = { [settingsWindow] }
-        manager.closeWindow = { _ in
-            events.append("close")
-        }
-        manager.activateHUDApp = {
-            events.append("activate")
-        }
-
-        manager.scheduleShow(
-            items: [HUDAppItem(bundleId: "com.test.1", name: "Test 1", icon: nil)],
-            activeAppId: "com.test.current",
-            modifierFlags: [.option],
-            shortcut: "Opt+1",
-            activeKey: .a
-        )
-
-        timerMock.fireLastNonRepeatingTimer()
-        await Task.yield()
-        await Task.yield()
-
-        XCTAssertEqual(Array(events.prefix(2)), ["close", "activate"])
-    }
-
-    @MainActor
-    func testImmediateShowDoesNotCloseCurrentSpaceSettingsWindow() {
-        let settingsWindow = MockWindow(
-            identifier: NSUserInterfaceItemIdentifier("settings"),
-            isVisible: true,
-            isOnActiveSpace: true
-        )
-        var closeCount = 0
-
-        manager.settingsWindowsProvider = { [settingsWindow] }
-        manager.closeWindow = { _ in
-            closeCount += 1
-        }
-
-        manager.scheduleShow(
-            items: [HUDAppItem(bundleId: "com.test.1", name: "Test 1", icon: nil)],
-            activeAppId: "com.test.current",
-            modifierFlags: [.option],
-            shortcut: "Opt+1",
-            activeKey: .a,
-            immediate: true
-        )
-
-        XCTAssertEqual(closeCount, 0)
-    }
-
-    @MainActor
-    func testFinalizeClosesCurrentSpaceSettingsWhenSelectedTargetLeavesCurrentSpace() async throws {
-        let settingsWindow = MockWindow(
-            identifier: NSUserInterfaceItemIdentifier("settings"),
-            isVisible: true,
-            isOnActiveSpace: true
-        )
-        var events: [String] = []
-
-        manager.currentModifierFlags = { [.option] }
-        manager.settingsWindowsProvider = { [settingsWindow] }
-        manager.closeWindow = { _ in
-            events.append("close")
-        }
-        manager.targetLeavesCurrentSpace = { item in
-            item.id == "com.test.other-space::42"
-        }
-        manager.activatePendingTargetApp = { _ in
-            events.append("activate")
-        }
-
-        manager.scheduleShow(
-            items: [HUDAppItem(bundleId: "com.test.other-space", pid: 42, name: "Other Space")],
-            activeAppId: "com.test.other-space::42",
-            modifierFlags: [.option],
-            shortcut: "Opt+1",
-            immediate: true
-        )
-
-        let flagsHandler = try XCTUnwrap(latestLocalMonitorHandler(for: .flagsChanged))
-        _ = flagsHandler(try makeFlagsChangedEvent(modifierFlags: []))
-        await Task.yield()
-        await Task.yield()
-
-        XCTAssertEqual(Array(events.prefix(2)), ["close", "activate"])
-    }
-
-    @MainActor
-    func testFinalizeKeepsCurrentSpaceSettingsOpenWhenSelectedTargetStaysOnCurrentSpace() async throws {
-        let settingsWindow = MockWindow(
-            identifier: NSUserInterfaceItemIdentifier("settings"),
-            isVisible: true,
-            isOnActiveSpace: true
-        )
-        var closeCount = 0
-        var activateCount = 0
-
-        manager.currentModifierFlags = { [.option] }
-        manager.settingsWindowsProvider = { [settingsWindow] }
-        manager.closeWindow = { _ in
-            closeCount += 1
-        }
-        manager.targetLeavesCurrentSpace = { _ in false }
-        manager.activatePendingTargetApp = { _ in
-            activateCount += 1
-        }
-
-        manager.scheduleShow(
-            items: [HUDAppItem(bundleId: "com.test.current-space", pid: 24, name: "Current Space")],
-            activeAppId: "com.test.current-space::24",
-            modifierFlags: [.option],
-            shortcut: "Opt+1",
-            immediate: true
-        )
-
-        let flagsHandler = try XCTUnwrap(latestLocalMonitorHandler(for: .flagsChanged))
-        _ = flagsHandler(try makeFlagsChangedEvent(modifierFlags: []))
-        await Task.yield()
-        await Task.yield()
-
-        XCTAssertEqual(closeCount, 0)
-        XCTAssertEqual(activateCount, 1)
-    }
-
-    @MainActor
-    func testBlindSwitchBeforeHUDPresentationKeepsSettingsOpen() async throws {
-        let settingsWindow = MockWindow(
-            identifier: NSUserInterfaceItemIdentifier("settings"),
-            isVisible: true,
-            isOnActiveSpace: true
-        )
-        var closeCount = 0
-        var activateCount = 0
-
-        manager.settingsWindowsProvider = { [settingsWindow] }
-        manager.closeWindow = { _ in
-            closeCount += 1
-        }
-        manager.targetLeavesCurrentSpace = { _ in true }
-        manager.activatePendingTargetApp = { _ in
-            activateCount += 1
-        }
-
-        manager.scheduleShow(
-            items: [HUDAppItem(bundleId: "com.test.quick-target", pid: 24, name: "Quick Target")],
-            activeAppId: "com.test.quick-target::24",
-            modifierFlags: [.option],
-            shortcut: "Opt+1"
-        )
-
-        let flagsHandler = try XCTUnwrap(latestGlobalMonitorHandler(for: .flagsChanged))
-        flagsHandler(try makeFlagsChangedEvent(modifierFlags: []))
-        await Task.yield()
-        await Task.yield()
-
-        XCTAssertEqual(closeCount, 0)
-        XCTAssertEqual(activateCount, 1)
-    }
-
-    @MainActor
-    func testHideClosesCurrentSpaceSettingsWhenSelectedTargetLeavesCurrentSpace() {
-        let settingsWindow = MockWindow(
-            identifier: NSUserInterfaceItemIdentifier("settings"),
-            isVisible: true,
-            isOnActiveSpace: true
-        )
-        var events: [String] = []
-
-        manager.settingsWindowsProvider = { [settingsWindow] }
-        manager.closeWindow = { _ in
-            events.append("close")
-        }
-        manager.targetLeavesCurrentSpace = { item in
-            item.id == "com.test.other-space::99"
-        }
-        manager.activatePendingTargetApp = { _ in
-            events.append("activate")
-        }
-
-        manager.scheduleShow(
-            items: [HUDAppItem(bundleId: "com.test.other-space", pid: 99, name: "Other Space")],
-            activeAppId: "com.test.other-space::99",
-            modifierFlags: [.option],
-            shortcut: "Opt+1",
-            immediate: true
-        )
-
-        manager.hide()
-
-        XCTAssertEqual(Array(events.prefix(2)), ["close", "activate"])
-    }
-
-    @MainActor
-    func testHideKeepsCurrentSpaceSettingsOpenWhenSelectedTargetStaysOnCurrentSpace() {
-        let settingsWindow = MockWindow(
-            identifier: NSUserInterfaceItemIdentifier("settings"),
-            isVisible: true,
-            isOnActiveSpace: true
-        )
-        var closeCount = 0
-        var activateCount = 0
-
-        manager.settingsWindowsProvider = { [settingsWindow] }
-        manager.closeWindow = { _ in closeCount += 1 }
-        manager.targetLeavesCurrentSpace = { _ in false }
-        manager.activatePendingTargetApp = { _ in activateCount += 1 }
-
-        manager.scheduleShow(
-            items: [HUDAppItem(bundleId: "com.test.current-space", pid: 24, name: "Current Space")],
-            activeAppId: "com.test.current-space::24",
-            modifierFlags: [.option],
-            shortcut: "Opt+1",
-            immediate: true
-        )
-
-        manager.hide()
-
-        XCTAssertEqual(closeCount, 0)
-        XCTAssertEqual(activateCount, 1)
-    }
-
-    @MainActor
-    func testHideKeepsSettingsOpenOnBlindSwitchWhenHUDWasNeverPresented() {
-        let settingsWindow = MockWindow(
-            identifier: NSUserInterfaceItemIdentifier("settings"),
-            isVisible: true,
-            isOnActiveSpace: true
-        )
-        var closeCount = 0
-        var activateCount = 0
-
-        manager.settingsWindowsProvider = { [settingsWindow] }
-        manager.closeWindow = { _ in closeCount += 1 }
-        manager.targetLeavesCurrentSpace = { _ in true }
-        manager.activatePendingTargetApp = { _ in activateCount += 1 }
-
-        // Schedule without immediate — HUD is pending but never shown before hide()
-        manager.scheduleShow(
-            items: [HUDAppItem(bundleId: "com.test.blind", pid: 7, name: "Blind Target")],
-            activeAppId: "com.test.blind::7",
-            modifierFlags: [.option],
-            shortcut: "Opt+1"
-        )
-
-        // Cancel the show timer without firing it, then call hide() directly (blind switch)
-        manager.hide()
-
-        // Settings must not be closed: HUD was never presented this session
-        XCTAssertEqual(closeCount, 0)
-        XCTAssertEqual(activateCount, 1)
     }
 
     @MainActor

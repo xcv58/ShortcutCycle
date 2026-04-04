@@ -22,16 +22,6 @@ final class AppSwitcherTests: XCTestCase {
         } else {
             UserDefaults.standard.removeObject(forKey: "showHUD")
         }
-
-        // Restore default closures on the shared singleton so in-flight
-        // DispatchQueue.main.asyncAfter blocks in activateRunningApp (fired 0.1s
-        // after handleShortcut) call the real APIs rather than test stubs.
-        switcher.unhideRunningApp = { app in
-            app.unhide()
-        }
-        switcher.activateRunningAppInstance = { app in
-            app.activate(options: .activateAllWindows)
-        }
         NSApp?.unhide(nil)
     }
 
@@ -64,9 +54,6 @@ final class AppSwitcherTests: XCTestCase {
         store.groups = [group]
 
         UserDefaults.standard.set(false, forKey: "showHUD")
-
-        switcher.unhideRunningApp = { _ in }
-        switcher.activateRunningAppInstance = { _ in true }
 
         switcher.handleShortcut(for: group, store: store)
 

@@ -1,6 +1,5 @@
 
 import SwiftUI
-import Combine
 import KeyboardShortcuts
 import UniformTypeIdentifiers
 #if canImport(ShortcutCycleCore)
@@ -15,32 +14,22 @@ struct MainView: View {
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
     @AppStorage("appTheme") private var appTheme: AppTheme = .system
     @EnvironmentObject var localeObserver: LocaleObserver
-    @State private var selectedTab = URLSettingsTab.groups.rawValue
+    @State private var selectedTab = "groups"
     @State private var showDeleteConfirmation = false
-    @AppStorage(WelcomeExperiencePolicy.hasDismissedWelcomeKey) private var hasDismissedWelcome = false
 
     var body: some View {
-        VStack(spacing: 0) {
-            if WelcomeExperiencePolicy.shouldShowBanner(hasDismissedWelcome: hasDismissedWelcome) {
-                WelcomeBannerView(selectedLanguage: selectedLanguage) {
-                    hasDismissedWelcome = true
+        TabView(selection: $selectedTab) {
+            GroupSettingsView()
+                .tabItem {
+                    Label("Groups".localized(language: selectedLanguage), systemImage: "rectangle.stack.3.hexagon")
                 }
-                .padding([.horizontal, .top])
-            }
-
-            TabView(selection: $selectedTab) {
-                GroupSettingsView()
-                    .tabItem {
-                        Label("Groups".localized(language: selectedLanguage), systemImage: "rectangle.stack.3.hexagon")
-                    }
-                    .tag(URLSettingsTab.groups.rawValue)
-
-                GeneralSettingsView()
-                    .tabItem {
-                        Label("General".localized(language: selectedLanguage), systemImage: "gear")
-                    }
-                    .tag(URLSettingsTab.general.rawValue)
-            }
+                .tag("groups")
+            
+            GeneralSettingsView()
+                .tabItem {
+                    Label("General".localized(language: selectedLanguage), systemImage: "gear")
+                }
+                .tag("general")
         }
         .focusedSceneValue(\.selectedTab, $selectedTab)
         .background(SettingsWindowObserver())
@@ -78,7 +67,6 @@ struct MainView: View {
         .environment(\.locale, LanguageManager.shared.locale)
         .id("\(selectedLanguage)-\(localeObserver.id)") // Force full redraw when language or system locale changes
     }
-
 }
 
 #Preview {

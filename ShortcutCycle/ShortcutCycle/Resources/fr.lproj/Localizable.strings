@@ -141,8 +141,3 @@
 
 /* Share */
 "Share" = "Partager";
-
-/* Welcome banner */
-"Show welcome again" = "Afficher à nouveau le message de bienvenue";
-"ShortcutCycle is running in your menu bar" = "ShortcutCycle est actif dans votre barre des menus";
-"Look for the ShortcutCycle icon in the top-right menu bar whenever you want to open the app again." = "Recherchez l'icône ShortcutCycle dans la barre des menus en haut à droite lorsque vous souhaitez rouvrir l'application.";
