@@ -48,6 +48,7 @@ fastlane/test_output
 
 ## Worktrees
 .worktrees/
+.artifacts/
 
 ## macOS specific
 .AppleDB

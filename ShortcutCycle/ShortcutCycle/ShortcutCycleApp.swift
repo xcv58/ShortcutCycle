@@ -673,7 +673,9 @@ struct ShortcutCycleApp: App {
     init() {
         // Setup shortcut manager
         Task { @MainActor in
-            ShortcutManager.shared.registerAllShortcuts()
+            if !ShortcutCycleIntegrationHarness.shared.isActive {
+                ShortcutManager.shared.registerAllShortcuts()
+            }
         }
     }
 
@@ -737,6 +739,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard !flag else { return false }
         ShortcutCycleURLRouter.openSettingsFromOutsideView()
         return true
+    }
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        ShortcutCycleIntegrationHarness.shared.startIfNeeded()
     }
 
     @objc private func handleURLEvent(

@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		017 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 901 /* KeyboardShortcuts */; };
+		A2000012F80000100C0DE01 /* ShortcutCycleIntegrationHarness.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000202F80000100C0DE01 /* ShortcutCycleIntegrationHarness.swift */; };
+		A2000022F80000100C0DE01 /* ShortcutCycleIntegrationTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000212F80000100C0DE01 /* ShortcutCycleIntegrationTestSupport.swift */; };
+		A2000032F80000100C0DE01 /* ShortcutCycleIntegrationHarnessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000222F80000100C0DE01 /* ShortcutCycleIntegrationHarnessTests.swift */; };
 		DF88A3762F300B110042E749 /* HUDManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3542F300B110042E749 /* HUDManager.swift */; };
 		DF88A3772F300B110042E749 /* ShortcutCycleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3742F300B110042E749 /* ShortcutCycleApp.swift */; };
 		DF88A3782F300B110042E749 /* GroupEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A36D2F300B110042E749 /* GroupEditView.swift */; };
@@ -85,6 +88,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		A2000102F80000100C0DE01 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 600 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 400;
+			remoteInfo = ShortcutCycle;
+		};
 		DF8B47DB2F2F090100C473F8 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 600 /* Project object */;
@@ -96,6 +106,10 @@
 
 /* Begin PBXFileReference section */
 		100 /* ShortcutCycle.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ShortcutCycle.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A2000202F80000100C0DE01 /* ShortcutCycleIntegrationHarness.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutCycleIntegrationHarness.swift; sourceTree = "<group>"; };
+		A2000212F80000100C0DE01 /* ShortcutCycleIntegrationTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutCycleIntegrationTestSupport.swift; sourceTree = "<group>"; };
+		A2000222F80000100C0DE01 /* ShortcutCycleIntegrationHarnessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutCycleIntegrationHarnessTests.swift; sourceTree = "<group>"; };
+		A2000232F80000100C0DE01 /* ShortcutCycleIntegrationTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ShortcutCycleIntegrationTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		DF88A3372F300B110042E749 /* String+Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Localization.swift"; sourceTree = "<group>"; };
 		DF88A3392F300B110042E749 /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
 		DF88A33A2F300B110042E749 /* AppItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppItem.swift; sourceTree = "<group>"; };
@@ -171,6 +185,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A2000502F80000100C0DE01 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -179,6 +200,7 @@
 			children = (
 				DF88A3752F300B110042E749 /* ShortcutCycle */,
 				DF8B47D82F2F090100C473F8 /* ShortcutCycleTests */,
+				A2000312F80000100C0DE01 /* ShortcutCycleIntegrationTests */,
 				302 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -188,8 +210,26 @@
 			children = (
 				100 /* ShortcutCycle.app */,
 				DF8B47D72F2F090100C473F8 /* ShortcutCycleTests.xctest */,
+				A2000232F80000100C0DE01 /* ShortcutCycleIntegrationTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		A2000302F80000100C0DE01 /* Integration */ = {
+			isa = PBXGroup;
+			children = (
+				A2000202F80000100C0DE01 /* ShortcutCycleIntegrationHarness.swift */,
+			);
+			path = Integration;
+			sourceTree = "<group>";
+		};
+		A2000312F80000100C0DE01 /* ShortcutCycleIntegrationTests */ = {
+			isa = PBXGroup;
+			children = (
+				A2000212F80000100C0DE01 /* ShortcutCycleIntegrationTestSupport.swift */,
+				A2000222F80000100C0DE01 /* ShortcutCycleIntegrationHarnessTests.swift */,
+			);
+			path = ShortcutCycleIntegrationTests;
 			sourceTree = "<group>";
 		};
 		DF88A3382F300B110042E749 /* Extensions */ = {
@@ -266,6 +306,7 @@
 			children = (
 				DF88A3522F300B110042E749 /* AppSwitcher */,
 				DF88A3552F300B110042E749 /* HUD */,
+				A2000302F80000100C0DE01 /* Integration */,
 				DF88A3572F300B110042E749 /* Managers */,
 				DF88A3592F300B110042E749 /* Overlay */,
 				E2B200012F50000100C0DE01 /* SettingsWindowLifecycleCoordinator.swift */,
@@ -443,6 +484,26 @@
 			productReference = DF8B47D72F2F090100C473F8 /* ShortcutCycleTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		A2000402F80000100C0DE01 /* ShortcutCycleIntegrationTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A2000622F80000100C0DE01 /* Build configuration list for PBXNativeTarget "ShortcutCycleIntegrationTests" */;
+			buildPhases = (
+				A2000522F80000100C0DE01 /* Sources */,
+				A2000502F80000100C0DE01 /* Frameworks */,
+				A2000512F80000100C0DE01 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A2000532F80000100C0DE01 /* PBXTargetDependency */,
+			);
+			name = ShortcutCycleIntegrationTests;
+			packageProductDependencies = (
+			);
+			productName = ShortcutCycleIntegrationTests;
+			productReference = A2000232F80000100C0DE01 /* ShortcutCycleIntegrationTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -454,6 +515,9 @@
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
 					400 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+					A2000402F80000100C0DE01 = {
 						CreatedOnToolsVersion = 15.0;
 					};
 					DF8B47D62F2F090100C473F8 = {
@@ -494,6 +558,7 @@
 			targets = (
 				400 /* ShortcutCycle */,
 				DF8B47D62F2F090100C473F8 /* ShortcutCycleTests */,
+				A2000402F80000100C0DE01 /* ShortcutCycleIntegrationTests */,
 			);
 		};
 /* End PBXProject section */
@@ -517,6 +582,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A2000512F80000100C0DE01 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -533,6 +605,7 @@
 				DF88A3A62F300CA00042E749 /* LaunchAtLoginManager.swift in Sources */,
 				DF88A3A72F300CA00042E749 /* ShortcutManager.swift in Sources */,
 				DF88A3A82F300CA00042E749 /* AppSwitcher.swift in Sources */,
+				A2000012F80000100C0DE01 /* ShortcutCycleIntegrationHarness.swift in Sources */,
 				DF88A39D2F300C800042E749 /* KeyboardShortcutsNames.swift in Sources */,
 				DF88A39E2F300C800042E749 /* AppItem.swift in Sources */,
 				DF88A39F2F300C800042E749 /* GroupStore.swift in Sources */,
@@ -604,9 +677,23 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A2000522F80000100C0DE01 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A2000022F80000100C0DE01 /* ShortcutCycleIntegrationTestSupport.swift in Sources */,
+				A2000032F80000100C0DE01 /* ShortcutCycleIntegrationHarnessTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		A2000532F80000100C0DE01 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 400 /* ShortcutCycle */;
+			targetProxy = A2000102F80000100C0DE01 /* PBXContainerItemProxy */;
+		};
 		DF8B47DC2F2F090100C473F8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 400 /* ShortcutCycle */;
@@ -778,8 +865,9 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.5;
-				PRODUCT_BUNDLE_IDENTIFIER = com.xcv58.ShortcutCycle;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SHORTCUTCYCLE_APP_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SHORTCUTCYCLE_APP_BUNDLE_IDENTIFIER = com.xcv58.ShortcutCycle;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -807,9 +895,50 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.5;
-				PRODUCT_BUNDLE_IDENTIFIER = com.xcv58.ShortcutCycle;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SHORTCUTCYCLE_APP_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SHORTCUTCYCLE_APP_BUNDLE_IDENTIFIER = com.xcv58.ShortcutCycle;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		A2000602F80000100C0DE01 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 56;
+				DEVELOPMENT_TEAM = 5736QK4NZX;
+				GENERATE_INFOPLIST_FILE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.5;
+				PRODUCT_BUNDLE_IDENTIFIER = com.xcv58.ShortcutCycleIntegrationTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		A2000612F80000100C0DE01 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 56;
+				DEVELOPMENT_TEAM = 5736QK4NZX;
+				GENERATE_INFOPLIST_FILE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.5;
+				PRODUCT_BUNDLE_IDENTIFIER = com.xcv58.ShortcutCycleIntegrationTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
@@ -875,6 +1004,15 @@
 			buildConfigurations = (
 				700 /* Debug */,
 				701 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A2000622F80000100C0DE01 /* Build configuration list for PBXNativeTarget "ShortcutCycleIntegrationTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A2000602F80000100C0DE01 /* Debug */,
+				A2000612F80000100C0DE01 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
