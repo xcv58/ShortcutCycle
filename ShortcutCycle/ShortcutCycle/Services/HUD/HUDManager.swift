@@ -132,6 +132,10 @@ class HUDManager: @preconcurrency ObservableObject {
     var isLooping: Bool {
         return isRepeatingLoopActive
     }
+
+    private var timings: ShortcutCycleIntegrationTimings {
+        ShortcutCycleIntegrationHarness.shared.timings
+    }
     
     // Singleton extraction for testing? 
     // Ideally we should make the constructor accessible for tests, 
@@ -186,7 +190,7 @@ class HUDManager: @preconcurrency ObservableObject {
 
         // Otherwise, schedule show after a short delay (mimic "hold" to show)
         showTimer?.invalidate()
-        showTimer = timerScheduler.schedule(timeInterval: 0.2, repeats: false) { [weak self] _ in // 200ms delay
+        showTimer = timerScheduler.schedule(timeInterval: timings.hudShowDelay, repeats: false) { [weak self] _ in
             Task { @MainActor in
                 self?.closeOffSpaceSettingsWindowIfNeeded()
                 self?.prepareAppForHUDPresentation()
@@ -286,6 +290,7 @@ class HUDManager: @preconcurrency ObservableObject {
         }
 
         window.orderFront(nil)
+        ShortcutCycleIntegrationHarness.shared.recordHUDPresented(activeAppId: activeAppId, items: items)
         // Note: Loop scheduling is handled by scheduleShow() AFTER startMonitoringModifiers(),
         // not here, to ensure isLoopKeyHeld is freshly set before the loop decision.
     }
@@ -297,7 +302,7 @@ class HUDManager: @preconcurrency ObservableObject {
 
         loopTimer?.invalidate()
         // Wait 0.2s after HUD appears before starting the auto-cycle
-        loopTimer = timerScheduler.schedule(timeInterval: 0.2, repeats: false) { [weak self] _ in
+        loopTimer = timerScheduler.schedule(timeInterval: timings.loopStartDelay, repeats: false) { [weak self] _ in
              Task { @MainActor in
                  self?.startRepeatingLoop()
              }
@@ -396,7 +401,7 @@ class HUDManager: @preconcurrency ObservableObject {
         let currentFlags = currentModifierFlags()
         if !checkModifiersHeld(currentFlags: currentFlags, required: required) {
              // Give a tiny grace period for state to settle or for fast release.
-             DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
+             DispatchQueue.main.asyncAfter(deadline: .now() + timings.modifierReleaseGraceDelay) { [weak self] in
                  guard let self = self else { return }
                  let flags = self.currentModifierFlags()
                  if !self.checkModifiersHeld(currentFlags: flags, required: required) {
@@ -501,7 +506,7 @@ class HUDManager: @preconcurrency ObservableObject {
         loopTimer?.invalidate()
         isRepeatingLoopActive = true
         // Repeat every 125ms
-        loopTimer = timerScheduler.schedule(timeInterval: 0.125, repeats: true) { [weak self] _ in
+        loopTimer = timerScheduler.schedule(timeInterval: timings.repeatLoopInterval, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.selectNextApp()
             }
@@ -677,6 +682,7 @@ class HUDManager: @preconcurrency ObservableObject {
                 closeVisibleSettingsWindowIfNeeded(beforeActivating: pendingId)
             }
             activatePendingTargetApp(pendingId)
+            ShortcutCycleIntegrationHarness.shared.recordSwitchFinalized(targetAppId: pendingId, items: currentItems)
             pendingActiveAppId = nil
         }
         
@@ -749,7 +755,7 @@ class HUDManager: @preconcurrency ObservableObject {
     
     private func scheduleAutoHide() {
         hideTimer?.invalidate()
-        hideTimer = timerScheduler.schedule(timeInterval: 1.0, repeats: false) { [weak self] _ in
+        hideTimer = timerScheduler.schedule(timeInterval: timings.autoHideDelay, repeats: false) { [weak self] _ in
             Task { @MainActor in
                 self?.hide()
             }

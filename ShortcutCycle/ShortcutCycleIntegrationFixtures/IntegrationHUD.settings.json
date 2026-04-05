@@ -1,0 +1,37 @@
+{
+  "exportDate" : "2026-04-04T00:00:00Z",
+  "groups" : [
+    {
+      "apps" : [
+        {
+          "bundleIdentifier" : "com.apple.calculator",
+          "id" : "00000000-0000-4000-8000-000000000002",
+          "name" : "Calculator"
+        },
+        {
+          "bundleIdentifier" : "com.apple.Chess",
+          "id" : "00000000-0000-4000-8000-000000000003",
+          "name" : "Chess"
+        }
+      ],
+      "id" : "00000000-0000-4000-8000-000000000001",
+      "isEnabled" : true,
+      "lastModified" : "2026-04-04T00:00:00Z",
+      "name" : "Integration HUD",
+      "openAppIfNeeded" : false
+    }
+  ],
+  "settings" : {
+    "appTheme" : "system",
+    "selectedLanguage" : "system",
+    "showHUD" : true,
+    "showShortcutInHUD" : true
+  },
+  "shortcuts" : {
+    "00000000-0000-4000-8000-000000000001" : {
+      "carbonKeyCode" : 18,
+      "carbonModifiers" : 2048
+    }
+  },
+  "version" : 3
+}
