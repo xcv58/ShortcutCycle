@@ -12,10 +12,10 @@ Cycle apps by group, instantly.
 ## Promotional Text
 Stop endlessly tabbing. Group your apps by context—Web, Code, Social—and cycle through them with dedicated hotkeys. Build muscle memory and flow.
 
-## What's New (1.5)
-- Automate ShortcutCycle with the new `shortcutcycle://` URL scheme from Apple Shortcuts, Alfred, Raycast, Keyboard Maestro, or scripts.
-- Open Settings or the Backup Browser directly, change settings, and export, import, or restore backups from URL commands.
-- Smarter backup handling reduces duplicate backup files, and settings links now work reliably right after launch.
+## What's New (1.6)
+- Add currently running apps to a group with one click from the group editor.
+- Get suggested shortcut ideas for groups that do not have a hotkey yet.
+- Enjoy clearer first-run setup and more reliable switching when apps are minimized or Settings is open on another Space.
 
 ## App Icon
 `ShortcutCycle/ShortcutCycle/Assets.xcassets/AppIcon.appiconset/1024.png`

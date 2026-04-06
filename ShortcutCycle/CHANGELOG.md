@@ -2,23 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.6] - Unreleased
+## [1.6] - 2026-04-05
+
+### Added
+- **Running app quick add**: The group editor now lets you add currently running apps with a single click, reducing the need to browse Finder when capturing an active workflow.
+- **Shortcut suggestions**: Groups without an assigned shortcut now surface suggested hotkeys to streamline initial setup.
+
+### Changed
+- **First-launch onboarding**: On first manual launch, ShortcutCycle now opens Settings with a welcome banner to make the menu bar-based app model clearer.
 
 ### Fixed
-- **Minimized multi-profile windows**: Multi-profile app instances (e.g., two Firefox profiles) that are minimized with Cmd+M are now hidden from the HUD, since macOS cannot reliably restore a specific minimized instance without Accessibility permission. Instances hidden with Cmd+H are unaffected and continue to appear — they are reliably restored by `unhide()+activate()`. If all instances of a multi-profile app are minimized, one entry is preserved in the HUD so the app remains reachable.
+- **Narrow group editor layout**: Cycling Mode controls now remain readable and properly aligned in narrow group editor layouts.
+- **Desktop Space jumps**: App switching no longer sends users to another Space merely because the Settings window is open elsewhere.
+- **Minimized multi-profile windows**: Minimized multi-profile app instances (for example, multiple Firefox profiles) are now excluded from the HUD when macOS cannot reliably restore a specific minimized instance without Accessibility permission. Instances hidden with Cmd+H remain visible because `unhide()+activate()` restores them reliably. When all instances of a multi-profile app are minimized, ShortcutCycle preserves one HUD entry so the app remains accessible.
 
 ## [1.5] - 2026-03-01
 
 ### Added
 - **Automation with `shortcutcycle://`**: ShortcutCycle can now be controlled from Apple Shortcuts, Alfred, Raycast, Keyboard Maestro, shell scripts, and other tools.
-- **Direct links into the app**: URL commands can open Settings to a specific tab, open the Automatic Backup Browser, change settings, flush pending auto-save, export or import settings, and restore a backup by latest item, index, name, or path.
+- **Direct links into the app**: URL commands can now open Settings to a specific tab, open the Automatic Backup Browser, change settings, flush pending auto-save, export or import settings, and restore backups by latest item, index, name, or path.
 
 ### Changed
-- **Smarter auto-backups**: Temporary switching-state updates now persist without triggering unnecessary automatic backups.
+- **Smarter auto-backups**: Temporary switching-state updates now persist without creating unnecessary automatic backups.
 
 ### Fixed
-- **Settings links after launch**: URL commands for opening Settings and related views now work reliably even right after the app starts.
-- **Duplicate backup files**: Manual and automatic backups no longer create extra files when only temporary switching state has changed.
+- **Settings links after launch**: URL commands for opening Settings and related views now work reliably immediately after app launch.
+- **Duplicate backup files**: Manual and automatic backups no longer create duplicate files when only temporary switching state has changed.
 
 ## [1.4] - 2026-02-12
 
