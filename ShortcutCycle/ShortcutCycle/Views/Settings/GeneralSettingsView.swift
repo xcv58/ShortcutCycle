@@ -87,17 +87,67 @@ struct GeneralSettingsView: View {
                 Text("The HUD appears briefly when you cycle through applications in a group.".localized(language: selectedLanguage))
             }
             
-            #if DEBUG
             Section {
                 HStack {
                     Text("Settings Window".localized(language: selectedLanguage))
                     Spacer()
                     KeyboardShortcuts.Recorder(for: .toggleSettings)
                 }
+
+                Divider()
+
+                KeyboardShortcutReferenceRow(
+                    title: "Settings...".localized(language: selectedLanguage),
+                    shortcuts: ["⌘,"]
+                )
+
+                KeyboardShortcutReferenceRow(
+                    title: "Groups".localized(language: selectedLanguage),
+                    shortcuts: ["⌘1"]
+                )
+
+                KeyboardShortcutReferenceRow(
+                    title: "General".localized(language: selectedLanguage),
+                    shortcuts: ["⌘2"]
+                )
+
+                KeyboardShortcutReferenceRow(
+                    title: "Add Group".localized(language: selectedLanguage),
+                    shortcuts: ["⌘N"]
+                )
+
+                KeyboardShortcutReferenceRow(
+                    title: "Delete Group".localized(language: selectedLanguage),
+                    shortcuts: ["⌘⌫"]
+                )
+
+                KeyboardShortcutReferenceRow(
+                    title: "Toggle Sidebar",
+                    shortcuts: ["⌃⌘S"]
+                )
+
+                KeyboardShortcutReferenceRow(
+                    title: "Previous Group",
+                    shortcuts: ["⌘↑", "⌘[", "⌘K"]
+                )
+
+                KeyboardShortcutReferenceRow(
+                    title: "Next Group",
+                    shortcuts: ["⌘↓", "⌘]", "⌘J"]
+                )
+
+                KeyboardShortcutReferenceRow(
+                    title: "Move Group Up",
+                    shortcuts: ["⌥⌘↑"]
+                )
+
+                KeyboardShortcutReferenceRow(
+                    title: "Move Group Down",
+                    shortcuts: ["⌥⌘↓"]
+                )
             } header: {
                 Text("Shortcuts".localized(language: selectedLanguage))
             }
-            #endif
             
             Section {
                 Toggle("Open at Login".localized(language: selectedLanguage), isOn: $launchAtLogin.isEnabled)
@@ -384,5 +434,30 @@ struct GeneralSettingsView: View {
         store.applyImport(export)
         showClipboardImportSuccess = true
         pendingClipboardExport = nil
+    }
+}
+
+private struct KeyboardShortcutReferenceRow: View {
+    let title: String
+    let shortcuts: [String]
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            Text(title)
+            Spacer(minLength: 12)
+            HStack(spacing: 6) {
+                ForEach(shortcuts, id: \.self) { shortcut in
+                    Text(shortcut)
+                        .font(.caption.monospaced())
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                .fill(Color(nsColor: .controlBackgroundColor))
+                        )
+                }
+            }
+            .foregroundStyle(.secondary)
+        }
     }
 }

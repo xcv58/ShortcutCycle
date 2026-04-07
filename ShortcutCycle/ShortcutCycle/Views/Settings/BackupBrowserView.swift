@@ -200,7 +200,7 @@ struct BackupBrowserView: View {
             .listStyle(.sidebar)
             .focused($isSidebarFocused)
 
-            Text("⌥-click to compare with a different backup".localized(language: selectedLanguage))
+            Text("Comparison defaults to the next older backup. Use Changes from to pick a different one.")
                 .font(.caption2)
                 .foregroundColor(.secondary)
                 .padding(.horizontal, 8)

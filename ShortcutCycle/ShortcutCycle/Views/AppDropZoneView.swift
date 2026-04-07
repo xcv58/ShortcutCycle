@@ -63,13 +63,13 @@ struct AppRowView: View {
 /// A grid item representing a single app with icon and name
 struct AppGridItemView: View {
     let app: AppItem
-    let onDelete: () -> Void
+    let isSelected: Bool
+    let onSelect: () -> Void
     @State private var isHovered = false
     
     var body: some View {
-        VStack(spacing: 8) {
-            ZStack(alignment: .topTrailing) {
-                // App icon
+        Button(action: onSelect) {
+            VStack(spacing: 8) {
                 Group {
                     if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: app.bundleIdentifier) {
                         Image(nsImage: NSWorkspace.shared.icon(forFile: appURL.path))
@@ -82,35 +82,29 @@ struct AppGridItemView: View {
                             .frame(width: 56, height: 56)
                     }
                 }
-                
-                // Delete button (visible on hover)
-                if isHovered {
-                    Button(action: onDelete) {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 16))
-                            .foregroundColor(.white)
-                            .background(Circle().fill(Color.red))
-                    }
-                    .buttonStyle(.plain)
-                    .offset(x: 6, y: -6)
-                }
+    
+                Text(app.name)
+                    .font(.caption)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+                    .frame(width: 88)
             }
-            
-            Text(app.name)
-                .font(.caption)
-                .lineLimit(2)
-                .multilineTextAlignment(.center)
-                .frame(width: 88)
+            .padding(10)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill((isHovered || isSelected) ? Color.accentColor.opacity(0.1) : Color.clear)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(isSelected ? Color.accentColor.opacity(0.35) : Color.clear, lineWidth: 1)
+            )
         }
-        .padding(10)
-        .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(isHovered ? Color.accentColor.opacity(0.1) : Color.clear)
-        )
+        .buttonStyle(.plain)
         .onHover { hovering in
             isHovered = hovering
         }
         .help(app.bundleIdentifier)
+        .accessibilityLabel(app.name)
     }
 }
 

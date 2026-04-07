@@ -50,9 +50,30 @@ struct AppCommands: Commands {
         selectedTab != "groups" || GroupStore.shared.groups.count < 2
     }
 
+    private var selectedGroupIndex: Int? {
+        guard let currentId = GroupStore.shared.selectedGroupId else { return nil }
+        return GroupStore.shared.groups.firstIndex(where: { $0.id == currentId })
+    }
+
+    private var canMoveGroupUp: Bool {
+        selectedTab == "groups" && (selectedGroupIndex ?? 0) > 0
+    }
+
+    private var canMoveGroupDown: Bool {
+        guard let selectedGroupIndex else { return false }
+        return selectedTab == "groups" && selectedGroupIndex < GroupStore.shared.groups.count - 1
+    }
+
     var body: some Commands {
         // Keep a non-lazy reference to openWindow for URL/shortcut cold-start requests.
         let _ = SettingsWindowBridge.register(openWindow: openWindow)
+
+        CommandGroup(replacing: .appSettings) {
+            Button("Settings...") {
+                ShortcutCycleURLRouter.openSettingsFromOutsideView(tab: .general)
+            }
+            .keyboardShortcut(",", modifiers: .command)
+        }
 
         CommandGroup(replacing: .newItem) {
             Button("Add Group") {
@@ -133,6 +154,20 @@ struct AppCommands: Commands {
             }
             .keyboardShortcut("j", modifiers: .command)
             .disabled(groupsDisabled)
+
+            Divider()
+
+            Button("Move Group Up") {
+                moveSelectedGroup(by: -1)
+            }
+            .keyboardShortcut(.upArrow, modifiers: [.command, .option])
+            .disabled(!canMoveGroupUp)
+
+            Button("Move Group Down") {
+                moveSelectedGroup(by: 1)
+            }
+            .keyboardShortcut(.downArrow, modifiers: [.command, .option])
+            .disabled(!canMoveGroupDown)
         }
     }
 
@@ -158,6 +193,21 @@ struct AppCommands: Commands {
         }
         let nextIndex = currentIndex == store.groups.count - 1 ? 0 : currentIndex + 1
         store.selectedGroupId = store.groups[nextIndex].id
+    }
+
+    private func moveSelectedGroup(by delta: Int) {
+        let store = GroupStore.shared
+        guard let currentId = store.selectedGroupId,
+              let currentIndex = store.groups.firstIndex(where: { $0.id == currentId }) else {
+            return
+        }
+
+        let targetIndex = currentIndex + delta
+        guard store.groups.indices.contains(targetIndex) else { return }
+
+        let destination = delta > 0 ? targetIndex + 1 : targetIndex
+        store.moveGroups(from: IndexSet(integer: currentIndex), to: destination)
+        store.selectedGroupId = currentId
     }
 }
 

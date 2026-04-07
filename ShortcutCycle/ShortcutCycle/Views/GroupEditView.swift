@@ -19,6 +19,7 @@ struct GroupEditView: View {
     @FocusState private var isNameFocused: Bool
     @State private var suppressAutoFocus = true
     @State private var runningAppsRefreshToken = 0
+    @State private var selectedAppId: UUID?
 
     init(
         groupId: UUID,
@@ -56,6 +57,9 @@ struct GroupEditView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 suppressAutoFocus = false
             }
+        }
+        .onChange(of: group?.apps.map(\.id) ?? []) { _, _ in
+            syncSelectedApp()
         }
         .onReceive(NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didLaunchApplicationNotification)) { _ in
             runningAppsRefreshToken += 1
@@ -139,8 +143,11 @@ struct GroupEditView: View {
             } else {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 80, maximum: 100))], spacing: 16) {
                     ForEach(group.apps) { app in
-                        AppGridItemView(app: app) {
-                            store.removeApp(app, from: groupId)
+                        AppGridItemView(
+                            app: app,
+                            isSelected: selectedAppId == app.id
+                        ) {
+                            selectedAppId = app.id
                         }
                         .opacity(draggingApp?.id == app.id ? 0.01 : 1)
                         .onDrag {
@@ -157,6 +164,8 @@ struct GroupEditView: View {
                 }
                 .padding(.vertical, 8)
                 .animation(.default, value: group.apps)
+
+                selectedAppControls(for: group)
             }
 
             addAppsPanel(for: group, quickAddCandidates: quickAddCandidates)
@@ -239,6 +248,101 @@ struct GroupEditView: View {
         if let group = group {
             groupName = group.name
         }
+        syncSelectedApp()
+    }
+
+    private func syncSelectedApp() {
+        guard let group else {
+            selectedAppId = nil
+            return
+        }
+
+        if let selectedAppId,
+           group.apps.contains(where: { $0.id == selectedAppId }) {
+            return
+        }
+
+        selectedAppId = group.apps.first?.id
+    }
+
+    private func selectedAppIndex(in group: AppGroup) -> Int? {
+        guard let selectedAppId else { return nil }
+        return group.apps.firstIndex(where: { $0.id == selectedAppId })
+    }
+
+    private func moveSelectedApp(in group: AppGroup, by delta: Int) {
+        guard let currentIndex = selectedAppIndex(in: group) else { return }
+        let targetIndex = currentIndex + delta
+        guard group.apps.indices.contains(targetIndex) else { return }
+
+        let destination = delta > 0 ? targetIndex + 1 : targetIndex
+        store.moveApp(in: groupId, from: IndexSet(integer: currentIndex), to: destination)
+    }
+
+    private func removeSelectedApp(from group: AppGroup) {
+        guard let currentIndex = selectedAppIndex(in: group) else { return }
+
+        let replacementSelection: UUID? = {
+            let nextIndex = currentIndex + 1
+            if group.apps.indices.contains(nextIndex) {
+                return group.apps[nextIndex].id
+            }
+            let previousIndex = currentIndex - 1
+            if group.apps.indices.contains(previousIndex) {
+                return group.apps[previousIndex].id
+            }
+            return nil
+        }()
+
+        store.removeApp(group.apps[currentIndex], from: groupId)
+        selectedAppId = replacementSelection
+    }
+
+    private func selectedAppControls(for group: AppGroup) -> some View {
+        let selectedIndex = selectedAppIndex(in: group)
+        let selectedAppName = selectedIndex.flatMap { group.apps[$0].name }
+
+        return HStack(spacing: 8) {
+            if let selectedAppName {
+                Text(selectedAppName)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+            }
+
+            Spacer()
+
+            Button {
+                moveSelectedApp(in: group, by: -1)
+            } label: {
+                Image(systemName: "arrow.left")
+            }
+            .buttonStyle(.borderless)
+            .disabled((selectedIndex ?? 0) <= 0)
+            .help("Move selected app earlier in the cycle")
+            .accessibilityLabel("Move selected app earlier in the cycle")
+
+            Button {
+                moveSelectedApp(in: group, by: 1)
+            } label: {
+                Image(systemName: "arrow.right")
+            }
+            .buttonStyle(.borderless)
+            .disabled(selectedIndex == nil || selectedIndex == group.apps.count - 1)
+            .help("Move selected app later in the cycle")
+            .accessibilityLabel("Move selected app later in the cycle")
+
+            Button(role: .destructive) {
+                removeSelectedApp(from: group)
+            } label: {
+                Image(systemName: "trash")
+            }
+            .buttonStyle(.borderless)
+            .disabled(selectedIndex == nil)
+            .help("Remove selected app from the group")
+            .accessibilityLabel("Remove selected app from the group")
+        }
+        .padding(.top, 4)
     }
 
     private func runningAppCandidates(for group: AppGroup) -> [AppItem] {
