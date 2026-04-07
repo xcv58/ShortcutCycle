@@ -122,32 +122,35 @@ struct AppDropZoneView: View {
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
     
     var body: some View {
-        VStack(spacing: 10) {
-            Image(systemName: "plus.app")
-                .font(.system(size: 28))
-                .foregroundColor(isTargeted ? .accentColor : .secondary)
-            
-            Text("Drop or click to add apps".localized(language: selectedLanguage))
-                .font(.caption)
-                .foregroundColor(isTargeted ? .accentColor : .secondary)
+        Button(action: openFilePicker) {
+            VStack(spacing: 10) {
+                Image(systemName: "plus.app")
+                    .font(.system(size: 28))
+                    .foregroundColor(isTargeted ? .accentColor : .secondary)
+
+                Text("Drop or click to add apps".localized(language: selectedLanguage))
+                    .font(.caption.weight(.medium))
+                    .foregroundColor(isTargeted ? .accentColor : .secondary)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 112)
+            .padding(.horizontal, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .strokeBorder(
+                        style: StrokeStyle(lineWidth: 2, dash: [8])
+                    )
+                    .foregroundColor(isTargeted ? .accentColor : .gray.opacity(0.3))
+            )
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(isTargeted ? Color.accentColor.opacity(0.1) : Color.clear)
+            )
         }
-        .frame(maxWidth: .infinity)
-        .frame(height: 112)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .strokeBorder(
-                    style: StrokeStyle(lineWidth: 2, dash: [8])
-                )
-                .foregroundColor(isTargeted ? .accentColor : .gray.opacity(0.3))
-        )
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(isTargeted ? Color.accentColor.opacity(0.1) : Color.clear)
-        )
-        .contentShape(Rectangle())
-        .onTapGesture {
-            openFilePicker()
-        }
+        .buttonStyle(.plain)
+        .help("Select applications to add to this group".localized(language: selectedLanguage))
+        .accessibilityLabel("Add Apps".localized(language: selectedLanguage))
+        .accessibilityHint("Select applications to add to this group".localized(language: selectedLanguage))
         .onDrop(of: [.fileURL], isTargeted: $isTargeted) { providers in
             handleDrop(providers: providers)
         }

@@ -16,19 +16,17 @@ struct GroupSettingsView: View {
                 GroupEditView(groupId: selectedId)
                     .id(selectedId)
             } else {
-                VStack(spacing: 16) {
-                    Image(systemName: "folder")
-                        .font(.system(size: 48))
-                        .foregroundStyle(.secondary)
-
-                    Text("No Group Selected".localized(language: selectedLanguage))
-                        .font(.title2)
-                        .fontWeight(.bold)
-
+                ContentUnavailableView {
+                    Label("No Group Selected".localized(language: selectedLanguage), systemImage: "folder")
+                } description: {
                     Text("Select a group from the sidebar or create a new one.".localized(language: selectedLanguage))
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
+                } actions: {
+                    if store.groups.isEmpty {
+                        Button("Add Group".localized(language: selectedLanguage)) {
+                            store.columnVisibility = .all
+                            store.isAddingGroup = true
+                        }
+                    }
                 }
                 .padding()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
