@@ -18,8 +18,8 @@ struct GroupEditView: View {
     @State private var isHovering: Bool = false
     @FocusState private var isNameFocused: Bool
     @State private var suppressAutoFocus = true
-    @State private var runningAppsRefreshToken = 0
     @State private var selectedAppId: UUID?
+    @State private var quickAddCandidates: [AppItem] = []
 
     init(
         groupId: UUID,
@@ -58,14 +58,15 @@ struct GroupEditView: View {
                 suppressAutoFocus = false
             }
         }
-        .onChange(of: group?.apps.map(\.id) ?? []) { _, _ in
+        .onChange(of: group?.apps.map(\.bundleIdentifier) ?? []) { _, _ in
             syncSelectedApp()
+            refreshQuickAddCandidates()
         }
         .onReceive(NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didLaunchApplicationNotification)) { _ in
-            runningAppsRefreshToken += 1
+            refreshQuickAddCandidates()
         }
         .onReceive(NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didTerminateApplicationNotification)) { _ in
-            runningAppsRefreshToken += 1
+            refreshQuickAddCandidates()
         }
     }
 
@@ -121,8 +122,6 @@ struct GroupEditView: View {
     }
 
     private func appsSection(for group: AppGroup) -> some View {
-        let quickAddCandidates = runningAppCandidates(for: group)
-
         return VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Applications".localized(language: selectedLanguage))
@@ -249,6 +248,7 @@ struct GroupEditView: View {
             groupName = group.name
         }
         syncSelectedApp()
+        refreshQuickAddCandidates()
     }
 
     private func syncSelectedApp() {
@@ -345,9 +345,13 @@ struct GroupEditView: View {
         .padding(.top, 4)
     }
 
-    private func runningAppCandidates(for group: AppGroup) -> [AppItem] {
-        _ = runningAppsRefreshToken
-        return runningAppCandidatesProvider(group.apps)
+    private func refreshQuickAddCandidates() {
+        guard let group else {
+            quickAddCandidates = []
+            return
+        }
+
+        quickAddCandidates = runningAppCandidatesProvider(group.apps)
     }
 
     private static func defaultRunningAppCandidates(for groupApps: [AppItem]) -> [AppItem] {
@@ -383,18 +387,7 @@ private struct RunningAppQuickAddButton: View {
         Button(action: onAdd) {
             VStack(spacing: 6) {
                 ZStack(alignment: .topTrailing) {
-                    Group {
-                        if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: app.bundleIdentifier) {
-                            Image(nsImage: NSWorkspace.shared.icon(forFile: appURL.path))
-                                .resizable()
-                                .frame(width: 30, height: 30)
-                        } else {
-                            Image(systemName: "app.fill")
-                                .font(.system(size: 24))
-                                .foregroundColor(.secondary)
-                                .frame(width: 30, height: 30)
-                        }
-                    }
+                    AppIconThumbnailView(app: app, size: 30, fallbackFontSize: 24)
 
                     Image(systemName: "plus.circle.fill")
                         .font(.system(size: 12, weight: .semibold))

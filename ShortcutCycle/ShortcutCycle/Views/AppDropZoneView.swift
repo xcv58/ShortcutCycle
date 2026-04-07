@@ -4,6 +4,27 @@ import ShortcutCycleCore
 #endif
 import UniformTypeIdentifiers
 
+struct AppIconThumbnailView: View {
+    let app: AppItem
+    let size: CGFloat
+    let fallbackFontSize: CGFloat
+
+    var body: some View {
+        Group {
+            if let icon = IconCache.shared.getIcon(for: app) {
+                Image(nsImage: icon)
+                    .resizable()
+                    .frame(width: size, height: size)
+            } else {
+                Image(systemName: "app.fill")
+                    .font(.system(size: fallbackFontSize))
+                    .foregroundColor(.secondary)
+                    .frame(width: size, height: size)
+            }
+        }
+    }
+}
+
 /// A row representing a single app in the group list
 struct AppRowView: View {
     let app: AppItem
@@ -11,22 +32,7 @@ struct AppRowView: View {
     
     var body: some View {
         HStack(spacing: 12) {
-            // App icon
-            if let iconPath = app.iconPath,
-               let icon = NSWorkspace.shared.icon(forFile: iconPath + "/Contents/Resources/AppIcon.icns") as NSImage? {
-                Image(nsImage: icon)
-                    .resizable()
-                    .frame(width: 32, height: 32)
-            } else if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: app.bundleIdentifier) {
-                Image(nsImage: NSWorkspace.shared.icon(forFile: appURL.path))
-                    .resizable()
-                    .frame(width: 32, height: 32)
-            } else {
-                Image(systemName: "app.fill")
-                    .font(.system(size: 24))
-                    .foregroundColor(.secondary)
-                    .frame(width: 32, height: 32)
-            }
+            AppIconThumbnailView(app: app, size: 32, fallbackFontSize: 24)
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(app.name)
@@ -70,18 +76,7 @@ struct AppGridItemView: View {
     var body: some View {
         Button(action: onSelect) {
             VStack(spacing: 8) {
-                Group {
-                    if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: app.bundleIdentifier) {
-                        Image(nsImage: NSWorkspace.shared.icon(forFile: appURL.path))
-                            .resizable()
-                            .frame(width: 56, height: 56)
-                    } else {
-                        Image(systemName: "app.fill")
-                            .font(.system(size: 42))
-                            .foregroundColor(.secondary)
-                            .frame(width: 56, height: 56)
-                    }
-                }
+                AppIconThumbnailView(app: app, size: 56, fallbackFontSize: 42)
     
                 Text(app.name)
                     .font(.caption)
