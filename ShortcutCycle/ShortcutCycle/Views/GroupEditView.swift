@@ -15,10 +15,10 @@ struct GroupEditView: View {
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
     @State private var groupName: String = ""
     @State private var draggingApp: AppItem?
+    @State private var dragPreviewApps: [AppItem]?
     @State private var isHovering: Bool = false
     @FocusState private var isNameFocused: Bool
     @State private var suppressAutoFocus = true
-    @State private var selectedAppId: UUID?
     @State private var quickAddCandidates: [AppItem] = []
 
     init(
@@ -58,8 +58,8 @@ struct GroupEditView: View {
                 suppressAutoFocus = false
             }
         }
-        .onChange(of: group?.apps.map(\.bundleIdentifier) ?? []) { _, _ in
-            syncSelectedApp()
+        .onChange(of: (group?.apps.map(\.bundleIdentifier).sorted()) ?? []) { _, _ in
+            dragPreviewApps = nil
             refreshQuickAddCandidates()
         }
         .onReceive(NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didLaunchApplicationNotification)) { _ in
@@ -122,6 +122,8 @@ struct GroupEditView: View {
     }
 
     private func appsSection(for group: AppGroup) -> some View {
+        let displayedApps = dragPreviewApps ?? group.apps
+
         return VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Applications".localized(language: selectedLanguage))
@@ -141,14 +143,13 @@ struct GroupEditView: View {
                     .padding(.vertical, 8)
             } else {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 80, maximum: 100))], spacing: 16) {
-                    ForEach(group.apps) { app in
+                    ForEach(displayedApps) { app in
                         AppGridItemView(
                             app: app,
-                            isSelected: selectedAppId == app.id
+                            isPlaceholder: draggingApp?.id == app.id
                         ) {
-                            selectedAppId = app.id
+                            store.removeApp(app, from: groupId)
                         }
-                        .opacity(draggingApp?.id == app.id ? 0.01 : 1)
                         .onDrag {
                             draggingApp = app
                             return NSItemProvider(object: app.id.uuidString as NSString)
@@ -156,15 +157,14 @@ struct GroupEditView: View {
                         .onDrop(of: [.text], delegate: AppReorderDelegate(
                             item: app,
                             draggingApp: $draggingApp,
+                            dragPreviewApps: $dragPreviewApps,
                             store: store,
                             groupId: groupId
                         ))
                     }
                 }
                 .padding(.vertical, 8)
-                .animation(.default, value: group.apps)
-
-                selectedAppControls(for: group)
+                .animation(.default, value: displayedApps)
             }
 
             addAppsPanel(for: group, quickAddCandidates: quickAddCandidates)
@@ -247,102 +247,8 @@ struct GroupEditView: View {
         if let group = group {
             groupName = group.name
         }
-        syncSelectedApp()
+        dragPreviewApps = nil
         refreshQuickAddCandidates()
-    }
-
-    private func syncSelectedApp() {
-        guard let group else {
-            selectedAppId = nil
-            return
-        }
-
-        if let selectedAppId,
-           group.apps.contains(where: { $0.id == selectedAppId }) {
-            return
-        }
-
-        selectedAppId = group.apps.first?.id
-    }
-
-    private func selectedAppIndex(in group: AppGroup) -> Int? {
-        guard let selectedAppId else { return nil }
-        return group.apps.firstIndex(where: { $0.id == selectedAppId })
-    }
-
-    private func moveSelectedApp(in group: AppGroup, by delta: Int) {
-        guard let currentIndex = selectedAppIndex(in: group) else { return }
-        let targetIndex = currentIndex + delta
-        guard group.apps.indices.contains(targetIndex) else { return }
-
-        let destination = delta > 0 ? targetIndex + 1 : targetIndex
-        store.moveApp(in: groupId, from: IndexSet(integer: currentIndex), to: destination)
-    }
-
-    private func removeSelectedApp(from group: AppGroup) {
-        guard let currentIndex = selectedAppIndex(in: group) else { return }
-
-        let replacementSelection: UUID? = {
-            let nextIndex = currentIndex + 1
-            if group.apps.indices.contains(nextIndex) {
-                return group.apps[nextIndex].id
-            }
-            let previousIndex = currentIndex - 1
-            if group.apps.indices.contains(previousIndex) {
-                return group.apps[previousIndex].id
-            }
-            return nil
-        }()
-
-        store.removeApp(group.apps[currentIndex], from: groupId)
-        selectedAppId = replacementSelection
-    }
-
-    private func selectedAppControls(for group: AppGroup) -> some View {
-        let selectedIndex = selectedAppIndex(in: group)
-        let selectedAppName = selectedIndex.flatMap { group.apps[$0].name }
-
-        return HStack(spacing: 8) {
-            if let selectedAppName {
-                Text(selectedAppName)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
-            }
-
-            Spacer()
-
-            Button {
-                moveSelectedApp(in: group, by: -1)
-            } label: {
-                Image(systemName: "arrow.left")
-            }
-            .buttonStyle(.borderless)
-            .disabled((selectedIndex ?? 0) <= 0)
-            .help("Move selected app earlier in the cycle")
-            .accessibilityLabel("Move selected app earlier in the cycle")
-
-            Button {
-                moveSelectedApp(in: group, by: 1)
-            } label: {
-                Image(systemName: "arrow.right")
-            }
-            .buttonStyle(.borderless)
-            .disabled(selectedIndex == nil || selectedIndex == group.apps.count - 1)
-            .help("Move selected app later in the cycle")
-            .accessibilityLabel("Move selected app later in the cycle")
-
-            Button(role: .destructive) {
-                removeSelectedApp(from: group)
-            } label: {
-                Image(systemName: "trash")
-            }
-            .buttonStyle(.borderless)
-            .disabled(selectedIndex == nil)
-            .help("Remove selected app from the group")
-            .accessibilityLabel("Remove selected app from the group")
-        }
-        .padding(.top, 4)
     }
 
     private func refreshQuickAddCandidates() {
@@ -495,6 +401,7 @@ private struct GroupShortcutEditor: View {
                     .font(.caption)
                     .labelsHidden()
                     .fixedSize(horizontal: true, vertical: false)
+                    .focusable()
 
                     Picker("Cycling Mode".localized(language: selectedLanguage), selection: cyclingModeSelection) {
                         Text("Running apps only".localized(language: selectedLanguage)).tag(false)
@@ -503,6 +410,7 @@ private struct GroupShortcutEditor: View {
                     .pickerStyle(.menu)
                     .font(.caption)
                     .labelsHidden()
+                    .focusable()
                 }
             }
 
@@ -558,6 +466,7 @@ private struct ShortcutSuggestionRow: View {
                             )
                     }
                     .buttonStyle(.plain)
+                    .focusable()
                     .help(shortcut.description)
                 }
             }
@@ -572,19 +481,26 @@ private struct ShortcutSuggestionRow: View {
 struct AppReorderDelegate: DropDelegate {
     let item: AppItem
     @Binding var draggingApp: AppItem?
+    @Binding var dragPreviewApps: [AppItem]?
     let store: GroupStore
     let groupId: UUID
 
     func dropEntered(info: DropInfo) {
-        guard let draggingApp = draggingApp,
-              draggingApp.id != item.id,
-              let group = store.groups.first(where: { $0.id == groupId }),
-              let fromIndex = group.apps.firstIndex(of: draggingApp),
-              let toIndex = group.apps.firstIndex(of: item)
+        guard let draggingApp,
+              draggingApp.id != item.id
+        else { return }
+
+        let currentApps = dragPreviewApps ?? store.groups.first(where: { $0.id == groupId })?.apps ?? []
+        guard let fromIndex = currentApps.firstIndex(of: draggingApp),
+              let toIndex = currentApps.firstIndex(of: item)
         else { return }
 
         let destination = toIndex > fromIndex ? toIndex + 1 : toIndex
-        store.moveApp(in: groupId, from: IndexSet(integer: fromIndex), to: destination)
+        var updatedApps = currentApps
+        updatedApps.move(fromOffsets: IndexSet(integer: fromIndex), toOffset: destination)
+
+        guard updatedApps != currentApps else { return }
+        dragPreviewApps = updatedApps
     }
 
     func dropUpdated(info: DropInfo) -> DropProposal? {
@@ -592,7 +508,13 @@ struct AppReorderDelegate: DropDelegate {
     }
 
     func performDrop(info: DropInfo) -> Bool {
-        draggingApp = nil
+        defer {
+            draggingApp = nil
+            dragPreviewApps = nil
+        }
+
+        guard let previewApps = dragPreviewApps else { return true }
+        store.replaceApps(in: groupId, with: previewApps)
         return true
     }
 }

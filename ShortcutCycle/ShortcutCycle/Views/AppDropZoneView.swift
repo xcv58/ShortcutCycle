@@ -69,37 +69,60 @@ struct AppRowView: View {
 /// A grid item representing a single app with icon and name
 struct AppGridItemView: View {
     let app: AppItem
-    let isSelected: Bool
-    let onSelect: () -> Void
+    let isPlaceholder: Bool
+    let onDelete: () -> Void
     @State private var isHovered = false
+
+    init(app: AppItem, isPlaceholder: Bool = false, onDelete: @escaping () -> Void) {
+        self.app = app
+        self.isPlaceholder = isPlaceholder
+        self.onDelete = onDelete
+    }
     
     var body: some View {
-        Button(action: onSelect) {
-            VStack(spacing: 8) {
+        VStack(spacing: 8) {
+            ZStack(alignment: .topTrailing) {
                 AppIconThumbnailView(app: app, size: 56, fallbackFontSize: 42)
-    
-                Text(app.name)
-                    .font(.caption)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.center)
-                    .frame(width: 88)
+
+                if isHovered && !isPlaceholder {
+                    Button(action: onDelete) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 16))
+                            .foregroundColor(.white)
+                            .background(Circle().fill(Color.red))
+                    }
+                    .buttonStyle(.plain)
+                    .offset(x: 6, y: -6)
+                }
             }
-            .padding(10)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill((isHovered || isSelected) ? Color.accentColor.opacity(0.1) : Color.clear)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(isSelected ? Color.accentColor.opacity(0.35) : Color.clear, lineWidth: 1)
-            )
+
+            Text(app.name)
+                .font(.caption)
+                .lineLimit(2)
+                .multilineTextAlignment(.center)
+                .frame(width: 88)
         }
-        .buttonStyle(.plain)
+        .opacity(isPlaceholder ? 0.12 : 1)
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(
+                    isPlaceholder
+                    ? Color.secondary.opacity(0.05)
+                    : (isHovered ? Color.accentColor.opacity(0.1) : Color.clear)
+                )
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(
+                    isPlaceholder ? Color.secondary.opacity(0.18) : Color.clear,
+                    style: StrokeStyle(lineWidth: 1, dash: [5, 4])
+                )
+        )
         .onHover { hovering in
-            isHovered = hovering
+            isHovered = isPlaceholder ? false : hovering
         }
         .help(app.bundleIdentifier)
-        .accessibilityLabel(app.name)
     }
 }
 
@@ -111,35 +134,32 @@ struct AppDropZoneView: View {
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
     
     var body: some View {
-        Button(action: openFilePicker) {
-            VStack(spacing: 10) {
-                Image(systemName: "plus.app")
-                    .font(.system(size: 28))
-                    .foregroundColor(isTargeted ? .accentColor : .secondary)
+        VStack(spacing: 10) {
+            Image(systemName: "plus.app")
+                .font(.system(size: 28))
+                .foregroundColor(isTargeted ? .accentColor : .secondary)
 
-                Text("Drop or click to add apps".localized(language: selectedLanguage))
-                    .font(.caption.weight(.medium))
-                    .foregroundColor(isTargeted ? .accentColor : .secondary)
-            }
-            .frame(maxWidth: .infinity)
-            .frame(height: 112)
-            .padding(.horizontal, 12)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .strokeBorder(
-                        style: StrokeStyle(lineWidth: 2, dash: [8])
-                    )
-                    .foregroundColor(isTargeted ? .accentColor : .gray.opacity(0.3))
-            )
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(isTargeted ? Color.accentColor.opacity(0.1) : Color.clear)
-            )
+            Text("Drop or click to add apps".localized(language: selectedLanguage))
+                .font(.caption)
+                .foregroundColor(isTargeted ? .accentColor : .secondary)
         }
-        .buttonStyle(.plain)
-        .help("Select applications to add to this group".localized(language: selectedLanguage))
-        .accessibilityLabel("Add Apps".localized(language: selectedLanguage))
-        .accessibilityHint("Select applications to add to this group".localized(language: selectedLanguage))
+        .frame(maxWidth: .infinity)
+        .frame(height: 112)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .strokeBorder(
+                    style: StrokeStyle(lineWidth: 2, dash: [8])
+                )
+                .foregroundColor(isTargeted ? .accentColor : .gray.opacity(0.3))
+        )
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(isTargeted ? Color.accentColor.opacity(0.1) : Color.clear)
+        )
+        .contentShape(Rectangle())
+        .onTapGesture {
+            openFilePicker()
+        }
         .onDrop(of: [.fileURL], isTargeted: $isTargeted) { providers in
             handleDrop(providers: providers)
         }

@@ -1,5 +1,4 @@
 import SwiftUI
-import KeyboardShortcuts
 import UniformTypeIdentifiers
 #if canImport(ShortcutCycleCore)
 import ShortcutCycleCore
@@ -27,6 +26,7 @@ struct GeneralSettingsView: View {
     // Backup browser state
     @State private var showBackupBrowser = false
     @State private var manualBackupFeedback: String?
+    @State private var showShortcutReferencePopover = false
 
     // Clipboard state
     @State private var showClipboardImportConfirmation = false
@@ -88,68 +88,6 @@ struct GeneralSettingsView: View {
             }
             
             Section {
-                HStack {
-                    Text("Settings Window".localized(language: selectedLanguage))
-                    Spacer()
-                    KeyboardShortcuts.Recorder(for: .toggleSettings)
-                }
-
-                Divider()
-
-                KeyboardShortcutReferenceRow(
-                    title: "Settings...".localized(language: selectedLanguage),
-                    shortcuts: ["⌘,"]
-                )
-
-                KeyboardShortcutReferenceRow(
-                    title: "Groups".localized(language: selectedLanguage),
-                    shortcuts: ["⌘1"]
-                )
-
-                KeyboardShortcutReferenceRow(
-                    title: "General".localized(language: selectedLanguage),
-                    shortcuts: ["⌘2"]
-                )
-
-                KeyboardShortcutReferenceRow(
-                    title: "Add Group".localized(language: selectedLanguage),
-                    shortcuts: ["⌘N"]
-                )
-
-                KeyboardShortcutReferenceRow(
-                    title: "Delete Group".localized(language: selectedLanguage),
-                    shortcuts: ["⌘⌫"]
-                )
-
-                KeyboardShortcutReferenceRow(
-                    title: "Toggle Sidebar",
-                    shortcuts: ["⌃⌘S"]
-                )
-
-                KeyboardShortcutReferenceRow(
-                    title: "Previous Group",
-                    shortcuts: ["⌘↑", "⌘[", "⌘K"]
-                )
-
-                KeyboardShortcutReferenceRow(
-                    title: "Next Group",
-                    shortcuts: ["⌘↓", "⌘]", "⌘J"]
-                )
-
-                KeyboardShortcutReferenceRow(
-                    title: "Move Group Up",
-                    shortcuts: ["⌥⌘↑"]
-                )
-
-                KeyboardShortcutReferenceRow(
-                    title: "Move Group Down",
-                    shortcuts: ["⌥⌘↓"]
-                )
-            } header: {
-                Text("Shortcuts".localized(language: selectedLanguage))
-            }
-            
-            Section {
                 Toggle("Open at Login".localized(language: selectedLanguage), isOn: $launchAtLogin.isEnabled)
                     .toggleStyle(.switch)
 
@@ -173,11 +111,27 @@ struct GeneralSettingsView: View {
                 }
                 .pickerStyle(.menu)
 
+                Button {
+                    showShortcutReferencePopover = true
+                } label: {
+                    HStack {
+                        Label("Shortcuts".localized(language: selectedLanguage), systemImage: "keyboard")
+                        Spacer()
+                        Image(systemName: "chevron.up.chevron.down")
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+                .focusable()
+                .popover(isPresented: $showShortcutReferencePopover, arrowEdge: .bottom) {
+                    KeyboardShortcutReferencePopover(selectedLanguage: selectedLanguage)
+                }
+
                 if WelcomeExperiencePolicy.shouldShowReplayControl(hasDismissedWelcome: hasDismissedWelcome) {
                     Button("Show welcome again".localized(language: selectedLanguage)) {
                         WelcomeExperiencePolicy.prepareReplay()
                         ShortcutCycleURLRouter.openSettingsFromOutsideView(tab: .groups)
                     }
+                    .focusable()
                 }
 
             } header: {
@@ -194,10 +148,12 @@ struct GeneralSettingsView: View {
                         Button("Export Settings...".localized(language: selectedLanguage)) {
                             exportSettings()
                         }
+                        .focusable()
 
                         Button("Import Settings...".localized(language: selectedLanguage)) {
                             importSettings()
                         }
+                        .focusable()
                     }
                     Text("Save to or load from a JSON file.".localized(language: selectedLanguage))
                         .font(.caption2)
@@ -214,10 +170,12 @@ struct GeneralSettingsView: View {
                         Button("Copy to Clipboard".localized(language: selectedLanguage)) {
                             copySettingsToClipboard()
                         }
+                        .focusable()
 
                         Button("Paste from Clipboard".localized(language: selectedLanguage)) {
                             pasteSettingsFromClipboard()
                         }
+                        .focusable()
                     }
                     Text("Use Universal Clipboard to sync between Macs.".localized(language: selectedLanguage))
                         .font(.caption2)
@@ -233,9 +191,11 @@ struct GeneralSettingsView: View {
                         Button("View Automatic Backups...".localized(language: selectedLanguage)) {
                             showBackupBrowser = true
                         }
+                        .focusable()
                         Button("Back Up Now".localized(language: selectedLanguage)) {
                             performManualBackup()
                         }
+                        .focusable()
                     }
                     if let feedback = manualBackupFeedback {
                         Text(feedback)
@@ -434,6 +394,45 @@ struct GeneralSettingsView: View {
         store.applyImport(export)
         showClipboardImportSuccess = true
         pendingClipboardExport = nil
+    }
+}
+
+private struct KeyboardShortcutReferencePopover: View {
+    let selectedLanguage: String
+
+    private var shortcutReferences: [(title: String, shortcuts: [String])] {
+        [
+            ("Settings...".localized(language: selectedLanguage), ["⌘,"]),
+            ("Groups".localized(language: selectedLanguage), ["⌘1"]),
+            ("General".localized(language: selectedLanguage), ["⌘2"]),
+            ("Add Group".localized(language: selectedLanguage), ["⌘N"]),
+            ("Delete Group".localized(language: selectedLanguage), ["⌘⌫"]),
+            ("Toggle Sidebar", ["⌃⌘S"]),
+            ("Previous Group", ["⌘↑", "⌘[", "⌘K"]),
+            ("Next Group", ["⌘↓", "⌘]", "⌘J"]),
+            ("Move Group Up", ["⌥⌘↑"]),
+            ("Move Group Down", ["⌥⌘↓"])
+        ]
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Shortcuts".localized(language: selectedLanguage))
+                .font(.headline)
+
+            Divider()
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 10) {
+                    ForEach(Array(shortcutReferences.enumerated()), id: \.offset) { _, item in
+                        KeyboardShortcutReferenceRow(title: item.title, shortcuts: item.shortcuts)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .padding(16)
+        .frame(width: 360, height: 300)
     }
 }
 
