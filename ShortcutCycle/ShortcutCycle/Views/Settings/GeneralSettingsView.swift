@@ -417,7 +417,11 @@ private struct KeyboardShortcutReferencePopover: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 10) {
                     ForEach(Array(shortcutReferences.enumerated()), id: \.offset) { _, item in
-                        KeyboardShortcutReferenceRow(title: item.title, shortcuts: item.shortcuts)
+                        KeyboardShortcutReferenceRow(
+                            title: item.title,
+                            shortcuts: item.shortcuts,
+                            selectedLanguage: selectedLanguage
+                        )
                     }
                 }
                 .padding(.trailing, 22)
@@ -432,14 +436,21 @@ private struct KeyboardShortcutReferencePopover: View {
 private struct KeyboardShortcutReferenceRow: View {
     let title: String
     let shortcuts: [String]
+    let selectedLanguage: String
 
     var body: some View {
         HStack(alignment: .center, spacing: 16) {
             Text(title)
             Spacer(minLength: 12)
             HStack(spacing: 6) {
-                ForEach(shortcuts, id: \.self) { shortcut in
+                ForEach(Array(shortcuts.enumerated()), id: \.offset) { index, shortcut in
                     KeyboardShortcutBadge(shortcut: shortcut)
+
+                    if index < shortcuts.count - 1 {
+                        Text("or".localized(language: selectedLanguage))
+                            .font(.caption2.weight(.medium))
+                            .foregroundStyle(.tertiary)
+                    }
                 }
             }
             .fixedSize(horizontal: true, vertical: false)
