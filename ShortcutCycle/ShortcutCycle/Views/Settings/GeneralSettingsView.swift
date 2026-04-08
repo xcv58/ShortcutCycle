@@ -420,12 +420,12 @@ private struct KeyboardShortcutReferencePopover: View {
                         KeyboardShortcutReferenceRow(title: item.title, shortcuts: item.shortcuts)
                     }
                 }
-                .padding(.trailing, 14)
+                .padding(.trailing, 22)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
         .padding(16)
-        .frame(width: 380, height: 300)
+        .frame(width: 420, height: 300)
     }
 }
 
@@ -434,22 +434,47 @@ private struct KeyboardShortcutReferenceRow: View {
     let shortcuts: [String]
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 12) {
+        HStack(alignment: .center, spacing: 16) {
             Text(title)
             Spacer(minLength: 12)
             HStack(spacing: 6) {
                 ForEach(shortcuts, id: \.self) { shortcut in
-                    Text(shortcut)
-                        .font(.caption.monospaced())
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(
-                            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                .fill(Color(nsColor: .controlBackgroundColor))
-                        )
+                    KeyboardShortcutBadge(shortcut: shortcut)
                 }
             }
-            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: true, vertical: false)
         }
+    }
+}
+
+enum KeyboardShortcutGlyphLayout {
+    static func symbols(in shortcut: String) -> [String] {
+        shortcut.map(String.init)
+    }
+}
+
+private struct KeyboardShortcutBadge: View {
+    let shortcut: String
+
+    private var symbols: [String] {
+        KeyboardShortcutGlyphLayout.symbols(in: shortcut)
+    }
+
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(Array(symbols.enumerated()), id: \.offset) { _, symbol in
+                Text(symbol)
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .lineLimit(1)
+                    .fixedSize()
+            }
+        }
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color(nsColor: .controlBackgroundColor))
+        )
     }
 }

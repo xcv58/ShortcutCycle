@@ -479,6 +479,44 @@ final class GroupStoreTests: XCTestCase {
         XCTAssertTrue(afterFlushStore.groups.contains(where: { $0.name == "Deferred Persist" }))
     }
 
+    func testDebouncedSaveTimerCallbackPersistsChanges() {
+        let suiteName = "TestDebouncedSaveTimer-\(UUID().uuidString)"
+        let isolatedDefaults = UserDefaults(suiteName: suiteName)!
+        isolatedDefaults.removePersistentDomain(forName: suiteName)
+        defer { isolatedDefaults.removePersistentDomain(forName: suiteName) }
+
+        let isolatedFileManager = IsolatedAppSupportFileManager()
+        defer { try? FileManager.default.removeItem(at: isolatedFileManager.appSupportURL) }
+
+        let debouncedStore = GroupStore(
+            userDefaults: isolatedDefaults,
+            backupDebounceInterval: 0,
+            saveDebounceInterval: 0.05,
+            fileManager: isolatedFileManager
+        )
+        debouncedStore.flushPendingSave()
+
+        _ = debouncedStore.addGroup(name: "Timer Persist")
+
+        let beforeTimerStore = GroupStore(
+            userDefaults: isolatedDefaults,
+            backupDebounceInterval: 0,
+            saveDebounceInterval: 0,
+            fileManager: isolatedFileManager
+        )
+        XCTAssertFalse(beforeTimerStore.groups.contains(where: { $0.name == "Timer Persist" }))
+
+        RunLoop.main.run(until: Date().addingTimeInterval(0.2))
+
+        let afterTimerStore = GroupStore(
+            userDefaults: isolatedDefaults,
+            backupDebounceInterval: 0,
+            saveDebounceInterval: 0,
+            fileManager: isolatedFileManager
+        )
+        XCTAssertTrue(afterTimerStore.groups.contains(where: { $0.name == "Timer Persist" }))
+    }
+
     // MARK: - Manual Backup Tests
 
     func testManualBackupSavesFile() {

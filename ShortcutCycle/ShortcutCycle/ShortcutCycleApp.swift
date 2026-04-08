@@ -244,9 +244,10 @@ struct SettingsWindowObserver: NSViewRepresentable {
         }
     }
 
-    class Coordinator {
+    final class Coordinator {
         private let onWindowWillClose: () -> Void
         private var observer: NSObjectProtocol?
+        private var keyEventMonitor: Any?
         private weak var observedWindow: NSWindow?
 
         init(onWindowWillClose: @escaping () -> Void = {}) {
@@ -255,13 +256,11 @@ struct SettingsWindowObserver: NSViewRepresentable {
 
         func observe(window: NSWindow) {
             guard observedWindow !== window else { return }
+            removeObservers()
             observedWindow = window
 
             window.identifier = NSUserInterfaceItemIdentifier("settings")
 
-            if let observer {
-                NotificationCenter.default.removeObserver(observer)
-            }
             observer = NotificationCenter.default.addObserver(
                 forName: NSWindow.willCloseNotification,
                 object: window,
@@ -274,12 +273,73 @@ struct SettingsWindowObserver: NSViewRepresentable {
                     NSApp.setActivationPolicy(.accessory)
                 }
             }
+
+            keyEventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+                self?.handleKeyDown(event)
+                return event
+            }
+        }
+
+        func handleKeyDown(_ event: NSEvent) {
+            guard shouldRevealFocus(for: event, in: observedWindow) else { return }
+            scheduleFocusReveal()
+        }
+
+        func shouldRevealFocus(for event: NSEvent, in window: NSWindow?) -> Bool {
+            guard let observedWindow, observedWindow === window else {
+                return false
+            }
+
+            let isObservedWindowEvent = event.window === observedWindow || event.windowNumber == observedWindow.windowNumber
+            guard isObservedWindowEvent else { return false }
+
+            return event.keyCode == 48
+        }
+
+        func scheduleFocusReveal() {
+            DispatchQueue.main.async { [weak self] in
+                self?.revealFocusedControl()
+                DispatchQueue.main.async { [weak self] in
+                    self?.revealFocusedControl()
+                }
+            }
+        }
+
+        func revealFocusedControl() {
+            guard let observedWindow,
+                  let focusedView = focusedView(in: observedWindow) else {
+                return
+            }
+
+            focusedView.scrollToVisible(focusedView.bounds.insetBy(dx: 0, dy: -20))
+        }
+
+        func focusedView(in window: NSWindow) -> NSView? {
+            if let textView = window.firstResponder as? NSTextView {
+                if let delegateView = textView.delegate as? NSView {
+                    return delegateView
+                }
+
+                return textView
+            }
+
+            return window.firstResponder as? NSView
+        }
+
+        private func removeObservers() {
+            if let observer {
+                NotificationCenter.default.removeObserver(observer)
+                self.observer = nil
+            }
+
+            if let keyEventMonitor {
+                NSEvent.removeMonitor(keyEventMonitor)
+                self.keyEventMonitor = nil
+            }
         }
 
         deinit {
-            if let o = observer {
-                NotificationCenter.default.removeObserver(o)
-            }
+            removeObservers()
         }
     }
 }
