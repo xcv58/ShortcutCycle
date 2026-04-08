@@ -9,6 +9,7 @@ import KeyboardShortcuts
 /// View for editing a single app group
 struct GroupEditView: View {
     @EnvironmentObject var store: GroupStore
+    @Environment(\.colorScheme) private var colorScheme
     let groupId: UUID
     private let runningAppCandidatesProvider: ([AppItem]) -> [AppItem]
 
@@ -36,7 +37,10 @@ struct GroupEditView: View {
     var body: some View {
         ScrollView {
             content
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(SettingsChromePalette.windowBackground(for: colorScheme))
         .padding()
         .onAppear {
             loadGroupData()
@@ -76,11 +80,11 @@ struct GroupEditView: View {
             VStack(alignment: .leading, spacing: 20) {
                 groupNameSection(for: group)
 
-                Divider()
+                SettingsSectionDivider()
 
                 GroupShortcutEditor(group: group, groupId: groupId)
 
-                Divider()
+                SettingsSectionDivider()
 
                 appsSection(for: group)
 
@@ -107,7 +111,14 @@ struct GroupEditView: View {
                 .padding(.horizontal, 8)
                 .background(
                     RoundedRectangle(cornerRadius: 6)
-                        .fill(isHovering ? Color.secondary.opacity(0.1) : Color.clear)
+                        .fill((isHovering || isNameFocused) ? SettingsChromePalette.inlineFill(for: colorScheme) : Color.clear)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(
+                            ((isHovering || isNameFocused) && colorScheme == .dark) ? SettingsChromePalette.panelBorder(for: colorScheme) : Color.clear,
+                            lineWidth: 1
+                        )
                 )
                 .onHover { hovering in
                     isHovering = hovering
@@ -183,8 +194,15 @@ struct GroupEditView: View {
                         runningAppsOptionCard(quickAddCandidates)
                             .frame(minWidth: 360, maxWidth: .infinity, alignment: .leading)
 
-                        Divider()
-                            .padding(.vertical, 4)
+                        if colorScheme == .dark {
+                            Rectangle()
+                                .fill(SettingsChromePalette.panelBorder(for: colorScheme))
+                                .frame(width: 1)
+                                .padding(.vertical, 4)
+                        } else {
+                            Divider()
+                                .padding(.vertical, 4)
+                        }
 
                         browseAppsOptionCard(for: group)
                             .frame(minWidth: 220, idealWidth: 240, maxWidth: 280, alignment: .leading)
@@ -202,11 +220,11 @@ struct GroupEditView: View {
         .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 14)
-                .fill(Color(nsColor: .controlBackgroundColor).opacity(0.75))
+                .fill(SettingsChromePalette.panelBackground(for: colorScheme))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 14)
-                .stroke(Color.secondary.opacity(0.08), lineWidth: 1)
+                .stroke(SettingsChromePalette.panelBorder(for: colorScheme), lineWidth: 1)
         )
     }
 
@@ -287,6 +305,7 @@ private struct RunningAppQuickAddButton: View {
     let onAdd: () -> Void
 
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
+    @Environment(\.colorScheme) private var colorScheme
     @State private var isHovered = false
 
     var body: some View {
@@ -314,11 +333,11 @@ private struct RunningAppQuickAddButton: View {
             .padding(.horizontal, 4)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(isHovered ? Color.accentColor.opacity(0.10) : Color.clear)
+                    .fill(isHovered ? SettingsChromePalette.neutralHoverFill(for: colorScheme) : Color.clear)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
-                    .stroke(isHovered ? Color.accentColor.opacity(0.28) : Color.clear, lineWidth: 1)
+                    .stroke(isHovered ? SettingsChromePalette.neutralHoverBorder(for: colorScheme) : Color.clear, lineWidth: 1)
             )
         }
         .buttonStyle(.plain)
@@ -385,7 +404,7 @@ private struct GroupShortcutEditor: View {
                 }
             }
 
-            Divider()
+            SettingsSectionDivider()
 
             HStack {
                 Text("Cycling Mode".localized(language: selectedLanguage))

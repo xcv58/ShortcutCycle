@@ -7,6 +7,7 @@ import KeyboardShortcuts
 /// Sidebar view showing the list of all groups
 struct GroupListView: View {
     @EnvironmentObject var store: GroupStore
+    @Environment(\.colorScheme) private var colorScheme
     @State private var newGroupName = ""
     @State private var groupToRename: AppGroup?
     @State private var renameText = ""
@@ -36,6 +37,8 @@ struct GroupListView: View {
                 }
             }
             .listStyle(.sidebar)
+            .scrollContentBackground(colorScheme == .dark ? .hidden : .automatic)
+            .background(SettingsChromePalette.sidebarBackground(for: colorScheme))
             .id(selectedLanguage) // Force redraw of list and context menus when language changes
 
             Divider()
@@ -79,6 +82,7 @@ struct GroupListView: View {
                 .buttonStyle(.plain)
             }
         }
+        .background(SettingsChromePalette.sidebarBackground(for: colorScheme))
         .alert("Rename Group", isPresented: Binding(
             get: { groupToRename != nil },
             set: { if !$0 { groupToRename = nil } }
@@ -114,6 +118,7 @@ struct GroupListView: View {
 struct GroupRowView: View {
     let group: AppGroup
     @EnvironmentObject var store: GroupStore
+    @Environment(\.colorScheme) private var colorScheme
     @State private var showDeleteConfirmation = false
     @State private var isHovering = false
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
@@ -149,7 +154,7 @@ struct GroupRowView: View {
                         .foregroundColor(.secondary)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
-                        .background(Color.gray.opacity(0.2))
+                        .background(SettingsChromePalette.chipFill(for: colorScheme))
                         .cornerRadius(4)
                         .lineLimit(1)
                 } else {
@@ -165,11 +170,11 @@ struct GroupRowView: View {
             
             // App count badge
             Text("\(group.apps.count)")
-                .font(.caption)
-                .foregroundColor(.white)
+                .font(colorScheme == .dark ? .caption.weight(.semibold) : .caption)
+                .foregroundStyle(colorScheme == .dark ? AnyShapeStyle(.secondary) : AnyShapeStyle(.white))
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
-                .background(Capsule().fill(Color.gray.opacity(0.5)))
+                .background(Capsule().fill(SettingsChromePalette.badgeFill(for: colorScheme)))
                 .layoutPriority(1)
             
             // Delete button (Visible only on hover)

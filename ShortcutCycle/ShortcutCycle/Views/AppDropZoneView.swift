@@ -29,6 +29,7 @@ struct AppIconThumbnailView: View {
 struct AppRowView: View {
     let app: AppItem
     let onDelete: () -> Void
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
         HStack(spacing: 12) {
@@ -61,7 +62,11 @@ struct AppRowView: View {
         }
         .padding(.vertical, 4)
         .padding(.horizontal, 8)
-        .background(Color(nsColor: .controlBackgroundColor))
+        .background(
+            colorScheme == .dark
+                ? SettingsChromePalette.panelBackground(for: colorScheme)
+                : Color(nsColor: .controlBackgroundColor)
+        )
         .cornerRadius(8)
     }
 }
@@ -71,6 +76,7 @@ struct AppGridItemView: View {
     let app: AppItem
     let isPlaceholder: Bool
     let onDelete: () -> Void
+    @Environment(\.colorScheme) private var colorScheme
     @State private var isHovered = false
 
     init(app: AppItem, isPlaceholder: Bool = false, onDelete: @escaping () -> Void) {
@@ -108,14 +114,26 @@ struct AppGridItemView: View {
             RoundedRectangle(cornerRadius: 8)
                 .fill(
                     isPlaceholder
-                    ? Color.secondary.opacity(0.05)
-                    : (isHovered ? Color.accentColor.opacity(0.1) : Color.clear)
+                    ? (colorScheme == .dark
+                        ? SettingsChromePalette.neutralHoverFill(for: colorScheme).opacity(0.45)
+                        : Color.secondary.opacity(0.05))
+                    : (isHovered
+                        ? (colorScheme == .dark
+                            ? SettingsChromePalette.neutralHoverFill(for: colorScheme)
+                            : Color.accentColor.opacity(0.1))
+                        : Color.clear)
                 )
         )
         .overlay(
             RoundedRectangle(cornerRadius: 8)
                 .stroke(
-                    isPlaceholder ? Color.secondary.opacity(0.18) : Color.clear,
+                    isPlaceholder
+                        ? (colorScheme == .dark
+                            ? SettingsChromePalette.neutralHoverBorder(for: colorScheme)
+                            : Color.secondary.opacity(0.18))
+                        : ((colorScheme == .dark && isHovered)
+                            ? SettingsChromePalette.neutralHoverBorder(for: colorScheme)
+                            : Color.clear),
                     style: StrokeStyle(lineWidth: 1, dash: [5, 4])
                 )
         )
@@ -132,6 +150,7 @@ struct AppDropZoneView: View {
     @State private var isTargeted = false
     let onAppAdded: (AppItem) -> Void
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
         VStack(spacing: 10) {
@@ -147,14 +166,14 @@ struct AppDropZoneView: View {
         .frame(height: 112)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .strokeBorder(
-                    style: StrokeStyle(lineWidth: 2, dash: [8])
-                )
-                .foregroundColor(isTargeted ? .accentColor : .gray.opacity(0.3))
+                .fill(SettingsChromePalette.dropZoneFill(for: colorScheme, targeted: isTargeted))
         )
-        .background(
+        .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .fill(isTargeted ? Color.accentColor.opacity(0.1) : Color.clear)
+                .strokeBorder(
+                    SettingsChromePalette.dropZoneBorder(for: colorScheme, targeted: isTargeted),
+                    style: StrokeStyle(lineWidth: colorScheme == .dark ? 1.5 : 2, dash: [8])
+                )
         )
         .contentShape(Rectangle())
         .onTapGesture {

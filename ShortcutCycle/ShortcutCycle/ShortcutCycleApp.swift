@@ -45,6 +45,7 @@ enum SettingsWindowBridge {
 struct AppCommands: Commands {
     @FocusedBinding(\.selectedTab) private var selectedTab
     @Environment(\.openWindow) private var openWindow
+    @AppStorage("appTheme") private var appTheme: AppTheme = .system
 
     private var groupsDisabled: Bool {
         selectedTab != "groups" || GroupStore.shared.groups.count < 2
@@ -97,6 +98,13 @@ struct AppCommands: Commands {
             }
             .keyboardShortcut("s", modifiers: [.command, .control])
             .disabled(selectedTab != "groups")
+
+            Button("Toggle Appearance") {
+                appTheme = appTheme.toggledAppearance(
+                    using: NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua])
+                )
+            }
+            .keyboardShortcut("a", modifiers: [.command, .control])
 
             Divider()
 
@@ -898,5 +906,20 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .light: return "sun.max.fill"
         case .dark: return "moon.fill"
         }
+    }
+
+    func toggledAppearance(using effectiveAppearanceName: NSAppearance.Name?) -> AppTheme {
+        let isCurrentlyDark: Bool
+
+        switch self {
+        case .light:
+            isCurrentlyDark = false
+        case .dark:
+            isCurrentlyDark = true
+        case .system:
+            isCurrentlyDark = effectiveAppearanceName == .darkAqua
+        }
+
+        return isCurrentlyDark ? .light : .dark
     }
 }

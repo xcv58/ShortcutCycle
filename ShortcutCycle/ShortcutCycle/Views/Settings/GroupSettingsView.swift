@@ -3,9 +3,98 @@ import SwiftUI
 import ShortcutCycleCore
 #endif
 
+enum SettingsChromePalette {
+    static func windowBackground(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark ? Color(nsColor: .windowBackgroundColor) : .clear
+    }
+
+    static func sidebarBackground(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark ? Color(nsColor: .underPageBackgroundColor) : .clear
+    }
+
+    static func panelBackground(for colorScheme: ColorScheme) -> Color {
+        Color(nsColor: .controlBackgroundColor)
+            .opacity(colorScheme == .dark ? 0.88 : 0.75)
+    }
+
+    static func panelBorder(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark
+            ? Color(nsColor: .separatorColor).opacity(0.18)
+            : Color.secondary.opacity(0.08)
+    }
+
+    static func inlineFill(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark
+            ? Color(nsColor: .controlBackgroundColor).opacity(0.76)
+            : Color.secondary.opacity(0.10)
+    }
+
+    static func chipFill(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark
+            ? Color(nsColor: .quaternaryLabelColor).opacity(0.45)
+            : Color.gray.opacity(0.20)
+    }
+
+    static func badgeFill(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark
+            ? Color(nsColor: .quaternaryLabelColor).opacity(0.40)
+            : Color.gray.opacity(0.50)
+    }
+
+    static func neutralHoverFill(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark
+            ? Color(nsColor: .controlBackgroundColor).opacity(0.84)
+            : Color.accentColor.opacity(0.10)
+    }
+
+    static func neutralHoverBorder(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark
+            ? Color(nsColor: .separatorColor).opacity(0.24)
+            : Color.accentColor.opacity(0.28)
+    }
+
+    static func dropZoneFill(for colorScheme: ColorScheme, targeted: Bool) -> Color {
+        if targeted {
+            return Color.accentColor.opacity(colorScheme == .dark ? 0.12 : 0.10)
+        }
+
+        return colorScheme == .dark
+            ? Color(nsColor: .controlBackgroundColor).opacity(0.30)
+            : .clear
+    }
+
+    static func dropZoneBorder(for colorScheme: ColorScheme, targeted: Bool) -> Color {
+        if targeted {
+            return colorScheme == .dark
+                ? Color.accentColor.opacity(0.58)
+                : .accentColor
+        }
+
+        return colorScheme == .dark
+            ? Color(nsColor: .separatorColor).opacity(0.30)
+            : Color.gray.opacity(0.30)
+    }
+}
+
+struct SettingsSectionDivider: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    @ViewBuilder
+    var body: some View {
+        if colorScheme == .dark {
+            Rectangle()
+                .fill(SettingsChromePalette.panelBorder(for: colorScheme))
+                .frame(height: 1)
+        } else {
+            Divider()
+        }
+    }
+}
+
 struct GroupSettingsView: View {
     @EnvironmentObject var store: GroupStore
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         NavigationSplitView(columnVisibility: $store.columnVisibility) {
@@ -30,8 +119,10 @@ struct GroupSettingsView: View {
                 }
                 .padding()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(SettingsChromePalette.windowBackground(for: colorScheme))
             }
         }
         .navigationTitle("App Groups".localized(language: selectedLanguage))
+        .background(SettingsChromePalette.windowBackground(for: colorScheme))
     }
 }

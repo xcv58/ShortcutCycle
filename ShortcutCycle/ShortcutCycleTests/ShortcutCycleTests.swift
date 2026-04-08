@@ -2,6 +2,7 @@ import XCTest
 #if canImport(ShortcutCycleCore)
 @testable import ShortcutCycleCore
 #else
+import AppKit
 @testable import ShortcutCycle
 #endif
 
@@ -194,6 +195,19 @@ final class ShortcutCycleTests: XCTestCase {
         let url = URL(string: "shortcutcycle://set-setting?key=appTheme&value=blue")!
         XCTAssertNil(ShortcutCycleURLParser.parse(url))
     }
+
+#if !canImport(ShortcutCycleCore)
+    func testAppThemeToggleFlipsExplicitThemes() {
+        XCTAssertEqual(AppTheme.light.toggledAppearance(using: .aqua), .dark)
+        XCTAssertEqual(AppTheme.dark.toggledAppearance(using: .darkAqua), .light)
+    }
+
+    func testAppThemeToggleUsesResolvedSystemAppearance() {
+        XCTAssertEqual(AppTheme.system.toggledAppearance(using: .aqua), .dark)
+        XCTAssertEqual(AppTheme.system.toggledAppearance(using: .darkAqua), .light)
+        XCTAssertEqual(AppTheme.system.toggledAppearance(using: nil), .dark)
+    }
+#endif
 
     func testParseSetSettingWithSelectedLanguageValue() {
         let url = URL(string: "shortcutcycle://set-setting?key=selectedlanguage&value=en")!
