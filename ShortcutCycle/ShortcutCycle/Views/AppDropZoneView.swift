@@ -172,7 +172,7 @@ struct AppDropZoneView: View {
             RoundedRectangle(cornerRadius: 12)
                 .strokeBorder(
                     SettingsChromePalette.dropZoneBorder(for: colorScheme, targeted: isTargeted),
-                    style: StrokeStyle(lineWidth: colorScheme == .dark ? 1.5 : 2, dash: [8])
+                    style: StrokeStyle(lineWidth: colorScheme == .dark ? 2 : 2, dash: [8])
                 )
         )
         .contentShape(Rectangle())

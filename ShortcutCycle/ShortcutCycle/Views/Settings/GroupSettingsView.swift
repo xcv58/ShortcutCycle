@@ -71,7 +71,7 @@ enum SettingsChromePalette {
         }
 
         return colorScheme == .dark
-            ? Color(nsColor: .separatorColor).opacity(0.30)
+            ? Color(nsColor: .quaternaryLabelColor).opacity(0.72)
             : Color.gray.opacity(0.30)
     }
 }

@@ -268,6 +268,7 @@ struct SettingsWindowObserver: NSViewRepresentable {
             observedWindow = window
 
             window.identifier = NSUserInterfaceItemIdentifier("settings")
+            configureChrome(for: window)
 
             observer = NotificationCenter.default.addObserver(
                 forName: NSWindow.willCloseNotification,
@@ -332,6 +333,14 @@ struct SettingsWindowObserver: NSViewRepresentable {
             }
 
             return window.firstResponder as? NSView
+        }
+
+        func configureChrome(for window: NSWindow) {
+            window.titlebarAppearsTransparent = true
+            window.isMovableByWindowBackground = true
+            window.backgroundColor = .windowBackgroundColor
+            window.toolbarStyle = .unified
+            window.toolbar?.showsBaselineSeparator = false
         }
 
         private func removeObservers() {

@@ -11,6 +11,7 @@ import ShortcutCycleCore
 
 struct MainView: View {
     @EnvironmentObject var store: GroupStore
+    @Environment(\.colorScheme) private var colorScheme
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
     @AppStorage("appTheme") private var appTheme: AppTheme = .system
     @EnvironmentObject var localeObserver: LocaleObserver
@@ -42,6 +43,7 @@ struct MainView: View {
             }
         }
         .focusedSceneValue(\.selectedTab, $selectedTab)
+        .background(SettingsChromePalette.windowBackground(for: colorScheme))
         .background(SettingsWindowObserver())
         .onAppear {
             if let pendingTab = ShortcutCycleURLNavigationState.consumePendingSettingsTab() {
