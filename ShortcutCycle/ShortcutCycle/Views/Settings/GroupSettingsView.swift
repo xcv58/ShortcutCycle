@@ -96,8 +96,27 @@ struct GroupSettingsView: View {
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
     @Environment(\.colorScheme) private var colorScheme
 
+    /// A deferred-write binding for columnVisibility.
+    ///
+    /// NSSplitViewController (backing NavigationSplitView) can write to this binding
+    /// synchronously during its layout pass when the Groups tab becomes visible after a
+    /// tab switch. The new .scrollContentBackground(.hidden) on the sidebar List triggers
+    /// that layout re-evaluation. Writing to a @Published property during SwiftUI's
+    /// render/commit phase fires objectWillChange synchronously, which AttributeGraph
+    /// detects as a cycle. Deferring the write via Task breaks the synchronous path.
+    private var columnVisibilityBinding: Binding<NavigationSplitViewVisibility> {
+        Binding(
+            get: { store.columnVisibility },
+            set: { newValue in
+                Task { @MainActor in
+                    store.columnVisibility = newValue
+                }
+            }
+        )
+    }
+
     var body: some View {
-        NavigationSplitView(columnVisibility: $store.columnVisibility) {
+        NavigationSplitView(columnVisibility: columnVisibilityBinding) {
             GroupListView()
                 .frame(minWidth: 220)
         } detail: {

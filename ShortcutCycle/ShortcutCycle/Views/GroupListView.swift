@@ -14,10 +14,28 @@ struct GroupListView: View {
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
     @FocusState private var isInputFocused: Bool
 
+    /// A deferred-write binding for the List selection.
+    ///
+    /// NSTableView (backing List) can fire its selection-changed callback synchronously
+    /// during its layout pass when .scrollContentBackground(.hidden) causes a re-layout.
+    /// Writing to a @Published property during SwiftUI's render/commit phase fires
+    /// objectWillChange synchronously, which AttributeGraph detects as a cycle. Deferring
+    /// the write via Task breaks the synchronous path while preserving selection behavior.
+    private var selectedGroupIdBinding: Binding<UUID?> {
+        Binding(
+            get: { store.selectedGroupId },
+            set: { newValue in
+                Task { @MainActor in
+                    store.selectedGroupId = newValue
+                }
+            }
+        )
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // Groups list
-            List(selection: $store.selectedGroupId) {
+            List(selection: selectedGroupIdBinding) {
                 ForEach(store.groups) { group in
                     GroupRowView(group: group)
                         .tag(group.id)
