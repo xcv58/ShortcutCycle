@@ -401,7 +401,6 @@ private struct GroupShortcutEditor: View {
                     .font(.caption)
                     .labelsHidden()
                     .fixedSize(horizontal: true, vertical: false)
-                    .focusable()
 
                     Picker("Cycling Mode".localized(language: selectedLanguage), selection: cyclingModeSelection) {
                         Text("Running apps only".localized(language: selectedLanguage)).tag(false)
@@ -410,7 +409,6 @@ private struct GroupShortcutEditor: View {
                     .pickerStyle(.menu)
                     .font(.caption)
                     .labelsHidden()
-                    .focusable()
                 }
             }
 
@@ -466,7 +464,6 @@ private struct ShortcutSuggestionRow: View {
                             )
                     }
                     .buttonStyle(.plain)
-                    .focusable()
                     .help(shortcut.description)
                 }
             }
@@ -486,6 +483,10 @@ struct AppReorderDelegate: DropDelegate {
     let groupId: UUID
 
     func dropEntered(info: DropInfo) {
+        updatePreviewOrder()
+    }
+
+    func updatePreviewOrder() {
         guard let draggingApp,
               draggingApp.id != item.id
         else { return }
@@ -508,14 +509,18 @@ struct AppReorderDelegate: DropDelegate {
     }
 
     func performDrop(info: DropInfo) -> Bool {
+        commitPreviewOrder()
+        return true
+    }
+
+    func commitPreviewOrder() {
         defer {
             draggingApp = nil
             dragPreviewApps = nil
         }
 
-        guard let previewApps = dragPreviewApps else { return true }
+        guard let previewApps = dragPreviewApps else { return }
         store.replaceApps(in: groupId, with: previewApps)
-        return true
     }
 }
 

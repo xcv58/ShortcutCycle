@@ -71,6 +71,12 @@
 "Settings Window" = "Einstellungsfenster";
 "Shortcuts" = "Kurzbefehle";
 "Add Group" = "Gruppe hinzufügen";
+"Delete Group" = "Gruppe löschen";
+"Toggle Sidebar" = "Seitenleiste ein-/ausblenden";
+"Previous Group" = "Vorherige Gruppe";
+"Next Group" = "Nächste Gruppe";
+"Move Group Up" = "Gruppe nach oben verschieben";
+"Move Group Down" = "Gruppe nach unten verschieben";
 
 
 /* Appearance Section */

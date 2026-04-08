@@ -71,6 +71,12 @@
 "Settings Window" = "Okno ustawień";
 "Shortcuts" = "Skróty";
 "Add Group" = "Dodaj grupę";
+"Delete Group" = "Usuń grupę";
+"Toggle Sidebar" = "Przełącz pasek boczny";
+"Previous Group" = "Poprzednia grupa";
+"Next Group" = "Następna grupa";
+"Move Group Up" = "Przenieś grupę w górę";
+"Move Group Down" = "Przenieś grupę w dół";
 
 
 /* Appearance Section */

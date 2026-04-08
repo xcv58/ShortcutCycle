@@ -72,6 +72,12 @@
 "Shortcuts" = "اختصارات";
 
 "Add Group" = "إضافة مجموعة";
+"Delete Group" = "حذف المجموعة";
+"Toggle Sidebar" = "إظهار/إخفاء الشريط الجانبي";
+"Previous Group" = "المجموعة السابقة";
+"Next Group" = "المجموعة التالية";
+"Move Group Up" = "نقل المجموعة إلى الأعلى";
+"Move Group Down" = "نقل المجموعة إلى الأسفل";
 
 
 /* Appearance Section */

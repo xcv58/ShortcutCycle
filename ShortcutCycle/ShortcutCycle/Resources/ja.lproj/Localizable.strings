@@ -71,6 +71,12 @@
 "Settings Window" = "設定ウィンドウ";
 "Shortcuts" = "ショートカット";
 "Add Group" = "グループを追加";
+"Delete Group" = "グループを削除";
+"Toggle Sidebar" = "サイドバーを切り替え";
+"Previous Group" = "前のグループ";
+"Next Group" = "次のグループ";
+"Move Group Up" = "グループを上へ移動";
+"Move Group Down" = "グループを下へ移動";
 
 
 /* Appearance Section */

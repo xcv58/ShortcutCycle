@@ -71,6 +71,12 @@
 "Settings Window" = "Ventana de ajustes";
 "Shortcuts" = "Atajos";
 "Add Group" = "Añadir grupo";
+"Delete Group" = "Eliminar grupo";
+"Toggle Sidebar" = "Alternar barra lateral";
+"Previous Group" = "Grupo anterior";
+"Next Group" = "Grupo siguiente";
+"Move Group Up" = "Mover grupo hacia arriba";
+"Move Group Down" = "Mover grupo hacia abajo";
 
 
 /* Appearance Section */

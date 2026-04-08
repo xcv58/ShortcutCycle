@@ -71,6 +71,12 @@
 "Shortcuts" = "Shortcuts";
 
 "Add Group" = "Add Group";
+"Delete Group" = "Delete Group";
+"Toggle Sidebar" = "Toggle Sidebar";
+"Previous Group" = "Previous Group";
+"Next Group" = "Next Group";
+"Move Group Up" = "Move Group Up";
+"Move Group Down" = "Move Group Down";
 
 
 /* Appearance Section */

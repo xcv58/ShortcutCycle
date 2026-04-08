@@ -121,7 +121,6 @@ struct GeneralSettingsView: View {
                             .foregroundStyle(.tertiary)
                     }
                 }
-                .focusable()
                 .popover(isPresented: $showShortcutReferencePopover, arrowEdge: .bottom) {
                     KeyboardShortcutReferencePopover(selectedLanguage: selectedLanguage)
                 }
@@ -131,7 +130,6 @@ struct GeneralSettingsView: View {
                         WelcomeExperiencePolicy.prepareReplay()
                         ShortcutCycleURLRouter.openSettingsFromOutsideView(tab: .groups)
                     }
-                    .focusable()
                 }
 
             } header: {
@@ -148,12 +146,10 @@ struct GeneralSettingsView: View {
                         Button("Export Settings...".localized(language: selectedLanguage)) {
                             exportSettings()
                         }
-                        .focusable()
 
                         Button("Import Settings...".localized(language: selectedLanguage)) {
                             importSettings()
                         }
-                        .focusable()
                     }
                     Text("Save to or load from a JSON file.".localized(language: selectedLanguage))
                         .font(.caption2)
@@ -170,12 +166,10 @@ struct GeneralSettingsView: View {
                         Button("Copy to Clipboard".localized(language: selectedLanguage)) {
                             copySettingsToClipboard()
                         }
-                        .focusable()
 
                         Button("Paste from Clipboard".localized(language: selectedLanguage)) {
                             pasteSettingsFromClipboard()
                         }
-                        .focusable()
                     }
                     Text("Use Universal Clipboard to sync between Macs.".localized(language: selectedLanguage))
                         .font(.caption2)
@@ -191,11 +185,9 @@ struct GeneralSettingsView: View {
                         Button("View Automatic Backups...".localized(language: selectedLanguage)) {
                             showBackupBrowser = true
                         }
-                        .focusable()
                         Button("Back Up Now".localized(language: selectedLanguage)) {
                             performManualBackup()
                         }
-                        .focusable()
                     }
                     if let feedback = manualBackupFeedback {
                         Text(feedback)
@@ -407,11 +399,11 @@ private struct KeyboardShortcutReferencePopover: View {
             ("General".localized(language: selectedLanguage), ["⌘2"]),
             ("Add Group".localized(language: selectedLanguage), ["⌘N"]),
             ("Delete Group".localized(language: selectedLanguage), ["⌘⌫"]),
-            ("Toggle Sidebar", ["⌃⌘S"]),
-            ("Previous Group", ["⌘↑", "⌘[", "⌘K"]),
-            ("Next Group", ["⌘↓", "⌘]", "⌘J"]),
-            ("Move Group Up", ["⌥⌘↑"]),
-            ("Move Group Down", ["⌥⌘↓"])
+            ("Toggle Sidebar".localized(language: selectedLanguage), ["⌃⌘S"]),
+            ("Previous Group".localized(language: selectedLanguage), ["⌘↑", "⌘[", "⌘K"]),
+            ("Next Group".localized(language: selectedLanguage), ["⌘↓", "⌘]", "⌘J"]),
+            ("Move Group Up".localized(language: selectedLanguage), ["⌥⌘↑"]),
+            ("Move Group Down".localized(language: selectedLanguage), ["⌥⌘↓"])
         ]
     }
 
@@ -428,11 +420,12 @@ private struct KeyboardShortcutReferencePopover: View {
                         KeyboardShortcutReferenceRow(title: item.title, shortcuts: item.shortcuts)
                     }
                 }
+                .padding(.trailing, 14)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
         .padding(16)
-        .frame(width: 360, height: 300)
+        .frame(width: 380, height: 300)
     }
 }
 

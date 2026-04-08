@@ -71,6 +71,12 @@
 "Settings Window" = "Ayarlar Penceresi";
 "Shortcuts" = "Kısayollar";
 "Add Group" = "Grup Ekle";
+"Delete Group" = "Grubu Sil";
+"Toggle Sidebar" = "Kenar Çubuğunu Aç/Kapat";
+"Previous Group" = "Önceki Grup";
+"Next Group" = "Sonraki Grup";
+"Move Group Up" = "Grubu Yukarı Taşı";
+"Move Group Down" = "Grubu Aşağı Taşı";
 
 
 /* Appearance Section */

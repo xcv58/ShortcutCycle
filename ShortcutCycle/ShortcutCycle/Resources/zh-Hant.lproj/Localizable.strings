@@ -72,6 +72,12 @@
 "Shortcuts" = "快速鍵";
 
 "Add Group" = "新增群組";
+"Delete Group" = "刪除群組";
+"Toggle Sidebar" = "切換側邊欄";
+"Previous Group" = "上一個群組";
+"Next Group" = "下一個群組";
+"Move Group Up" = "將群組上移";
+"Move Group Down" = "將群組下移";
 
 
 /* Appearance Section */
