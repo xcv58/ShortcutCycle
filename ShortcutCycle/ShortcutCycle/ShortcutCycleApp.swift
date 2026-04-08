@@ -811,6 +811,7 @@ struct ShortcutCycleApp: App {
                 .environmentObject(localeObserver)
         }
         .defaultSize(width: 700, height: 500)
+        .windowToolbarStyle(.unified(showsTitle: false))
         .commands {
             AppCommands()
         }
