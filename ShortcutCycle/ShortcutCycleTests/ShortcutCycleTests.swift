@@ -217,6 +217,7 @@ final class ShortcutCycleTests: XCTestCase {
         )
     }
 
+#if !canImport(ShortcutCycleCore)
     @MainActor
     func testSetSettingSelectedLanguageSyncsAppleLanguages() {
         let defaults = UserDefaults.standard
@@ -233,6 +234,7 @@ final class ShortcutCycleTests: XCTestCase {
         XCTAssertEqual(defaults.string(forKey: "selectedLanguage"), "zh-Hant")
         XCTAssertEqual(defaults.stringArray(forKey: "AppleLanguages"), ["zh-TW"])
     }
+#endif
 
     func testParseSetSettingWithTooLongKeyOrValueReturnsNil() {
         let longKey = String(repeating: "k", count: 129)

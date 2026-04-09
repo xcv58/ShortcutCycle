@@ -1,6 +1,43 @@
 import Foundation
 import KeyboardShortcuts
 
+private enum AppleLanguagePreferenceSync {
+    // Keep in sync with LanguageManager.supportedLanguages.
+    private static let supportedLanguageCodes = [
+        "en", "de", "fr", "es", "ja", "pt-BR", "zh-Hans", "zh-Hant",
+        "it", "ko", "ar", "nl", "pl", "tr", "ru"
+    ]
+
+    private static var globalPreferredLanguages: [String] {
+        if let languages = CFPreferencesCopyValue(
+            "AppleLanguages" as CFString,
+            kCFPreferencesAnyApplication,
+            kCFPreferencesCurrentUser,
+            kCFPreferencesAnyHost
+        ) as? [String] {
+            return languages
+        }
+
+        return Locale.preferredLanguages
+    }
+
+    static func sync(_ selectedLanguage: String, userDefaults: UserDefaults = .standard) {
+        let effectiveCode: String
+        if selectedLanguage == "system" {
+            let preferred = Bundle.preferredLocalizations(
+                from: supportedLanguageCodes,
+                forPreferences: globalPreferredLanguages
+            )
+            effectiveCode = preferred.first ?? "en"
+        } else {
+            effectiveCode = selectedLanguage
+        }
+
+        let appleCode = effectiveCode == "zh-Hant" ? "zh-TW" : effectiveCode
+        userDefaults.set([appleCode], forKey: "AppleLanguages")
+    }
+}
+
 /// Data for a single keyboard shortcut
 public struct ShortcutData: Codable, Equatable {
     public let carbonKeyCode: Int
@@ -42,7 +79,7 @@ public struct AppSettings: Codable, Equatable {
         UserDefaults.standard.set(showShortcutInHUD, forKey: "showShortcutInHUD")
         let resolvedLanguage = selectedLanguage ?? "system"
         UserDefaults.standard.set(resolvedLanguage, forKey: "selectedLanguage")
-        LanguageManager.shared.syncAppleLanguages(for: resolvedLanguage)
+        AppleLanguagePreferenceSync.sync(resolvedLanguage)
         if let appTheme = appTheme {
             UserDefaults.standard.set(appTheme, forKey: "appTheme")
         }
