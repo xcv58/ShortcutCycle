@@ -22,7 +22,11 @@ class AppSwitcher: @preconcurrency ObservableObject {
         app.unhide()
     }
     var activateRunningAppInstance: (NSRunningApplication) -> Bool = { app in
-        app.activate(options: .activateAllWindows)
+        if NSApp?.isActive == true {
+            NSApp?.yieldActivation(to: app)
+            return app.activate(from: .current, options: .activateAllWindows)
+        }
+        return app.activate(options: .activateAllWindows)
     }
     private var lastInvokedGroupId: UUID?
     private var cycleSessionState: CycleSessionState?
@@ -105,7 +109,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
             items: resolvableItems
         )
 
-        let isHUDVisible = HUDManager.shared.isVisible
+        let isHUDVisible = HUDManager.shared.isSessionActive
         nextAppId = AppCyclingLogic.nextAppId(
             items: cycleItems,
             currentFrontmostAppId: frontmostAppUniqueId,
@@ -280,7 +284,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
             items: resolvableItems
         )
 
-        let isHUDVisible = HUDManager.shared.isVisible
+        let isHUDVisible = HUDManager.shared.isSessionActive
         nextAppId = AppCyclingLogic.nextAppId(
             items: cycleItems,
             currentFrontmostAppId: frontmostAppUniqueId,
