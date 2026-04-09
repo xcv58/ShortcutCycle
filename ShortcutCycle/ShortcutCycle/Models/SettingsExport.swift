@@ -1,24 +1,34 @@
 import Foundation
 import KeyboardShortcuts
 
-private enum AppleLanguagePreferenceSync {
+enum AppleLanguagePreferenceSync {
     // Keep in sync with LanguageManager.supportedLanguages.
     private static let supportedLanguageCodes = [
         "en", "de", "fr", "es", "ja", "pt-BR", "zh-Hans", "zh-Hant",
         "it", "ko", "ar", "nl", "pl", "tr", "ru"
     ]
 
-    private static var globalPreferredLanguages: [String] {
-        if let languages = CFPreferencesCopyValue(
-            "AppleLanguages" as CFString,
-            kCFPreferencesAnyApplication,
-            kCFPreferencesCurrentUser,
-            kCFPreferencesAnyHost
-        ) as? [String] {
+    static func resolvedPreferredLanguages(
+        from globalPreferenceValue: CFPropertyList?,
+        fallback: [String] = Locale.preferredLanguages
+    ) -> [String] {
+        if let languages = globalPreferenceValue as? [String] {
             return languages
         }
 
-        return Locale.preferredLanguages
+        return fallback
+    }
+
+    private static var globalPreferredLanguages: [String] {
+        resolvedPreferredLanguages(
+            from: CFPreferencesCopyValue(
+                "AppleLanguages" as CFString,
+                kCFPreferencesAnyApplication,
+                kCFPreferencesCurrentUser,
+                kCFPreferencesAnyHost
+            ),
+            fallback: Locale.preferredLanguages
+        )
     }
 
     static func sync(_ selectedLanguage: String, userDefaults: UserDefaults = .standard) {

@@ -475,6 +475,16 @@ final class SettingsExportTests: XCTestCase {
         XCTAssertEqual(defaults.string(forKey: "appTheme"), "light")
     }
 
+    func testAppleLanguagePreferenceSyncFallsBackToLocalePreferredLanguages() {
+        XCTAssertEqual(
+            AppleLanguagePreferenceSync.resolvedPreferredLanguages(
+                from: nil,
+                fallback: ["ja"]
+            ),
+            ["ja"]
+        )
+    }
+
     func testAppSettingsApplyWithNilThemeDoesNotWrite() {
         let defaults = UserDefaults.standard
         let originalTheme = defaults.string(forKey: "appTheme")
