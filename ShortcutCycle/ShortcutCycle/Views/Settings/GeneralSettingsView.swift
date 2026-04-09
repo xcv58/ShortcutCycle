@@ -179,6 +179,7 @@ struct GeneralSettingsView: View {
                     get: { UserDefaults.standard.string(forKey: "selectedLanguage") ?? "system" },
                     set: { newValue in
                         UserDefaults.standard.set(newValue, forKey: "selectedLanguage")
+                        LanguageManager.shared.syncAppleLanguages(for: newValue)
                     }
                 )) {
                     Text("\("System Default".localized(language: "system")) (\(LanguageManager.shared.supportedLanguages.first { $0.code == LanguageManager.shared.systemLanguageCode }?.name ?? "English"))").tag("system")

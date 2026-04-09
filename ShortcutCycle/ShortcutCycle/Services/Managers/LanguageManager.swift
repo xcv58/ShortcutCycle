@@ -91,4 +91,21 @@ class LanguageManager {
         }
         return Locale(identifier: selected)
     }
+
+    /// Syncs UserDefaults `AppleLanguages` so third-party bundles (e.g. KeyboardShortcuts)
+    /// resolve the correct localization. Some packages use region-based codes (e.g. zh-TW)
+    /// instead of script-based codes (e.g. zh-Hant); Bundle.preferredLocalizations does not
+    /// automatically bridge between them, so we map them here.
+    func syncAppleLanguages(for selectedLanguage: String) {
+        let effectiveCode = selectedLanguage == "system" ? systemLanguageCode : selectedLanguage
+        let appleCode = Self.appleCompatibleCode(for: effectiveCode)
+        UserDefaults.standard.set([appleCode], forKey: "AppleLanguages")
+    }
+
+    /// Maps app language codes to codes understood by third-party package bundles.
+    /// The KeyboardShortcuts package ships zh-TW.lproj rather than zh-Hant.lproj;
+    /// Bundle.preferredLocalizations does not match zh-Hant to zh-TW automatically.
+    private static func appleCompatibleCode(for code: String) -> String {
+        code == "zh-Hant" ? "zh-TW" : code
+    }
 }

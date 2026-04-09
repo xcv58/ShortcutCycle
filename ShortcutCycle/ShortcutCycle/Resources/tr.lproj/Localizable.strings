@@ -131,7 +131,7 @@
 "No changes" = "Değişiklik yok";
 "(invalid)" = "(geçersiz)";
 "This backup file is invalid or corrupted." = "Bu yedek dosyası geçersiz veya bozuk.";
-"⌥-click to compare with a different backup" = "⌥-tıklayarak başka bir yedekle karşılaştırın";
+"Comparison defaults to the next older backup. Use Changes from to pick a different one." = "Karşılaştırma varsayılan olarak bir sonraki eski yedeği kullanır. Farklı birini seçmek için «Değişiklikler» seçeneğini kullanın.";
 "No Backup Selected" = "Yedek Seçilmedi";
 "Select a backup from the sidebar to preview its contents." = "İçeriğini önizlemek için kenar çubuğundan bir yedek seçin.";
 "selected" = "seçili";

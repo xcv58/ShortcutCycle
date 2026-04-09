@@ -131,7 +131,7 @@
 "No changes" = "Sem alterações";
 "(invalid)" = "(inválido)";
 "This backup file is invalid or corrupted." = "Este arquivo de backup é inválido ou está corrompido.";
-"⌥-click to compare with a different backup" = "⌥-clique para comparar com outro backup";
+"Comparison defaults to the next older backup. Use Changes from to pick a different one." = "A comparação usa por padrão o backup imediatamente anterior. Use «Alterações de» para escolher outro.";
 "No Backup Selected" = "Nenhum backup selecionado";
 "Select a backup from the sidebar to preview its contents." = "Selecione um backup na barra lateral para visualizar seu conteúdo.";
 "selected" = "selecionado";

@@ -132,7 +132,7 @@
 "No changes" = "لا توجد تغييرات";
 "(invalid)" = "(غير صالح)";
 "This backup file is invalid or corrupted." = "ملف النسخة الاحتياطية غير صالح أو تالف.";
-"⌥-click to compare with a different backup" = "⌥-انقر للمقارنة مع نسخة احتياطية مختلفة";
+"Comparison defaults to the next older backup. Use Changes from to pick a different one." = "يستخدم المقارنة افتراضيًا النسخة الاحتياطية الأقدم التالية. استخدم «التغييرات من» لاختيار نسخة مختلفة.";
 "No Backup Selected" = "لم يتم اختيار نسخة احتياطية";
 "Select a backup from the sidebar to preview its contents." = "اختر نسخة احتياطية من الشريط الجانبي لمعاينة محتوياتها.";
 "selected" = "محدد";

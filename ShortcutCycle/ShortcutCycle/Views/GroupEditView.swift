@@ -395,6 +395,7 @@ private struct GroupShortcutEditor: View {
             VStack(alignment: .leading, spacing: 8) {
                 KeyboardShortcuts.Recorder(for: shortcutName, onChange: handleShortcutChange)
                     .padding(.leading, 4)
+                    .id(selectedLanguage) // Recreate on language change so placeholder re-reads AppleLanguages
 
                 if shouldShowSuggestions {
                     ShortcutSuggestionRow(

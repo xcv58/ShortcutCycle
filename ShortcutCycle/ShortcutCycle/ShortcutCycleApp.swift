@@ -431,6 +431,7 @@ enum ShortcutCycleURLRouter {
         case .backup:
             _ = store.manualBackup()
         case .flushAutoSave:
+            store.flushPendingSave()
             store.flushPendingBackup()
         case .setSetting(let key, let value):
             applySetting(key: key, value: value)
@@ -603,6 +604,7 @@ enum ShortcutCycleURLRouter {
             let supportedCodes = LanguageManager.shared.supportedLanguages.map(\.code)
             guard let language = URLRouterLogic.parseLanguage(value, supportedCodes: supportedCodes) else { return }
             UserDefaults.standard.set(language, forKey: "selectedLanguage")
+            LanguageManager.shared.syncAppleLanguages(for: language)
         case "openatlogin", "launchatlogin":
             guard let boolValue = URLRouterLogic.parseBool(value) else { return }
             LaunchAtLoginManager.shared.isEnabled = boolValue
@@ -793,6 +795,10 @@ struct ShortcutCycleApp: App {
         Task { @MainActor in
             ShortcutManager.shared.registerAllShortcuts()
         }
+        // Sync AppleLanguages so third-party bundles (e.g. KeyboardShortcuts) use the
+        // correct locale. Must run before any view creates a KeyboardShortcuts.Recorder.
+        let selected = UserDefaults.standard.string(forKey: "selectedLanguage") ?? "system"
+        LanguageManager.shared.syncAppleLanguages(for: selected)
     }
 
     var body: some Scene {

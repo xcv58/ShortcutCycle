@@ -455,11 +455,13 @@ final class SettingsExportTests: XCTestCase {
         let originalShowHUD = defaults.object(forKey: "showHUD")
         let originalShowShortcut = defaults.object(forKey: "showShortcutInHUD")
         let originalLanguage = defaults.string(forKey: "selectedLanguage")
+        let originalAppleLanguages = defaults.stringArray(forKey: "AppleLanguages")
         let originalTheme = defaults.string(forKey: "appTheme")
         defer {
             if let v = originalShowHUD { defaults.set(v, forKey: "showHUD") } else { defaults.removeObject(forKey: "showHUD") }
             if let v = originalShowShortcut { defaults.set(v, forKey: "showShortcutInHUD") } else { defaults.removeObject(forKey: "showShortcutInHUD") }
             if let v = originalLanguage { defaults.set(v, forKey: "selectedLanguage") } else { defaults.removeObject(forKey: "selectedLanguage") }
+            if let v = originalAppleLanguages { defaults.set(v, forKey: "AppleLanguages") } else { defaults.removeObject(forKey: "AppleLanguages") }
             if let v = originalTheme { defaults.set(v, forKey: "appTheme") } else { defaults.removeObject(forKey: "appTheme") }
         }
 
@@ -469,6 +471,7 @@ final class SettingsExportTests: XCTestCase {
         XCTAssertEqual(defaults.bool(forKey: "showHUD"), false)
         XCTAssertEqual(defaults.bool(forKey: "showShortcutInHUD"), true)
         XCTAssertEqual(defaults.string(forKey: "selectedLanguage"), "ko")
+        XCTAssertEqual(defaults.stringArray(forKey: "AppleLanguages"), ["ko"])
         XCTAssertEqual(defaults.string(forKey: "appTheme"), "light")
     }
 

@@ -133,7 +133,7 @@
 "No changes" = "無變更";
 "(invalid)" = "（無效）";
 "This backup file is invalid or corrupted." = "此備份檔案無效或已損壞。";
-"⌥-click to compare with a different backup" = "⌥-點按以與其他備份進行比較";
+"Comparison defaults to the next older backup. Use Changes from to pick a different one." = "比較預設為下一個較早的備份。使用「變更來源」選擇其他備份。";
 "No Backup Selected" = "未選擇備份";
 "Select a backup from the sidebar to preview its contents." = "從側邊欄選擇備份以預覽其內容。";
 "selected" = "已選擇";

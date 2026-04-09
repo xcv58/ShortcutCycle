@@ -133,7 +133,7 @@
 "No changes" = "No changes";
 "(invalid)" = "(invalid)";
 "This backup file is invalid or corrupted." = "This backup file is invalid or corrupted.";
-"⌥-click to compare with a different backup" = "⌥-click to compare with a different backup";
+"Comparison defaults to the next older backup. Use Changes from to pick a different one." = "Comparison defaults to the next older backup. Use Changes from to pick a different one.";
 "No Backup Selected" = "No Backup Selected";
 "Select a backup from the sidebar to preview its contents." = "Select a backup from the sidebar to preview its contents.";
 "selected" = "selected";

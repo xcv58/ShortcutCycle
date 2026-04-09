@@ -40,7 +40,9 @@ public struct AppSettings: Codable, Equatable {
     public func apply() {
         UserDefaults.standard.set(showHUD, forKey: "showHUD")
         UserDefaults.standard.set(showShortcutInHUD, forKey: "showShortcutInHUD")
-        UserDefaults.standard.set(selectedLanguage ?? "system", forKey: "selectedLanguage")
+        let resolvedLanguage = selectedLanguage ?? "system"
+        UserDefaults.standard.set(resolvedLanguage, forKey: "selectedLanguage")
+        LanguageManager.shared.syncAppleLanguages(for: resolvedLanguage)
         if let appTheme = appTheme {
             UserDefaults.standard.set(appTheme, forKey: "appTheme")
         }

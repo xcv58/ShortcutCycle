@@ -217,6 +217,23 @@ final class ShortcutCycleTests: XCTestCase {
         )
     }
 
+    @MainActor
+    func testSetSettingSelectedLanguageSyncsAppleLanguages() {
+        let defaults = UserDefaults.standard
+        let originalLanguage = defaults.string(forKey: "selectedLanguage")
+        let originalAppleLanguages = defaults.stringArray(forKey: "AppleLanguages")
+        defer {
+            if let v = originalLanguage { defaults.set(v, forKey: "selectedLanguage") } else { defaults.removeObject(forKey: "selectedLanguage") }
+            if let v = originalAppleLanguages { defaults.set(v, forKey: "AppleLanguages") } else { defaults.removeObject(forKey: "AppleLanguages") }
+        }
+
+        let url = URL(string: "shortcutcycle://set-setting?key=selectedlanguage&value=zh-Hant")!
+        ShortcutCycleURLRouter.handle(url)
+
+        XCTAssertEqual(defaults.string(forKey: "selectedLanguage"), "zh-Hant")
+        XCTAssertEqual(defaults.stringArray(forKey: "AppleLanguages"), ["zh-TW"])
+    }
+
     func testParseSetSettingWithTooLongKeyOrValueReturnsNil() {
         let longKey = String(repeating: "k", count: 129)
         let longValue = String(repeating: "v", count: 129)
