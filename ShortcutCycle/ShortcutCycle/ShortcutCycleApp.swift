@@ -45,14 +45,36 @@ enum SettingsWindowBridge {
 struct AppCommands: Commands {
     @FocusedBinding(\.selectedTab) private var selectedTab
     @Environment(\.openWindow) private var openWindow
+    @AppStorage("appTheme") private var appTheme: AppTheme = .system
 
     private var groupsDisabled: Bool {
         selectedTab != "groups" || GroupStore.shared.groups.count < 2
     }
 
+    private var selectedGroupIndex: Int? {
+        guard let currentId = GroupStore.shared.selectedGroupId else { return nil }
+        return GroupStore.shared.groups.firstIndex(where: { $0.id == currentId })
+    }
+
+    private var canMoveGroupUp: Bool {
+        selectedTab == "groups" && (selectedGroupIndex ?? 0) > 0
+    }
+
+    private var canMoveGroupDown: Bool {
+        guard let selectedGroupIndex else { return false }
+        return selectedTab == "groups" && selectedGroupIndex < GroupStore.shared.groups.count - 1
+    }
+
     var body: some Commands {
         // Keep a non-lazy reference to openWindow for URL/shortcut cold-start requests.
         let _ = SettingsWindowBridge.register(openWindow: openWindow)
+
+        CommandGroup(replacing: .appSettings) {
+            Button("Settings...") {
+                ShortcutCycleURLRouter.openSettingsFromOutsideView(tab: .general)
+            }
+            .keyboardShortcut(",", modifiers: .command)
+        }
 
         CommandGroup(replacing: .newItem) {
             Button("Add Group") {
@@ -76,6 +98,13 @@ struct AppCommands: Commands {
             }
             .keyboardShortcut("s", modifiers: [.command, .control])
             .disabled(selectedTab != "groups")
+
+            Button("Toggle Appearance") {
+                appTheme = appTheme.toggledAppearance(
+                    using: NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua])
+                )
+            }
+            .keyboardShortcut("a", modifiers: [.command, .control])
 
             Divider()
 
@@ -133,6 +162,20 @@ struct AppCommands: Commands {
             }
             .keyboardShortcut("j", modifiers: .command)
             .disabled(groupsDisabled)
+
+            Divider()
+
+            Button("Move Group Up") {
+                moveSelectedGroup(by: -1)
+            }
+            .keyboardShortcut(.upArrow, modifiers: [.command, .option])
+            .disabled(!canMoveGroupUp)
+
+            Button("Move Group Down") {
+                moveSelectedGroup(by: 1)
+            }
+            .keyboardShortcut(.downArrow, modifiers: [.command, .option])
+            .disabled(!canMoveGroupDown)
         }
     }
 
@@ -158,6 +201,21 @@ struct AppCommands: Commands {
         }
         let nextIndex = currentIndex == store.groups.count - 1 ? 0 : currentIndex + 1
         store.selectedGroupId = store.groups[nextIndex].id
+    }
+
+    private func moveSelectedGroup(by delta: Int) {
+        let store = GroupStore.shared
+        guard let currentId = store.selectedGroupId,
+              let currentIndex = store.groups.firstIndex(where: { $0.id == currentId }) else {
+            return
+        }
+
+        let targetIndex = currentIndex + delta
+        guard store.groups.indices.contains(targetIndex) else { return }
+
+        let destination = delta > 0 ? targetIndex + 1 : targetIndex
+        store.moveGroups(from: IndexSet(integer: currentIndex), to: destination)
+        store.selectedGroupId = currentId
     }
 }
 
@@ -194,9 +252,10 @@ struct SettingsWindowObserver: NSViewRepresentable {
         }
     }
 
-    class Coordinator {
+    final class Coordinator {
         private let onWindowWillClose: () -> Void
         private var observer: NSObjectProtocol?
+        private var keyEventMonitor: Any?
         private weak var observedWindow: NSWindow?
 
         init(onWindowWillClose: @escaping () -> Void = {}) {
@@ -205,13 +264,11 @@ struct SettingsWindowObserver: NSViewRepresentable {
 
         func observe(window: NSWindow) {
             guard observedWindow !== window else { return }
+            removeObservers()
             observedWindow = window
 
             window.identifier = NSUserInterfaceItemIdentifier("settings")
 
-            if let observer {
-                NotificationCenter.default.removeObserver(observer)
-            }
             observer = NotificationCenter.default.addObserver(
                 forName: NSWindow.willCloseNotification,
                 object: window,
@@ -224,12 +281,73 @@ struct SettingsWindowObserver: NSViewRepresentable {
                     NSApp.setActivationPolicy(.accessory)
                 }
             }
+
+            keyEventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+                self?.handleKeyDown(event)
+                return event
+            }
+        }
+
+        func handleKeyDown(_ event: NSEvent) {
+            guard shouldRevealFocus(for: event, in: observedWindow) else { return }
+            scheduleFocusReveal()
+        }
+
+        func shouldRevealFocus(for event: NSEvent, in window: NSWindow?) -> Bool {
+            guard let observedWindow, observedWindow === window else {
+                return false
+            }
+
+            let isObservedWindowEvent = event.window === observedWindow || event.windowNumber == observedWindow.windowNumber
+            guard isObservedWindowEvent else { return false }
+
+            return event.keyCode == 48
+        }
+
+        func scheduleFocusReveal() {
+            DispatchQueue.main.async { [weak self] in
+                self?.revealFocusedControl()
+                DispatchQueue.main.async { [weak self] in
+                    self?.revealFocusedControl()
+                }
+            }
+        }
+
+        func revealFocusedControl() {
+            guard let observedWindow,
+                  let focusedView = focusedView(in: observedWindow) else {
+                return
+            }
+
+            focusedView.scrollToVisible(focusedView.bounds.insetBy(dx: 0, dy: -20))
+        }
+
+        func focusedView(in window: NSWindow) -> NSView? {
+            if let textView = window.firstResponder as? NSTextView {
+                if let delegateView = textView.delegate as? NSView {
+                    return delegateView
+                }
+
+                return textView
+            }
+
+            return window.firstResponder as? NSView
+        }
+
+        private func removeObservers() {
+            if let observer {
+                NotificationCenter.default.removeObserver(observer)
+                self.observer = nil
+            }
+
+            if let keyEventMonitor {
+                NSEvent.removeMonitor(keyEventMonitor)
+                self.keyEventMonitor = nil
+            }
         }
 
         deinit {
-            if let o = observer {
-                NotificationCenter.default.removeObserver(o)
-            }
+            removeObservers()
         }
     }
 }
@@ -313,6 +431,7 @@ enum ShortcutCycleURLRouter {
         case .backup:
             _ = store.manualBackup()
         case .flushAutoSave:
+            store.flushPendingSave()
             store.flushPendingBackup()
         case .setSetting(let key, let value):
             applySetting(key: key, value: value)
@@ -485,6 +604,7 @@ enum ShortcutCycleURLRouter {
             let supportedCodes = LanguageManager.shared.supportedLanguages.map(\.code)
             guard let language = URLRouterLogic.parseLanguage(value, supportedCodes: supportedCodes) else { return }
             UserDefaults.standard.set(language, forKey: "selectedLanguage")
+            LanguageManager.shared.syncAppleLanguages(for: language)
         case "openatlogin", "launchatlogin":
             guard let boolValue = URLRouterLogic.parseBool(value) else { return }
             LaunchAtLoginManager.shared.isEnabled = boolValue
@@ -675,6 +795,10 @@ struct ShortcutCycleApp: App {
         Task { @MainActor in
             ShortcutManager.shared.registerAllShortcuts()
         }
+        // Sync AppleLanguages so third-party bundles (e.g. KeyboardShortcuts) use the
+        // correct locale. Must run before any view creates a KeyboardShortcuts.Recorder.
+        let selected = UserDefaults.standard.string(forKey: "selectedLanguage") ?? "system"
+        LanguageManager.shared.syncAppleLanguages(for: selected)
     }
 
     var body: some Scene {
@@ -693,6 +817,7 @@ struct ShortcutCycleApp: App {
                 .environmentObject(localeObserver)
         }
         .defaultSize(width: 700, height: 500)
+        .windowToolbarStyle(.unified(showsTitle: false))
         .commands {
             AppCommands()
         }
@@ -788,5 +913,20 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .light: return "sun.max.fill"
         case .dark: return "moon.fill"
         }
+    }
+
+    func toggledAppearance(using effectiveAppearanceName: NSAppearance.Name?) -> AppTheme {
+        let isCurrentlyDark: Bool
+
+        switch self {
+        case .light:
+            isCurrentlyDark = false
+        case .dark:
+            isCurrentlyDark = true
+        case .system:
+            isCurrentlyDark = effectiveAppearanceName == .darkAqua
+        }
+
+        return isCurrentlyDark ? .light : .dark
     }
 }

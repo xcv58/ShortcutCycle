@@ -15,6 +15,7 @@ struct MenuBarView: View {
     var selectedLanguage: String = "system"
     
     @State private var listHeight: CGFloat = 0
+    @State private var runningBundleIDs = Set<String>()
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -39,7 +40,7 @@ struct MenuBarView: View {
                             .padding()
                     } else {
                         ForEach(store.groups) { group in
-                            MenuBarGroupRow(group: group)
+                            MenuBarGroupRow(group: group, runningBundleIDs: runningBundleIDs)
                         }
                     }
                 }
@@ -117,6 +118,24 @@ struct MenuBarView: View {
         .background(VisualEffectView(material: .popover, blendingMode: .behindWindow))
         .background(WindowAppearanceApplier(colorScheme: appTheme.colorScheme))
         .preferredColorScheme(appTheme.colorScheme)
+        .onAppear {
+            refreshRunningBundleIDs()
+        }
+        .onReceive(NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didLaunchApplicationNotification)) { _ in
+            refreshRunningBundleIDs()
+        }
+        .onReceive(NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didTerminateApplicationNotification)) { _ in
+            refreshRunningBundleIDs()
+        }
+    }
+
+    private func refreshRunningBundleIDs() {
+        runningBundleIDs = Set(
+            NSWorkspace.shared.runningApplications.compactMap { app in
+                guard app.activationPolicy == .regular else { return nil }
+                return app.bundleIdentifier
+            }
+        )
     }
 }
 
@@ -151,6 +170,7 @@ struct MenuBarButton: View {
 /// A single group row in the menu bar view
 struct MenuBarGroupRow: View {
     let group: AppGroup
+    let runningBundleIDs: Set<String>
     @EnvironmentObject var store: GroupStore
     @State private var isHovering = false
     
@@ -185,9 +205,7 @@ struct MenuBarGroupRow: View {
                     .cornerRadius(4)
             }
             
-            // Show running app count
-            let runningCount = countRunningApps(in: group)
-            if runningCount > 0 {
+            if hasRunningApp {
                 Circle()
                     .fill(group.isEnabled ? (isHovering ? .white : Color.green) : Color.gray)
                     .frame(width: 6, height: 6)
@@ -201,15 +219,9 @@ struct MenuBarGroupRow: View {
             isHovering = hovering
         }
     }
-    
-    private func countRunningApps(in group: AppGroup) -> Int {
-        let runningApps = NSWorkspace.shared.runningApplications
-        let groupBundleIds = Set(group.apps.map { $0.bundleIdentifier })
-        
-        return runningApps.filter { app in
-            guard let bundleId = app.bundleIdentifier else { return false }
-            return groupBundleIds.contains(bundleId) && app.activationPolicy == .regular
-        }.count
+
+    private var hasRunningApp: Bool {
+        group.apps.contains { runningBundleIDs.contains($0.bundleIdentifier) }
     }
 }
 

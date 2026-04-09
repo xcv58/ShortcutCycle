@@ -19,12 +19,18 @@ public class GroupStore: ObservableObject {
     private let saveKey = "ShortcutCycle.Groups"
     private let userDefaults: UserDefaults
     private let fileManager: FileManager
+    private let saveDebounceInterval: TimeInterval
+    private let performsImmediateAutoBackupOnFirstChange: Bool
 
     private static let backupDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd HH-mm-ss"
         return formatter
     }()
+
+    private var saveTimer: Timer?
+    private var savePending = false
+    private var pendingSaveTriggersAutoBackup = false
     
     // Debounce timer for auto-backup (60 seconds)
     private var backupTimer: Timer?
@@ -36,10 +42,13 @@ public class GroupStore: ObservableObject {
     init(
         userDefaults: UserDefaults = .standard,
         backupDebounceInterval: TimeInterval = 60.0,
+        saveDebounceInterval: TimeInterval? = nil,
         fileManager: FileManager = .default
     ) {
         self.userDefaults = userDefaults
         self.backupDebounceInterval = backupDebounceInterval
+        self.saveDebounceInterval = saveDebounceInterval ?? (userDefaults === UserDefaults.standard ? 0.25 : 0.0)
+        self.performsImmediateAutoBackupOnFirstChange = userDefaults !== UserDefaults.standard
         self.fileManager = fileManager
         loadGroups()
         setupTerminationObserver()
@@ -55,9 +64,20 @@ public class GroupStore: ObservableObject {
             // Must run synchronously on main thread before app exits
             guard let self = self else { return }
             MainActor.assumeIsolated {
+                self.flushPendingSave()
                 self.flushPendingBackup()
             }
         }
+    }
+
+    public func flushPendingSave() {
+        guard savePending else { return }
+        let triggerAutoBackup = pendingSaveTriggersAutoBackup
+        saveTimer?.invalidate()
+        saveTimer = nil
+        savePending = false
+        pendingSaveTriggersAutoBackup = false
+        persistGroups(triggerAutoBackup: triggerAutoBackup)
     }
 
     /// Force immediate backup if one is pending (public for testing)
@@ -139,6 +159,15 @@ public class GroupStore: ObservableObject {
             saveGroups()
         }
     }
+
+    public func replaceApps(in groupId: UUID, with apps: [AppItem]) {
+        if let index = groups.firstIndex(where: { $0.id == groupId }) {
+            guard groups[index].apps != apps else { return }
+            groups[index].apps = apps
+            groups[index].lastModified = Date()
+            saveGroups()
+        }
+    }
     
     // MARK: - Shortcut Management
     
@@ -169,6 +198,24 @@ public class GroupStore: ObservableObject {
     // MARK: - Persistence
     
     private func saveGroups(triggerAutoBackup: Bool = true) {
+        guard saveDebounceInterval > 0 else {
+            persistGroups(triggerAutoBackup: triggerAutoBackup)
+            return
+        }
+
+        savePending = true
+        pendingSaveTriggersAutoBackup = pendingSaveTriggersAutoBackup || triggerAutoBackup
+
+        saveTimer?.invalidate()
+        saveTimer = Timer(timeInterval: saveDebounceInterval, repeats: false) { [weak self] _ in
+            Task { @MainActor in
+                self?.flushPendingSave()
+            }
+        }
+        RunLoop.main.add(saveTimer!, forMode: .common)
+    }
+
+    private func persistGroups(triggerAutoBackup: Bool) {
         // JSONEncoder.encode cannot fail for [AppGroup] since all types are trivially Codable
         let data = try! JSONEncoder().encode(groups)
         userDefaults.set(data, forKey: saveKey)
@@ -180,20 +227,23 @@ public class GroupStore: ObservableObject {
     /// Schedule a debounced auto-backup (resets timer on each call)
     private func scheduleAutoBackup() {
         backupPending = true
-        
-        // Immediate save if enough time has passed since last backup and no debounce is active
-        // This ensures the first change saves immediately, but subsequent rapid changes are debounced
-        let timeSinceLastBackup = Date().timeIntervalSince(lastBackupTime)
-        if backupTimer == nil && timeSinceLastBackup > backupDebounceInterval {
+
+        if backupDebounceInterval <= 0 {
             performAutoBackup()
             return
         }
-        
-        // Cancel any existing timer
+
+        let timeSinceLastBackup = Date().timeIntervalSince(lastBackupTime)
+        if performsImmediateAutoBackupOnFirstChange,
+           backupTimer == nil,
+           timeSinceLastBackup > backupDebounceInterval {
+            performAutoBackup()
+            return
+        }
+
         backupTimer?.invalidate()
         backupTimer = nil
-        
-        // Schedule new backup after debounce interval on main run loop
+
         backupTimer = Timer(timeInterval: backupDebounceInterval, repeats: false) { [weak self] _ in
             Task { @MainActor in
                 self?.performAutoBackup()

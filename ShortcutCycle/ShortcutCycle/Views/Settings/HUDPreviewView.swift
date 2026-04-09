@@ -5,6 +5,36 @@ struct HUDPreviewView: View {
     let showShortcut: Bool
     var selectedLanguage: String = "system"
     @Environment(\.colorScheme) var colorScheme
+
+    private var previewShellFill: Color {
+        colorScheme == .dark
+            ? SettingsChromePalette.panelBackground(for: colorScheme)
+            : Color.white.opacity(0.42)
+    }
+
+    private var previewShellBorder: Color {
+        colorScheme == .dark
+            ? SettingsChromePalette.panelBorder(for: colorScheme)
+            : Color.primary.opacity(0.10)
+    }
+
+    private var selectedTileFill: Color {
+        colorScheme == .dark
+            ? SettingsChromePalette.inlineFill(for: colorScheme)
+            : Color.primary.opacity(0.05)
+    }
+
+    private var selectedTileBorder: Color {
+        colorScheme == .dark
+            ? SettingsChromePalette.panelBorder(for: colorScheme)
+            : Color.primary.opacity(0.10)
+    }
+
+    private var shortcutCapsuleFill: Color {
+        colorScheme == .dark
+            ? SettingsChromePalette.inlineFill(for: colorScheme)
+            : Color.white.opacity(0.72)
+    }
     
     var body: some View {
         VStack(spacing: 16) {
@@ -27,13 +57,18 @@ struct HUDPreviewView: View {
                     .padding(8)
                     .background(
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(Color.primary.opacity(0.05))
+                            .fill(selectedTileFill)
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .stroke(Color.primary.opacity(0.1), lineWidth: 1)
+                            .stroke(selectedTileBorder, lineWidth: 1)
                     )
-                    .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+                    .shadow(
+                        color: colorScheme == .dark ? .black.opacity(0.18) : .black.opacity(0.10),
+                        radius: colorScheme == .dark ? 10 : 4,
+                        x: 0,
+                        y: colorScheme == .dark ? 6 : 2
+                    )
                     .scaleEffect(1.1)
                 
                 Image(systemName: "envelope.fill")
@@ -47,12 +82,17 @@ struct HUDPreviewView: View {
             .padding(12)
             .background(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(.ultraThinMaterial)
-                    .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 4)
+                    .fill(previewShellFill)
+                    .shadow(
+                        color: colorScheme == .dark ? .black.opacity(0.24) : .black.opacity(0.10),
+                        radius: colorScheme == .dark ? 18 : 10,
+                        x: 0,
+                        y: colorScheme == .dark ? 10 : 4
+                    )
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(Color.primary.opacity(0.1), lineWidth: 1)
+                    .stroke(previewShellBorder, lineWidth: 1)
             )
             
             // App Name Label
@@ -72,7 +112,11 @@ struct HUDPreviewView: View {
             .padding(.vertical, 6)
             .background(
                 Capsule()
-                    .fill(.regularMaterial)
+                    .fill(shortcutCapsuleFill)
+            )
+            .overlay(
+                Capsule()
+                    .stroke(previewShellBorder.opacity(colorScheme == .dark ? 0.85 : 0.65), lineWidth: 1)
             )
         }
     }

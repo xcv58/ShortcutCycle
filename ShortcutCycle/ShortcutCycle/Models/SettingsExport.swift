@@ -1,6 +1,53 @@
 import Foundation
 import KeyboardShortcuts
 
+enum AppleLanguagePreferenceSync {
+    // Keep in sync with LanguageManager.supportedLanguages.
+    private static let supportedLanguageCodes = [
+        "en", "de", "fr", "es", "ja", "pt-BR", "zh-Hans", "zh-Hant",
+        "it", "ko", "ar", "nl", "pl", "tr", "ru"
+    ]
+
+    static func resolvedPreferredLanguages(
+        from globalPreferenceValue: CFPropertyList?,
+        fallback: [String] = Locale.preferredLanguages
+    ) -> [String] {
+        if let languages = globalPreferenceValue as? [String] {
+            return languages
+        }
+
+        return fallback
+    }
+
+    private static var globalPreferredLanguages: [String] {
+        resolvedPreferredLanguages(
+            from: CFPreferencesCopyValue(
+                "AppleLanguages" as CFString,
+                kCFPreferencesAnyApplication,
+                kCFPreferencesCurrentUser,
+                kCFPreferencesAnyHost
+            ),
+            fallback: Locale.preferredLanguages
+        )
+    }
+
+    static func sync(_ selectedLanguage: String, userDefaults: UserDefaults = .standard) {
+        let effectiveCode: String
+        if selectedLanguage == "system" {
+            let preferred = Bundle.preferredLocalizations(
+                from: supportedLanguageCodes,
+                forPreferences: globalPreferredLanguages
+            )
+            effectiveCode = preferred.first ?? "en"
+        } else {
+            effectiveCode = selectedLanguage
+        }
+
+        let appleCode = effectiveCode == "zh-Hant" ? "zh-TW" : effectiveCode
+        userDefaults.set([appleCode], forKey: "AppleLanguages")
+    }
+}
+
 /// Data for a single keyboard shortcut
 public struct ShortcutData: Codable, Equatable {
     public let carbonKeyCode: Int
@@ -40,7 +87,9 @@ public struct AppSettings: Codable, Equatable {
     public func apply() {
         UserDefaults.standard.set(showHUD, forKey: "showHUD")
         UserDefaults.standard.set(showShortcutInHUD, forKey: "showShortcutInHUD")
-        UserDefaults.standard.set(selectedLanguage ?? "system", forKey: "selectedLanguage")
+        let resolvedLanguage = selectedLanguage ?? "system"
+        UserDefaults.standard.set(resolvedLanguage, forKey: "selectedLanguage")
+        AppleLanguagePreferenceSync.sync(resolvedLanguage)
         if let appTheme = appTheme {
             UserDefaults.standard.set(appTheme, forKey: "appTheme")
         }

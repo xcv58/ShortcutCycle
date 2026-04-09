@@ -71,6 +71,14 @@
 "Settings Window" = "Instellingenvenster";
 "Shortcuts" = "Sneltoetsen";
 "Add Group" = "Groep toevoegen";
+"Delete Group" = "Groep verwijderen";
+"Toggle Sidebar" = "Zijbalk tonen/verbergen";
+"Toggle Appearance" = "Weergave wisselen";
+"Previous Group" = "Vorige groep";
+"Next Group" = "Volgende groep";
+"Move Group Up" = "Groep omhoog verplaatsen";
+"Move Group Down" = "Groep omlaag verplaatsen";
+"or" = "of";
 
 
 /* Appearance Section */
@@ -123,7 +131,7 @@
 "No changes" = "Geen wijzigingen";
 "(invalid)" = "(ongeldig)";
 "This backup file is invalid or corrupted." = "Dit back-upbestand is ongeldig of beschadigd.";
-"⌥-click to compare with a different backup" = "⌥-klik om te vergelijken met een andere back-up";
+"Comparison defaults to the next older backup. Use Changes from to pick a different one." = "Vergelijking gebruikt standaard de eerstvolgende oudere back-up. Gebruik «Wijzigingen van» om een andere te kiezen.";
 "No Backup Selected" = "Geen back-up geselecteerd";
 "Select a backup from the sidebar to preview its contents." = "Selecteer een back-up in de zijbalk om de inhoud te bekijken.";
 "selected" = "geselecteerd";

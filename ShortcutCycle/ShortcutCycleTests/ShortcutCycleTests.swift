@@ -2,6 +2,7 @@ import XCTest
 #if canImport(ShortcutCycleCore)
 @testable import ShortcutCycleCore
 #else
+import AppKit
 @testable import ShortcutCycle
 #endif
 
@@ -195,6 +196,19 @@ final class ShortcutCycleTests: XCTestCase {
         XCTAssertNil(ShortcutCycleURLParser.parse(url))
     }
 
+#if !canImport(ShortcutCycleCore)
+    func testAppThemeToggleFlipsExplicitThemes() {
+        XCTAssertEqual(AppTheme.light.toggledAppearance(using: .aqua), .dark)
+        XCTAssertEqual(AppTheme.dark.toggledAppearance(using: .darkAqua), .light)
+    }
+
+    func testAppThemeToggleUsesResolvedSystemAppearance() {
+        XCTAssertEqual(AppTheme.system.toggledAppearance(using: .aqua), .dark)
+        XCTAssertEqual(AppTheme.system.toggledAppearance(using: .darkAqua), .light)
+        XCTAssertEqual(AppTheme.system.toggledAppearance(using: nil), .dark)
+    }
+#endif
+
     func testParseSetSettingWithSelectedLanguageValue() {
         let url = URL(string: "shortcutcycle://set-setting?key=selectedlanguage&value=en")!
         XCTAssertEqual(
@@ -202,6 +216,25 @@ final class ShortcutCycleTests: XCTestCase {
             .setSetting(key: "selectedlanguage", value: "en")
         )
     }
+
+#if !canImport(ShortcutCycleCore)
+    @MainActor
+    func testSetSettingSelectedLanguageSyncsAppleLanguages() {
+        let defaults = UserDefaults.standard
+        let originalLanguage = defaults.string(forKey: "selectedLanguage")
+        let originalAppleLanguages = defaults.stringArray(forKey: "AppleLanguages")
+        defer {
+            if let v = originalLanguage { defaults.set(v, forKey: "selectedLanguage") } else { defaults.removeObject(forKey: "selectedLanguage") }
+            if let v = originalAppleLanguages { defaults.set(v, forKey: "AppleLanguages") } else { defaults.removeObject(forKey: "AppleLanguages") }
+        }
+
+        let url = URL(string: "shortcutcycle://set-setting?key=selectedlanguage&value=zh-Hant")!
+        ShortcutCycleURLRouter.handle(url)
+
+        XCTAssertEqual(defaults.string(forKey: "selectedLanguage"), "zh-Hant")
+        XCTAssertEqual(defaults.stringArray(forKey: "AppleLanguages"), ["zh-TW"])
+    }
+#endif
 
     func testParseSetSettingWithTooLongKeyOrValueReturnsNil() {
         let longKey = String(repeating: "k", count: 129)

@@ -72,6 +72,8 @@ struct MainView: View {
         } message: {
             Text("This action cannot be undone.".localized(language: selectedLanguage))
         }
+        .toolbarBackground(Color(nsColor: .windowBackgroundColor), for: .windowToolbar)
+        .toolbarBackground(.visible, for: .windowToolbar)
         .preferredColorScheme(appTheme.colorScheme)
         .frame(minWidth: 720, minHeight: 460)
         .environment(\.locale, LanguageManager.shared.locale)

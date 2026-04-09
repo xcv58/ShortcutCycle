@@ -71,6 +71,14 @@
 "Settings Window" = "Finestra impostazioni";
 "Shortcuts" = "Comandi rapidi";
 "Add Group" = "Aggiungi gruppo";
+"Delete Group" = "Elimina gruppo";
+"Toggle Sidebar" = "Mostra/nascondi barra laterale";
+"Toggle Appearance" = "Alterna aspetto";
+"Previous Group" = "Gruppo precedente";
+"Next Group" = "Gruppo successivo";
+"Move Group Up" = "Sposta gruppo in alto";
+"Move Group Down" = "Sposta gruppo in basso";
+"or" = "o";
 
 
 /* Appearance Section */
@@ -123,7 +131,7 @@
 "No changes" = "Nessuna modifica";
 "(invalid)" = "(non valido)";
 "This backup file is invalid or corrupted." = "Questo file di backup non è valido o è danneggiato.";
-"⌥-click to compare with a different backup" = "⌥-clic per confrontare con un altro backup";
+"Comparison defaults to the next older backup. Use Changes from to pick a different one." = "Il confronto usa per impostazione predefinita il backup precedente. Usa «Modifiche da» per sceglierne uno diverso.";
 "No Backup Selected" = "Nessun backup selezionato";
 "Select a backup from the sidebar to preview its contents." = "Seleziona un backup dalla barra laterale per visualizzarne il contenuto.";
 "selected" = "selezionato";

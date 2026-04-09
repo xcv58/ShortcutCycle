@@ -72,6 +72,14 @@
 "Shortcuts" = "快捷键";
 
 "Add Group" = "添加群组";
+"Delete Group" = "删除群组";
+"Toggle Sidebar" = "切换侧边栏";
+"Toggle Appearance" = "切换外观";
+"Previous Group" = "上一个群组";
+"Next Group" = "下一个群组";
+"Move Group Up" = "上移群组";
+"Move Group Down" = "下移群组";
+"or" = "或";
 
 
 /* Appearance Section */
@@ -124,7 +132,7 @@
 "No changes" = "无更改";
 "(invalid)" = "（无效）";
 "This backup file is invalid or corrupted." = "此备份文件无效或已损坏。";
-"⌥-click to compare with a different backup" = "⌥-点击以与其他备份进行比较";
+"Comparison defaults to the next older backup. Use Changes from to pick a different one." = "比较默认使用下一个较早的备份。使用“更改来源”选择其他备份。";
 "No Backup Selected" = "未选择备份";
 "Select a backup from the sidebar to preview its contents." = "从侧边栏选择备份以预览其内容。";
 "selected" = "已选择";

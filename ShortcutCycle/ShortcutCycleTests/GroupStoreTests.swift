@@ -254,6 +254,41 @@ final class GroupStoreTests: XCTestCase {
         XCTAssertEqual(group.apps[2].bundleIdentifier, "com.test.1")
     }
 
+    func testReplaceAppsUpdatesOrderAndLastModified() {
+        let groupId = store.groups.first!.id
+        let app1 = AppItem(bundleIdentifier: "com.test.alpha", name: "Alpha")
+        let app2 = AppItem(bundleIdentifier: "com.test.beta", name: "Beta")
+
+        store.addApp(app1, to: groupId)
+        store.addApp(app2, to: groupId)
+
+        let originalGroup = try! XCTUnwrap(store.groups.first(where: { $0.id == groupId }))
+        let originalLastModified = originalGroup.lastModified
+
+        Thread.sleep(forTimeInterval: 0.01)
+        store.replaceApps(in: groupId, with: [app2, app1])
+
+        let updatedGroup = try! XCTUnwrap(store.groups.first(where: { $0.id == groupId }))
+        XCTAssertEqual(updatedGroup.apps, [app2, app1])
+        XCTAssertGreaterThanOrEqual(updatedGroup.lastModified, originalLastModified)
+    }
+
+    func testReplaceAppsNoOpWhenAppsAreUnchanged() {
+        let groupId = store.groups.first!.id
+        let app = AppItem(bundleIdentifier: "com.test.same", name: "Same")
+
+        store.addApp(app, to: groupId)
+
+        let originalGroup = try! XCTUnwrap(store.groups.first(where: { $0.id == groupId }))
+        let originalLastModified = originalGroup.lastModified
+
+        store.replaceApps(in: groupId, with: originalGroup.apps)
+
+        let updatedGroup = try! XCTUnwrap(store.groups.first(where: { $0.id == groupId }))
+        XCTAssertEqual(updatedGroup.apps, originalGroup.apps)
+        XCTAssertEqual(updatedGroup.lastModified, originalLastModified)
+    }
+
     // MARK: - Last Active App
 
     func testUpdateLastActiveApp() {
@@ -404,6 +439,82 @@ final class GroupStoreTests: XCTestCase {
         // Create new store with same defaults
         let store2 = GroupStore(userDefaults: userDefaults)
         XCTAssertTrue(store2.groups.contains(where: { $0.name == "Persistent" }))
+    }
+
+    func testDebouncedSavePersistsOnlyAfterFlushPendingSave() {
+        let suiteName = "TestDebouncedSave-\(UUID().uuidString)"
+        let isolatedDefaults = UserDefaults(suiteName: suiteName)!
+        isolatedDefaults.removePersistentDomain(forName: suiteName)
+        defer { isolatedDefaults.removePersistentDomain(forName: suiteName) }
+
+        let isolatedFileManager = IsolatedAppSupportFileManager()
+        defer { try? FileManager.default.removeItem(at: isolatedFileManager.appSupportURL) }
+
+        let debouncedStore = GroupStore(
+            userDefaults: isolatedDefaults,
+            backupDebounceInterval: 0,
+            saveDebounceInterval: 60,
+            fileManager: isolatedFileManager
+        )
+        debouncedStore.flushPendingSave()
+
+        _ = debouncedStore.addGroup(name: "Deferred Persist")
+
+        let beforeFlushStore = GroupStore(
+            userDefaults: isolatedDefaults,
+            backupDebounceInterval: 0,
+            saveDebounceInterval: 0,
+            fileManager: isolatedFileManager
+        )
+        XCTAssertFalse(beforeFlushStore.groups.contains(where: { $0.name == "Deferred Persist" }))
+
+        debouncedStore.flushPendingSave()
+
+        let afterFlushStore = GroupStore(
+            userDefaults: isolatedDefaults,
+            backupDebounceInterval: 0,
+            saveDebounceInterval: 0,
+            fileManager: isolatedFileManager
+        )
+        XCTAssertTrue(afterFlushStore.groups.contains(where: { $0.name == "Deferred Persist" }))
+    }
+
+    func testDebouncedSaveTimerCallbackPersistsChanges() {
+        let suiteName = "TestDebouncedSaveTimer-\(UUID().uuidString)"
+        let isolatedDefaults = UserDefaults(suiteName: suiteName)!
+        isolatedDefaults.removePersistentDomain(forName: suiteName)
+        defer { isolatedDefaults.removePersistentDomain(forName: suiteName) }
+
+        let isolatedFileManager = IsolatedAppSupportFileManager()
+        defer { try? FileManager.default.removeItem(at: isolatedFileManager.appSupportURL) }
+
+        let debouncedStore = GroupStore(
+            userDefaults: isolatedDefaults,
+            backupDebounceInterval: 0,
+            saveDebounceInterval: 0.05,
+            fileManager: isolatedFileManager
+        )
+        debouncedStore.flushPendingSave()
+
+        _ = debouncedStore.addGroup(name: "Timer Persist")
+
+        let beforeTimerStore = GroupStore(
+            userDefaults: isolatedDefaults,
+            backupDebounceInterval: 0,
+            saveDebounceInterval: 0,
+            fileManager: isolatedFileManager
+        )
+        XCTAssertFalse(beforeTimerStore.groups.contains(where: { $0.name == "Timer Persist" }))
+
+        RunLoop.main.run(until: Date().addingTimeInterval(0.2))
+
+        let afterTimerStore = GroupStore(
+            userDefaults: isolatedDefaults,
+            backupDebounceInterval: 0,
+            saveDebounceInterval: 0,
+            fileManager: isolatedFileManager
+        )
+        XCTAssertTrue(afterTimerStore.groups.contains(where: { $0.name == "Timer Persist" }))
     }
 
     // MARK: - Manual Backup Tests

@@ -9,16 +9,18 @@ import KeyboardShortcuts
 /// View for editing a single app group
 struct GroupEditView: View {
     @EnvironmentObject var store: GroupStore
+    @Environment(\.colorScheme) private var colorScheme
     let groupId: UUID
     private let runningAppCandidatesProvider: ([AppItem]) -> [AppItem]
 
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
     @State private var groupName: String = ""
     @State private var draggingApp: AppItem?
+    @State private var dragPreviewApps: [AppItem]?
     @State private var isHovering: Bool = false
     @FocusState private var isNameFocused: Bool
     @State private var suppressAutoFocus = true
-    @State private var runningAppsRefreshToken = 0
+    @State private var quickAddCandidates: [AppItem] = []
 
     init(
         groupId: UUID,
@@ -35,7 +37,10 @@ struct GroupEditView: View {
     var body: some View {
         ScrollView {
             content
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(SettingsChromePalette.windowBackground(for: colorScheme))
         .padding()
         .onAppear {
             loadGroupData()
@@ -57,11 +62,15 @@ struct GroupEditView: View {
                 suppressAutoFocus = false
             }
         }
+        .onChange(of: (group?.apps.map(\.bundleIdentifier).sorted()) ?? []) { _, _ in
+            dragPreviewApps = nil
+            refreshQuickAddCandidates()
+        }
         .onReceive(NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didLaunchApplicationNotification)) { _ in
-            runningAppsRefreshToken += 1
+            refreshQuickAddCandidates()
         }
         .onReceive(NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didTerminateApplicationNotification)) { _ in
-            runningAppsRefreshToken += 1
+            refreshQuickAddCandidates()
         }
     }
 
@@ -71,11 +80,11 @@ struct GroupEditView: View {
             VStack(alignment: .leading, spacing: 20) {
                 groupNameSection(for: group)
 
-                Divider()
+                SettingsSectionDivider()
 
                 GroupShortcutEditor(group: group, groupId: groupId)
 
-                Divider()
+                SettingsSectionDivider()
 
                 appsSection(for: group)
 
@@ -102,7 +111,14 @@ struct GroupEditView: View {
                 .padding(.horizontal, 8)
                 .background(
                     RoundedRectangle(cornerRadius: 6)
-                        .fill(isHovering ? Color.secondary.opacity(0.1) : Color.clear)
+                        .fill((isHovering || isNameFocused) ? SettingsChromePalette.inlineFill(for: colorScheme) : Color.clear)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(
+                            ((isHovering || isNameFocused) && colorScheme == .dark) ? SettingsChromePalette.panelBorder(for: colorScheme) : Color.clear,
+                            lineWidth: 1
+                        )
                 )
                 .onHover { hovering in
                     isHovering = hovering
@@ -117,7 +133,7 @@ struct GroupEditView: View {
     }
 
     private func appsSection(for group: AppGroup) -> some View {
-        let quickAddCandidates = runningAppCandidates(for: group)
+        let displayedApps = dragPreviewApps ?? group.apps
 
         return VStack(alignment: .leading, spacing: 12) {
             HStack {
@@ -138,11 +154,13 @@ struct GroupEditView: View {
                     .padding(.vertical, 8)
             } else {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 80, maximum: 100))], spacing: 16) {
-                    ForEach(group.apps) { app in
-                        AppGridItemView(app: app) {
+                    ForEach(displayedApps) { app in
+                        AppGridItemView(
+                            app: app,
+                            isPlaceholder: draggingApp?.id == app.id
+                        ) {
                             store.removeApp(app, from: groupId)
                         }
-                        .opacity(draggingApp?.id == app.id ? 0.01 : 1)
                         .onDrag {
                             draggingApp = app
                             return NSItemProvider(object: app.id.uuidString as NSString)
@@ -150,13 +168,14 @@ struct GroupEditView: View {
                         .onDrop(of: [.text], delegate: AppReorderDelegate(
                             item: app,
                             draggingApp: $draggingApp,
+                            dragPreviewApps: $dragPreviewApps,
                             store: store,
                             groupId: groupId
                         ))
                     }
                 }
                 .padding(.vertical, 8)
-                .animation(.default, value: group.apps)
+                .animation(.default, value: displayedApps)
             }
 
             addAppsPanel(for: group, quickAddCandidates: quickAddCandidates)
@@ -175,8 +194,15 @@ struct GroupEditView: View {
                         runningAppsOptionCard(quickAddCandidates)
                             .frame(minWidth: 360, maxWidth: .infinity, alignment: .leading)
 
-                        Divider()
-                            .padding(.vertical, 4)
+                        if colorScheme == .dark {
+                            Rectangle()
+                                .fill(SettingsChromePalette.panelBorder(for: colorScheme))
+                                .frame(width: 1)
+                                .padding(.vertical, 4)
+                        } else {
+                            Divider()
+                                .padding(.vertical, 4)
+                        }
 
                         browseAppsOptionCard(for: group)
                             .frame(minWidth: 220, idealWidth: 240, maxWidth: 280, alignment: .leading)
@@ -194,11 +220,11 @@ struct GroupEditView: View {
         .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 14)
-                .fill(Color(nsColor: .controlBackgroundColor).opacity(0.75))
+                .fill(SettingsChromePalette.panelBackground(for: colorScheme))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 14)
-                .stroke(Color.secondary.opacity(0.08), lineWidth: 1)
+                .stroke(SettingsChromePalette.panelBorder(for: colorScheme), lineWidth: 1)
         )
     }
 
@@ -239,11 +265,17 @@ struct GroupEditView: View {
         if let group = group {
             groupName = group.name
         }
+        dragPreviewApps = nil
+        refreshQuickAddCandidates()
     }
 
-    private func runningAppCandidates(for group: AppGroup) -> [AppItem] {
-        _ = runningAppsRefreshToken
-        return runningAppCandidatesProvider(group.apps)
+    private func refreshQuickAddCandidates() {
+        guard let group else {
+            quickAddCandidates = []
+            return
+        }
+
+        quickAddCandidates = runningAppCandidatesProvider(group.apps)
     }
 
     private static func defaultRunningAppCandidates(for groupApps: [AppItem]) -> [AppItem] {
@@ -273,24 +305,14 @@ private struct RunningAppQuickAddButton: View {
     let onAdd: () -> Void
 
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
+    @Environment(\.colorScheme) private var colorScheme
     @State private var isHovered = false
 
     var body: some View {
         Button(action: onAdd) {
             VStack(spacing: 6) {
                 ZStack(alignment: .topTrailing) {
-                    Group {
-                        if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: app.bundleIdentifier) {
-                            Image(nsImage: NSWorkspace.shared.icon(forFile: appURL.path))
-                                .resizable()
-                                .frame(width: 30, height: 30)
-                        } else {
-                            Image(systemName: "app.fill")
-                                .font(.system(size: 24))
-                                .foregroundColor(.secondary)
-                                .frame(width: 30, height: 30)
-                        }
-                    }
+                    AppIconThumbnailView(app: app, size: 30, fallbackFontSize: 24)
 
                     Image(systemName: "plus.circle.fill")
                         .font(.system(size: 12, weight: .semibold))
@@ -311,11 +333,11 @@ private struct RunningAppQuickAddButton: View {
             .padding(.horizontal, 4)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(isHovered ? Color.accentColor.opacity(0.10) : Color.clear)
+                    .fill(isHovered ? SettingsChromePalette.neutralHoverFill(for: colorScheme) : Color.clear)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
-                    .stroke(isHovered ? Color.accentColor.opacity(0.28) : Color.clear, lineWidth: 1)
+                    .stroke(isHovered ? SettingsChromePalette.neutralHoverBorder(for: colorScheme) : Color.clear, lineWidth: 1)
             )
         }
         .buttonStyle(.plain)
@@ -373,6 +395,7 @@ private struct GroupShortcutEditor: View {
             VStack(alignment: .leading, spacing: 8) {
                 KeyboardShortcuts.Recorder(for: shortcutName, onChange: handleShortcutChange)
                     .padding(.leading, 4)
+                    .id(selectedLanguage) // Recreate on language change so placeholder re-reads AppleLanguages
 
                 if shouldShowSuggestions {
                     ShortcutSuggestionRow(
@@ -382,7 +405,7 @@ private struct GroupShortcutEditor: View {
                 }
             }
 
-            Divider()
+            SettingsSectionDivider()
 
             HStack {
                 Text("Cycling Mode".localized(language: selectedLanguage))
@@ -475,19 +498,30 @@ private struct ShortcutSuggestionRow: View {
 struct AppReorderDelegate: DropDelegate {
     let item: AppItem
     @Binding var draggingApp: AppItem?
+    @Binding var dragPreviewApps: [AppItem]?
     let store: GroupStore
     let groupId: UUID
 
     func dropEntered(info: DropInfo) {
-        guard let draggingApp = draggingApp,
-              draggingApp.id != item.id,
-              let group = store.groups.first(where: { $0.id == groupId }),
-              let fromIndex = group.apps.firstIndex(of: draggingApp),
-              let toIndex = group.apps.firstIndex(of: item)
+        updatePreviewOrder()
+    }
+
+    func updatePreviewOrder() {
+        guard let draggingApp,
+              draggingApp.id != item.id
+        else { return }
+
+        let currentApps = dragPreviewApps ?? store.groups.first(where: { $0.id == groupId })?.apps ?? []
+        guard let fromIndex = currentApps.firstIndex(of: draggingApp),
+              let toIndex = currentApps.firstIndex(of: item)
         else { return }
 
         let destination = toIndex > fromIndex ? toIndex + 1 : toIndex
-        store.moveApp(in: groupId, from: IndexSet(integer: fromIndex), to: destination)
+        var updatedApps = currentApps
+        updatedApps.move(fromOffsets: IndexSet(integer: fromIndex), toOffset: destination)
+
+        guard updatedApps != currentApps else { return }
+        dragPreviewApps = updatedApps
     }
 
     func dropUpdated(info: DropInfo) -> DropProposal? {
@@ -495,8 +529,18 @@ struct AppReorderDelegate: DropDelegate {
     }
 
     func performDrop(info: DropInfo) -> Bool {
-        draggingApp = nil
+        commitPreviewOrder()
         return true
+    }
+
+    func commitPreviewOrder() {
+        defer {
+            draggingApp = nil
+            dragPreviewApps = nil
+        }
+
+        guard let previewApps = dragPreviewApps else { return }
+        store.replaceApps(in: groupId, with: previewApps)
     }
 }
 

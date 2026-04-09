@@ -1,5 +1,4 @@
 import SwiftUI
-import KeyboardShortcuts
 import UniformTypeIdentifiers
 #if canImport(ShortcutCycleCore)
 import ShortcutCycleCore
@@ -7,6 +6,7 @@ import ShortcutCycleCore
 
 struct GeneralSettingsView: View {
     @EnvironmentObject var store: GroupStore
+    @Environment(\.colorScheme) private var colorScheme
     @AppStorage("showHUD") private var showHUD = true
     @AppStorage("showShortcutInHUD") private var showShortcutInHUD = true
     @AppStorage("appTheme") private var appTheme: AppTheme = .system
@@ -27,6 +27,7 @@ struct GeneralSettingsView: View {
     // Backup browser state
     @State private var showBackupBrowser = false
     @State private var manualBackupFeedback: String?
+    @State private var showShortcutReferencePopover = false
 
     // Clipboard state
     @State private var showClipboardImportConfirmation = false
@@ -35,174 +36,9 @@ struct GeneralSettingsView: View {
     @State private var clipboardErrorMessage = ""
     @State private var clipboardImportSummary = ""
     @State private var pendingClipboardExport: SettingsExport?
-    
+
     var body: some View {
-        Form {
-            Section {
-                // HUD Preview
-                VStack(alignment: .center) {
-                    HUDPreviewView(showShortcut: showShortcutInHUD, selectedLanguage: selectedLanguage)
-                        .frame(height: 160)
-                        .frame(maxWidth: .infinity)
-                        .background(Color.black.opacity(0.05))
-                        .cornerRadius(8)
-                        .opacity(showHUD ? 1.0 : 0.5) // Dim when disabled
-                        .grayscale(showHUD ? 0.0 : 1.0) // Grayscale when disabled
-                        .saturation(showHUD ? 1.0 : 0.0)
-                        .overlay {
-                            if !showHUD {
-                                // optional: "Disabled" label overlay
-                                Text("HUD Disabled".localized(language: selectedLanguage))
-                                    .font(.headline)
-                                    .foregroundColor(.secondary)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 6)
-                                    .background(.regularMaterial)
-                                    .cornerRadius(8)
-                            }
-                        }
-                        .padding(.bottom, 8)
-                    
-                    Text("Preview of the Heads-Up Display".localized(language: selectedLanguage))
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                .listRowInsets(EdgeInsets())
-                .padding()
-                
-                Toggle("Show HUD when switching".localized(language: selectedLanguage), isOn: $showHUD)
-                
-                if showHUD {
-                    Toggle("Show shortcut in HUD".localized(language: selectedLanguage), isOn: $showShortcutInHUD)
-                        .padding(.leading)
-                    
-                    Text("Displays the keyboard shortcut used to trigger the switch.".localized(language: selectedLanguage))
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .padding(.leading)
-                }
-            } header: {
-                Text("HUD Behavior".localized(language: selectedLanguage))
-            } footer: {
-                Text("The HUD appears briefly when you cycle through applications in a group.".localized(language: selectedLanguage))
-            }
-            
-            #if DEBUG
-            Section {
-                HStack {
-                    Text("Settings Window".localized(language: selectedLanguage))
-                    Spacer()
-                    KeyboardShortcuts.Recorder(for: .toggleSettings)
-                }
-            } header: {
-                Text("Shortcuts".localized(language: selectedLanguage))
-            }
-            #endif
-            
-            Section {
-                Toggle("Open at Login".localized(language: selectedLanguage), isOn: $launchAtLogin.isEnabled)
-                    .toggleStyle(.switch)
-
-                Picker("Appearance".localized(language: selectedLanguage), selection: $appTheme) {
-                    ForEach(AppTheme.allCases) { theme in
-                        Text(theme.displayName.localized(language: selectedLanguage)).tag(theme)
-                    }
-                }
-                .pickerStyle(.segmented)
-
-                Picker("Language".localized(language: selectedLanguage), selection: Binding(
-                    get: { UserDefaults.standard.string(forKey: "selectedLanguage") ?? "system" },
-                    set: { newValue in
-                        UserDefaults.standard.set(newValue, forKey: "selectedLanguage")
-                    }
-                )) {
-                    Text("\("System Default".localized(language: "system")) (\(LanguageManager.shared.supportedLanguages.first { $0.code == LanguageManager.shared.systemLanguageCode }?.name ?? "English"))").tag("system")
-                    ForEach(LanguageManager.shared.supportedLanguages, id: \.code) { language in
-                        Text(language.displayName()).tag(language.code)
-                    }
-                }
-                .pickerStyle(.menu)
-
-                if WelcomeExperiencePolicy.shouldShowReplayControl(hasDismissedWelcome: hasDismissedWelcome) {
-                    Button("Show welcome again".localized(language: selectedLanguage)) {
-                        WelcomeExperiencePolicy.prepareReplay()
-                        ShortcutCycleURLRouter.openSettingsFromOutsideView(tab: .groups)
-                    }
-                }
-
-            } header: {
-                Text("Application".localized(language: selectedLanguage))
-            }
-            
-            Section {
-                // Sub-section 1: File-based backup
-                VStack(alignment: .leading, spacing: 8) {
-                    Label("File Export/Import".localized(language: selectedLanguage), systemImage: "doc.badge.gearshape")
-                        .font(.caption.weight(.medium))
-                        .foregroundColor(.secondary)
-                    HStack {
-                        Button("Export Settings...".localized(language: selectedLanguage)) {
-                            exportSettings()
-                        }
-
-                        Button("Import Settings...".localized(language: selectedLanguage)) {
-                            importSettings()
-                        }
-                    }
-                    Text("Save to or load from a JSON file.".localized(language: selectedLanguage))
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
-                
-                
-                // Sub-section 2: Clipboard-based sync
-                VStack(alignment: .leading, spacing: 8) {
-                    Label("Clipboard Sync".localized(language: selectedLanguage), systemImage: "doc.on.clipboard")
-                        .font(.caption.weight(.medium))
-                        .foregroundColor(.secondary)
-                    HStack {
-                        Button("Copy to Clipboard".localized(language: selectedLanguage)) {
-                            copySettingsToClipboard()
-                        }
-
-                        Button("Paste from Clipboard".localized(language: selectedLanguage)) {
-                            pasteSettingsFromClipboard()
-                        }
-                    }
-                    Text("Use Universal Clipboard to sync between Macs.".localized(language: selectedLanguage))
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
-
-                // Sub-section 3: Automatic Backups
-                VStack(alignment: .leading, spacing: 8) {
-                    Label("Automatic Backups".localized(language: selectedLanguage), systemImage: "clock.arrow.circlepath")
-                        .font(.caption.weight(.medium))
-                        .foregroundColor(.secondary)
-                    HStack {
-                        Button("View Automatic Backups...".localized(language: selectedLanguage)) {
-                            showBackupBrowser = true
-                        }
-                        Button("Back Up Now".localized(language: selectedLanguage)) {
-                            performManualBackup()
-                        }
-                    }
-                    if let feedback = manualBackupFeedback {
-                        Text(feedback)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .transition(.opacity)
-                            .animation(.easeInOut(duration: 0.3), value: manualBackupFeedback)
-                    }
-                    Text("View and restore from automatic backups.".localized(language: selectedLanguage))
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
-            } header: {
-                Text("Backup & Restore".localized(language: selectedLanguage))
-            }
-        }
-        .formStyle(.grouped)
+        content
         .navigationTitle("General".localized(language: selectedLanguage))
         .alert("Export Failed".localized(language: selectedLanguage), isPresented: $showExportError) {
             Button("OK", role: .cancel) {}
@@ -262,6 +98,189 @@ struct GeneralSettingsView: View {
         } message: {
             Text("Your settings have been imported from clipboard.".localized(language: selectedLanguage))
         }
+    }
+
+    private var content: some View {
+        Form {
+            Section {
+                VStack(alignment: .center) {
+                    HUDPreviewView(showShortcut: showShortcutInHUD, selectedLanguage: selectedLanguage)
+                        .frame(height: 160)
+                        .frame(maxWidth: .infinity)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .fill(
+                                    colorScheme == .dark
+                                        ? SettingsChromePalette.panelBackground(for: colorScheme)
+                                        : Color.black.opacity(0.05)
+                                )
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .stroke(
+                                    colorScheme == .dark
+                                        ? SettingsChromePalette.panelBorder(for: colorScheme)
+                                        : Color.clear,
+                                    lineWidth: 1
+                                )
+                        )
+                        .opacity(showHUD ? 1.0 : 0.5)
+                        .grayscale(showHUD ? 0.0 : 1.0)
+                        .saturation(showHUD ? 1.0 : 0.0)
+                        .overlay {
+                            if !showHUD {
+                                Text("HUD Disabled".localized(language: selectedLanguage))
+                                    .font(.headline)
+                                    .foregroundColor(.secondary)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(.regularMaterial)
+                                    .cornerRadius(8)
+                            }
+                        }
+                        .padding(.bottom, 8)
+
+                    Text("Preview of the Heads-Up Display".localized(language: selectedLanguage))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .listRowInsets(EdgeInsets())
+                .padding()
+
+                Toggle("Show HUD when switching".localized(language: selectedLanguage), isOn: $showHUD)
+
+                if showHUD {
+                    Toggle("Show shortcut in HUD".localized(language: selectedLanguage), isOn: $showShortcutInHUD)
+                        .padding(.leading)
+
+                    Text("Displays the keyboard shortcut used to trigger the switch.".localized(language: selectedLanguage))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .padding(.leading)
+                }
+            } header: {
+                Text("HUD Behavior".localized(language: selectedLanguage))
+            } footer: {
+                Text("The HUD appears briefly when you cycle through applications in a group.".localized(language: selectedLanguage))
+            }
+
+            Section {
+                Toggle("Open at Login".localized(language: selectedLanguage), isOn: $launchAtLogin.isEnabled)
+                    .toggleStyle(.switch)
+
+                Picker("Appearance".localized(language: selectedLanguage), selection: $appTheme) {
+                    ForEach(AppTheme.allCases) { theme in
+                        Text(theme.displayName.localized(language: selectedLanguage)).tag(theme)
+                    }
+                }
+                .pickerStyle(.segmented)
+
+                Picker("Language".localized(language: selectedLanguage), selection: Binding(
+                    get: { UserDefaults.standard.string(forKey: "selectedLanguage") ?? "system" },
+                    set: { newValue in
+                        UserDefaults.standard.set(newValue, forKey: "selectedLanguage")
+                        LanguageManager.shared.syncAppleLanguages(for: newValue)
+                    }
+                )) {
+                    Text("\("System Default".localized(language: "system")) (\(LanguageManager.shared.supportedLanguages.first { $0.code == LanguageManager.shared.systemLanguageCode }?.name ?? "English"))").tag("system")
+                    ForEach(LanguageManager.shared.supportedLanguages, id: \.code) { language in
+                        Text(language.displayName()).tag(language.code)
+                    }
+                }
+                .pickerStyle(.menu)
+
+                Button {
+                    showShortcutReferencePopover = true
+                } label: {
+                    HStack {
+                        Label("Shortcuts".localized(language: selectedLanguage), systemImage: "keyboard")
+                        Spacer()
+                        Image(systemName: "chevron.up.chevron.down")
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+                .popover(isPresented: $showShortcutReferencePopover, arrowEdge: .bottom) {
+                    KeyboardShortcutReferencePopover(selectedLanguage: selectedLanguage)
+                }
+
+                if WelcomeExperiencePolicy.shouldShowReplayControl(hasDismissedWelcome: hasDismissedWelcome) {
+                    Button("Show welcome again".localized(language: selectedLanguage)) {
+                        WelcomeExperiencePolicy.prepareReplay()
+                        ShortcutCycleURLRouter.openSettingsFromOutsideView(tab: .groups)
+                    }
+                }
+
+            } header: {
+                Text("Application".localized(language: selectedLanguage))
+            }
+
+            Section {
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("File Export/Import".localized(language: selectedLanguage), systemImage: "doc.badge.gearshape")
+                        .font(.caption.weight(.medium))
+                        .foregroundColor(.secondary)
+                    HStack {
+                        Button("Export Settings...".localized(language: selectedLanguage)) {
+                            exportSettings()
+                        }
+
+                        Button("Import Settings...".localized(language: selectedLanguage)) {
+                            importSettings()
+                        }
+                    }
+                    Text("Save to or load from a JSON file.".localized(language: selectedLanguage))
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("Clipboard Sync".localized(language: selectedLanguage), systemImage: "doc.on.clipboard")
+                        .font(.caption.weight(.medium))
+                        .foregroundColor(.secondary)
+                    HStack {
+                        Button("Copy to Clipboard".localized(language: selectedLanguage)) {
+                            copySettingsToClipboard()
+                        }
+
+                        Button("Paste from Clipboard".localized(language: selectedLanguage)) {
+                            pasteSettingsFromClipboard()
+                        }
+                    }
+                    Text("Use Universal Clipboard to sync between Macs.".localized(language: selectedLanguage))
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("Automatic Backups".localized(language: selectedLanguage), systemImage: "clock.arrow.circlepath")
+                        .font(.caption.weight(.medium))
+                        .foregroundColor(.secondary)
+                    HStack {
+                        Button("View Automatic Backups...".localized(language: selectedLanguage)) {
+                            showBackupBrowser = true
+                        }
+                        Button("Back Up Now".localized(language: selectedLanguage)) {
+                            performManualBackup()
+                        }
+                    }
+                    if let feedback = manualBackupFeedback {
+                        Text(feedback)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .transition(.opacity)
+                            .animation(.easeInOut(duration: 0.3), value: manualBackupFeedback)
+                    }
+                    Text("View and restore from automatic backups.".localized(language: selectedLanguage))
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+            } header: {
+                Text("Backup & Restore".localized(language: selectedLanguage))
+            }
+        }
+        .formStyle(.grouped)
+        .scrollContentBackground(colorScheme == .dark ? .hidden : .automatic)
+        .background(SettingsChromePalette.windowBackground(for: colorScheme))
     }
 
     // MARK: - Export/Import Actions
@@ -384,5 +403,107 @@ struct GeneralSettingsView: View {
         store.applyImport(export)
         showClipboardImportSuccess = true
         pendingClipboardExport = nil
+    }
+}
+
+private struct KeyboardShortcutReferencePopover: View {
+    let selectedLanguage: String
+
+    private var shortcutReferences: [(title: String, shortcuts: [String])] {
+        [
+            ("Settings...".localized(language: selectedLanguage), ["⌘,"]),
+            ("Toggle Appearance".localized(language: selectedLanguage), ["⌃⌘A"]),
+            ("Groups".localized(language: selectedLanguage), ["⌘1"]),
+            ("General".localized(language: selectedLanguage), ["⌘2"]),
+            ("Add Group".localized(language: selectedLanguage), ["⌘N"]),
+            ("Delete Group".localized(language: selectedLanguage), ["⌘⌫"]),
+            ("Toggle Sidebar".localized(language: selectedLanguage), ["⌃⌘S"]),
+            ("Previous Group".localized(language: selectedLanguage), ["⌘↑", "⌘[", "⌘K"]),
+            ("Next Group".localized(language: selectedLanguage), ["⌘↓", "⌘]", "⌘J"]),
+            ("Move Group Up".localized(language: selectedLanguage), ["⌥⌘↑"]),
+            ("Move Group Down".localized(language: selectedLanguage), ["⌥⌘↓"])
+        ]
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Shortcuts".localized(language: selectedLanguage))
+                .font(.headline)
+
+            Divider()
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 10) {
+                    ForEach(Array(shortcutReferences.enumerated()), id: \.offset) { _, item in
+                        KeyboardShortcutReferenceRow(
+                            title: item.title,
+                            shortcuts: item.shortcuts,
+                            selectedLanguage: selectedLanguage
+                        )
+                    }
+                }
+                .padding(.trailing, 22)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .padding(16)
+        .frame(width: 420, height: 300)
+    }
+}
+
+private struct KeyboardShortcutReferenceRow: View {
+    let title: String
+    let shortcuts: [String]
+    let selectedLanguage: String
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 16) {
+            Text(title)
+            Spacer(minLength: 12)
+            HStack(spacing: 6) {
+                ForEach(Array(shortcuts.enumerated()), id: \.offset) { index, shortcut in
+                    KeyboardShortcutBadge(shortcut: shortcut)
+
+                    if index < shortcuts.count - 1 {
+                        Text("or".localized(language: selectedLanguage))
+                            .font(.caption2.weight(.medium))
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+            }
+            .fixedSize(horizontal: true, vertical: false)
+        }
+    }
+}
+
+enum KeyboardShortcutGlyphLayout {
+    static func symbols(in shortcut: String) -> [String] {
+        shortcut.map(String.init)
+    }
+}
+
+private struct KeyboardShortcutBadge: View {
+    let shortcut: String
+
+    private var symbols: [String] {
+        KeyboardShortcutGlyphLayout.symbols(in: shortcut)
+    }
+
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(Array(symbols.enumerated()), id: \.offset) { _, symbol in
+                Text(symbol)
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .lineLimit(1)
+                    .fixedSize()
+            }
+        }
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color(nsColor: .controlBackgroundColor))
+        )
     }
 }

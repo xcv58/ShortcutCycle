@@ -71,6 +71,14 @@
 "Settings Window" = "Окно настроек";
 "Shortcuts" = "Горячие клавиши";
 "Add Group" = "Добавить группу";
+"Delete Group" = "Удалить группу";
+"Toggle Sidebar" = "Переключить боковую панель";
+"Toggle Appearance" = "Переключить оформление";
+"Previous Group" = "Предыдущая группа";
+"Next Group" = "Следующая группа";
+"Move Group Up" = "Переместить группу вверх";
+"Move Group Down" = "Переместить группу вниз";
+"or" = "или";
 
 
 /* Appearance Section */
@@ -123,7 +131,7 @@
 "No changes" = "Нет изменений";
 "(invalid)" = "(недействительный)";
 "This backup file is invalid or corrupted." = "Этот файл резервной копии недействителен или повреждён.";
-"⌥-click to compare with a different backup" = "⌥-нажмите для сравнения с другой резервной копией";
+"Comparison defaults to the next older backup. Use Changes from to pick a different one." = "По умолчанию сравнение выполняется с ближайшей предыдущей резервной копией. Используйте «Изменения с», чтобы выбрать другую.";
 "No Backup Selected" = "Резервная копия не выбрана";
 "Select a backup from the sidebar to preview its contents." = "Выберите резервную копию на боковой панели для предварительного просмотра содержимого.";
 "selected" = "выбрано";

@@ -71,6 +71,14 @@
 "Settings Window" = "Ayarlar Penceresi";
 "Shortcuts" = "Kısayollar";
 "Add Group" = "Grup Ekle";
+"Delete Group" = "Grubu Sil";
+"Toggle Sidebar" = "Kenar Çubuğunu Aç/Kapat";
+"Toggle Appearance" = "Görünümü değiştir";
+"Previous Group" = "Önceki Grup";
+"Next Group" = "Sonraki Grup";
+"Move Group Up" = "Grubu Yukarı Taşı";
+"Move Group Down" = "Grubu Aşağı Taşı";
+"or" = "veya";
 
 
 /* Appearance Section */
@@ -123,7 +131,7 @@
 "No changes" = "Değişiklik yok";
 "(invalid)" = "(geçersiz)";
 "This backup file is invalid or corrupted." = "Bu yedek dosyası geçersiz veya bozuk.";
-"⌥-click to compare with a different backup" = "⌥-tıklayarak başka bir yedekle karşılaştırın";
+"Comparison defaults to the next older backup. Use Changes from to pick a different one." = "Karşılaştırma varsayılan olarak bir sonraki eski yedeği kullanır. Farklı birini seçmek için «Değişiklikler» seçeneğini kullanın.";
 "No Backup Selected" = "Yedek Seçilmedi";
 "Select a backup from the sidebar to preview its contents." = "İçeriğini önizlemek için kenar çubuğundan bir yedek seçin.";
 "selected" = "seçili";

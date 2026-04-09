@@ -196,6 +196,7 @@ final class LocalizationTests: XCTestCase {
             "Rename",
             "Delete",
             "Appearance",
+            "Toggle Appearance",
             "Language"
         ]
         

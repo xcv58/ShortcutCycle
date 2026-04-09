@@ -71,6 +71,14 @@
 "Settings Window" = "設定ウィンドウ";
 "Shortcuts" = "ショートカット";
 "Add Group" = "グループを追加";
+"Delete Group" = "グループを削除";
+"Toggle Sidebar" = "サイドバーを切り替え";
+"Toggle Appearance" = "外観を切り替え";
+"Previous Group" = "前のグループ";
+"Next Group" = "次のグループ";
+"Move Group Up" = "グループを上へ移動";
+"Move Group Down" = "グループを下へ移動";
+"or" = "または";
 
 
 /* Appearance Section */
@@ -123,7 +131,7 @@
 "No changes" = "変更なし";
 "(invalid)" = "(無効)";
 "This backup file is invalid or corrupted." = "このバックアップファイルは無効または破損しています。";
-"⌥-click to compare with a different backup" = "⌥-クリックで別のバックアップと比較";
+"Comparison defaults to the next older backup. Use Changes from to pick a different one." = "比較は次に古いバックアップが自動的に選択されます。「変更元」で別のバックアップを選択できます。";
 "No Backup Selected" = "バックアップ未選択";
 "Select a backup from the sidebar to preview its contents." = "サイドバーからバックアップを選択して内容をプレビューします。";
 "selected" = "選択中";

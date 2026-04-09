@@ -4,29 +4,36 @@ import ShortcutCycleCore
 #endif
 import UniformTypeIdentifiers
 
+struct AppIconThumbnailView: View {
+    let app: AppItem
+    let size: CGFloat
+    let fallbackFontSize: CGFloat
+
+    var body: some View {
+        Group {
+            if let icon = IconCache.shared.getIcon(for: app) {
+                Image(nsImage: icon)
+                    .resizable()
+                    .frame(width: size, height: size)
+            } else {
+                Image(systemName: "app.fill")
+                    .font(.system(size: fallbackFontSize))
+                    .foregroundColor(.secondary)
+                    .frame(width: size, height: size)
+            }
+        }
+    }
+}
+
 /// A row representing a single app in the group list
 struct AppRowView: View {
     let app: AppItem
     let onDelete: () -> Void
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
         HStack(spacing: 12) {
-            // App icon
-            if let iconPath = app.iconPath,
-               let icon = NSWorkspace.shared.icon(forFile: iconPath + "/Contents/Resources/AppIcon.icns") as NSImage? {
-                Image(nsImage: icon)
-                    .resizable()
-                    .frame(width: 32, height: 32)
-            } else if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: app.bundleIdentifier) {
-                Image(nsImage: NSWorkspace.shared.icon(forFile: appURL.path))
-                    .resizable()
-                    .frame(width: 32, height: 32)
-            } else {
-                Image(systemName: "app.fill")
-                    .font(.system(size: 24))
-                    .foregroundColor(.secondary)
-                    .frame(width: 32, height: 32)
-            }
+            AppIconThumbnailView(app: app, size: 32, fallbackFontSize: 24)
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(app.name)
@@ -55,7 +62,11 @@ struct AppRowView: View {
         }
         .padding(.vertical, 4)
         .padding(.horizontal, 8)
-        .background(Color(nsColor: .controlBackgroundColor))
+        .background(
+            colorScheme == .dark
+                ? SettingsChromePalette.panelBackground(for: colorScheme)
+                : Color(nsColor: .controlBackgroundColor)
+        )
         .cornerRadius(8)
     }
 }
@@ -63,28 +74,23 @@ struct AppRowView: View {
 /// A grid item representing a single app with icon and name
 struct AppGridItemView: View {
     let app: AppItem
+    let isPlaceholder: Bool
     let onDelete: () -> Void
+    @Environment(\.colorScheme) private var colorScheme
     @State private var isHovered = false
+
+    init(app: AppItem, isPlaceholder: Bool = false, onDelete: @escaping () -> Void) {
+        self.app = app
+        self.isPlaceholder = isPlaceholder
+        self.onDelete = onDelete
+    }
     
     var body: some View {
         VStack(spacing: 8) {
             ZStack(alignment: .topTrailing) {
-                // App icon
-                Group {
-                    if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: app.bundleIdentifier) {
-                        Image(nsImage: NSWorkspace.shared.icon(forFile: appURL.path))
-                            .resizable()
-                            .frame(width: 56, height: 56)
-                    } else {
-                        Image(systemName: "app.fill")
-                            .font(.system(size: 42))
-                            .foregroundColor(.secondary)
-                            .frame(width: 56, height: 56)
-                    }
-                }
-                
-                // Delete button (visible on hover)
-                if isHovered {
+                AppIconThumbnailView(app: app, size: 56, fallbackFontSize: 42)
+
+                if isHovered && !isPlaceholder {
                     Button(action: onDelete) {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: 16))
@@ -95,20 +101,44 @@ struct AppGridItemView: View {
                     .offset(x: 6, y: -6)
                 }
             }
-            
+
             Text(app.name)
                 .font(.caption)
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
                 .frame(width: 88)
         }
+        .opacity(isPlaceholder ? 0.12 : 1)
         .padding(10)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(isHovered ? Color.accentColor.opacity(0.1) : Color.clear)
+                .fill(
+                    isPlaceholder
+                    ? (colorScheme == .dark
+                        ? SettingsChromePalette.neutralHoverFill(for: colorScheme).opacity(0.45)
+                        : Color.secondary.opacity(0.05))
+                    : (isHovered
+                        ? (colorScheme == .dark
+                            ? SettingsChromePalette.neutralHoverFill(for: colorScheme)
+                            : Color.accentColor.opacity(0.1))
+                        : Color.clear)
+                )
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(
+                    isPlaceholder
+                        ? (colorScheme == .dark
+                            ? SettingsChromePalette.neutralHoverBorder(for: colorScheme)
+                            : Color.secondary.opacity(0.18))
+                        : ((colorScheme == .dark && isHovered)
+                            ? SettingsChromePalette.neutralHoverBorder(for: colorScheme)
+                            : Color.clear),
+                    style: StrokeStyle(lineWidth: 1, dash: [5, 4])
+                )
         )
         .onHover { hovering in
-            isHovered = hovering
+            isHovered = isPlaceholder ? false : hovering
         }
         .help(app.bundleIdentifier)
     }
@@ -120,13 +150,14 @@ struct AppDropZoneView: View {
     @State private var isTargeted = false
     let onAppAdded: (AppItem) -> Void
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
         VStack(spacing: 10) {
             Image(systemName: "plus.app")
                 .font(.system(size: 28))
                 .foregroundColor(isTargeted ? .accentColor : .secondary)
-            
+
             Text("Drop or click to add apps".localized(language: selectedLanguage))
                 .font(.caption)
                 .foregroundColor(isTargeted ? .accentColor : .secondary)
@@ -135,14 +166,14 @@ struct AppDropZoneView: View {
         .frame(height: 112)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .strokeBorder(
-                    style: StrokeStyle(lineWidth: 2, dash: [8])
-                )
-                .foregroundColor(isTargeted ? .accentColor : .gray.opacity(0.3))
+                .fill(SettingsChromePalette.dropZoneFill(for: colorScheme, targeted: isTargeted))
         )
-        .background(
+        .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .fill(isTargeted ? Color.accentColor.opacity(0.1) : Color.clear)
+                .strokeBorder(
+                    SettingsChromePalette.dropZoneBorder(for: colorScheme, targeted: isTargeted),
+                    style: StrokeStyle(lineWidth: colorScheme == .dark ? 2 : 2, dash: [8])
+                )
         )
         .contentShape(Rectangle())
         .onTapGesture {
