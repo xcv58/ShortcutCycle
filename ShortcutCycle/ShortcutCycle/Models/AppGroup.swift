@@ -142,9 +142,9 @@ public enum AppCyclingLogic {
     /// - Parameters:
     ///   - items: List of available apps to cycle through
     ///   - currentFrontmostAppId: The bundle ID of the currently frontmost app
-    ///   - currentHUDSelectionId: The bundle ID currently selected in the HUD (if visible)
+    ///   - currentHUDSelectionId: The bundle ID currently selected in the HUD session (if any)
     ///   - lastActiveAppId: The bundle ID of the last active app in this group
-    ///   - isHUDVisible: Whether the HUD is currently visible
+    ///   - isHUDVisible: Whether a HUD session is already active (revealed or still preparing)
     ///   - prioritizeFrontmost: Whether a new cycle should advance from current frontmost app
     /// - Returns: The bundle ID of the next app to activate
     public static func nextAppId(
@@ -160,7 +160,7 @@ public enum AppCyclingLogic {
             return "" 
         }
         
-        // 1. If HUD is already visible, we are interacting with the list.
+        // 1. If a HUD session is already active, we are interacting with the list.
         // Cycle from the currently selected item in the HUD.
         if isHUDVisible, let currentID = currentHUDSelectionId {
             if let currentIndex = items.firstIndex(where: { $0.id == currentID }) {
@@ -172,7 +172,7 @@ public enum AppCyclingLogic {
             }
         }
         
-        // 2. HUD is NOT visible. This is a new cycle start.
+        // 2. No HUD session is active. This is a new cycle start.
         
         // Check if the frontmost app is part of our group
         if prioritizeFrontmost {

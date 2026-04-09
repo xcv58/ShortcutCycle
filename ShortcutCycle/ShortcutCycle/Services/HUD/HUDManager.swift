@@ -138,7 +138,6 @@ class HUDManager: @preconcurrency ObservableObject {
     
     private var currentItems: [HUDAppItem] = []
 
-    private var previousFrontmostApp: NSRunningApplication?
     private var pendingActiveAppId: String?
     private var sessionPhase: HUDSessionPhase = .idle
     
@@ -209,12 +208,6 @@ class HUDManager: @preconcurrency ObservableObject {
         // Store items immediately so fast switch path can look up PID
         self.currentItems = items
         
-        // Capture the previous frontmost app only when starting a fresh session.
-        // We do this BEFORE we activate ourselves
-        if !isSessionActive {
-             self.previousFrontmostApp = NSWorkspace.shared.frontmostApplication
-        }
-
         if !isSessionActive {
             closeOffSpaceSettingsWindowIfNeeded()
             prepareAppForHUDPresentation()
@@ -748,6 +741,7 @@ class HUDManager: @preconcurrency ObservableObject {
         
         if window != nil || isSessionActive {
             hide() // Hide immediately
+            return
         }
         
         // Stop monitoring

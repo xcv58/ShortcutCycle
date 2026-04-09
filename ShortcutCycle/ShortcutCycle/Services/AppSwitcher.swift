@@ -109,20 +109,20 @@ class AppSwitcher: @preconcurrency ObservableObject {
             items: resolvableItems
         )
 
-        let isHUDVisible = HUDManager.shared.isSessionActive
+        let isHUDSessionActive = HUDManager.shared.isSessionActive
         nextAppId = AppCyclingLogic.nextAppId(
             items: cycleItems,
             currentFrontmostAppId: frontmostAppUniqueId,
             currentHUDSelectionId: HUDManager.shared.currentSelectedAppId,
             lastActiveAppId: resolvedLastActiveId,
-            isHUDVisible: isHUDVisible,
+            isHUDVisible: isHUDSessionActive,
             prioritizeFrontmost: prioritizeFrontmost
         )
         nextAppId = resolveSessionNextAppId(
             groupId: group.id,
             itemIds: cycleItems.map(\.id),
             fallbackNextId: nextAppId,
-            isHUDVisible: isHUDVisible
+            isHUDVisible: isHUDSessionActive
         )
 
         // If no app from the group is running, launch the first app and show overlay
@@ -284,20 +284,20 @@ class AppSwitcher: @preconcurrency ObservableObject {
             items: resolvableItems
         )
 
-        let isHUDVisible = HUDManager.shared.isSessionActive
+        let isHUDSessionActive = HUDManager.shared.isSessionActive
         nextAppId = AppCyclingLogic.nextAppId(
             items: cycleItems,
             currentFrontmostAppId: frontmostAppUniqueId,
             currentHUDSelectionId: HUDManager.shared.currentSelectedAppId,
             lastActiveAppId: resolvedLastActiveId,
-            isHUDVisible: isHUDVisible,
+            isHUDVisible: isHUDSessionActive,
             prioritizeFrontmost: prioritizeFrontmost
         )
         nextAppId = resolveSessionNextAppId(
             groupId: group.id,
             itemIds: cycleItems.map(\.id),
             fallbackNextId: nextAppId,
-            isHUDVisible: isHUDVisible
+            isHUDVisible: isHUDSessionActive
         )
         
         // Find the HUDAppItem for the next app
