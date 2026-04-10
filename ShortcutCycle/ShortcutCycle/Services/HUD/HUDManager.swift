@@ -190,13 +190,30 @@ class HUDManager: @preconcurrency ObservableObject {
         sessionPhase == .revealed
     }
 
+    private func resetSessionAfterAbortedReveal() {
+        sessionPhase = .idle
+        currentSelectedAppId = nil
+        currentShortcut = nil
+        pendingActiveAppId = nil
+        stopLooping()
+        clearEventMonitors()
+        clearKeyUpMonitors()
+
+        if let observer = appResignObserver {
+            NotificationCenter.default.removeObserver(observer)
+            appResignObserver = nil
+        }
+    }
+
     /// Schedule showing the HUD with macOS Command+Tab logic
     func scheduleShow(items: [HUDAppItem], activeAppId: String, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key? = nil, shouldActivate: Bool = true, immediate: Bool = false, onSelect: ((String) -> Void)? = nil, onFinalize: ((String) -> Void)? = nil) {
         // Cancel existing hide timer
         hideTimer?.invalidate()
         hideTimer = nil // Ensure we don't auto-hide while interacting
         
-        // Update callbacks
+        // Callbacks are session-scoped. If another shortcut invocation supersedes
+        // the current prepared/revealed session, the latest invocation owns the
+        // eventual select/finalize callbacks.
         self.onSelectCallback = onSelect
         self.onFinalizeCallback = onFinalize
         
@@ -348,7 +365,10 @@ class HUDManager: @preconcurrency ObservableObject {
         revealTimer?.invalidate()
         revealTimer = nil
 
-        guard let window else { return }
+        guard let window else {
+            resetSessionAfterAbortedReveal()
+            return
+        }
         guard sessionPhase != .revealed else {
             if activeKey != nil {
                 scheduleLoopStart()

@@ -19,32 +19,32 @@ final class PressAndHoldTests: XCTestCase {
     }
 
     class MockTimerScheduler: TimerScheduler {
-        // (interval, repeats, block)
-        var scheduledTimers: [(TimeInterval, Bool, (Timer) -> Void)] = []
+        // (interval, repeats, timer, block)
+        var scheduledTimers: [(TimeInterval, Bool, Timer, (Timer) -> Void)] = []
         var lastTimer: Timer?
 
         func schedule(timeInterval: TimeInterval, repeats: Bool, block: @escaping (Timer) -> Void) -> Timer {
-            let timer = Timer() // Dummy
-            scheduledTimers.append((timeInterval, repeats, block))
+            let timer = Timer(timeInterval: timeInterval, repeats: repeats) { _ in }
+            scheduledTimers.append((timeInterval, repeats, timer, block))
             lastTimer = timer
             return timer
         }
 
         func fireLastTimer() {
             guard let last = scheduledTimers.last else { return }
-            last.2(Timer())
+            last.3(last.2)
         }
 
         /// Fire the most recent non-repeating timer (delay timer)
         func fireLastNonRepeatingTimer() {
             guard let entry = scheduledTimers.last(where: { !$0.1 }) else { return }
-            entry.2(Timer())
+            entry.3(entry.2)
         }
 
         /// Fire the most recent repeating timer (loop timer)
         func fireLastRepeatingTimer() {
             guard let entry = scheduledTimers.last(where: { $0.1 }) else { return }
-            entry.2(Timer())
+            entry.3(entry.2)
         }
     }
 
@@ -192,6 +192,27 @@ final class PressAndHoldTests: XCTestCase {
                 charactersIgnoringModifiers: "",
                 isARepeat: false,
                 keyCode: 58
+            )
+        )
+    }
+
+    private func makeKeyEvent(
+        type: NSEvent.EventType,
+        keyCode: Int,
+        modifierFlags: NSEvent.ModifierFlags = []
+    ) throws -> NSEvent {
+        try XCTUnwrap(
+            NSEvent.keyEvent(
+                with: type,
+                location: .zero,
+                modifierFlags: modifierFlags,
+                timestamp: 0,
+                windowNumber: 0,
+                context: nil,
+                characters: "a",
+                charactersIgnoringModifiers: "a",
+                isARepeat: false,
+                keyCode: UInt16(keyCode)
             )
         )
     }
@@ -397,6 +418,35 @@ final class PressAndHoldTests: XCTestCase {
     }
 
     @MainActor
+    func testPeekRevealsHUDWithoutStartingLoopWhenLoopKeyIsReleasedDuringPreparedInvisible() async throws {
+        manager.currentModifierFlags = { [.option] }
+
+        manager.scheduleShow(
+            items: [
+                HUDAppItem(bundleId: "com.test.1", name: "Test 1", icon: nil),
+                HUDAppItem(bundleId: "com.test.2", name: "Test 2", icon: nil)
+            ],
+            activeAppId: "com.test.1",
+            modifierFlags: [.option],
+            shortcut: "Opt+1",
+            activeKey: .a
+        )
+
+        XCTAssertFalse(manager.isVisible, "HUD should still be invisible during the prepared phase")
+
+        let keyUpHandler = try XCTUnwrap(latestLocalMonitorHandler(for: .keyUp))
+        _ = keyUpHandler(try makeKeyEvent(type: .keyUp, keyCode: KeyboardShortcuts.Key.a.rawValue, modifierFlags: [.option]))
+        await Task.yield()
+        await Task.yield()
+
+        XCTAssertTrue(manager.isVisible, "Releasing only the loop key should reveal the HUD for peeking")
+        XCTAssertFalse(manager.isLooping, "Peek should not start the repeating loop")
+        XCTAssertFalse(manager.isRepeatingLoopActive, "Peek should leave the repeating loop inactive")
+        XCTAssertEqual(windowAlphaChanges.last, 1, "Peek reveal should animate the HUD to full opacity")
+        XCTAssertEqual(mouseInteractionStates.last, false, "Peek reveal should allow HUD interaction")
+    }
+
+    @MainActor
     func testFinalizeClosesCurrentSpaceSettingsWhenSelectedTargetLeavesCurrentSpace() async throws {
         let settingsWindow = MockWindow(
             identifier: NSUserInterfaceItemIdentifier("settings"),
@@ -571,6 +621,56 @@ final class PressAndHoldTests: XCTestCase {
         await Task.yield()
 
         XCTAssertEqual(Array(events.prefix(2)), ["back", "activate"])
+    }
+
+    @MainActor
+    func testFinalizeFiresOnFinalizeExactlyOnce() async throws {
+        var finalizedAppIds: [String] = []
+
+        manager.currentModifierFlags = { [.option] }
+
+        manager.scheduleShow(
+            items: [HUDAppItem(bundleId: "com.test.finalize", pid: 41, name: "Finalize Target")],
+            activeAppId: "com.test.finalize::41",
+            modifierFlags: [.option],
+            shortcut: "Opt+1",
+            immediate: true,
+            onFinalize: { appId in
+                finalizedAppIds.append(appId)
+            }
+        )
+
+        let flagsHandler = try XCTUnwrap(latestLocalMonitorHandler(for: .flagsChanged))
+        _ = flagsHandler(try makeFlagsChangedEvent(modifierFlags: []))
+        await Task.yield()
+        await Task.yield()
+
+        XCTAssertEqual(finalizedAppIds, ["com.test.finalize::41"], "Finalize callback should fire exactly once with the pending selection")
+    }
+
+    @MainActor
+    func testPreparedInvisibleFinalizeWithShouldActivateFalseDoesNotActivatePendingTarget() async throws {
+        var activateCount = 0
+
+        manager.activatePendingTargetApp = { _ in
+            activateCount += 1
+        }
+
+        manager.scheduleShow(
+            items: [HUDAppItem(bundleId: "com.test.passive", pid: 52, name: "Passive Target")],
+            activeAppId: "com.test.passive::52",
+            modifierFlags: [.option],
+            shortcut: "Opt+1",
+            shouldActivate: false
+        )
+
+        let flagsHandler = try XCTUnwrap(latestLocalMonitorHandler(for: .flagsChanged))
+        _ = flagsHandler(try makeFlagsChangedEvent(modifierFlags: []))
+        await Task.yield()
+        await Task.yield()
+
+        XCTAssertEqual(activateCount, 0, "Prepared invisible sessions that opted out of activation should not activate a pending target on finalize")
+        XCTAssertFalse(manager.isSessionActive, "Finalize should still fully tear down the prepared session")
     }
 
     @MainActor
