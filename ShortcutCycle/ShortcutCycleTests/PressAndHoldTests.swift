@@ -32,18 +32,21 @@ final class PressAndHoldTests: XCTestCase {
 
         func fireLastTimer() {
             guard let last = scheduledTimers.last else { return }
+            guard last.2.isValid else { return }
             last.3(last.2)
         }
 
         /// Fire the most recent non-repeating timer (delay timer)
         func fireLastNonRepeatingTimer() {
             guard let entry = scheduledTimers.last(where: { !$0.1 }) else { return }
+            guard entry.2.isValid else { return }
             entry.3(entry.2)
         }
 
         /// Fire the most recent repeating timer (loop timer)
         func fireLastRepeatingTimer() {
             guard let entry = scheduledTimers.last(where: { $0.1 }) else { return }
+            guard entry.2.isValid else { return }
             entry.3(entry.2)
         }
     }
@@ -447,6 +450,88 @@ final class PressAndHoldTests: XCTestCase {
     }
 
     @MainActor
+    func testPeekThenModifierReleaseFinalizesAndActivatesPendingTarget() async throws {
+        let settingsWindow = MockWindow(
+            identifier: NSUserInterfaceItemIdentifier("settings"),
+            isVisible: true,
+            isOnActiveSpace: true
+        )
+        var events: [String] = []
+
+        manager.currentModifierFlags = { [.option] }
+        manager.settingsWindowsProvider = { [settingsWindow] }
+        manager.appWindowsProvider = { [settingsWindow] }
+        manager.closeWindow = { _ in
+            events.append("close")
+        }
+        manager.orderWindowBack = { _ in
+            events.append("back")
+        }
+        manager.targetLeavesCurrentSpace = { _ in true }
+        manager.activatePendingTargetApp = { _ in
+            events.append("activate")
+        }
+
+        manager.scheduleShow(
+            items: [
+                HUDAppItem(bundleId: "com.test.1", name: "Test 1", icon: nil),
+                HUDAppItem(bundleId: "com.test.2", name: "Test 2", icon: nil)
+            ],
+            activeAppId: "com.test.1",
+            modifierFlags: [.option],
+            shortcut: "Opt+1",
+            activeKey: .a
+        )
+
+        let keyUpHandler = try XCTUnwrap(latestLocalMonitorHandler(for: .keyUp))
+        _ = keyUpHandler(try makeKeyEvent(type: .keyUp, keyCode: KeyboardShortcuts.Key.a.rawValue, modifierFlags: [.option]))
+        await Task.yield()
+        await Task.yield()
+
+        XCTAssertTrue(manager.isVisible, "Peek should reveal the HUD before modifier release")
+
+        let flagsHandler = try XCTUnwrap(latestLocalMonitorHandler(for: .flagsChanged))
+        _ = flagsHandler(try makeFlagsChangedEvent(modifierFlags: []))
+        await Task.yield()
+        await Task.yield()
+
+        XCTAssertFalse(manager.isSessionActive, "Modifier release after a peek should end the HUD session")
+        XCTAssertFalse(manager.isVisible, "Modifier release after a peek should hide the HUD")
+        XCTAssertEqual(events, ["close", "activate"], "Peek finalize should use the revealed cleanup path and not order current-space windows back")
+    }
+
+    @MainActor
+    func testFullReleaseDuringPreparedInvisibleCancelsRevealWithoutShowingHUD() async throws {
+        manager.currentModifierFlags = { [] }
+
+        manager.scheduleShow(
+            items: [
+                HUDAppItem(bundleId: "com.test.1", name: "Test 1", icon: nil),
+                HUDAppItem(bundleId: "com.test.2", name: "Test 2", icon: nil)
+            ],
+            activeAppId: "com.test.1",
+            modifierFlags: [.option],
+            shortcut: "Opt+1",
+            activeKey: .a
+        )
+
+        XCTAssertFalse(manager.isVisible, "HUD should start invisible during the prepared phase")
+
+        let keyUpHandler = try XCTUnwrap(latestLocalMonitorHandler(for: .keyUp))
+        _ = keyUpHandler(try makeKeyEvent(type: .keyUp, keyCode: KeyboardShortcuts.Key.a.rawValue, modifierFlags: []))
+        await Task.yield()
+        await Task.yield()
+
+        XCTAssertFalse(manager.isVisible, "Releasing the loop key together with modifiers should not reveal the HUD")
+
+        timerMock.fireLastNonRepeatingTimer()
+        await Task.yield()
+        await Task.yield()
+
+        XCTAssertFalse(manager.isVisible, "Cancelling the reveal timer should prevent any later phantom reveal")
+    }
+
+    @MainActor
     func testFinalizeClosesCurrentSpaceSettingsWhenSelectedTargetLeavesCurrentSpace() async throws {
         let settingsWindow = MockWindow(
             identifier: NSUserInterfaceItemIdentifier("settings"),
@@ -523,8 +608,6 @@ final class PressAndHoldTests: XCTestCase {
     @MainActor
     func testFinalizeRequiresAllConfiguredModifiersToRemainHeld() async throws {
         var activateCount = 0
-
-        manager.currentModifierFlags = { [.command] }
         manager.activatePendingTargetApp = { _ in
             activateCount += 1
         }
@@ -675,6 +758,32 @@ final class PressAndHoldTests: XCTestCase {
         await Task.yield()
 
         XCTAssertEqual(finalizedAppIds, ["com.test.finalize::41"], "Finalize callback should fire exactly once with the pending selection")
+    }
+
+    @MainActor
+    func testFinalizeFallsBackToCurrentSelectionWhenNoPendingTargetExists() async throws {
+        var finalizedAppIds: [String] = []
+
+        manager.currentModifierFlags = { [.option] }
+
+        manager.scheduleShow(
+            items: [HUDAppItem(bundleId: "com.test.fallback", pid: 71, name: "Fallback Target")],
+            activeAppId: "com.test.fallback::71",
+            modifierFlags: [.option],
+            shortcut: "Opt+1",
+            shouldActivate: false,
+            immediate: true,
+            onFinalize: { appId in
+                finalizedAppIds.append(appId)
+            }
+        )
+
+        let flagsHandler = try XCTUnwrap(latestLocalMonitorHandler(for: .flagsChanged))
+        _ = flagsHandler(try makeFlagsChangedEvent(modifierFlags: []))
+        await Task.yield()
+        await Task.yield()
+
+        XCTAssertEqual(finalizedAppIds, ["com.test.fallback::71"], "Finalize should fall back to the current HUD selection when there is no pending activation target")
     }
 
     @MainActor
