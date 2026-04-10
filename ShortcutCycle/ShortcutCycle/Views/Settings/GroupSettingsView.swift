@@ -131,6 +131,7 @@ struct GroupSettingsView: View {
     @EnvironmentObject var store: GroupStore
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
     @Environment(\.colorScheme) private var colorScheme
+    @State private var pendingSelectedGroupId: UUID?
 
     /// A deferred-write binding for columnVisibility.
     ///
@@ -151,14 +152,43 @@ struct GroupSettingsView: View {
         )
     }
 
+    /// Keep the UI responsive by showing a temporary local selection immediately while
+    /// still deferring the store write that previously avoided an AttributeGraph cycle.
+    private var selectedGroupIdBinding: Binding<UUID?> {
+        Binding(
+            get: { pendingSelectedGroupId ?? store.selectedGroupId },
+            set: { newValue in
+                guard store.selectedGroupId != newValue else {
+                    pendingSelectedGroupId = nil
+                    return
+                }
+
+                pendingSelectedGroupId = newValue
+
+                Task { @MainActor in
+                    if store.selectedGroupId != newValue {
+                        store.selectedGroupId = newValue
+                    }
+
+                    if pendingSelectedGroupId == newValue {
+                        pendingSelectedGroupId = nil
+                    }
+                }
+            }
+        )
+    }
+
+    private var visibleSelectedGroupId: UUID? {
+        pendingSelectedGroupId ?? store.selectedGroupId
+    }
+
     var body: some View {
         NavigationSplitView(columnVisibility: columnVisibilityBinding) {
-            GroupListView()
+            GroupListView(selection: selectedGroupIdBinding)
                 .frame(minWidth: 220)
         } detail: {
-            if let selectedId = store.selectedGroupId {
+            if let selectedId = visibleSelectedGroupId {
                 GroupEditView(groupId: selectedId)
-                    .id(selectedId)
             } else {
                 ContentUnavailableView {
                     Label("No Group Selected".localized(language: selectedLanguage), systemImage: "folder")
@@ -179,5 +209,9 @@ struct GroupSettingsView: View {
         }
         .navigationTitle("App Groups".localized(language: selectedLanguage))
         .background(SettingsChromePalette.windowBackground(for: colorScheme))
+        .onChange(of: store.selectedGroupId) { _, _ in
+            // External selection changes (menu commands, URL routing, etc.) should win immediately.
+            pendingSelectedGroupId = nil
+        }
     }
 }

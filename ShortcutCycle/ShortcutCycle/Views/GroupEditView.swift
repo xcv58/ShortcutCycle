@@ -228,7 +228,8 @@ struct GroupEditView: View {
                     }
                 }
                 .padding(.vertical, 8)
-                .animation(.default, value: displayedApps)
+                // Only animate the temporary drag preview; switching groups should update immediately.
+                .animation(.default, value: dragPreviewApps?.map(\.id) ?? [])
             }
 
             addAppsPanel(for: group, quickAddCandidates: quickAddCandidates)
@@ -448,7 +449,7 @@ private struct GroupShortcutEditor: View {
             VStack(alignment: .leading, spacing: 8) {
                 KeyboardShortcuts.Recorder(for: shortcutName, onChange: handleShortcutChange)
                     .padding(.leading, 4)
-                    .id(selectedLanguage) // Recreate on language change so placeholder re-reads AppleLanguages
+                    .id("\(selectedLanguage)-\(groupId.uuidString)") // Recreate only when localization or target group changes
 
                 if shouldShowSuggestions {
                     ShortcutSuggestionRow(
