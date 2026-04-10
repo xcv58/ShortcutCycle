@@ -521,6 +521,35 @@ final class PressAndHoldTests: XCTestCase {
     }
 
     @MainActor
+    func testFinalizeRequiresAllConfiguredModifiersToRemainHeld() async throws {
+        var activateCount = 0
+
+        manager.currentModifierFlags = { [.command] }
+        manager.activatePendingTargetApp = { _ in
+            activateCount += 1
+        }
+
+        manager.scheduleShow(
+            items: [HUDAppItem(bundleId: "com.test.multi-mod", pid: 61, name: "Multi Mod Target")],
+            activeAppId: "com.test.multi-mod::61",
+            modifierFlags: [.command, .option],
+            shortcut: "Cmd+Opt+1",
+            immediate: true
+        )
+
+        XCTAssertTrue(manager.isVisible, "Immediate path should reveal the HUD before testing modifier release")
+
+        let flagsHandler = try XCTUnwrap(latestLocalMonitorHandler(for: .flagsChanged))
+        _ = flagsHandler(try makeFlagsChangedEvent(modifierFlags: [.command]))
+        await Task.yield()
+        await Task.yield()
+
+        XCTAssertFalse(manager.isSessionActive, "Dropping any required modifier should finalize the HUD session")
+        XCTAssertFalse(manager.isVisible, "HUD should hide once one of the required modifiers is released")
+        XCTAssertEqual(activateCount, 1, "Finalizing after a partial modifier release should still activate the pending target once")
+    }
+
+    @MainActor
     func testBlindSwitchBeforeHUDPresentationKeepsSettingsOpen() async throws {
         let settingsWindow = MockWindow(
             identifier: NSUserInterfaceItemIdentifier("settings"),

@@ -689,33 +689,23 @@ class HUDManager: @preconcurrency ObservableObject {
     }
 
     private func checkModifiersHeld(currentFlags: NSEvent.ModifierFlags, required: NSEvent.ModifierFlags) -> Bool {
-        // Command (55, 54)
-        if required.contains(.command) {
-            if isKeyDown(55) || isKeyDown(54) { return true }
+        let isModifierHeld: (NSEvent.ModifierFlags, [Int]) -> Bool = { modifier, keyCodes in
+            guard required.contains(modifier) else {
+                return true
+            }
+
+            if keyCodes.contains(where: self.isKeyDown) {
+                return true
+            }
+
+            // Fallback to flags if the hardware check misses a transient state.
+            return currentFlags.contains(modifier)
         }
-        
-        // Option (58, 61)
-        if required.contains(.option) {
-            if isKeyDown(58) || isKeyDown(61) { return true }
-        }
-        
-        // Control (59, 62)
-        if required.contains(.control) {
-            if isKeyDown(59) || isKeyDown(62) { return true }
-        }
-        
-        // Shift (56, 60)
-        if required.contains(.shift) {
-            if isKeyDown(56) || isKeyDown(60) { return true }
-        }
-        
-        // Fallback to flags if hardware check fails (unlikely, but safe)
-        if required.contains(.command) && currentFlags.contains(.command) { return true }
-        if required.contains(.shift) && currentFlags.contains(.shift) { return true }
-        if required.contains(.option) && currentFlags.contains(.option) { return true }
-        if required.contains(.control) && currentFlags.contains(.control) { return true }
-        
-        return false
+
+        return isModifierHeld(.command, [55, 54])
+            && isModifierHeld(.option, [58, 61])
+            && isModifierHeld(.control, [59, 62])
+            && isModifierHeld(.shift, [56, 60])
     }
     
     private func handleFlagsChanged(event: NSEvent, required: NSEvent.ModifierFlags) {
