@@ -17,7 +17,7 @@ struct GroupEditView: View {
     @State private var groupName: String = ""
     @State private var draggingApp: AppItem?
     @State private var dragPreviewApps: [AppItem]?
-    @State private var isHovering: Bool = false
+    @State private var isNameFieldHovered: Bool = false
     @FocusState private var isNameFocused: Bool
     @State private var suppressAutoFocus = true
     @State private var quickAddCandidates: [AppItem] = []
@@ -110,18 +110,23 @@ struct GroupEditView: View {
                 .padding(.vertical, 4)
                 .padding(.horizontal, 8)
                 .background(
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill((isHovering || isNameFocused) ? SettingsChromePalette.inlineFill(for: colorScheme) : Color.clear)
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(nameFieldBackgroundColor)
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 6)
-                        .stroke(
-                            ((isHovering || isNameFocused) && colorScheme == .dark) ? SettingsChromePalette.panelBorder(for: colorScheme) : Color.clear,
-                            lineWidth: 1
-                        )
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .stroke(nameFieldBorderColor, lineWidth: nameFieldBorderWidth)
                 )
+                .shadow(
+                    color: nameFieldGlowColor,
+                    radius: nameFieldGlowRadius,
+                    x: 0,
+                    y: 0
+                )
+                .animation(.easeInOut(duration: 0.15), value: isNameFocused)
+                .animation(.easeInOut(duration: 0.15), value: isNameFieldHovered)
                 .onHover { hovering in
-                    isHovering = hovering
+                    isNameFieldHovered = hovering
                 }
                 .onChange(of: groupName) { _, newValue in
                     guard isNameFocused else { return }
@@ -130,6 +135,54 @@ struct GroupEditView: View {
                     store.updateGroup(updatedGroup)
                 }
         }
+    }
+
+    private var nameFieldBackgroundColor: Color {
+        if isNameFocused {
+            return SettingsChromePalette.focusRingFill(for: colorScheme)
+        }
+
+        if isNameFieldHovered {
+            return SettingsChromePalette.hoverRingFill(for: colorScheme)
+        }
+
+        return .clear
+    }
+
+    private var nameFieldBorderColor: Color {
+        if isNameFocused {
+            return SettingsChromePalette.focusRingBorder(for: colorScheme)
+        }
+
+        if isNameFieldHovered {
+            return SettingsChromePalette.hoverRingBorder(for: colorScheme)
+        }
+
+        return .clear
+    }
+
+    private var nameFieldBorderWidth: CGFloat {
+        isNameFocused ? 1.5 : (isNameFieldHovered ? 1 : 0)
+    }
+
+    private var nameFieldGlowColor: Color {
+        if isNameFocused {
+            return SettingsChromePalette.focusRingGlow(for: colorScheme)
+        }
+
+        if isNameFieldHovered {
+            return SettingsChromePalette.hoverRingGlow(for: colorScheme)
+        }
+
+        return .clear
+    }
+
+    private var nameFieldGlowRadius: CGFloat {
+        if isNameFocused {
+            return 8
+        }
+
+        return isNameFieldHovered ? 4 : 0
     }
 
     private func appsSection(for group: AppGroup) -> some View {

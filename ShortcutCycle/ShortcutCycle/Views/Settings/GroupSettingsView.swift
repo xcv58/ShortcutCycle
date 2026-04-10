@@ -74,6 +74,42 @@ enum SettingsChromePalette {
             ? Color(nsColor: .quaternaryLabelColor).opacity(0.72)
             : Color.gray.opacity(0.30)
     }
+
+    static func focusRingFill(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark
+            ? Color.accentColor.opacity(0.18)
+            : Color.accentColor.opacity(0.10)
+    }
+
+    static func focusRingBorder(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark
+            ? Color.accentColor.opacity(0.95)
+            : Color.accentColor.opacity(0.65)
+    }
+
+    static func focusRingGlow(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark
+            ? Color.accentColor.opacity(0.30)
+            : Color.accentColor.opacity(0.16)
+    }
+
+    static func hoverRingFill(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark
+            ? Color.accentColor.opacity(0.10)
+            : inlineFill(for: colorScheme)
+    }
+
+    static func hoverRingBorder(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark
+            ? Color.accentColor.opacity(0.48)
+            : neutralHoverBorder(for: colorScheme)
+    }
+
+    static func hoverRingGlow(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark
+            ? Color.accentColor.opacity(0.12)
+            : .clear
+    }
 }
 
 struct SettingsSectionDivider: View {
