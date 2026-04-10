@@ -48,7 +48,7 @@ class HUDWindow: NSPanel {
         self.backgroundColor = .clear
         self.isOpaque = false
         self.hasShadow = false
-        self.ignoresMouseEvents = false // Enable mouse events for selection
+        self.ignoresMouseEvents = true
     }
 }
 
@@ -56,6 +56,12 @@ class HUDWindow: NSPanel {
 
 @MainActor
 class HUDManager: @preconcurrency ObservableObject {
+    private enum HUDSessionPhase {
+        case idle
+        case preparedInvisible
+        case revealed
+    }
+
     static let shared = HUDManager()
     
     let objectWillChange = ObservableObjectPublisher()
@@ -78,11 +84,32 @@ class HUDManager: @preconcurrency ObservableObject {
     var currentModifierFlags: () -> NSEvent.ModifierFlags = {
         NSEvent.modifierFlags
     }
+    var isAppActive: () -> Bool = {
+        NSApp?.isActive == true
+    }
     var settingsWindowsProvider: () -> [NSWindow] = {
+        NSApp?.windows ?? []
+    }
+    var appWindowsProvider: () -> [NSWindow] = {
         NSApp?.windows ?? []
     }
     var closeWindow: (NSWindow) -> Void = { window in
         window.close()
+    }
+    var orderWindowBack: (NSWindow) -> Void = { window in
+        window.orderBack(nil)
+    }
+    var setWindowAlpha: (NSWindow, CGFloat) -> Void = { window, alpha in
+        window.alphaValue = alpha
+    }
+    var animateWindowAlpha: (NSWindow, CGFloat, TimeInterval) -> Void = { window, alpha, duration in
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = duration
+            window.animator().alphaValue = alpha
+        }
+    }
+    var setWindowIgnoresMouseEvents: (NSWindow, Bool) -> Void = { window, ignores in
+        window.ignoresMouseEvents = ignores
     }
     // `lazy` because the default captures `self` to call the private `activateOrLaunch` method.
     lazy var activatePendingTargetApp: (String) -> Void = { [weak self] bundleId in
@@ -99,9 +126,9 @@ class HUDManager: @preconcurrency ObservableObject {
     
     private var window: HUDWindow?
     private var hideTimer: Timer?
-    private var showTimer: Timer?
+    private var revealTimer: Timer?
     private var loopTimer: Timer?
-    private var keyUpMonitor: Any?
+    private var keyUpMonitors: [Any] = []
     private var eventMonitors: [Any] = []
     private var appResignObserver: NSObjectProtocol?
     
@@ -111,16 +138,19 @@ class HUDManager: @preconcurrency ObservableObject {
     
     private var currentItems: [HUDAppItem] = []
 
-    private var previousFrontmostApp: NSRunningApplication?
     private var pendingActiveAppId: String?
-    private var didPresentHUDThisSession = false
+    private var sessionPhase: HUDSessionPhase = .idle
     
     // Track the currently selected app in the HUD
     public private(set) var currentSelectedAppId: String?
     private var currentShortcut: String?
     
     var isVisible: Bool {
-        window?.isVisible == true
+        sessionPhase == .revealed
+    }
+
+    var isSessionActive: Bool {
+        sessionPhase != .idle
     }
     
     /// True only when the repeating auto-cycle loop is active (not during the initial delay phase).
@@ -140,6 +170,40 @@ class HUDManager: @preconcurrency ObservableObject {
     
     private var onSelectCallback: ((String) -> Void)?
     private var onFinalizeCallback: ((String) -> Void)?
+    private let hudPresentationDelay: TimeInterval = 0.2
+
+    private func clearEventMonitors() {
+        for monitor in eventMonitors {
+            removeEventMonitor(monitor)
+        }
+        eventMonitors.removeAll()
+    }
+
+    private func clearKeyUpMonitors() {
+        for monitor in keyUpMonitors {
+            removeEventMonitor(monitor)
+        }
+        keyUpMonitors.removeAll()
+    }
+
+    private func isHUDRevealedThisSession() -> Bool {
+        sessionPhase == .revealed
+    }
+
+    private func resetSessionAfterAbortedReveal() {
+        sessionPhase = .idle
+        currentSelectedAppId = nil
+        currentShortcut = nil
+        pendingActiveAppId = nil
+        stopLooping()
+        clearEventMonitors()
+        clearKeyUpMonitors()
+
+        if let observer = appResignObserver {
+            NotificationCenter.default.removeObserver(observer)
+            appResignObserver = nil
+        }
+    }
 
     /// Schedule showing the HUD with macOS Command+Tab logic
     func scheduleShow(items: [HUDAppItem], activeAppId: String, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key? = nil, shouldActivate: Bool = true, immediate: Bool = false, onSelect: ((String) -> Void)? = nil, onFinalize: ((String) -> Void)? = nil) {
@@ -147,15 +211,13 @@ class HUDManager: @preconcurrency ObservableObject {
         hideTimer?.invalidate()
         hideTimer = nil // Ensure we don't auto-hide while interacting
         
-        // Update callbacks
+        // Callbacks are session-scoped. If another shortcut invocation supersedes
+        // the current prepared/revealed session, the latest invocation owns the
+        // eventual select/finalize callbacks.
         self.onSelectCallback = onSelect
         self.onFinalizeCallback = onFinalize
         
-        let now = timeProvider.now
-        let isRepeated = lastRequestTime != nil && now.timeIntervalSince(lastRequestTime!) < 0.5
-
-        lastRequestTime = now
-        didPresentHUDThisSession = false
+        lastRequestTime = timeProvider.now
         
         // Store pending active app for fast switching
         self.pendingActiveAppId = shouldActivate ? activeAppId : nil
@@ -163,44 +225,31 @@ class HUDManager: @preconcurrency ObservableObject {
         // Store items immediately so fast switch path can look up PID
         self.currentItems = items
         
-        // Capture the previous frontmost app if we aren't already visible
-        // We do this BEFORE we activate ourselves
-        if window?.isVisible != true {
-             self.previousFrontmostApp = NSWorkspace.shared.frontmostApplication
-        }
-        
-        // If HUD is already visible, this is a repeated hit (cycling), or immediate is requested, show/update immediately
-        if (window?.isVisible == true) || isRepeated || immediate {
-            showTimer?.invalidate()
-            showTimer = nil
+        if !isSessionActive {
             closeOffSpaceSettingsWindowIfNeeded()
             prepareAppForHUDPresentation()
-            presentHUD(items: items, activeAppId: activeAppId, shortcut: shortcut)
-            startMonitoringModifiers(requiredModifiers: modifierFlags, activeKey: activeKey)
-            // Start loop AFTER monitoring is set up so isLoopKeyHeld is fresh
-            if activeKey != nil {
-                scheduleLoopStart()
+            prepareHUD(items: items, activeAppId: activeAppId, shortcut: shortcut, reveal: false)
+            sessionPhase = .preparedInvisible
+            startMonitoring(requiredModifiers: modifierFlags, activeKey: activeKey)
+
+            if immediate {
+                revealHUD(requiredModifiers: modifierFlags, activeKey: activeKey)
+            } else {
+                scheduleReveal(requiredModifiers: modifierFlags, activeKey: activeKey)
             }
             return
         }
 
-        // Otherwise, schedule show after a short delay (mimic "hold" to show)
-        showTimer?.invalidate()
-        showTimer = timerScheduler.schedule(timeInterval: 0.2, repeats: false) { [weak self] _ in // 200ms delay
-            Task { @MainActor in
-                self?.closeOffSpaceSettingsWindowIfNeeded()
-                self?.prepareAppForHUDPresentation()
-                self?.presentHUD(items: items, activeAppId: activeAppId, shortcut: shortcut)
-                self?.startMonitoringModifiers(requiredModifiers: modifierFlags, activeKey: activeKey)
-                // Start loop AFTER monitoring is set up so isLoopKeyHeld is fresh
-                if activeKey != nil {
-                    self?.scheduleLoopStart()
-                }
-            }
-        }
+        prepareHUD(items: items, activeAppId: activeAppId, shortcut: shortcut, reveal: isHUDRevealedThisSession())
 
-        // Monitor release globally while we wait to decide whether the HUD should appear.
-        startPreShowMonitoring(requiredModifiers: modifierFlags, activeKey: activeKey)
+        if isHUDRevealedThisSession() {
+            startMonitoring(requiredModifiers: modifierFlags, activeKey: activeKey)
+            if activeKey != nil {
+                scheduleLoopStart()
+            }
+        } else {
+            revealHUD(requiredModifiers: modifierFlags, activeKey: activeKey)
+        }
     }
 
     private func closeOffSpaceSettingsWindowIfNeeded() {
@@ -229,6 +278,15 @@ class HUDManager: @preconcurrency ObservableObject {
         closeWindow(settingsWindow)
     }
 
+    private func orderCurrentSpaceWindowsBackIfNeeded() {
+        for visibleWindow in appWindowsProvider() where visibleWindow !== window {
+            guard visibleWindow.isVisible, visibleWindow.isOnActiveSpace else {
+                continue
+            }
+            orderWindowBack(visibleWindow)
+        }
+    }
+
     private func prepareAppForHUDPresentation() {
         guard let app = NSApp else { return }
 
@@ -245,7 +303,7 @@ class HUDManager: @preconcurrency ObservableObject {
         }
     }
     
-    private func presentHUD(items: [HUDAppItem], activeAppId: String, shortcut: String?) {
+    private func prepareHUD(items: [HUDAppItem], activeAppId: String, shortcut: String?, reveal: Bool) {
         // Prepare Window if needed
         if window == nil {
             window = HUDWindow()
@@ -253,7 +311,6 @@ class HUDManager: @preconcurrency ObservableObject {
 
         self.currentItems = items
         currentSelectedAppId = activeAppId
-        didPresentHUDThisSession = true
 
         if let shortcut = shortcut {
             self.currentShortcut = shortcut
@@ -285,9 +342,49 @@ class HUDManager: @preconcurrency ObservableObject {
             window.setFrame(NSRect(x: x, y: y, width: viewSize.width, height: viewSize.height), display: true)
         }
 
+        if reveal {
+            setWindowIgnoresMouseEvents(window, false)
+            setWindowAlpha(window, 1.0)
+        } else {
+            setWindowIgnoresMouseEvents(window, true)
+            setWindowAlpha(window, 0.0)
+        }
         window.orderFront(nil)
-        // Note: Loop scheduling is handled by scheduleShow() AFTER startMonitoringModifiers(),
-        // not here, to ensure isLoopKeyHeld is freshly set before the loop decision.
+    }
+
+    private func scheduleReveal(requiredModifiers: NSEvent.ModifierFlags?, activeKey: KeyboardShortcuts.Key?) {
+        revealTimer?.invalidate()
+        revealTimer = timerScheduler.schedule(timeInterval: hudPresentationDelay, repeats: false) { [weak self] _ in
+            Task { @MainActor in
+                self?.revealHUD(requiredModifiers: requiredModifiers, activeKey: activeKey)
+            }
+        }
+    }
+
+    private func revealHUD(requiredModifiers: NSEvent.ModifierFlags?, activeKey: KeyboardShortcuts.Key?, shouldStartLoop: Bool? = nil) {
+        revealTimer?.invalidate()
+        revealTimer = nil
+
+        guard let window else {
+            resetSessionAfterAbortedReveal()
+            return
+        }
+        guard sessionPhase != .revealed else {
+            if activeKey != nil {
+                scheduleLoopStart()
+            }
+            return
+        }
+
+        sessionPhase = .revealed
+        setWindowIgnoresMouseEvents(window, false)
+        animateWindowAlpha(window, 1.0, 0.12)
+        startMonitoring(requiredModifiers: requiredModifiers, activeKey: activeKey)
+
+        let startLoop = shouldStartLoop ?? (activeKey != nil && isLoopKeyHeld)
+        if startLoop {
+            scheduleLoopStart()
+        }
     }
     
     private func scheduleLoopStart() {
@@ -309,71 +406,19 @@ class HUDManager: @preconcurrency ObservableObject {
 
     internal var isLoopKeyHeld: Bool = false
 
-    private func startPreShowMonitoring(requiredModifiers: NSEvent.ModifierFlags?, activeKey: KeyboardShortcuts.Key? = nil) {
-        for monitor in eventMonitors {
-            removeEventMonitor(monitor)
-        }
-        eventMonitors.removeAll()
-
-        if let keyMonitor = keyUpMonitor {
-            removeEventMonitor(keyMonitor)
-            keyUpMonitor = nil
-        }
-
-        guard let required = requiredModifiers, !required.isEmpty else {
-            return
-        }
-
-        let flagsMonitor = addGlobalEventMonitor(.flagsChanged) { [weak self] event in
-            Task { @MainActor in
-                self?.handleFlagsChanged(event: event, required: required)
-            }
-        }
-        if let flagsMonitor = flagsMonitor {
-            eventMonitors.append(flagsMonitor)
-        }
-
-        if let activeKey = activeKey {
-            keyUpMonitor = addGlobalEventMonitor(.keyUp) { [weak self] event in
-                guard Int(event.keyCode) == activeKey.rawValue else { return }
-
-                Task { @MainActor in
-                    guard let self else { return }
-                    self.isLoopKeyHeld = false
-
-                    if let timer = self.showTimer, timer.isValid {
-                        let flags = self.currentModifierFlags()
-                        if self.checkModifiersHeld(currentFlags: flags, required: required) {
-                            self.showTimer?.fire()
-                        } else {
-                            self.showTimer?.invalidate()
-                            self.showTimer = nil
-                        }
-                    }
-
-                    self.stopLooping()
-                }
-            }
-        }
-    }
-    
-    private func startMonitoringModifiers(requiredModifiers: NSEvent.ModifierFlags?, activeKey: KeyboardShortcuts.Key? = nil) {
-        
+    private func startMonitoring(requiredModifiers: NSEvent.ModifierFlags?, activeKey: KeyboardShortcuts.Key? = nil) {
         // Check if we are already looping for this key. If so, DO NOT reset monitors.
-        if let active = activeKey, let current = currentLoopKey, active.rawValue == current, loopTimer != nil {
+        if sessionPhase == .revealed,
+           let active = activeKey,
+           let current = currentLoopKey,
+           active.rawValue == current,
+           loopTimer != nil {
             return
         }
         
         // Stop existing monitors
-        for monitor in eventMonitors {
-            removeEventMonitor(monitor)
-        }
-        eventMonitors.removeAll()
-        
-        if let keyMonitor = keyUpMonitor {
-            removeEventMonitor(keyMonitor)
-            keyUpMonitor = nil
-        }
+        clearEventMonitors()
+        clearKeyUpMonitors()
         loopTimer?.invalidate()
         loopTimer = nil
         isRepeatingLoopActive = false
@@ -392,85 +437,120 @@ class HUDManager: @preconcurrency ObservableObject {
              return
         }
         
-        // Check if ANY of the required modifiers are currently held.
-        let currentFlags = currentModifierFlags()
-        if !checkModifiersHeld(currentFlags: currentFlags, required: required) {
-             // Give a tiny grace period for state to settle or for fast release.
-             DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
-                 guard let self = self else { return }
-                 let flags = self.currentModifierFlags()
-                 if !self.checkModifiersHeld(currentFlags: flags, required: required) {
-                     self.finalizeSwitchAndHide()
-                 }
-             }
-        }
-        
-        // Monitor flags changed - use LOCAL monitor now since we are active
-        let flagsMonitor = addLocalEventMonitor(.flagsChanged) { [weak self] event in
-            Task { @MainActor in
-                self?.handleFlagsChanged(event: event, required: required)
+        let addFlagsMonitor: (Bool) -> Void = { [weak self] isGlobal in
+            guard let self else { return }
+            if isGlobal {
+                let flagsMonitor = self.addGlobalEventMonitor(.flagsChanged) { [weak self] event in
+                    Task { @MainActor in
+                        self?.handleFlagsChanged(event: event, required: required)
+                    }
+                }
+                if let flagsMonitor {
+                    self.eventMonitors.append(flagsMonitor)
+                }
+                return
             }
-            return event
+
+            let flagsMonitor = self.addLocalEventMonitor(.flagsChanged) { [weak self] event in
+                Task { @MainActor in
+                    self?.handleFlagsChanged(event: event, required: required)
+                }
+                return event
+            }
+            if let flagsMonitor {
+                self.eventMonitors.append(flagsMonitor)
+            }
         }
-        if let flagsMonitor = flagsMonitor {
-            eventMonitors.append(flagsMonitor)
+
+        addFlagsMonitor(false)
+        if sessionPhase != .revealed {
+            // During the invisible preparation phase we watch both scopes. Once the
+            // HUD is revealed we re-install local-only monitoring.
+            addFlagsMonitor(true)
+        }
+
+        if sessionPhase == .revealed {
+            // Give a tiny grace period for state to settle or for fast release.
+            let currentFlags = currentModifierFlags()
+            if !checkModifiersHeld(currentFlags: currentFlags, required: required) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
+                    guard let self else { return }
+                    let flags = self.currentModifierFlags()
+                    if self.sessionPhase == .revealed,
+                       !self.checkModifiersHeld(currentFlags: flags, required: required) {
+                        self.finalizeSwitchAndHide()
+                    }
+                }
+            }
         }
         
         // 2. Loop Logic (Hyper Key / Hold Key)
         if let activeKey = activeKey {
             currentLoopKey = activeKey.rawValue
             isLoopKeyHeld = true
-            
-            // Start listening for Key Up of this specific key
-            keyUpMonitor = addLocalEventMonitor(.keyUp) { [weak self] event in
-                let keyCode = Int(event.keyCode)
-                if keyCode == activeKey.rawValue {
-                    Task { @MainActor in
-                        guard let self = self else { return }
-                        self.isLoopKeyHeld = false
-                        
-                        // Check if HUD is waiting to show?
-                        if let timer = self.showTimer, timer.isValid {
-                            // "Quick Tap" OR "Peek"? Check Modifiers!
-                            let currentFlags = self.currentModifierFlags()
-                            if self.checkModifiersHeld(currentFlags: currentFlags, required: required) {
-                                // Modifiers HELD -> PEEK Mode!
-                                // Show HUD immediately, but DO NOT start looping (since key is up).
-                                self.showTimer?.fire() // Trigger manual fire to show HUD
-                            } else {
-                                // Modifiers RELEASED -> Quick Tap!
-                                // Cancel HUD.
-                                self.showTimer?.invalidate()
-                                self.showTimer = nil
-                            }
+
+            let handleKeyUp: (NSEvent) -> Void = { [weak self] event in
+                guard Int(event.keyCode) == activeKey.rawValue else { return }
+
+                Task { @MainActor in
+                    guard let self else { return }
+                    self.isLoopKeyHeld = false
+
+                    if let timer = self.revealTimer, timer.isValid {
+                        let currentFlags = self.currentModifierFlags()
+                        if self.checkModifiersHeld(currentFlags: currentFlags, required: required) {
+                            // "Peek" behavior: reveal the HUD immediately, but do not
+                            // start auto-cycling because the loop key was released.
+                            self.revealHUD(requiredModifiers: requiredModifiers, activeKey: activeKey, shouldStartLoop: false)
+                        } else {
+                            self.revealTimer?.invalidate()
+                            self.revealTimer = nil
                         }
-                        
-                        self.stopLooping()
                     }
+
+                    self.stopLooping()
                 }
-                return event
             }
-            // Note: Loop timer is NOT started here anymore. It's started by presentHUD -> scheduleLoopStart.
-            
+
+            if sessionPhase != .revealed,
+               let keyMonitor = addGlobalEventMonitor(.keyUp, handleKeyUp) {
+                keyUpMonitors.append(keyMonitor)
+            }
+
+            if let keyMonitor = addLocalEventMonitor(.keyUp, { event in
+                handleKeyUp(event)
+                return event
+            }) {
+                keyUpMonitors.append(keyMonitor)
+            }
         }
-        
+
+        guard sessionPhase == .revealed else {
+            return
+        }
+
         // Monitor Arrow Keys AND Loop Key for "Heartbeat"
         let keyMonitor = addLocalEventMonitor(.keyDown) { [weak self] event in
-            
-            // Heartbeat: If this is the active loop key, update the timestamp
+            Task { @MainActor in
+                // Heartbeat: If this is the active loop key, update the timestamp
+                if let active = activeKey, Int(event.keyCode) == active.rawValue {
+                    self?.lastLocalKeyDownTime = self?.timeProvider.now
+                    return
+                }
+
+                // Stop looping if user calculates manually navigation (Arrows, etc)
+                // But NOT if it's just the loop key repeating!
+                if let active = activeKey, Int(event.keyCode) != active.rawValue {
+                    self?.stopLooping()
+                } else if activeKey == nil {
+                    self?.stopLooping()
+                }
+            }
+
             if let active = activeKey, Int(event.keyCode) == active.rawValue {
-                self?.lastLocalKeyDownTime = self?.timeProvider.now
                 return nil // Consume the event so it doesn't beep or do other things
             }
-            
-            // Stop looping if user calculates manually navigation (Arrows, etc)
-            // But NOT if it's just the loop key repeating!
-            if let active = activeKey, Int(event.keyCode) != active.rawValue {
-                self?.stopLooping()
-            } else if activeKey == nil {
-                self?.stopLooping()
-            }
-            
+
             return self?.handleKeyDown(event: event) ?? event
         }
         if let keyMonitor = keyMonitor {
@@ -513,10 +593,7 @@ class HUDManager: @preconcurrency ObservableObject {
         loopTimer = nil
         isRepeatingLoopActive = false
         currentLoopKey = nil // Reset so we accept new requests
-        if let monitor = keyUpMonitor {
-            removeEventMonitor(monitor)
-            keyUpMonitor = nil
-        }
+        clearKeyUpMonitors()
     }
     
     private func selectNextApp() {
@@ -555,7 +632,7 @@ class HUDManager: @preconcurrency ObservableObject {
         let nextIndex = (currentIndex + 1) % count
         let newId = currentItems[nextIndex].id
         
-        presentHUD(items: currentItems, activeAppId: newId, shortcut: nil)
+        prepareHUD(items: currentItems, activeAppId: newId, shortcut: nil, reveal: true)
         
         // Update pending ID and notify listener
         self.pendingActiveAppId = newId
@@ -598,7 +675,7 @@ class HUDManager: @preconcurrency ObservableObject {
         
         if nextIndex != currentIndex {
             let newId = currentItems[nextIndex].id
-            presentHUD(items: currentItems, activeAppId: newId, shortcut: nil)
+            prepareHUD(items: currentItems, activeAppId: newId, shortcut: nil, reveal: true)
             self.pendingActiveAppId = newId
             self.onSelectCallback?(newId)
             return nil // Consume event
@@ -612,33 +689,23 @@ class HUDManager: @preconcurrency ObservableObject {
     }
 
     private func checkModifiersHeld(currentFlags: NSEvent.ModifierFlags, required: NSEvent.ModifierFlags) -> Bool {
-        // Command (55, 54)
-        if required.contains(.command) {
-            if isKeyDown(55) || isKeyDown(54) { return true }
+        let isModifierHeld: (NSEvent.ModifierFlags, [Int]) -> Bool = { modifier, keyCodes in
+            guard required.contains(modifier) else {
+                return true
+            }
+
+            if keyCodes.contains(where: self.isKeyDown) {
+                return true
+            }
+
+            // Fallback to flags if the hardware check misses a transient state.
+            return currentFlags.contains(modifier)
         }
-        
-        // Option (58, 61)
-        if required.contains(.option) {
-            if isKeyDown(58) || isKeyDown(61) { return true }
-        }
-        
-        // Control (59, 62)
-        if required.contains(.control) {
-            if isKeyDown(59) || isKeyDown(62) { return true }
-        }
-        
-        // Shift (56, 60)
-        if required.contains(.shift) {
-            if isKeyDown(56) || isKeyDown(60) { return true }
-        }
-        
-        // Fallback to flags if hardware check fails (unlikely, but safe)
-        if required.contains(.command) && currentFlags.contains(.command) { return true }
-        if required.contains(.shift) && currentFlags.contains(.shift) { return true }
-        if required.contains(.option) && currentFlags.contains(.option) { return true }
-        if required.contains(.control) && currentFlags.contains(.control) { return true }
-        
-        return false
+
+        return isModifierHeld(.command, [55, 54])
+            && isModifierHeld(.option, [58, 61])
+            && isModifierHeld(.control, [59, 62])
+            && isModifierHeld(.shift, [56, 60])
     }
     
     private func handleFlagsChanged(event: NSEvent, required: NSEvent.ModifierFlags) {
@@ -659,8 +726,8 @@ class HUDManager: @preconcurrency ObservableObject {
 
     private func finalizeSwitchAndHide() {
         // Modifiers released
-        showTimer?.invalidate() // Cancel pending show
-        showTimer = nil
+        revealTimer?.invalidate()
+        revealTimer = nil
 
         // KEY CHANGE: Session has ended.
         // Clear the lastRequestTime and lastLocalKeyDownTime tracking so the next interaction is fresh.
@@ -673,22 +740,23 @@ class HUDManager: @preconcurrency ObservableObject {
 
         // Fast switch: user released keys before HUD appeared or while it was visible
         if let pendingId = pendingActiveAppId {
-            if didPresentHUDThisSession {
+            if isHUDRevealedThisSession() {
                 closeVisibleSettingsWindowIfNeeded(beforeActivating: pendingId)
+            } else {
+                orderCurrentSpaceWindowsBackIfNeeded()
             }
             activatePendingTargetApp(pendingId)
             pendingActiveAppId = nil
         }
         
-        if window?.isVisible == true {
+        if window != nil || isSessionActive {
             hide() // Hide immediately
+            return
         }
         
         // Stop monitoring
-        for monitor in eventMonitors {
-            removeEventMonitor(monitor)
-        }
-        eventMonitors.removeAll()
+        clearEventMonitors()
+        clearKeyUpMonitors()
         
         if let observer = appResignObserver {
             NotificationCenter.default.removeObserver(observer)
@@ -703,6 +771,16 @@ class HUDManager: @preconcurrency ObservableObject {
         return list.contains { ($0[kCGWindowOwnerPID as String] as? Int32) == pid }
     }
 
+    private func activateRunningTargetApp(_ app: NSRunningApplication) {
+        if isAppActive() {
+            NSApp?.yieldActivation(to: app)
+            _ = app.activate(from: .current, options: .activateAllWindows)
+            return
+        }
+
+        _ = app.activate(options: .activateAllWindows)
+    }
+
     private func activateOrLaunch(bundleId: String) {
         // Resolve the real bundle ID from currentItems (bundleId may be a composite "bundleId::pid")
         let item = currentItems.first(where: { $0.id == bundleId || $0.bundleId == bundleId })
@@ -712,7 +790,10 @@ class HUDManager: @preconcurrency ObservableObject {
            let app = NSRunningApplication.runningApplications(withBundleIdentifier: realBundleId)
                .first(where: { $0.processIdentifier == pid }) {
             app.unhide()
-            app.activate(options: .activateAllWindows)
+            // Quick-tap blind switching can happen while ShortcutCycle is still the
+            // active app (for example with Settings or menu UI involved). Yield our
+            // activation first so the target app can take frontmost focus reliably.
+            activateRunningTargetApp(app)
             // If all windows are minimized, activate() succeeds but nothing appears on screen.
             // After a short delay, check via CGWindowList (no Accessibility permission needed);
             // if no visible windows exist, re-activate the specific instance to ensure it is
@@ -721,7 +802,7 @@ class HUDManager: @preconcurrency ObservableObject {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
                 guard let self else { return }
                 guard !self.hasVisibleWindows(pid: pid) else { return }
-                app.activate(options: .activateAllWindows)
+                self.activateRunningTargetApp(app)
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
                     self?.launchApp(bundleIdentifier: realBundleId)
                 }
@@ -759,17 +840,19 @@ class HUDManager: @preconcurrency ObservableObject {
     /// Hide the HUD
     func hide() {
         fireOnFinalizeIfNeeded()
-        let hadPresentedHUD = didPresentHUDThisSession
+        let hadRevealedHUD = isHUDRevealedThisSession()
         window?.orderOut(nil)
         window = nil
         currentSelectedAppId = nil
         currentShortcut = nil
-        didPresentHUDThisSession = false
+        sessionPhase = .idle
 
         // Ensure we activate the pending app if it exists (fallback)
         if let pendingId = pendingActiveAppId {
-            if hadPresentedHUD {
+            if hadRevealedHUD {
                 closeVisibleSettingsWindowIfNeeded(beforeActivating: pendingId)
+            } else {
+                orderCurrentSpaceWindowsBackIfNeeded()
             }
             activatePendingTargetApp(pendingId)
             pendingActiveAppId = nil
@@ -780,15 +863,14 @@ class HUDManager: @preconcurrency ObservableObject {
 
         hideTimer?.invalidate()
         hideTimer = nil
-        showTimer?.invalidate()
-        showTimer = nil
+        revealTimer?.invalidate()
+        revealTimer = nil
         lastLocalKeyDownTime = nil
+        lastRequestTime = nil
         stopLooping()
         
-        for monitor in eventMonitors {
-            removeEventMonitor(monitor)
-        }
-        eventMonitors.removeAll()
+        clearEventMonitors()
+        clearKeyUpMonitors()
         
         if let observer = appResignObserver {
             NotificationCenter.default.removeObserver(observer)

@@ -30,7 +30,11 @@ final class AppSwitcherTests: XCTestCase {
             app.unhide()
         }
         switcher.activateRunningAppInstance = { app in
-            app.activate(options: .activateAllWindows)
+            if NSApp?.isActive == true {
+                NSApp?.yieldActivation(to: app)
+                return app.activate(from: .current, options: .activateAllWindows)
+            }
+            return app.activate(options: .activateAllWindows)
         }
         NSApp?.unhide(nil)
     }
