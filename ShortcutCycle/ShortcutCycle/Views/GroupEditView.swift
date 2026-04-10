@@ -20,7 +20,11 @@ struct GroupEditView: View {
     @State private var isNameFieldHovered: Bool = false
     @FocusState private var isNameFocused: Bool
     @State private var suppressAutoFocus = true
+    @State private var areSecondarySectionsMounted = false
     @State private var quickAddCandidates: [AppItem] = []
+    @State private var isRefreshingQuickAddCandidates = false
+    @State private var secondarySectionsMountTask: Task<Void, Never>?
+    @State private var quickAddRefreshTask: Task<Void, Never>?
 
     init(
         groupId: UUID,
@@ -64,13 +68,25 @@ struct GroupEditView: View {
         }
         .onChange(of: (group?.apps.map(\.bundleIdentifier).sorted()) ?? []) { _, _ in
             dragPreviewApps = nil
-            refreshQuickAddCandidates()
+            if areSecondarySectionsMounted {
+                scheduleQuickAddCandidatesRefresh()
+            }
         }
         .onReceive(NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didLaunchApplicationNotification)) { _ in
-            refreshQuickAddCandidates()
+            RunningAppQuickAddCatalog.shared.refresh()
+            if areSecondarySectionsMounted {
+                scheduleQuickAddCandidatesRefresh()
+            }
         }
         .onReceive(NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didTerminateApplicationNotification)) { _ in
-            refreshQuickAddCandidates()
+            RunningAppQuickAddCatalog.shared.refresh()
+            if areSecondarySectionsMounted {
+                scheduleQuickAddCandidatesRefresh()
+            }
+        }
+        .onDisappear {
+            secondarySectionsMountTask?.cancel()
+            quickAddRefreshTask?.cancel()
         }
     }
 
@@ -82,11 +98,18 @@ struct GroupEditView: View {
 
                 SettingsSectionDivider()
 
-                GroupShortcutEditor(group: group, groupId: groupId)
+                GroupShortcutEditor(
+                    group: group,
+                    groupId: groupId
+                )
 
                 SettingsSectionDivider()
 
-                appsSection(for: group)
+                if areSecondarySectionsMounted {
+                    appsSection(for: group)
+                } else {
+                    secondarySectionsPlaceholder
+                }
 
                 Spacer()
             }
@@ -134,6 +157,9 @@ struct GroupEditView: View {
                     updatedGroup.name = newValue
                     store.updateGroup(updatedGroup)
                 }
+        }
+        .task(id: groupId) {
+            GroupSwitchPerformanceTracker.shared.markHeaderVisible(for: groupId)
         }
     }
 
@@ -210,10 +236,14 @@ struct GroupEditView: View {
                     ForEach(displayedApps) { app in
                         AppGridItemView(
                             app: app,
-                            isPlaceholder: draggingApp?.id == app.id
-                        ) {
-                            store.removeApp(app, from: groupId)
-                        }
+                            isPlaceholder: draggingApp?.id == app.id,
+                            onDelete: {
+                                store.removeApp(app, from: groupId)
+                            },
+                            onIconResolved: {
+                                GroupSwitchPerformanceTracker.shared.markGroupIconResolved(itemId: app.id, for: groupId)
+                            }
+                        )
                         .onDrag {
                             draggingApp = app
                             return NSItemProvider(object: app.id.uuidString as NSString)
@@ -232,11 +262,43 @@ struct GroupEditView: View {
                 .animation(.default, value: dragPreviewApps?.map(\.id) ?? [])
             }
 
-            addAppsPanel(for: group, quickAddCandidates: quickAddCandidates)
+            addAppsPanel(
+                for: group,
+                quickAddCandidates: quickAddCandidates,
+                isRefreshingQuickAddCandidates: isRefreshingQuickAddCandidates
+            )
+        }
+        .task(id: groupId) {
+            GroupSwitchPerformanceTracker.shared.markAppsSectionVisible(for: groupId)
         }
     }
 
-    private func addAppsPanel(for group: AppGroup, quickAddCandidates: [AppItem]) -> some View {
+    private var secondarySectionsPlaceholder: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Applications".localized(language: selectedLanguage))
+                .font(.headline)
+
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(SettingsChromePalette.panelBackground(for: colorScheme))
+                .frame(maxWidth: .infinity)
+                .frame(height: 160)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(SettingsChromePalette.panelBorder(for: colorScheme), lineWidth: 1)
+                )
+                .overlay {
+                    ProgressView()
+                        .controlSize(.small)
+                }
+        }
+        .accessibilityHidden(true)
+    }
+
+    private func addAppsPanel(
+        for group: AppGroup,
+        quickAddCandidates: [AppItem],
+        isRefreshingQuickAddCandidates: Bool
+    ) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Add Apps".localized(language: selectedLanguage))
                 .font(.caption.weight(.semibold))
@@ -266,6 +328,11 @@ struct GroupEditView: View {
                         runningAppsOptionCard(quickAddCandidates)
                         browseAppsOptionCard(for: group)
                     }
+                }
+            } else if isRefreshingQuickAddCandidates {
+                VStack(alignment: .leading, spacing: 12) {
+                    runningAppsLoadingCard()
+                    browseAppsOptionCard(for: group)
                 }
             } else {
                 browseAppsOptionCard(for: group)
@@ -303,6 +370,19 @@ struct GroupEditView: View {
         }
     }
 
+    private func runningAppsLoadingCard() -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Running Apps".localized(language: selectedLanguage))
+                .font(.caption.weight(.medium))
+                .foregroundColor(.secondary)
+
+            ProgressView()
+                .controlSize(.small)
+                .padding(.vertical, 6)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
     private func browseAppsOptionCard(for group: AppGroup) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Browse or drag from Finder".localized(language: selectedLanguage))
@@ -316,41 +396,114 @@ struct GroupEditView: View {
     }
 
     private func loadGroupData() {
+        scheduleSecondarySectionsMount()
+
         if let group = group {
             groupName = group.name
+            IconCache.shared.prefetchIcons(for: group.apps)
         }
         dragPreviewApps = nil
-        refreshQuickAddCandidates()
+        quickAddRefreshTask?.cancel()
+        quickAddCandidates = []
+        isRefreshingQuickAddCandidates = false
     }
 
-    private func refreshQuickAddCandidates() {
+    private func scheduleSecondarySectionsMount() {
+        secondarySectionsMountTask?.cancel()
+        areSecondarySectionsMounted = false
+
+        guard group != nil else { return }
+
+        secondarySectionsMountTask = Task { @MainActor in
+            await Task.yield()
+            await Task.yield()
+            guard !Task.isCancelled else { return }
+            areSecondarySectionsMounted = true
+            scheduleQuickAddCandidatesRefresh()
+        }
+    }
+
+    private func scheduleQuickAddCandidatesRefresh() {
+        quickAddRefreshTask?.cancel()
+
         guard let group else {
             quickAddCandidates = []
+            isRefreshingQuickAddCandidates = false
             return
         }
 
-        quickAddCandidates = runningAppCandidatesProvider(group.apps)
+        let groupApps = group.apps
+        quickAddCandidates = []
+        isRefreshingQuickAddCandidates = true
+        GroupSwitchPerformanceTracker.shared.markQuickAddRefreshStarted(for: groupId)
+
+        quickAddRefreshTask = Task { @MainActor in
+            await Task.yield()
+            guard !Task.isCancelled else { return }
+
+            let candidates = runningAppCandidatesProvider(groupApps)
+            guard !Task.isCancelled else { return }
+
+            quickAddCandidates = candidates
+            isRefreshingQuickAddCandidates = false
+            IconCache.shared.prefetchIcons(for: candidates)
+            GroupSwitchPerformanceTracker.shared.markQuickAddReady(for: groupId, candidateCount: candidates.count)
+        }
     }
 
     private static func defaultRunningAppCandidates(for groupApps: [AppItem]) -> [AppItem] {
-        let runningApps: [RunningAppQuickAddSource] = NSWorkspace.shared.runningApplications.compactMap { app in
-            guard let bundleIdentifier = app.bundleIdentifier else { return nil }
-            return RunningAppQuickAddSource(
-                bundleIdentifier: bundleIdentifier,
-                bundleURL: app.bundleURL ?? NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier),
-                isRegularApp: app.activationPolicy == .regular
-            )
-        }
-        let excludedBundleIdentifiers = Set(["com.xcv58.ShortcutCycle", Bundle.main.bundleIdentifier].compactMap { $0 })
-        return RunningAppQuickAdd.candidates(
-            for: groupApps,
-            runningApps: runningApps,
-            excludedBundleIdentifiers: excludedBundleIdentifiers
-        )
+        RunningAppQuickAddCatalog.shared.candidates(for: groupApps)
     }
 
     static func shouldShowRunningAppQuickAddSection(_ quickAddCandidates: [AppItem]) -> Bool {
         !quickAddCandidates.isEmpty
+    }
+}
+
+@MainActor
+private final class RunningAppQuickAddCatalog {
+    static let shared = RunningAppQuickAddCatalog()
+
+    private var cachedApps: [AppItem] = []
+    private var hasLoaded = false
+
+    private init() {}
+
+    func refresh() {
+        let excludedBundleIdentifiers = Set(["com.xcv58.ShortcutCycle", Bundle.main.bundleIdentifier].compactMap { $0 })
+        var seenBundleIdentifiers = Set<String>()
+
+        cachedApps = NSWorkspace.shared.runningApplications.compactMap { app in
+            guard app.activationPolicy == .regular else { return nil }
+            guard let bundleIdentifier = app.bundleIdentifier else { return nil }
+            guard !excludedBundleIdentifiers.contains(bundleIdentifier) else { return nil }
+            guard seenBundleIdentifiers.insert(bundleIdentifier).inserted else { return nil }
+            guard let appURL = app.bundleURL ?? NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier) else {
+                return nil
+            }
+            return AppItem.from(appURL: appURL)
+        }
+        .sorted { lhs, rhs in
+            let lhsKey = lhs.name.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+            let rhsKey = rhs.name.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+
+            if lhsKey == rhsKey {
+                return lhs.bundleIdentifier < rhs.bundleIdentifier
+            }
+
+            return lhsKey < rhsKey
+        }
+
+        hasLoaded = true
+    }
+
+    func candidates(for groupApps: [AppItem]) -> [AppItem] {
+        if !hasLoaded {
+            refresh()
+        }
+
+        let excludedBundleIdentifiers = Set(groupApps.map(\.bundleIdentifier))
+        return cachedApps.filter { !excludedBundleIdentifiers.contains($0.bundleIdentifier) }
     }
 }
 
@@ -366,7 +519,7 @@ private struct RunningAppQuickAddButton: View {
         Button(action: onAdd) {
             VStack(spacing: 6) {
                 ZStack(alignment: .topTrailing) {
-                    AppIconThumbnailView(app: app, size: 30, fallbackFontSize: 24)
+                    AppIconThumbnailView(app: app, size: 30, fallbackFontSize: 24, onIconResolved: nil)
 
                     Image(systemName: "plus.circle.fill")
                         .font(.system(size: 12, weight: .semibold))
@@ -450,6 +603,9 @@ private struct GroupShortcutEditor: View {
                 KeyboardShortcuts.Recorder(for: shortcutName, onChange: handleShortcutChange)
                     .padding(.leading, 4)
                     .id("\(selectedLanguage)-\(groupId.uuidString)") // Recreate only when localization or target group changes
+                    .task(id: groupId) {
+                        GroupSwitchPerformanceTracker.shared.markRecorderMounted(for: groupId)
+                    }
 
                 if shouldShowSuggestions {
                     ShortcutSuggestionRow(
@@ -493,6 +649,9 @@ private struct GroupShortcutEditor: View {
             .font(.caption)
             .foregroundColor(.secondary)
             .padding(.top, 2)
+        }
+        .task(id: groupId) {
+            GroupSwitchPerformanceTracker.shared.markShortcutSectionVisible(for: groupId)
         }
     }
 

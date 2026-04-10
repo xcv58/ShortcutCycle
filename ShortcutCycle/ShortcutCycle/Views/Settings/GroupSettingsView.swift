@@ -163,6 +163,14 @@ struct GroupSettingsView: View {
                     return
                 }
 
+                if let newValue {
+                    GroupSwitchPerformanceTracker.shared.beginGroupSwitch(
+                        to: newValue,
+                        source: "sidebar",
+                        expectedGroupIconCount: appCount(for: newValue)
+                    )
+                }
+
                 pendingSelectedGroupId = newValue
 
                 Task { @MainActor in
@@ -180,6 +188,11 @@ struct GroupSettingsView: View {
 
     private var visibleSelectedGroupId: UUID? {
         pendingSelectedGroupId ?? store.selectedGroupId
+    }
+
+    private func appCount(for groupId: UUID?) -> Int {
+        guard let groupId else { return 0 }
+        return store.groups.first(where: { $0.id == groupId })?.apps.count ?? 0
     }
 
     var body: some View {
@@ -212,6 +225,15 @@ struct GroupSettingsView: View {
         .onChange(of: store.selectedGroupId) { _, _ in
             // External selection changes (menu commands, URL routing, etc.) should win immediately.
             pendingSelectedGroupId = nil
+        }
+        .onChange(of: store.selectedGroupId) { _, newValue in
+            if let newValue {
+                GroupSwitchPerformanceTracker.shared.beginGroupSwitch(
+                    to: newValue,
+                    source: "external",
+                    expectedGroupIconCount: appCount(for: newValue)
+                )
+            }
         }
     }
 }
