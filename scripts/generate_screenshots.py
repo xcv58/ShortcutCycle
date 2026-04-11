@@ -333,6 +333,33 @@ def crop_to_alpha_bounds(image: Image.Image, *, padding: int = 0) -> Image.Image
     return rgba.crop((left, top, right, bottom))
 
 
+def validate_crop_content(
+    image: Image.Image,
+    *,
+    label: str,
+    difference_threshold: int = 12,
+    minimum_non_uniform_ratio: float = 0.01,
+) -> None:
+    rgba = image.convert("RGBA")
+    if rgba.width == 0 or rgba.height == 0:
+        print(f"Warning: {label} crop is empty; verify crop bounds.")
+        return
+
+    reference_pixel = rgba.getpixel((0, 0))
+    background = Image.new("RGBA", rgba.size, reference_pixel)
+    diff = ImageChops.difference(rgba, background).convert("L")
+    mask = diff.point(lambda value: 255 if value > difference_threshold else 0)
+    histogram = mask.histogram()
+    non_uniform_pixels = sum(histogram[1:])
+    non_uniform_ratio = non_uniform_pixels / max(rgba.width * rgba.height, 1)
+
+    if non_uniform_ratio < minimum_non_uniform_ratio:
+        print(
+            f"Warning: {label} crop appears mostly uniform "
+            f"({non_uniform_ratio:.1%} non-uniform pixels); verify crop bounds."
+        )
+
+
 def apply_rounded_mask(image: Image.Image, *, radius: int) -> Image.Image:
     panel = image.convert("RGBA")
     mask = Image.new("L", panel.size, 0)
@@ -475,12 +502,20 @@ def rotated_panel(
     return crop_to_alpha_bounds(panel, padding=2)
 
 
+# Crop the General settings application panel used for the foreground cards in
+# the multi-language composite.
 def crop_general_application_panel(image: Image.Image) -> Image.Image:
-    return crop_box(image.convert("RGBA"), left=0.195, top=0.555, right=0.845, bottom=0.79)
+    panel = crop_box(image.convert("RGBA"), left=0.195, top=0.555, right=0.845, bottom=0.79)
+    validate_crop_content(panel, label="general application panel")
+    return panel
 
 
+# Crop the General settings language controls strip when validating the
+# localized language row framing.
 def crop_general_language_strip(image: Image.Image) -> Image.Image:
-    return crop_box(image.convert("RGBA"), left=0.21, top=0.60, right=0.845, bottom=0.735)
+    panel = crop_box(image.convert("RGBA"), left=0.21, top=0.60, right=0.845, bottom=0.735)
+    validate_crop_content(panel, label="general language strip")
+    return panel
 
 
 def crop_full_window_capture(image: Image.Image) -> Image.Image:

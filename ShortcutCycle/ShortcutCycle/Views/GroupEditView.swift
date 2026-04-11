@@ -466,22 +466,28 @@ final class RunningAppQuickAddCatalog {
 
     private var cachedApps: [AppItem] = []
     private var hasLoaded = false
+    #if DEBUG
     private var overrideApps: [AppItem]?
+    #endif
 
     private init() {}
 
+    #if DEBUG
     func setOverrideApps(_ apps: [AppItem]?) {
         overrideApps = apps
         cachedApps = apps ?? []
         hasLoaded = apps != nil
     }
+    #endif
 
     func refresh() {
+        #if DEBUG
         if let overrideApps {
             cachedApps = overrideApps
             hasLoaded = true
             return
         }
+        #endif
 
         let excludedBundleIdentifiers = Set(["com.xcv58.ShortcutCycle", Bundle.main.bundleIdentifier].compactMap { $0 })
         var seenBundleIdentifiers = Set<String>()

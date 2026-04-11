@@ -12,22 +12,30 @@ struct MenuBarView: View {
     @AppStorage(WelcomeExperiencePolicy.hasDismissedWelcomeKey) private var hasDismissedWelcome = false
 
     var selectedLanguage: String = "system"
+    #if DEBUG
     var screenshotHighlightedGroupID: UUID? = nil
     var screenshotRunningBundleIDs: Set<String>? = nil
     var screenshotLaunchAtLogin: Bool? = nil
     var screenshotThemeOverride: AppTheme? = nil
+    #endif
     
     @State private var listHeight: CGFloat = 0
     @State private var runningBundleIDs = Set<String>()
 
     private var effectiveTheme: AppTheme {
+        #if DEBUG
         screenshotThemeOverride ?? appTheme
+        #else
+        appTheme
+        #endif
     }
 
     private var launchAtLoginBinding: Binding<Bool> {
+        #if DEBUG
         if let screenshotLaunchAtLogin {
             return .constant(screenshotLaunchAtLogin)
         }
+        #endif
 
         return $launchAtLogin.isEnabled
     }
@@ -55,11 +63,18 @@ struct MenuBarView: View {
                             .padding()
                     } else {
                         ForEach(store.groups) { group in
+                            #if DEBUG
                             MenuBarGroupRow(
                                 group: group,
                                 runningBundleIDs: runningBundleIDs,
                                 screenshotHighlighted: group.id == screenshotHighlightedGroupID
                             )
+                            #else
+                            MenuBarGroupRow(
+                                group: group,
+                                runningBundleIDs: runningBundleIDs
+                            )
+                            #endif
                         }
                     }
                 }
@@ -77,6 +92,7 @@ struct MenuBarView: View {
             Divider()
             
             // Preferences
+            #if DEBUG
             if ScreenshotMode.usesSyntheticControls {
                 HStack(spacing: 12) {
                     Text("Open at Login".localized(language: selectedLanguage))
@@ -91,6 +107,12 @@ struct MenuBarView: View {
                     .padding(.horizontal, 14)
                     .padding(.vertical, 8)
             }
+            #else
+            Toggle("Open at Login".localized(language: selectedLanguage), isOn: launchAtLoginBinding)
+                .toggleStyle(SwitchToggleStyle(tint: Color(nsColor: .controlAccentColor)))
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+            #endif
             
             Divider()
                 .padding(.vertical, 4)
@@ -107,7 +129,9 @@ struct MenuBarView: View {
                 HStack(spacing: 2) {
                     ForEach(AppTheme.allCases) { theme in
                         Button {
+                            #if DEBUG
                             guard screenshotThemeOverride == nil else { return }
+                            #endif
                             appTheme = theme
                         } label: {
                             Image(systemName: theme.icon)
@@ -161,10 +185,12 @@ struct MenuBarView: View {
     }
 
     private func refreshRunningBundleIDs() {
+        #if DEBUG
         if let screenshotRunningBundleIDs {
             runningBundleIDs = screenshotRunningBundleIDs
             return
         }
+        #endif
 
         runningBundleIDs = Set(
             NSWorkspace.shared.runningApplications.compactMap { app in
@@ -207,15 +233,22 @@ struct MenuBarButton: View {
 struct MenuBarGroupRow: View {
     let group: AppGroup
     let runningBundleIDs: Set<String>
+    #if DEBUG
     var screenshotHighlighted: Bool = false
+    #endif
     @EnvironmentObject var store: GroupStore
     @State private var isHovering = false
     
     var body: some View {
+        #if DEBUG
         let highlighted = screenshotHighlighted || isHovering
+        #else
+        let highlighted = isHovering
+        #endif
 
         HStack(spacing: 8) {
             // Enable/Disable Toggle
+            #if DEBUG
             if ScreenshotMode.usesSyntheticControls {
                 ScreenshotAccentSwitch(isOn: group.isEnabled, size: .mini)
             } else {
@@ -228,6 +261,16 @@ struct MenuBarGroupRow: View {
                 .labelsHidden()
                 .controlSize(.mini)
             }
+            #else
+            Toggle("", isOn: Binding(
+                get: { group.isEnabled },
+                set: { _ in store.toggleGroupEnabled(group) }
+            ))
+            .toggleStyle(SwitchToggleStyle(tint: Color(nsColor: .controlAccentColor)))
+            .tint(.accentColor)
+            .labelsHidden()
+            .controlSize(.mini)
+            #endif
             
             Image(systemName: "folder.fill")
                 .foregroundColor(group.isEnabled ? (highlighted ? .white : .accentColor) : .gray)

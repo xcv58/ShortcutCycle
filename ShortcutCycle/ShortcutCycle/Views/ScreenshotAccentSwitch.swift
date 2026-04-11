@@ -1,22 +1,5 @@
+#if DEBUG
 import SwiftUI
-
-enum ScreenshotMode {
-    static let isActive = ProcessInfo.processInfo.arguments.contains("--screenshot-scene")
-    static var renderStyle: ScreenshotRenderStyle = .synthetic
-
-    static var usesSyntheticControls: Bool {
-        isActive && renderStyle == .synthetic
-    }
-
-    static var usesSyntheticChrome: Bool {
-        isActive && renderStyle == .synthetic
-    }
-}
-
-enum ScreenshotRenderStyle {
-    case liveWindow
-    case synthetic
-}
 
 struct ScreenshotAccentSwitch: View {
     enum Size {
@@ -77,3 +60,4 @@ struct ScreenshotAccentSwitch: View {
         .accessibilityHidden(true)
     }
 }
+#endif

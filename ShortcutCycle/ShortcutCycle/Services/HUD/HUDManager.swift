@@ -837,6 +837,7 @@ class HUDManager: @preconcurrency ObservableObject {
         }
     }
 
+    #if DEBUG
     func presentScreenshotHUD(items: [HUDAppItem], activeAppId: String, shortcut: String?) -> NSWindow? {
         resetForScreenshotPresentation()
         prepareHUD(items: items, activeAppId: activeAppId, shortcut: shortcut, reveal: true)
@@ -870,6 +871,7 @@ class HUDManager: @preconcurrency ObservableObject {
         onSelectCallback = nil
         onFinalizeCallback = nil
     }
+    #endif
     
     /// Hide the HUD
     func hide() {

@@ -86,6 +86,18 @@
 		F1A200032FB1000100C0DE01 /* ScreenshotAccentSwitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A200012FB1000100C0DE01 /* ScreenshotAccentSwitch.swift */; };
 		F0A100022F60000100C0DE01 /* WelcomeExperiencePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0A100012F60000100C0DE01 /* WelcomeExperiencePolicy.swift */; };
 		F0A100032F60000100C0DE01 /* WelcomeExperiencePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0A100012F60000100C0DE01 /* WelcomeExperiencePolicy.swift */; };
+		F2B000082FC1000100C0DE01 /* ScreenshotArguments.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B000022FC1000100C0DE01 /* ScreenshotArguments.swift */; };
+		F2B000092FC1000100C0DE01 /* ScreenshotRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B000032FC1000100C0DE01 /* ScreenshotRuntime.swift */; };
+		F2B0000A2FC1000100C0DE01 /* ScreenshotFixtureLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B000042FC1000100C0DE01 /* ScreenshotFixtureLibrary.swift */; };
+		F2B0000B2FC1000100C0DE01 /* ScreenshotWindowLifecycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B000052FC1000100C0DE01 /* ScreenshotWindowLifecycle.swift */; };
+		F2B0000C2FC1000100C0DE01 /* ScreenshotSceneViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B000062FC1000100C0DE01 /* ScreenshotSceneViews.swift */; };
+		F2B0000D2FC1000100C0DE01 /* ScreenshotSettingsChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B000072FC1000100C0DE01 /* ScreenshotSettingsChrome.swift */; };
+		F2B0000E2FC1000100C0DE01 /* ScreenshotArguments.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B000022FC1000100C0DE01 /* ScreenshotArguments.swift */; };
+		F2B0000F2FC1000100C0DE01 /* ScreenshotRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B000032FC1000100C0DE01 /* ScreenshotRuntime.swift */; };
+		F2B000102FC1000100C0DE01 /* ScreenshotFixtureLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B000042FC1000100C0DE01 /* ScreenshotFixtureLibrary.swift */; };
+		F2B000112FC1000100C0DE01 /* ScreenshotWindowLifecycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B000052FC1000100C0DE01 /* ScreenshotWindowLifecycle.swift */; };
+		F2B000122FC1000100C0DE01 /* ScreenshotSceneViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B000062FC1000100C0DE01 /* ScreenshotSceneViews.swift */; };
+		F2B000132FC1000100C0DE01 /* ScreenshotSettingsChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B000072FC1000100C0DE01 /* ScreenshotSettingsChrome.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -155,6 +167,12 @@
 		E2B200012F50000100C0DE01 /* SettingsWindowLifecycleCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowLifecycleCoordinator.swift; sourceTree = "<group>"; };
 		F1A200012FB1000100C0DE01 /* ScreenshotAccentSwitch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotAccentSwitch.swift; sourceTree = "<group>"; };
 		F0A100012F60000100C0DE01 /* WelcomeExperiencePolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeExperiencePolicy.swift; sourceTree = "<group>"; };
+		F2B000022FC1000100C0DE01 /* ScreenshotArguments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotArguments.swift; sourceTree = "<group>"; };
+		F2B000032FC1000100C0DE01 /* ScreenshotRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotRuntime.swift; sourceTree = "<group>"; };
+		F2B000042FC1000100C0DE01 /* ScreenshotFixtureLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotFixtureLibrary.swift; sourceTree = "<group>"; };
+		F2B000052FC1000100C0DE01 /* ScreenshotWindowLifecycle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotWindowLifecycle.swift; sourceTree = "<group>"; };
+		F2B000062FC1000100C0DE01 /* ScreenshotSceneViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotSceneViews.swift; sourceTree = "<group>"; };
+		F2B000072FC1000100C0DE01 /* ScreenshotSettingsChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotSettingsChrome.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -397,6 +415,19 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
+		F2B000012FC1000100C0DE01 /* Screenshot */ = {
+			isa = PBXGroup;
+			children = (
+				F2B000022FC1000100C0DE01 /* ScreenshotArguments.swift */,
+				F2B000032FC1000100C0DE01 /* ScreenshotRuntime.swift */,
+				F2B000042FC1000100C0DE01 /* ScreenshotFixtureLibrary.swift */,
+				F2B000052FC1000100C0DE01 /* ScreenshotWindowLifecycle.swift */,
+				F2B000062FC1000100C0DE01 /* ScreenshotSceneViews.swift */,
+				F2B000072FC1000100C0DE01 /* ScreenshotSettingsChrome.swift */,
+			);
+			path = Screenshot;
+			sourceTree = "<group>";
+		};
 		DF88A3752F300B110042E749 /* ShortcutCycle */ = {
 			isa = PBXGroup;
 			children = (
@@ -404,6 +435,7 @@
 				DF88A33F2F300B110042E749 /* Models */,
 				DF88A3502F300B110042E749 /* Resources */,
 				DF88A35D2F300B110042E749 /* Services */,
+				F2B000012FC1000100C0DE01 /* Screenshot */,
 				DF88A3662F300B110042E749 /* ShortcutCycle */,
 				DF88A3712F300B110042E749 /* Views */,
 				DF88A3722F300B110042E749 /* Assets.xcassets */,
@@ -574,6 +606,12 @@
 				E1F4B0042F40000100C0DE01 /* URLRouterLogic.swift in Sources */,
 				DF88A3B42F300CB20042E749 /* URLScheme.swift in Sources */,
 				E2B200022F50000100C0DE01 /* SettingsWindowLifecycleCoordinator.swift in Sources */,
+				F2B000082FC1000100C0DE01 /* ScreenshotArguments.swift in Sources */,
+				F2B000092FC1000100C0DE01 /* ScreenshotRuntime.swift in Sources */,
+				F2B0000A2FC1000100C0DE01 /* ScreenshotFixtureLibrary.swift in Sources */,
+				F2B0000B2FC1000100C0DE01 /* ScreenshotWindowLifecycle.swift in Sources */,
+				F2B0000C2FC1000100C0DE01 /* ScreenshotSceneViews.swift in Sources */,
+				F2B0000D2FC1000100C0DE01 /* ScreenshotSettingsChrome.swift in Sources */,
 				F1A200022FB1000100C0DE01 /* ScreenshotAccentSwitch.swift in Sources */,
 				F0A100022F60000100C0DE01 /* WelcomeExperiencePolicy.swift in Sources */,
 				DF88A3C22F300CE00042E749 /* WelcomeBannerView.swift in Sources */,
@@ -618,6 +656,12 @@
 				E1F4B0052F40000100C0DE01 /* URLRouterLogic.swift in Sources */,
 				DF88A3B52F300CB20042E749 /* URLScheme.swift in Sources */,
 				E2B200032F50000100C0DE01 /* SettingsWindowLifecycleCoordinator.swift in Sources */,
+				F2B0000E2FC1000100C0DE01 /* ScreenshotArguments.swift in Sources */,
+				F2B0000F2FC1000100C0DE01 /* ScreenshotRuntime.swift in Sources */,
+				F2B000102FC1000100C0DE01 /* ScreenshotFixtureLibrary.swift in Sources */,
+				F2B000112FC1000100C0DE01 /* ScreenshotWindowLifecycle.swift in Sources */,
+				F2B000122FC1000100C0DE01 /* ScreenshotSceneViews.swift in Sources */,
+				F2B000132FC1000100C0DE01 /* ScreenshotSettingsChrome.swift in Sources */,
 				F1A200032FB1000100C0DE01 /* ScreenshotAccentSwitch.swift in Sources */,
 				F0A100032F60000100C0DE01 /* WelcomeExperiencePolicy.swift in Sources */,
 				DF88A3C32F300CE00042E749 /* WelcomeBannerView.swift in Sources */,

@@ -17,6 +17,7 @@ xcuserdata/
 
 ## Root-level files
 .DS_Store
+/background.jpeg
 
 ## Scheme files
 # Note: You might want to commit shared schemes. If so, uncomment the lines below.

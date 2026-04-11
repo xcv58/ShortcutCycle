@@ -6,8 +6,11 @@ import Foundation
 enum WelcomeExperiencePolicy {
     static let hasDismissedWelcomeKey = "hasDismissedWelcome"
     static let hasAutoOpenedWelcomeSettingsKey = "hasAutoOpenedWelcomeSettings"
+    #if DEBUG
     static var isScreenshotModeEnabled = false
+    #endif
 
+    #if DEBUG
     static func shouldShowBanner(hasDismissedWelcome: Bool) -> Bool {
         guard !isScreenshotModeEnabled else { return false }
         return !hasDismissedWelcome
@@ -17,6 +20,15 @@ enum WelcomeExperiencePolicy {
         guard !isScreenshotModeEnabled else { return false }
         return hasDismissedWelcome
     }
+    #else
+    static func shouldShowBanner(hasDismissedWelcome: Bool) -> Bool {
+        !hasDismissedWelcome
+    }
+
+    static func shouldShowReplayControl(hasDismissedWelcome: Bool) -> Bool {
+        hasDismissedWelcome
+    }
+    #endif
 
     /// Resets the banner-dismissed flag so the welcome banner reappears on the next
     /// Settings window open. Intentionally does not reset `hasAutoOpenedWelcomeSettingsKey`:
