@@ -8,7 +8,6 @@ class IconCache {
     static let shared = IconCache()
 
     private let lock = NSLock()
-    private let lookupQueue = DispatchQueue(label: "ShortcutCycle.IconCache", qos: .userInitiated)
     private var cache: [String: NSImage] = [:]
     private var failedLookups: Set<String> = []
     private var pendingCallbacks: [String: [(NSImage?) -> Void]] = [:]
@@ -31,7 +30,7 @@ class IconCache {
             return cached
         }
 
-        let icon = Self.resolveIcon(for: appItem)
+        let icon = Self.resolveIconOnMainThread(for: appItem)
 
         lock.lock()
         if let icon {
@@ -71,12 +70,9 @@ class IconCache {
 
         guard shouldStartLookup else { return }
 
-        lookupQueue.async { [appItem] in
+        DispatchQueue.main.async { [appItem] in
             let icon = Self.resolveIcon(for: appItem)
-
-            DispatchQueue.main.async {
-                self.finishLookup(for: key, icon: icon)
-            }
+            self.finishLookup(for: key, icon: icon)
         }
     }
 
@@ -99,6 +95,18 @@ class IconCache {
         for callback in callbacks {
             callback(icon)
         }
+    }
+
+    private static func resolveIconOnMainThread(for appItem: AppItem) -> NSImage? {
+        if Thread.isMainThread {
+            return resolveIcon(for: appItem)
+        }
+
+        var icon: NSImage?
+        DispatchQueue.main.sync {
+            icon = resolveIcon(for: appItem)
+        }
+        return icon
     }
 
     private static func resolveIcon(for appItem: AppItem) -> NSImage? {

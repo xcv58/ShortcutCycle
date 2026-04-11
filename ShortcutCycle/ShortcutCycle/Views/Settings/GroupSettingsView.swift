@@ -132,6 +132,7 @@ struct GroupSettingsView: View {
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
     @Environment(\.colorScheme) private var colorScheme
     @State private var pendingSelectedGroupId: UUID?
+    @State private var pendingSelectionRequestID: UUID?
 
     /// A deferred-write binding for columnVisibility.
     ///
@@ -160,6 +161,7 @@ struct GroupSettingsView: View {
             set: { newValue in
                 guard store.selectedGroupId != newValue else {
                     pendingSelectedGroupId = nil
+                    pendingSelectionRequestID = nil
                     return
                 }
 
@@ -171,15 +173,20 @@ struct GroupSettingsView: View {
                     )
                 }
 
+                let requestID = UUID()
                 pendingSelectedGroupId = newValue
+                pendingSelectionRequestID = requestID
 
                 Task { @MainActor in
+                    guard pendingSelectionRequestID == requestID else { return }
+
                     if store.selectedGroupId != newValue {
                         store.selectedGroupId = newValue
                     }
 
-                    if pendingSelectedGroupId == newValue {
+                    if pendingSelectionRequestID == requestID, pendingSelectedGroupId == newValue {
                         pendingSelectedGroupId = nil
+                        pendingSelectionRequestID = nil
                     }
                 }
             }
@@ -222,11 +229,17 @@ struct GroupSettingsView: View {
         }
         .navigationTitle("App Groups".localized(language: selectedLanguage))
         .background(SettingsChromePalette.windowBackground(for: colorScheme))
-        .onChange(of: store.selectedGroupId) { _, _ in
+        .onChange(of: store.selectedGroupId) { _, newValue in
+            if pendingSelectedGroupId == newValue {
+                pendingSelectedGroupId = nil
+                pendingSelectionRequestID = nil
+                return
+            }
+
             // External selection changes (menu commands, URL routing, etc.) should win immediately.
             pendingSelectedGroupId = nil
-        }
-        .onChange(of: store.selectedGroupId) { _, newValue in
+            pendingSelectionRequestID = nil
+
             if let newValue {
                 GroupSwitchPerformanceTracker.shared.beginGroupSwitch(
                     to: newValue,
