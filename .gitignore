@@ -18,6 +18,8 @@ xcuserdata/
 ## Root-level files
 .DS_Store
 /background.jpeg
+__pycache__/
+*.pyc
 
 ## Scheme files
 # Note: You might want to commit shared schemes. If so, uncomment the lines below.
