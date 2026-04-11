@@ -1,4 +1,5 @@
 import Foundation
+#if DEBUG
 import OSLog
 import os.signpost
 
@@ -215,11 +216,7 @@ final class GroupSwitchPerformanceTracker {
             return false
         }
 
-#if DEBUG
         return UserDefaults.standard.object(forKey: Self.enabledDefaultsKey) as? Bool ?? true
-#else
-        return UserDefaults.standard.bool(forKey: Self.enabledDefaultsKey)
-#endif
     }
 
     private func maybeFinishCurrentSession() {
@@ -293,3 +290,21 @@ final class GroupSwitchPerformanceTracker {
         String(format: "%.2f", value)
     }
 }
+#else
+@MainActor
+final class GroupSwitchPerformanceTracker {
+    static let shared = GroupSwitchPerformanceTracker()
+    static let enabledDefaultsKey = "Debug.GroupSwitchPerformanceEnabled"
+
+    private init() {}
+
+    func beginGroupSwitch(to groupId: UUID, source: String, expectedGroupIconCount: Int) {}
+    func markHeaderVisible(for groupId: UUID) {}
+    func markShortcutSectionVisible(for groupId: UUID) {}
+    func markRecorderMounted(for groupId: UUID) {}
+    func markAppsSectionVisible(for groupId: UUID) {}
+    func markQuickAddRefreshStarted(for groupId: UUID) {}
+    func markQuickAddReady(for groupId: UUID, candidateCount: Int) {}
+    func markGroupIconResolved(itemId: UUID, for groupId: UUID) {}
+}
+#endif
