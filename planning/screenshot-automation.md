@@ -193,15 +193,17 @@ At Retina scale that yields:
 
 They are assembled from multiple base captures by the generation script rather than captured as a single live app scene.
 
-### Optional Background Photo
+### Background Photo
 
-`background.jpeg` at the repository root is optional.
+The default photo background source lives at:
 
-If present, the generator uses it as the blurred/photo-style background for composite assets.
+- `scripts/assets/background.jpeg`
 
-If absent, the generator falls back to the built-in gradient background.
+The generator uses it as the blurred/photo-style background for composite assets.
 
-The file is intentionally gitignored and is not required for deterministic regeneration.
+If the file is removed, the generator falls back to the built-in gradient background.
+
+Keep this source image reasonably sized for the `2880x1800` output workflow; it does not need to be a full-resolution photo export.
 
 ## Regeneration Workflow
 

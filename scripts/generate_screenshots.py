@@ -21,7 +21,7 @@ BUILD_DIR = PACKAGE_ROOT / ".build" / "debug"
 APP_BINARY = BUILD_DIR / "ShortcutCycle"
 RAW_SCREENSHOTS_DIR = PACKAGE_ROOT / "App Store Connect Assets" / "Screenshots"
 OPTIMIZE_SCRIPT = REPO_ROOT / "scripts" / "optimize_images.py"
-BACKGROUND_IMAGE_PATH = REPO_ROOT / "background.jpeg"
+BACKGROUND_IMAGE_PATH = REPO_ROOT / "scripts" / "assets" / "background.jpeg"
 OUTPUT_SIZE = (2880, 1800)
 
 
