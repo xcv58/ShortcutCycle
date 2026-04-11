@@ -1,0 +1,20 @@
+id: overview-main
+description: Core overview demo reused by the Reddit cut
+profile: default
+fixture: marketing-default
+fallback_source_clip: docs/assets/videos/1.mp4
+publish_capture_to:
+  - docs/assets/videos/1.mp4
+capture:
+  mode: synthetic_overview
+  duration: 14.6
+actions:
+  - { at: 1.80, type: cycle, group: Tools }
+  - { at: 3.45, type: cycle, group: Tools }
+  - { at: 5.10, type: cycle, group: Tools }
+  - { at: 6.90, type: cycle, group: Projects }
+  - { at: 8.75, type: cycle, group: Projects }
+  - { at: 10.60, type: cycle, group: Projects }
+  - { at: 12.55, type: cycle, group: Tools }
+trim_hints:
+  - { label: full, start: 0.20, end: 14.30 }

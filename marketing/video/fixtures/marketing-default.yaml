@@ -1,0 +1,26 @@
+id: marketing-default
+description: Built-in and common apps used for the overview marketing demo
+settings:
+  language: en
+  appearance: light
+  show_hud: true
+  show_shortcut_in_hud: true
+groups:
+  - id: 10000000-0000-4000-8000-000000000001
+    name: Tools
+    shortcut: option+1
+    is_enabled: true
+    open_app_if_needed: true
+    apps:
+      - { id: 10000000-0000-4000-8000-000000000011, name: Clock, bundle_id: com.apple.clock }
+      - { id: 10000000-0000-4000-8000-000000000012, name: Tips, bundle_id: com.apple.helpviewer }
+      - { id: 10000000-0000-4000-8000-000000000013, name: Calculator, bundle_id: com.apple.calculator }
+  - id: 10000000-0000-4000-8000-000000000002
+    name: Projects
+    shortcut: option+3
+    is_enabled: true
+    open_app_if_needed: true
+    apps:
+      - { id: 10000000-0000-4000-8000-000000000021, name: Font Book, bundle_id: com.apple.FontBook }
+      - { id: 10000000-0000-4000-8000-000000000022, name: TextEdit, bundle_id: com.apple.TextEdit }
+      - { id: 10000000-0000-4000-8000-000000000023, name: Dictionary, bundle_id: com.apple.Dictionary }

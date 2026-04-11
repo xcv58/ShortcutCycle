@@ -1,0 +1,19 @@
+id: reddit-overview
+description: Reddit launch cut with generated intro card
+profile: reddit
+publish_to:
+  - marketing/reddit/output/shortcutcycle-reddit-cut.mp4
+sequence:
+  - type: card
+    template: intro-social
+    duration: 1.0
+    title: One shortcut per group
+    lines:
+      - "Opt 1 Tools"
+      - "Opt 3 Projects"
+  - { type: scene, scene: overview-main, trim_start: 0.20, trim_end: 14.30 }
+validate:
+  resolution: [1920, 1080]
+  frame_rate: 30
+  max_duration: 15.5
+  audio: false

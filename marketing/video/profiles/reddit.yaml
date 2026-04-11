@@ -1,0 +1,5 @@
+id: reddit
+description: Output defaults for the Reddit launch cut
+inherits: default
+frame_rate: 30
+output_size: [1920, 1080]

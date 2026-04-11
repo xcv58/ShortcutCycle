@@ -1,0 +1,19 @@
+id: intro-social
+kind: shortcut_intro
+size: [1920, 1080]
+background_color: "#0A0E15"
+panel:
+  width: 980
+  height: 470
+  radius: 34
+  color: "#111722"
+title:
+  font: /System/Library/Fonts/SFNS.ttf
+  size: 32
+  color: "#C9CFD8"
+  offset_y: -126
+line:
+  font: /System/Library/Fonts/SFNS.ttf
+  size: 46
+  color: "#F5F7FA"
+  gap: 58
