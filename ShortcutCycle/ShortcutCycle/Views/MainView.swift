@@ -75,6 +75,7 @@ struct MainView: View {
         .toolbarBackground(Color(nsColor: .windowBackgroundColor), for: .windowToolbar)
         .toolbarBackground(.visible, for: .windowToolbar)
         .preferredColorScheme(appTheme.colorScheme)
+        .background(WindowAppearanceApplier(colorScheme: appTheme.colorScheme))
         .frame(minWidth: 720, minHeight: 460)
         .environment(\.locale, LanguageManager.shared.locale)
         .id("\(selectedLanguage)-\(localeObserver.id)") // Force full redraw when language or system locale changes

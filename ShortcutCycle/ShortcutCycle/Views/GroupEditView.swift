@@ -461,15 +461,28 @@ struct GroupEditView: View {
 }
 
 @MainActor
-private final class RunningAppQuickAddCatalog {
+final class RunningAppQuickAddCatalog {
     static let shared = RunningAppQuickAddCatalog()
 
     private var cachedApps: [AppItem] = []
     private var hasLoaded = false
+    private var overrideApps: [AppItem]?
 
     private init() {}
 
+    func setOverrideApps(_ apps: [AppItem]?) {
+        overrideApps = apps
+        cachedApps = apps ?? []
+        hasLoaded = apps != nil
+    }
+
     func refresh() {
+        if let overrideApps {
+            cachedApps = overrideApps
+            hasLoaded = true
+            return
+        }
+
         let excludedBundleIdentifiers = Set(["com.xcv58.ShortcutCycle", Bundle.main.bundleIdentifier].compactMap { $0 })
         var seenBundleIdentifiers = Set<String>()
 

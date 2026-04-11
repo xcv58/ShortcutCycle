@@ -11,11 +11,26 @@ struct MenuBarView: View {
     @AppStorage("appTheme") private var appTheme: AppTheme = .system
     @AppStorage(WelcomeExperiencePolicy.hasDismissedWelcomeKey) private var hasDismissedWelcome = false
 
-    
     var selectedLanguage: String = "system"
+    var screenshotHighlightedGroupID: UUID? = nil
+    var screenshotRunningBundleIDs: Set<String>? = nil
+    var screenshotLaunchAtLogin: Bool? = nil
+    var screenshotThemeOverride: AppTheme? = nil
     
     @State private var listHeight: CGFloat = 0
     @State private var runningBundleIDs = Set<String>()
+
+    private var effectiveTheme: AppTheme {
+        screenshotThemeOverride ?? appTheme
+    }
+
+    private var launchAtLoginBinding: Binding<Bool> {
+        if let screenshotLaunchAtLogin {
+            return .constant(screenshotLaunchAtLogin)
+        }
+
+        return $launchAtLogin.isEnabled
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -40,7 +55,11 @@ struct MenuBarView: View {
                             .padding()
                     } else {
                         ForEach(store.groups) { group in
-                            MenuBarGroupRow(group: group, runningBundleIDs: runningBundleIDs)
+                            MenuBarGroupRow(
+                                group: group,
+                                runningBundleIDs: runningBundleIDs,
+                                screenshotHighlighted: group.id == screenshotHighlightedGroupID
+                            )
                         }
                     }
                 }
@@ -58,9 +77,20 @@ struct MenuBarView: View {
             Divider()
             
             // Preferences
-            Toggle("Open at Login".localized(language: selectedLanguage), isOn: $launchAtLogin.isEnabled)
+            if ScreenshotMode.usesSyntheticControls {
+                HStack(spacing: 12) {
+                    Text("Open at Login".localized(language: selectedLanguage))
+                    Spacer()
+                    ScreenshotAccentSwitch(isOn: launchAtLoginBinding.wrappedValue)
+                }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
+            } else {
+                Toggle("Open at Login".localized(language: selectedLanguage), isOn: launchAtLoginBinding)
+                    .toggleStyle(SwitchToggleStyle(tint: Color(nsColor: .controlAccentColor)))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+            }
             
             Divider()
                 .padding(.vertical, 4)
@@ -77,13 +107,14 @@ struct MenuBarView: View {
                 HStack(spacing: 2) {
                     ForEach(AppTheme.allCases) { theme in
                         Button {
+                            guard screenshotThemeOverride == nil else { return }
                             appTheme = theme
                         } label: {
                             Image(systemName: theme.icon)
                                 .font(.system(size: 14))
                                 .frame(width: 28, height: 28)
-                                .background(appTheme == theme ? Color.accentColor : Color.clear)
-                                .foregroundColor(appTheme == theme ? .white : .primary)
+                                .background(effectiveTheme == theme ? Color.accentColor : Color.clear)
+                                .foregroundColor(effectiveTheme == theme ? .white : .primary)
                                 .cornerRadius(6)
                                 .contentShape(Rectangle())
                         }
@@ -116,8 +147,8 @@ struct MenuBarView: View {
         }
         .frame(width: 280)
         .background(VisualEffectView(material: .popover, blendingMode: .behindWindow))
-        .background(WindowAppearanceApplier(colorScheme: appTheme.colorScheme))
-        .preferredColorScheme(appTheme.colorScheme)
+        .background(WindowAppearanceApplier(colorScheme: effectiveTheme.colorScheme))
+        .preferredColorScheme(effectiveTheme.colorScheme)
         .onAppear {
             refreshRunningBundleIDs()
         }
@@ -130,6 +161,11 @@ struct MenuBarView: View {
     }
 
     private func refreshRunningBundleIDs() {
+        if let screenshotRunningBundleIDs {
+            runningBundleIDs = screenshotRunningBundleIDs
+            return
+        }
+
         runningBundleIDs = Set(
             NSWorkspace.shared.runningApplications.compactMap { app in
                 guard app.activationPolicy == .regular else { return nil }
@@ -171,49 +207,57 @@ struct MenuBarButton: View {
 struct MenuBarGroupRow: View {
     let group: AppGroup
     let runningBundleIDs: Set<String>
+    var screenshotHighlighted: Bool = false
     @EnvironmentObject var store: GroupStore
     @State private var isHovering = false
     
     var body: some View {
+        let highlighted = screenshotHighlighted || isHovering
+
         HStack(spacing: 8) {
             // Enable/Disable Toggle
-            Toggle("", isOn: Binding(
-                get: { group.isEnabled },
-                set: { _ in store.toggleGroupEnabled(group) }
-            ))
-            .toggleStyle(.switch)
-            .labelsHidden()
-            .controlSize(.mini)
+            if ScreenshotMode.usesSyntheticControls {
+                ScreenshotAccentSwitch(isOn: group.isEnabled, size: .mini)
+            } else {
+                Toggle("", isOn: Binding(
+                    get: { group.isEnabled },
+                    set: { _ in store.toggleGroupEnabled(group) }
+                ))
+                .toggleStyle(SwitchToggleStyle(tint: Color(nsColor: .controlAccentColor)))
+                .tint(.accentColor)
+                .labelsHidden()
+                .controlSize(.mini)
+            }
             
             Image(systemName: "folder.fill")
-                .foregroundColor(group.isEnabled ? (isHovering ? .white : .accentColor) : .gray)
+                .foregroundColor(group.isEnabled ? (highlighted ? .white : .accentColor) : .gray)
             
             Text(group.name)
-                .foregroundColor(group.isEnabled ? (isHovering ? .white : .primary) : .secondary)
+                .foregroundColor(group.isEnabled ? (highlighted ? .white : .primary) : .secondary)
             
             Spacer()
             
             if let shortcutString = group.shortcutDisplayString {
                 Text(shortcutString)
                     .font(.caption)
-                    .foregroundColor(isHovering ? .white.opacity(0.8) : .secondary)
+                    .foregroundColor(highlighted ? .white.opacity(0.8) : .secondary)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
                     .background(
-                        isHovering ? Color.white.opacity(0.2) : Color.gray.opacity(0.1)
+                        highlighted ? Color.white.opacity(0.2) : Color.gray.opacity(0.1)
                     )
                     .cornerRadius(4)
             }
             
             if hasRunningApp {
                 Circle()
-                    .fill(group.isEnabled ? (isHovering ? .white : Color.green) : Color.gray)
+                    .fill(group.isEnabled ? (highlighted ? .white : Color.green) : Color.gray)
                     .frame(width: 6, height: 6)
             }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 6)
-        .background(isHovering ? Color.accentColor : Color.clear)
+        .background(highlighted ? Color.accentColor : Color.clear)
         .contentShape(Rectangle())
         .onHover { hovering in
             isHovering = hovering

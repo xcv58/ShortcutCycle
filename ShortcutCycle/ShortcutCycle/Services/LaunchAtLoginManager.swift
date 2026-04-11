@@ -9,18 +9,30 @@ import ShortcutCycleCore
 @MainActor
 class LaunchAtLoginManager: ObservableObject {
     static let shared = LaunchAtLoginManager()
+    private static var screenshotOverrideEnabled: Bool?
     
     @Published var isEnabled: Bool {
         didSet {
             if isEnabled != oldValue {
-                updateLoginItem()
+                if Self.screenshotOverrideEnabled == nil {
+                    updateLoginItem()
+                }
             }
         }
     }
     
     private init() {
         // Read current status from SMAppService
-        self.isEnabled = SMAppService.mainApp.status == .enabled
+        self.isEnabled = Self.screenshotOverrideEnabled ?? (SMAppService.mainApp.status == .enabled)
+    }
+
+    static func setScreenshotOverride(isEnabled: Bool?) {
+        screenshotOverrideEnabled = isEnabled
+        if let isEnabled {
+            shared.isEnabled = isEnabled
+        } else {
+            shared.refreshStatus()
+        }
     }
     
     private func updateLoginItem() {
@@ -41,6 +53,11 @@ class LaunchAtLoginManager: ObservableObject {
     
     /// Refresh the current status from SMAppService
     func refreshStatus() {
+        if let override = Self.screenshotOverrideEnabled {
+            self.isEnabled = override
+            return
+        }
+
         self.isEnabled = SMAppService.mainApp.status == .enabled
     }
 }

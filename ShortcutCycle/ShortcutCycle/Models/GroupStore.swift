@@ -21,6 +21,7 @@ public class GroupStore: ObservableObject {
     private let fileManager: FileManager
     private let saveDebounceInterval: TimeInterval
     private let performsImmediateAutoBackupOnFirstChange: Bool
+    private let autoBackupEnabled: Bool
 
     private static let backupDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -39,17 +40,19 @@ public class GroupStore: ObservableObject {
     private var lastBackupTime: Date = .distantPast
 
     // Internal init for testing
-    init(
+    public init(
         userDefaults: UserDefaults = .standard,
         backupDebounceInterval: TimeInterval = 60.0,
         saveDebounceInterval: TimeInterval? = nil,
-        fileManager: FileManager = .default
+        fileManager: FileManager = .default,
+        autoBackupEnabled: Bool = true
     ) {
         self.userDefaults = userDefaults
         self.backupDebounceInterval = backupDebounceInterval
         self.saveDebounceInterval = saveDebounceInterval ?? (userDefaults === UserDefaults.standard ? 0.25 : 0.0)
         self.performsImmediateAutoBackupOnFirstChange = userDefaults !== UserDefaults.standard
         self.fileManager = fileManager
+        self.autoBackupEnabled = autoBackupEnabled
         loadGroups()
         setupTerminationObserver()
     }
@@ -226,6 +229,7 @@ public class GroupStore: ObservableObject {
 
     /// Schedule a debounced auto-backup (resets timer on each call)
     private func scheduleAutoBackup() {
+        guard autoBackupEnabled else { return }
         backupPending = true
 
         if backupDebounceInterval <= 0 {

@@ -37,6 +37,10 @@ struct GeneralSettingsView: View {
     @State private var clipboardImportSummary = ""
     @State private var pendingClipboardExport: SettingsExport?
 
+    private var isScreenshotMode: Bool {
+        ScreenshotMode.usesSyntheticControls
+    }
+
     var body: some View {
         content
         .navigationTitle("General".localized(language: selectedLanguage))
@@ -147,11 +151,24 @@ struct GeneralSettingsView: View {
                 .listRowInsets(EdgeInsets())
                 .padding()
 
-                Toggle("Show HUD when switching".localized(language: selectedLanguage), isOn: $showHUD)
+                if isScreenshotMode {
+                    screenshotToggleRow("Show HUD when switching".localized(language: selectedLanguage), isOn: showHUD)
+                } else {
+                    Toggle("Show HUD when switching".localized(language: selectedLanguage), isOn: $showHUD)
+                        .toggleStyle(SwitchToggleStyle(tint: Color(nsColor: .controlAccentColor)))
+                        .tint(.accentColor)
+                }
 
                 if showHUD {
-                    Toggle("Show shortcut in HUD".localized(language: selectedLanguage), isOn: $showShortcutInHUD)
-                        .padding(.leading)
+                    if isScreenshotMode {
+                        screenshotToggleRow("Show shortcut in HUD".localized(language: selectedLanguage), isOn: showShortcutInHUD)
+                            .padding(.leading)
+                    } else {
+                        Toggle("Show shortcut in HUD".localized(language: selectedLanguage), isOn: $showShortcutInHUD)
+                            .toggleStyle(SwitchToggleStyle(tint: Color(nsColor: .controlAccentColor)))
+                            .tint(.accentColor)
+                            .padding(.leading)
+                    }
 
                     Text("Displays the keyboard shortcut used to trigger the switch.".localized(language: selectedLanguage))
                         .font(.caption)
@@ -165,8 +182,13 @@ struct GeneralSettingsView: View {
             }
 
             Section {
-                Toggle("Open at Login".localized(language: selectedLanguage), isOn: $launchAtLogin.isEnabled)
-                    .toggleStyle(.switch)
+                if isScreenshotMode {
+                    screenshotToggleRow("Open at Login".localized(language: selectedLanguage), isOn: launchAtLogin.isEnabled)
+                } else {
+                    Toggle("Open at Login".localized(language: selectedLanguage), isOn: $launchAtLogin.isEnabled)
+                        .toggleStyle(SwitchToggleStyle(tint: Color(nsColor: .controlAccentColor)))
+                        .tint(.accentColor)
+                }
 
                 Picker("Appearance".localized(language: selectedLanguage), selection: $appTheme) {
                     ForEach(AppTheme.allCases) { theme in
@@ -184,7 +206,7 @@ struct GeneralSettingsView: View {
                 )) {
                     Text("\("System Default".localized(language: "system")) (\(LanguageManager.shared.supportedLanguages.first { $0.code == LanguageManager.shared.systemLanguageCode }?.name ?? "English"))").tag("system")
                     ForEach(LanguageManager.shared.supportedLanguages, id: \.code) { language in
-                        Text(language.displayName()).tag(language.code)
+                        Text(language.displayName(in: LanguageManager.shared.locale)).tag(language.code)
                     }
                 }
                 .pickerStyle(.menu)
@@ -281,6 +303,14 @@ struct GeneralSettingsView: View {
         .formStyle(.grouped)
         .scrollContentBackground(colorScheme == .dark ? .hidden : .automatic)
         .background(SettingsChromePalette.windowBackground(for: colorScheme))
+    }
+
+    private func screenshotToggleRow(_ title: String, isOn: Bool) -> some View {
+        HStack(spacing: 12) {
+            Text(title)
+            Spacer()
+            ScreenshotAccentSwitch(isOn: isOn)
+        }
     }
 
     // MARK: - Export/Import Actions
