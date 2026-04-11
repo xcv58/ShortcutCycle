@@ -252,15 +252,9 @@ struct AppCommands: Commands {
 
 // MARK: - Settings Window Observer
 
-/// Observes the settings window so close callbacks can react to dismissal.
+/// Observes the settings window so focus-related affordances can react to key navigation.
 struct SettingsWindowObserver: NSViewRepresentable {
-    let onWindowWillClose: () -> Void
-
-    init(onWindowWillClose: @escaping () -> Void = {}) {
-        self.onWindowWillClose = onWindowWillClose
-    }
-
-    func makeCoordinator() -> Coordinator { Coordinator(onWindowWillClose: onWindowWillClose) }
+    func makeCoordinator() -> Coordinator { Coordinator() }
 
     func makeNSView(context: Context) -> NSView {
         let view = ObserverView()
@@ -283,14 +277,8 @@ struct SettingsWindowObserver: NSViewRepresentable {
     }
 
     final class Coordinator {
-        private let onWindowWillClose: () -> Void
-        private var observer: NSObjectProtocol?
         private var keyEventMonitor: Any?
         private weak var observedWindow: NSWindow?
-
-        init(onWindowWillClose: @escaping () -> Void = {}) {
-            self.onWindowWillClose = onWindowWillClose
-        }
 
         func observe(window: NSWindow) {
             guard observedWindow !== window else { return }
@@ -298,19 +286,6 @@ struct SettingsWindowObserver: NSViewRepresentable {
             observedWindow = window
 
             window.identifier = NSUserInterfaceItemIdentifier("settings")
-
-            observer = NotificationCenter.default.addObserver(
-                forName: NSWindow.willCloseNotification,
-                object: window,
-                queue: .main
-            ) { _ in
-                Task { @MainActor [weak self] in
-                    self?.onWindowWillClose()
-                }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    NSApp.setActivationPolicy(.accessory)
-                }
-            }
 
             keyEventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
                 self?.handleKeyDown(event)
@@ -365,11 +340,6 @@ struct SettingsWindowObserver: NSViewRepresentable {
         }
 
         private func removeObservers() {
-            if let observer {
-                NotificationCenter.default.removeObserver(observer)
-                self.observer = nil
-            }
-
             if let keyEventMonitor {
                 NSEvent.removeMonitor(keyEventMonitor)
                 self.keyEventMonitor = nil
@@ -2266,6 +2236,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard !flag else { return false }
         ShortcutCycleURLRouter.openSettingsFromOutsideView()
         return true
+    }
+
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        false
     }
 
     @objc private func handleURLEvent(
