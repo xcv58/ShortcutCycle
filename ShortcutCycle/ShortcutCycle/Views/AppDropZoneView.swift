@@ -2,17 +2,25 @@ import SwiftUI
 #if canImport(ShortcutCycleCore)
 import ShortcutCycleCore
 #endif
+import AppKit
 import UniformTypeIdentifiers
 
 struct AppIconThumbnailView: View {
     let app: AppItem
     let size: CGFloat
     let fallbackFontSize: CGFloat
+    let onIconResolved: (() -> Void)?
+    @State private var icon: NSImage?
+    @State private var hasReportedResolution = false
+
+    private var displayedIcon: NSImage? {
+        icon ?? IconCache.shared.cachedIcon(for: app)
+    }
 
     var body: some View {
         Group {
-            if let icon = IconCache.shared.getIcon(for: app) {
-                Image(nsImage: icon)
+            if let displayedIcon {
+                Image(nsImage: displayedIcon)
                     .resizable()
                     .frame(width: size, height: size)
             } else {
@@ -22,6 +30,32 @@ struct AppIconThumbnailView: View {
                     .frame(width: size, height: size)
             }
         }
+        .task(id: app.id) {
+            hasReportedResolution = false
+            loadIconIfNeeded()
+        }
+    }
+
+    @MainActor
+    private func loadIconIfNeeded() {
+        if let cachedIcon = IconCache.shared.cachedIcon(for: app) {
+            icon = cachedIcon
+            reportResolutionIfNeeded()
+            return
+        }
+
+        icon = nil
+        IconCache.shared.loadIcon(for: app) { loadedIcon in
+            icon = loadedIcon
+            reportResolutionIfNeeded()
+        }
+    }
+
+    @MainActor
+    private func reportResolutionIfNeeded() {
+        guard !hasReportedResolution else { return }
+        hasReportedResolution = true
+        onIconResolved?()
     }
 }
 
@@ -33,7 +67,7 @@ struct AppRowView: View {
     
     var body: some View {
         HStack(spacing: 12) {
-            AppIconThumbnailView(app: app, size: 32, fallbackFontSize: 24)
+            AppIconThumbnailView(app: app, size: 32, fallbackFontSize: 24, onIconResolved: nil)
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(app.name)
@@ -76,19 +110,26 @@ struct AppGridItemView: View {
     let app: AppItem
     let isPlaceholder: Bool
     let onDelete: () -> Void
+    let onIconResolved: (() -> Void)?
     @Environment(\.colorScheme) private var colorScheme
     @State private var isHovered = false
 
-    init(app: AppItem, isPlaceholder: Bool = false, onDelete: @escaping () -> Void) {
+    init(
+        app: AppItem,
+        isPlaceholder: Bool = false,
+        onDelete: @escaping () -> Void,
+        onIconResolved: (() -> Void)? = nil
+    ) {
         self.app = app
         self.isPlaceholder = isPlaceholder
         self.onDelete = onDelete
+        self.onIconResolved = onIconResolved
     }
     
     var body: some View {
         VStack(spacing: 8) {
             ZStack(alignment: .topTrailing) {
-                AppIconThumbnailView(app: app, size: 56, fallbackFontSize: 42)
+                AppIconThumbnailView(app: app, size: 56, fallbackFontSize: 42, onIconResolved: onIconResolved)
 
                 if isHovered && !isPlaceholder {
                     Button(action: onDelete) {

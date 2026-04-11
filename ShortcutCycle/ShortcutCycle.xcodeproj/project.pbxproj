@@ -10,6 +10,8 @@
 		017 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 901 /* KeyboardShortcuts */; };
 		A1B200022F70000100C0DE01 /* ShortcutSuggestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B200012F70000100C0DE01 /* ShortcutSuggestion.swift */; };
 		A1B200032F70000100C0DE01 /* ShortcutSuggestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B200012F70000100C0DE01 /* ShortcutSuggestion.swift */; };
+		C0A1D0012FB0000100C0DE01 /* GroupSwitchPerformanceTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A1D0002FB0000100C0DE01 /* GroupSwitchPerformanceTracker.swift */; };
+		C0A1D0022FB0000100C0DE01 /* GroupSwitchPerformanceTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A1D0002FB0000100C0DE01 /* GroupSwitchPerformanceTracker.swift */; };
 		DF88A3762F300B110042E749 /* HUDManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3542F300B110042E749 /* HUDManager.swift */; };
 		DF88A3772F300B110042E749 /* ShortcutCycleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3742F300B110042E749 /* ShortcutCycleApp.swift */; };
 		DF88A3782F300B110042E749 /* GroupEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A36D2F300B110042E749 /* GroupEditView.swift */; };
@@ -97,6 +99,7 @@
 /* Begin PBXFileReference section */
 		100 /* ShortcutCycle.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ShortcutCycle.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1B200012F70000100C0DE01 /* ShortcutSuggestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutSuggestion.swift; sourceTree = "<group>"; };
+		C0A1D0002FB0000100C0DE01 /* GroupSwitchPerformanceTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupSwitchPerformanceTracker.swift; sourceTree = "<group>"; };
 		DF88A3372F300B110042E749 /* String+Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Localization.swift"; sourceTree = "<group>"; };
 		DF88A3392F300B110042E749 /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
 		DF88A33A2F300B110042E749 /* AppItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppItem.swift; sourceTree = "<group>"; };
@@ -261,10 +264,19 @@
 			path = Overlay;
 			sourceTree = "<group>";
 		};
+		C0A1D0032FB0000100C0DE01 /* Diagnostics */ = {
+			isa = PBXGroup;
+			children = (
+				C0A1D0002FB0000100C0DE01 /* GroupSwitchPerformanceTracker.swift */,
+			);
+			path = Diagnostics;
+			sourceTree = "<group>";
+		};
 		DF88A35D2F300B110042E749 /* Services */ = {
 			isa = PBXGroup;
 			children = (
 				DF88A3522F300B110042E749 /* AppSwitcher */,
+				C0A1D0032FB0000100C0DE01 /* Diagnostics */,
 				DF88A3552F300B110042E749 /* HUD */,
 				DF88A3572F300B110042E749 /* Managers */,
 				DF88A3592F300B110042E749 /* Overlay */,
@@ -529,6 +541,7 @@
 				DF88A3B92F300CB20042E749 /* HUDItemFilter.swift in Sources */,
 				A1B200022F70000100C0DE01 /* ShortcutSuggestion.swift in Sources */,
 				DF88A39B2F300C800042E749 /* SettingsExport.swift in Sources */,
+				C0A1D0012FB0000100C0DE01 /* GroupSwitchPerformanceTracker.swift in Sources */,
 				DF88A39C2F300C800042E749 /* AppGroup.swift in Sources */,
 				DF88A3A62F300CA00042E749 /* LaunchAtLoginManager.swift in Sources */,
 				DF88A3A72F300CA00042E749 /* ShortcutManager.swift in Sources */,
@@ -585,6 +598,7 @@
 				DF88A3832F300B110042E749 /* HUDAppItem.swift in Sources */,
 				DF88A3BA2F300CB20042E749 /* HUDItemFilter.swift in Sources */,
 				A1B200032F70000100C0DE01 /* ShortcutSuggestion.swift in Sources */,
+				C0A1D0022FB0000100C0DE01 /* GroupSwitchPerformanceTracker.swift in Sources */,
 				DF88A3842F300B110042E749 /* AppItem.swift in Sources */,
 				DF88A3852F300B110042E749 /* LaunchAtLoginManager.swift in Sources */,
 				DF88A3862F300B110042E749 /* MenuBarView.swift in Sources */,

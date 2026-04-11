@@ -74,6 +74,42 @@ enum SettingsChromePalette {
             ? Color(nsColor: .quaternaryLabelColor).opacity(0.72)
             : Color.gray.opacity(0.30)
     }
+
+    static func focusRingFill(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark
+            ? Color.accentColor.opacity(0.18)
+            : Color.accentColor.opacity(0.10)
+    }
+
+    static func focusRingBorder(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark
+            ? Color.accentColor.opacity(0.95)
+            : Color.accentColor.opacity(0.65)
+    }
+
+    static func focusRingGlow(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark
+            ? Color.accentColor.opacity(0.30)
+            : Color.accentColor.opacity(0.16)
+    }
+
+    static func hoverRingFill(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark
+            ? Color.accentColor.opacity(0.10)
+            : inlineFill(for: colorScheme)
+    }
+
+    static func hoverRingBorder(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark
+            ? Color.accentColor.opacity(0.48)
+            : neutralHoverBorder(for: colorScheme)
+    }
+
+    static func hoverRingGlow(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark
+            ? Color.accentColor.opacity(0.12)
+            : .clear
+    }
 }
 
 struct SettingsSectionDivider: View {
@@ -95,6 +131,8 @@ struct GroupSettingsView: View {
     @EnvironmentObject var store: GroupStore
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
     @Environment(\.colorScheme) private var colorScheme
+    @State private var pendingSelectedGroupId: UUID?
+    @State private var pendingSelectionRequestID: UUID?
 
     /// A deferred-write binding for columnVisibility.
     ///
@@ -115,14 +153,62 @@ struct GroupSettingsView: View {
         )
     }
 
+    /// Keep the UI responsive by showing a temporary local selection immediately while
+    /// still deferring the store write that previously avoided an AttributeGraph cycle.
+    private var selectedGroupIdBinding: Binding<UUID?> {
+        Binding(
+            get: { pendingSelectedGroupId ?? store.selectedGroupId },
+            set: { newValue in
+                guard store.selectedGroupId != newValue else {
+                    pendingSelectedGroupId = nil
+                    pendingSelectionRequestID = nil
+                    return
+                }
+
+                if let newValue {
+                    GroupSwitchPerformanceTracker.shared.beginGroupSwitch(
+                        to: newValue,
+                        source: "sidebar",
+                        expectedGroupIconCount: appCount(for: newValue)
+                    )
+                }
+
+                let requestID = UUID()
+                pendingSelectedGroupId = newValue
+                pendingSelectionRequestID = requestID
+
+                Task { @MainActor in
+                    guard pendingSelectionRequestID == requestID else { return }
+
+                    if store.selectedGroupId != newValue {
+                        store.selectedGroupId = newValue
+                    }
+
+                    if pendingSelectionRequestID == requestID, pendingSelectedGroupId == newValue {
+                        pendingSelectedGroupId = nil
+                        pendingSelectionRequestID = nil
+                    }
+                }
+            }
+        )
+    }
+
+    private var visibleSelectedGroupId: UUID? {
+        pendingSelectedGroupId ?? store.selectedGroupId
+    }
+
+    private func appCount(for groupId: UUID?) -> Int {
+        guard let groupId else { return 0 }
+        return store.groups.first(where: { $0.id == groupId })?.apps.count ?? 0
+    }
+
     var body: some View {
         NavigationSplitView(columnVisibility: columnVisibilityBinding) {
-            GroupListView()
+            GroupListView(selection: selectedGroupIdBinding)
                 .frame(minWidth: 220)
         } detail: {
-            if let selectedId = store.selectedGroupId {
+            if let selectedId = visibleSelectedGroupId {
                 GroupEditView(groupId: selectedId)
-                    .id(selectedId)
             } else {
                 ContentUnavailableView {
                     Label("No Group Selected".localized(language: selectedLanguage), systemImage: "folder")
@@ -143,5 +229,24 @@ struct GroupSettingsView: View {
         }
         .navigationTitle("App Groups".localized(language: selectedLanguage))
         .background(SettingsChromePalette.windowBackground(for: colorScheme))
+        .onChange(of: store.selectedGroupId) { _, newValue in
+            if pendingSelectedGroupId == newValue {
+                pendingSelectedGroupId = nil
+                pendingSelectionRequestID = nil
+                return
+            }
+
+            // External selection changes (menu commands, URL routing, etc.) should win immediately.
+            pendingSelectedGroupId = nil
+            pendingSelectionRequestID = nil
+
+            if let newValue {
+                GroupSwitchPerformanceTracker.shared.beginGroupSwitch(
+                    to: newValue,
+                    source: "external",
+                    expectedGroupIconCount: appCount(for: newValue)
+                )
+            }
+        }
     }
 }

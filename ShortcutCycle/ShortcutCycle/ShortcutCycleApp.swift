@@ -184,11 +184,24 @@ struct AppCommands: Commands {
         guard store.groups.count >= 2 else { return }
         guard let currentId = store.selectedGroupId,
               let currentIndex = store.groups.firstIndex(where: { $0.id == currentId }) else {
-            store.selectedGroupId = store.groups.first?.id
+            if let firstGroup = store.groups.first {
+                GroupSwitchPerformanceTracker.shared.beginGroupSwitch(
+                    to: firstGroup.id,
+                    source: "command-previous",
+                    expectedGroupIconCount: firstGroup.apps.count
+                )
+                store.selectedGroupId = firstGroup.id
+            }
             return
         }
         let previousIndex = currentIndex == 0 ? store.groups.count - 1 : currentIndex - 1
-        store.selectedGroupId = store.groups[previousIndex].id
+        let previousGroup = store.groups[previousIndex]
+        GroupSwitchPerformanceTracker.shared.beginGroupSwitch(
+            to: previousGroup.id,
+            source: "command-previous",
+            expectedGroupIconCount: previousGroup.apps.count
+        )
+        store.selectedGroupId = previousGroup.id
     }
 
     private func selectNextGroup() {
@@ -196,11 +209,24 @@ struct AppCommands: Commands {
         guard store.groups.count >= 2 else { return }
         guard let currentId = store.selectedGroupId,
               let currentIndex = store.groups.firstIndex(where: { $0.id == currentId }) else {
-            store.selectedGroupId = store.groups.first?.id
+            if let firstGroup = store.groups.first {
+                GroupSwitchPerformanceTracker.shared.beginGroupSwitch(
+                    to: firstGroup.id,
+                    source: "command-next",
+                    expectedGroupIconCount: firstGroup.apps.count
+                )
+                store.selectedGroupId = firstGroup.id
+            }
             return
         }
         let nextIndex = currentIndex == store.groups.count - 1 ? 0 : currentIndex + 1
-        store.selectedGroupId = store.groups[nextIndex].id
+        let nextGroup = store.groups[nextIndex]
+        GroupSwitchPerformanceTracker.shared.beginGroupSwitch(
+            to: nextGroup.id,
+            source: "command-next",
+            expectedGroupIconCount: nextGroup.apps.count
+        )
+        store.selectedGroupId = nextGroup.id
     }
 
     private func moveSelectedGroup(by delta: Int) {
