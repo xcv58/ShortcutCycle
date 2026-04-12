@@ -2,9 +2,8 @@ id: overview-main
 description: Core overview demo reused by the Reddit cut
 profile: default
 fixture: marketing-story
+source_clip: marketing/video/sources/overview-main.mp4
 fallback_source_clip: docs/assets/videos/1.mp4
-publish_capture_to:
-  - docs/assets/videos/1.mp4
 capture:
   duration: 11.6
 prepare_urls:

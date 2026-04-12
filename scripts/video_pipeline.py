@@ -27,6 +27,7 @@ VIDEO_ROOT = REPO_ROOT / "marketing" / "video"
 FIXTURES_DIR = VIDEO_ROOT / "fixtures"
 PROFILES_DIR = VIDEO_ROOT / "profiles"
 SCENES_DIR = VIDEO_ROOT / "scenes"
+SOURCES_DIR = VIDEO_ROOT / "sources"
 SETS_DIR = VIDEO_ROOT / "sets"
 TEMPLATES_DIR = VIDEO_ROOT / "templates"
 VIDEOS_DIR = VIDEO_ROOT / "videos"
@@ -42,6 +43,7 @@ FIXED_LAST_MODIFIED = 796_953_600
 DEFAULT_REGULAR_FONT = "/System/Library/Fonts/Supplemental/Arial.ttf"
 DEFAULT_BOLD_FONT = "/System/Library/Fonts/Supplemental/Arial Bold.ttf"
 OVERVIEW_BACKGROUND_PATH = REPO_ROOT / "scripts" / "assets" / "background.jpeg"
+VERTICAL_CROP_BIAS = 40
 
 KNOWN_APP_BUNDLES = {
     "com.apple.ActivityMonitor": Path("/System/Applications/Utilities/Activity Monitor.app"),
@@ -274,6 +276,13 @@ def frame_rate(profile: dict[str, Any]) -> int:
 
 def raw_scene_path(scene_id: str, run_id: str) -> Path:
     return RAW_DIR / run_id / f"{scene_id}.mp4"
+
+
+def scene_source_path(scene: dict[str, Any]) -> Path | None:
+    source_clip = scene.get("source_clip")
+    if not source_clip:
+        return None
+    return REPO_ROOT / str(source_clip)
 
 
 def cards_video_dir(video_id: str, run_id: str) -> Path:
@@ -1189,6 +1198,15 @@ def publish_scene_capture(scene: dict[str, Any], capture_path: Path) -> None:
             ],
             check=True,
         )
+
+
+def publish_scene_source(scene: dict[str, Any], capture_path: Path) -> None:
+    source_path = scene_source_path(scene)
+    if source_path is None:
+        return
+
+    source_path.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(capture_path, source_path)
 
 
 def click_highlight_asset() -> Path:
@@ -2278,6 +2296,7 @@ def capture_scene(scene_id: str, run_id: str) -> Path:
     require_file(output_path, "captured scene output")
     apply_click_highlights(scene, output_path)
     apply_shortcut_overlays(scene, output_path)
+    publish_scene_source(scene, output_path)
     publish_scene_capture(scene, output_path)
     return output_path
 
@@ -2286,7 +2305,7 @@ def cover_filter(width: int, height: int, fps: int) -> str:
     return (
         f"fps={fps},"
         f"scale={width}:{height}:force_original_aspect_ratio=increase,"
-        f"crop={width}:{height},"
+        f"crop={width}:{height}:(iw-ow)/2:max((ih-oh)/2-{VERTICAL_CROP_BIAS}\\,0),"
         "format=yuv420p"
     )
 
@@ -2316,6 +2335,8 @@ def render_shortcut_intro_card(
     template: dict[str, Any],
     title: str,
     lines: list[str],
+    rows: list[dict[str, str]],
+    content_offset_y: int,
     output_path: Path,
 ) -> None:
     width, height = template.get("size", [1920, 1080])
@@ -2349,16 +2370,44 @@ def render_shortcut_intro_card(
 
     line_style = template["line"]
     line_font = font_for(str(line_style["font"]), int(line_style["size"]))
-    start_y = panel_top + int(panel_height * 0.42)
+    start_y = panel_top + int(panel_height * 0.42) + int(content_offset_y)
     gap = int(line_style.get("gap", 56))
-    for index, line in enumerate(lines):
-        line_box = (
-            panel_left + 80,
-            start_y + index * gap,
-            panel_left + panel_width - 80,
-            start_y + index * gap + 72,
-        )
-        draw_centered_text(draw, line_box, line, font=line_font, fill=line_style["color"])
+    line_height = int(line_style.get("height", 72))
+
+    if rows:
+        shortcut_width = int(line_style.get("shortcut_width", 136))
+        label_gap = int(line_style.get("label_gap", 26))
+        label_width = 0.0
+        for row in rows:
+            bbox = draw.textbbox((0, 0), row["label"], font=line_font)
+            label_width = max(label_width, float(bbox[2] - bbox[0]))
+        total_width = shortcut_width + label_gap + label_width
+        block_left = panel_left + (panel_width - total_width) / 2
+        shortcut_right = block_left + shortcut_width
+        label_left = shortcut_right + label_gap
+
+        for index, row in enumerate(rows):
+            row_top = start_y + index * gap
+            shortcut_bbox = draw.textbbox((0, 0), row["shortcut"], font=line_font)
+            shortcut_width_actual = shortcut_bbox[2] - shortcut_bbox[0]
+            shortcut_height = shortcut_bbox[3] - shortcut_bbox[1]
+            shortcut_x = shortcut_right - shortcut_width_actual
+            shortcut_y = row_top + (line_height - shortcut_height) / 2 - shortcut_bbox[1]
+            draw.text((shortcut_x, shortcut_y), row["shortcut"], font=line_font, fill=line_style["color"])
+
+            label_bbox = draw.textbbox((0, 0), row["label"], font=line_font)
+            label_height = label_bbox[3] - label_bbox[1]
+            label_y = row_top + (line_height - label_height) / 2 - label_bbox[1]
+            draw.text((label_left, label_y), row["label"], font=line_font, fill=line_style["color"])
+    else:
+        for index, line in enumerate(lines):
+            line_box = (
+                panel_left + 80,
+                start_y + index * gap,
+                panel_left + panel_width - 80,
+                start_y + index * gap + line_height,
+            )
+            draw_centered_text(draw, line_box, line, font=line_font, fill=line_style["color"])
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     image.save(output_path)
@@ -2371,7 +2420,13 @@ def render_card_image(template_id: str, item: dict[str, Any], output_path: Path)
 
     title = str(item.get("title", "")).strip()
     lines = [str(value) for value in item.get("lines", [])]
-    render_shortcut_intro_card(template, title, lines, output_path)
+    rows = [
+        {"shortcut": str(value.get("shortcut", "")).strip(), "label": str(value.get("label", "")).strip()}
+        for value in item.get("rows", [])
+        if isinstance(value, dict)
+    ]
+    content_offset_y = int(item.get("content_offset_y", 0))
+    render_shortcut_intro_card(template, title, lines, rows, content_offset_y, output_path)
     return output_path
 
 
@@ -2411,11 +2466,15 @@ def render_card_segment(
 
 
 def resolve_scene_source(scene_id: str, run_id: str) -> Path:
+    scene = load_scene(scene_id)
+    source_path = scene_source_path(scene)
+    if source_path is not None and source_path.exists():
+        return source_path
+
     raw_path = raw_scene_path(scene_id, run_id)
     if raw_path.exists():
         return raw_path
 
-    scene = load_scene(scene_id)
     fallback_source = scene.get("fallback_source_clip")
     if not fallback_source:
         raise PipelineError(

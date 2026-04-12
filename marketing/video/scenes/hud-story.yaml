@@ -2,8 +2,7 @@ id: hud-story
 description: Real HUD storytelling clip with a compact group and a large group
 profile: default
 fixture: marketing-story
-publish_capture_to:
-  - docs/assets/videos/2.mp4
+source_clip: marketing/video/sources/hud-story.mp4
 capture:
   duration: 15.8
 prepare_urls:

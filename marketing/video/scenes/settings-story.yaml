@@ -2,8 +2,7 @@ id: settings-story
 description: Real settings walkthrough showing group selection and general preferences
 profile: default
 fixture: marketing-default
-publish_capture_to:
-  - docs/assets/videos/3.mp4
+source_clip: marketing/video/sources/settings-story.mp4
 capture:
   duration: 14.4
 prepare_urls:
