@@ -35,6 +35,7 @@ RAW_DIR = ARTIFACTS_ROOT / "raw"
 CARDS_DIR = ARTIFACTS_ROOT / "cards"
 RENDERS_DIR = ARTIFACTS_ROOT / "renders"
 REPORTS_DIR = ARTIFACTS_ROOT / "reports"
+BIN_DIR = ARTIFACTS_ROOT / "bin"
 DEFAULT_PROFILE_ID = "default"
 DEFAULT_TEMPLATE_BG = "#0A0E15"
 FIXED_LAST_MODIFIED = 796_953_600
@@ -130,6 +131,13 @@ SHORTCUT_KEY_CODES = {
     "0": 29,
 }
 
+MODIFIER_KEY_CODES = {
+    "command": 55,
+    "shift": 56,
+    "option": 58,
+    "control": 59,
+}
+
 MODIFIER_BITS = {
     "command": 256,
     "shift": 512,
@@ -165,7 +173,7 @@ def run(
 
 
 def ensure_directories() -> None:
-    for directory in (RAW_DIR, CARDS_DIR, RENDERS_DIR, REPORTS_DIR):
+    for directory in (RAW_DIR, CARDS_DIR, RENDERS_DIR, REPORTS_DIR, BIN_DIR):
         directory.mkdir(parents=True, exist_ok=True)
 
 
@@ -175,6 +183,12 @@ def now_run_id() -> str:
 
 def require_file(path: Path, description: str) -> Path:
     if not path.is_file():
+        raise PipelineError(f"Missing {description}: {path}")
+    return path
+
+
+def require_path(path: Path, description: str) -> Path:
+    if not path.exists():
         raise PipelineError(f"Missing {description}: {path}")
     return path
 
@@ -220,11 +234,25 @@ def load_set(set_id: str) -> dict[str, Any]:
 
 
 def app_bundle_path(profile: dict[str, Any]) -> Path:
-    return require_file(REPO_ROOT / profile["app_bundle_path"], "integration app bundle")
+    return require_path(REPO_ROOT / profile["app_bundle_path"], "integration app bundle")
 
 
 def bundle_id(profile: dict[str, Any]) -> str:
     return str(profile["bundle_id"])
+
+
+def expand_repo_path(path_value: str) -> Path:
+    path = Path(path_value).expanduser()
+    if path.is_absolute():
+        return path
+    return REPO_ROOT / path
+
+
+def preferences_path(profile: dict[str, Any]) -> Path:
+    raw_path = profile.get("preferences_path")
+    if not raw_path:
+        raise PipelineError("Profile is missing preferences_path for direct fixture seeding")
+    return expand_repo_path(str(raw_path))
 
 
 def output_size(profile: dict[str, Any]) -> tuple[int, int]:
@@ -341,23 +369,380 @@ def prefs_payload_for_fixture(fixture: dict[str, Any]) -> dict[str, Any]:
 def seed_fixture(profile: dict[str, Any], fixture_id: str) -> None:
     fixture = load_fixture(fixture_id)
     payload = prefs_payload_for_fixture(fixture)
+    destination = preferences_path(profile)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+
+    existing: dict[str, Any] = {}
+    if destination.exists():
+        with destination.open("rb") as handle:
+            loaded = plistlib.load(handle)
+        if isinstance(loaded, dict):
+            existing = dict(loaded)
+
+    for key in list(existing):
+        if key.startswith("KeyboardShortcuts_group-"):
+            existing.pop(key, None)
+
+    existing.update(payload)
 
     with tempfile.NamedTemporaryFile("wb", suffix=".plist", delete=False) as handle:
-        plistlib.dump(payload, handle)
+        plistlib.dump(existing, handle, sort_keys=True)
         temp_path = Path(handle.name)
 
     try:
-        run(["defaults", "import", bundle_id(profile), str(temp_path)], check=True)
+        shutil.move(str(temp_path), str(destination))
     finally:
         temp_path.unlink(missing_ok=True)
 
+    run(["killall", "cfprefsd"], capture_output=True, check=False)
+
 
 def open_url(profile: dict[str, Any], url: str) -> None:
-    run(["open", "-b", bundle_id(profile), url], check=True)
+    subprocess.Popen(
+        ["open", "-b", bundle_id(profile), url],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
 
 
 def launch_app(bundle_identifier: str) -> None:
-    run(["open", "-b", bundle_identifier], check=False)
+    subprocess.Popen(
+        ["open", "-b", bundle_identifier],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
+
+def open_file(path_value: str, bundle_identifier: str | None = None) -> None:
+    path = expand_repo_path(path_value)
+    require_file(path, f"automation asset file {path_value}")
+    command = ["open"]
+    if bundle_identifier:
+        command.extend(["-a", application_name(bundle_identifier)])
+    command.append(str(path))
+    run(command, capture_output=True, check=True)
+
+
+def application_name(bundle_identifier: str) -> str:
+    result = run(
+        ["osascript", "-e", f'tell application id "{bundle_identifier}" to get name'],
+        capture_output=True,
+        check=True,
+    )
+    return result.stdout.strip()
+
+
+def position_front_window(bundle_identifier: str, bounds: list[int]) -> None:
+    app_name = application_name(bundle_identifier)
+    x, y, width, height = (int(value) for value in bounds)
+    run(
+        [
+            "osascript",
+            "-e",
+            f'tell application id "{bundle_identifier}" to activate',
+            "-e",
+            "delay 0.35",
+            "-e",
+            f'tell application "System Events" to tell process "{app_name}" to set position of front window to {{{x}, {y}}}',
+            "-e",
+            f'tell application "System Events" to tell process "{app_name}" to set size of front window to {{{width}, {height}}}',
+        ],
+        capture_output=True,
+        check=True,
+    )
+
+
+def run_osascript(lines: list[str]) -> None:
+    if not lines:
+        return
+    command = ["osascript"]
+    for line in lines:
+        command.extend(["-e", line])
+    run(command, capture_output=True, check=True)
+
+
+def run_prepare_step(step: dict[str, Any]) -> None:
+    step_type = str(step["type"])
+    if step_type == "sleep":
+        time.sleep(float(step["seconds"]))
+        return
+    if step_type == "activate-app":
+        run(
+            ["osascript", "-e", f'tell application id "{str(step["bundle_id"])}" to activate'],
+            capture_output=True,
+            check=True,
+        )
+        return
+    if step_type == "quit-app":
+        run(
+            ["osascript", "-e", f'tell application id "{str(step["bundle_id"])}" to quit'],
+            capture_output=True,
+            check=False,
+        )
+        return
+    if step_type == "open-file":
+        open_file(str(step["path"]), str(step.get("bundle_id")) if step.get("bundle_id") else None)
+        return
+    if step_type == "osascript":
+        raw_lines = step.get("lines", [])
+        if not isinstance(raw_lines, list):
+            raise PipelineError("osascript prepare step expects a list of lines")
+        run_osascript([str(line) for line in raw_lines])
+        return
+    raise PipelineError(f"Unsupported prepare step: {step_type}")
+
+
+def run_prepare_steps(steps: list[dict[str, Any]]) -> None:
+    for step in steps:
+        run_prepare_step(step)
+
+
+def stage_windows(scene: dict[str, Any]) -> None:
+    bounds = scene.get("window_bounds")
+    layouts = scene.get("window_layouts", {})
+    if not bounds and not layouts:
+        return
+
+    for bundle_identifier in scene.get("launch_apps", []):
+        bundle_id_value = str(bundle_identifier)
+        resolved_bounds = layouts.get(bundle_id_value, bounds)
+        if not resolved_bounds:
+            continue
+        position_front_window(bundle_id_value, resolved_bounds)
+        time.sleep(0.2)
+
+    initial_app = scene.get("initial_frontmost_app")
+    if initial_app:
+        run(
+            ["osascript", "-e", f'tell application id "{str(initial_app)}" to activate'],
+            capture_output=True,
+            check=True,
+        )
+        time.sleep(0.3)
+
+
+def result_file_path(profile: dict[str, Any]) -> Path:
+    return integration_query_result_path(profile)
+
+
+def url_command(profile: dict[str, Any], command: str) -> None:
+    open_url(profile, f"shortcutcycle://{command}")
+
+
+def url_query(profile: dict[str, Any], command: str, *, timeout: float = 5.0) -> dict[str, Any]:
+    result_path = result_file_path(profile)
+    previous_mtime = result_path.stat().st_mtime if result_path.exists() else 0.0
+    url_command(profile, command)
+
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if result_path.exists():
+            current_mtime = result_path.stat().st_mtime
+            if current_mtime >= previous_mtime:
+                try:
+                    payload = json.loads(result_path.read_text(encoding="utf-8"))
+                except json.JSONDecodeError:
+                    time.sleep(0.1)
+                    continue
+                if payload.get("command") == command.split("?", 1)[0]:
+                    return payload
+        time.sleep(0.15)
+    raise PipelineError(f"Timed out waiting for URL query result: {command}")
+
+
+def setting_url_command(key: str, value: str) -> str:
+    return f"set-setting?key={quote(key)}&value={quote(value)}"
+
+
+def group_selector(group_id: str) -> str:
+    return f"groupId={quote(group_id)}"
+
+
+def compile_shortcut_helper() -> Path:
+    ensure_directories()
+    source_path = BIN_DIR / "post_shortcut_sequence.swift"
+    binary_path = BIN_DIR / "post_shortcut_sequence"
+    source = """import Cocoa
+import CoreGraphics
+import Foundation
+
+let arguments = Array(CommandLine.arguments.dropFirst())
+guard arguments.count == 6 else {
+    fputs("usage: post_shortcut_sequence <modifierName> <modifierKeyCode> <keyCode> <tapCount> <preHoldMicros> <betweenTapMicros>\\n", stderr)
+    exit(2)
+}
+
+guard
+    let modifierKeyCode = Int(arguments[1]),
+    let keyCode = Int(arguments[2]),
+    let tapCount = Int(arguments[3]),
+    let preHoldMicros = UInt32(arguments[4]),
+    let betweenTapMicros = UInt32(arguments[5])
+else {
+    fputs("invalid numeric arguments\\n", stderr)
+    exit(2)
+}
+
+let flags: CGEventFlags
+switch arguments[0] {
+case "option":
+    flags = [.maskAlternate]
+case "command":
+    flags = [.maskCommand]
+case "shift":
+    flags = [.maskShift]
+case "control":
+    flags = [.maskControl]
+default:
+    fputs("unsupported modifier\\n", stderr)
+    exit(2)
+}
+
+func post(_ key: CGKeyCode, _ down: Bool, flags: CGEventFlags = []) {
+    guard let event = CGEvent(keyboardEventSource: nil, virtualKey: key, keyDown: down) else {
+        return
+    }
+    event.flags = flags
+    event.post(tap: .cghidEventTap)
+}
+
+func tap(_ key: CGKeyCode, flags: CGEventFlags) {
+    post(key, true, flags: flags)
+    usleep(40_000)
+    post(key, false, flags: flags)
+}
+
+post(CGKeyCode(modifierKeyCode), true, flags: flags)
+usleep(preHoldMicros)
+for index in 0..<tapCount {
+    tap(CGKeyCode(keyCode), flags: flags)
+    if index < tapCount - 1 {
+        usleep(betweenTapMicros)
+    }
+}
+usleep(420_000)
+post(CGKeyCode(modifierKeyCode), false)
+"""
+    current_source = source_path.read_text(encoding="utf-8") if source_path.exists() else None
+    if current_source != source or not binary_path.exists():
+        source_path.write_text(source, encoding="utf-8")
+        run(["swiftc", str(source_path), "-o", str(binary_path)], check=True)
+    return require_file(binary_path, "shortcut helper binary")
+
+
+def parse_shortcut(shortcut: str) -> tuple[str, int, int]:
+    parts = shortcut.split("+")
+    if len(parts) != 2:
+        raise PipelineError(f"Unsupported shortcut format for real capture: {shortcut}")
+
+    modifier, key = parts
+    if modifier not in MODIFIER_BITS or modifier not in MODIFIER_KEY_CODES:
+        raise PipelineError(f"Unsupported shortcut modifier: {shortcut}")
+    if key not in SHORTCUT_KEY_CODES:
+        raise PipelineError(f"Unsupported shortcut key: {shortcut}")
+
+    return modifier, MODIFIER_KEY_CODES[modifier], SHORTCUT_KEY_CODES[key]
+
+
+def post_shortcut_sequence(shortcut: str, tap_count: int, pre_hold: float, between_taps: float) -> None:
+    modifier_name, modifier_key_code, key_code = parse_shortcut(shortcut)
+    helper_path = compile_shortcut_helper()
+    run(
+        [
+            str(helper_path),
+            modifier_name,
+            str(modifier_key_code),
+            str(key_code),
+            str(tap_count),
+            str(int(pre_hold * 1_000_000)),
+            str(int(between_taps * 1_000_000)),
+        ],
+        capture_output=True,
+        check=True,
+    )
+
+
+def ensure_group(profile: dict[str, Any], group_name: str) -> dict[str, Any]:
+    groups_payload = url_query(profile, "list-groups")
+    groups = groups_payload.get("data", [])
+    if not isinstance(groups, list):
+        raise PipelineError("Unexpected list-groups payload")
+
+    for group in groups:
+        if str(group.get("name", "")).lower() == group_name.lower():
+            return group
+
+    url_command(profile, f"create-group?name={quote(group_name)}")
+    time.sleep(0.25)
+    groups_payload = url_query(profile, "list-groups")
+    groups = groups_payload.get("data", [])
+    if not isinstance(groups, list):
+        raise PipelineError("Unexpected list-groups payload after create-group")
+    for group in groups:
+        if str(group.get("name", "")).lower() == group_name.lower():
+            return group
+    raise PipelineError(f"Failed to create group via URL automation: {group_name}")
+
+
+def sync_group_apps(profile: dict[str, Any], group_id: str, desired_apps: list[dict[str, Any]]) -> None:
+    payload = url_query(profile, f"get-group?{group_selector(group_id)}")
+    group_data = payload.get("data", {})
+    current_apps = group_data.get("apps", [])
+    if not isinstance(current_apps, list):
+        raise PipelineError("Unexpected get-group payload")
+
+    current_bundle_ids = {str(app["bundleId"]) for app in current_apps}
+    desired_bundle_ids = {str(app["bundle_id"]) for app in desired_apps}
+
+    for bundle_id in sorted(current_bundle_ids - desired_bundle_ids):
+        url_command(profile, f"remove-app?{group_selector(group_id)}&bundleId={quote(bundle_id)}")
+        time.sleep(0.15)
+
+    for app in desired_apps:
+        bundle_id = str(app["bundle_id"])
+        if bundle_id in current_bundle_ids:
+            continue
+        url_command(profile, f"add-app?{group_selector(group_id)}&bundleId={quote(bundle_id)}")
+        time.sleep(0.15)
+
+
+def seed_fixture_via_url(profile: dict[str, Any], fixture_id: str) -> None:
+    fixture = load_fixture(fixture_id)
+    settings = fixture.get("settings", {})
+
+    if "show_hud" in settings:
+        url_command(profile, setting_url_command("showHUD", "true" if settings["show_hud"] else "false"))
+        time.sleep(0.1)
+    if "show_shortcut_in_hud" in settings:
+        url_command(
+            profile,
+            setting_url_command(
+                "showShortcutInHUD",
+                "true" if settings["show_shortcut_in_hud"] else "false",
+            ),
+        )
+        time.sleep(0.1)
+    if "appearance" in settings:
+        url_command(profile, setting_url_command("appTheme", str(settings["appearance"])))
+        time.sleep(0.1)
+    if "language" in settings:
+        url_command(profile, setting_url_command("selectedLanguage", str(settings["language"])))
+        time.sleep(0.1)
+
+    for position, desired_group in enumerate(fixture["groups"], start=1):
+        group = ensure_group(profile, str(desired_group["name"]))
+        group_id = str(group["id"])
+        if not bool(group.get("isEnabled", True)):
+            url_command(profile, f"enable-group?{group_selector(group_id)}")
+            time.sleep(0.15)
+        sync_group_apps(profile, group_id, desired_group["apps"])
+        url_command(profile, f"reorder-group?{group_selector(group_id)}&position={position}")
+        time.sleep(0.15)
+
+    if fixture["groups"]:
+        first_group = ensure_group(profile, str(fixture["groups"][0]["name"]))
+        url_command(profile, f"select-group?{group_selector(str(first_group['id']))}")
+        time.sleep(0.15)
 
 
 def publish_scene_capture(scene: dict[str, Any], capture_path: Path) -> None:
@@ -1163,6 +1548,13 @@ def execute_capture_action(profile: dict[str, Any], action: dict[str, Any]) -> N
     if action_type == "cycle":
         group = quote(str(action["group"]))
         open_url(profile, f"shortcutcycle://cycle?group={group}")
+    elif action_type == "shortcut-sequence":
+        post_shortcut_sequence(
+            str(action["shortcut"]),
+            int(action.get("tap_count", 1)),
+            float(action.get("pre_hold", 0.12)),
+            float(action.get("between_taps", 0.26)),
+        )
     elif action_type == "open-url":
         open_url(profile, str(action["url"]))
     elif action_type == "launch-app":
@@ -1182,13 +1574,26 @@ def capture_scene(scene_id: str, run_id: str) -> Path:
     output_path = raw_scene_path(scene_id, run_id)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    seed_fixture(profile, scene["fixture"])
     quit_integration_app(profile)
+    if not bool(scene.get("skip_seed", False)):
+        seed_fixture(profile, scene["fixture"])
+
+    run_prepare_steps([step for step in scene.get("prepare_before_launch", []) if isinstance(step, dict)])
+
     launch_integration_app(profile)
+
+    for command in scene.get("prepare_urls", []):
+        url_command(profile, str(command))
+        time.sleep(0.15)
 
     for bundle_identifier in scene.get("launch_apps", []):
         launch_app(str(bundle_identifier))
         time.sleep(float(profile.get("app_launch_stagger_seconds", 0.6)))
+
+    run_prepare_steps([step for step in scene.get("prepare_after_launch", []) if isinstance(step, dict)])
+
+    if scene.get("window_bounds") or scene.get("window_layouts"):
+        stage_windows(scene)
 
     duration = float(capture_settings["duration"])
     ffmpeg_command = [

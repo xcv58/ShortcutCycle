@@ -2,6 +2,7 @@ id: default
 description: Default local capture profile for marketing videos
 bundle_id: com.xcv58.ShortcutCycle.Integration
 app_bundle_path: .artifacts/xcode-integration/DerivedData/Build/Products/Debug/ShortcutCycle.app
+preferences_path: ~/Library/Preferences/ShortcutCycle.plist
 frame_rate: 30
 output_size: [1920, 1080]
 capture_device: "3:none"

@@ -13,7 +13,7 @@ groups:
     open_app_if_needed: true
     apps:
       - { id: 10000000-0000-4000-8000-000000000011, name: Clock, bundle_id: com.apple.clock }
-      - { id: 10000000-0000-4000-8000-000000000012, name: Tips, bundle_id: com.apple.helpviewer }
+      - { id: 10000000-0000-4000-8000-000000000012, name: Calendar, bundle_id: com.apple.iCal }
       - { id: 10000000-0000-4000-8000-000000000013, name: Calculator, bundle_id: com.apple.calculator }
   - id: 10000000-0000-4000-8000-000000000002
     name: Projects

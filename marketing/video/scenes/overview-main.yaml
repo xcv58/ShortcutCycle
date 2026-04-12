@@ -6,15 +6,44 @@ fallback_source_clip: docs/assets/videos/1.mp4
 publish_capture_to:
   - docs/assets/videos/1.mp4
 capture:
-  mode: synthetic_overview
-  duration: 14.6
+  duration: 8.0
+prepare_urls:
+  - set-setting?key=showHUD&value=true
+  - set-setting?key=showShortcutInHUD&value=true
+prepare_before_launch:
+  - { type: quit-app, bundle_id: com.apple.clock }
+  - { type: quit-app, bundle_id: com.apple.iCal }
+  - { type: quit-app, bundle_id: com.apple.calculator }
+  - { type: quit-app, bundle_id: com.apple.FontBook }
+  - { type: quit-app, bundle_id: com.apple.TextEdit }
+  - { type: quit-app, bundle_id: com.apple.Dictionary }
+launch_apps:
+  - com.apple.clock
+  - com.apple.iCal
+  - com.apple.calculator
+  - com.apple.FontBook
+  - com.apple.TextEdit
+  - com.apple.Dictionary
+prepare_after_launch:
+  - { type: sleep, seconds: 1.0 }
+  - { type: activate-app, bundle_id: com.apple.calculator }
+  - type: osascript
+    lines:
+      - tell application "System Events" to tell process "Calculator" to click menu item "Scientific" of menu "View" of menu bar 1
+  - { type: sleep, seconds: 0.4 }
+  - { type: open-file, bundle_id: com.apple.TextEdit, path: marketing/video/assets/shortcutcycle-demo.rtf }
+  - { type: sleep, seconds: 0.8 }
+window_layouts:
+  "com.apple.clock": [210, 72, 1490, 1000]
+  "com.apple.iCal": [180, 52, 1535, 1035]
+  "com.apple.calculator": [720, 82, 880, 955]
+  "com.apple.FontBook": [190, 62, 1510, 1000]
+  "com.apple.TextEdit": [150, 64, 1540, 980]
+  "com.apple.Dictionary": [185, 62, 1505, 995]
+initial_frontmost_app: com.apple.iCal
 actions:
-  - { at: 1.80, type: cycle, group: Tools }
-  - { at: 3.45, type: cycle, group: Tools }
-  - { at: 5.10, type: cycle, group: Tools }
-  - { at: 6.90, type: cycle, group: Projects }
-  - { at: 8.75, type: cycle, group: Projects }
-  - { at: 10.60, type: cycle, group: Projects }
-  - { at: 12.55, type: cycle, group: Tools }
+  - { at: 0.70, type: shortcut-sequence, shortcut: option+1, tap_count: 3, pre_hold: 0.12, between_taps: 0.26 }
+  - { at: 3.55, type: shortcut-sequence, shortcut: option+3, tap_count: 3, pre_hold: 0.12, between_taps: 0.26 }
+  - { at: 6.20, type: shortcut-sequence, shortcut: option+1, tap_count: 1, pre_hold: 0.12, between_taps: 0.26 }
 trim_hints:
-  - { label: full, start: 0.20, end: 14.30 }
+  - { label: full, start: 0.20, end: 7.70 }
