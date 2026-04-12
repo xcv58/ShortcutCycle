@@ -1164,22 +1164,43 @@ def seed_fixture_via_url(profile: dict[str, Any], fixture_id: str) -> None:
 
 
 def publish_scene_capture(scene: dict[str, Any], capture_path: Path) -> None:
+    profile = load_profile(str(scene["profile"]))
+    width, height = output_size(profile)
+    fps = frame_rate(profile)
     for destination in scene.get("publish_capture_to", []):
         destination_path = REPO_ROOT / str(destination)
         destination_path.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(capture_path, destination_path)
+        run(
+            [
+                "ffmpeg",
+                "-y",
+                "-i",
+                str(capture_path),
+                "-vf",
+                cover_filter(width, height, fps),
+                "-an",
+                "-c:v",
+                "libx264",
+                "-pix_fmt",
+                "yuv420p",
+                "-movflags",
+                "+faststart",
+                str(destination_path),
+            ],
+            check=True,
+        )
 
 
 def click_highlight_asset() -> Path:
     ensure_directories()
-    output_path = BIN_DIR / "click-highlight.png"
+    output_path = BIN_DIR / "click-highlight-v2.png"
     if output_path.exists():
         return output_path
 
-    size = 96
+    size = 72
     image = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(image)
-    draw.ellipse((12, 12, size - 12, size - 12), outline=(255, 214, 120, 210), width=6)
+    draw.ellipse((10, 10, size - 10, size - 10), outline=(255, 214, 120, 152), width=4)
     image.save(output_path)
     return output_path
 
@@ -1241,6 +1262,8 @@ def apply_click_highlights(scene: dict[str, Any], capture_path: Path) -> None:
         return
 
     highlight_path = click_highlight_asset()
+    highlight_image = Image.open(highlight_path)
+    highlight_width, highlight_height = highlight_image.size
     capture_duration = float(ffprobe_stream(capture_path)["format"]["duration"])
     temp_output = capture_path.with_name(f"{capture_path.stem}-clicks{capture_path.suffix}")
     command = ["ffmpeg", "-y", "-i", str(capture_path)]
@@ -1249,8 +1272,8 @@ def apply_click_highlights(scene: dict[str, Any], capture_path: Path) -> None:
 
     for index, action in enumerate(click_actions, start=1):
         command.extend(["-loop", "1", "-i", str(highlight_path)])
-        x = int(action["x"]) - 60
-        y = int(action["y"]) - 60
+        x = int(action["x"]) - highlight_width // 2
+        y = int(action["y"]) - highlight_height // 2
         start = float(action["at"])
         duration = float(action.get("highlight_duration", 0.45))
         output_label = f"[v{index}]"
@@ -1312,7 +1335,7 @@ def apply_shortcut_overlays(scene: dict[str, Any], capture_path: Path) -> None:
         duration = float(action.get("overlay_duration", 0.90))
         output_label = f"[v{index}]"
         filter_parts.append(
-            f"{previous}[{index}:v]overlay=84:76:enable='between(t,{start:.3f},{start + duration:.3f})'{output_label}"
+            f"{previous}[{index}:v]overlay=main_w-overlay_w-84:76:enable='between(t,{start:.3f},{start + duration:.3f})'{output_label}"
         )
         previous = output_label
 

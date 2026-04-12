@@ -12,6 +12,11 @@ prepare_urls:
 prepare_after_launch:
   - { type: sleep, seconds: 1.1 }
   - { type: hide-other-apps, except_bundle_ids: [com.xcv58.ShortcutCycle] }
+window_stage_apps:
+  - com.xcv58.ShortcutCycle
+window_layouts:
+  "com.xcv58.ShortcutCycle": [160, 58, 1600, 1010]
+initial_frontmost_app: com.xcv58.ShortcutCycle
 actions:
   - { at: 1.35, type: mouse-click, x: 238, y: 181, move_duration: 0.30, settle: 0.18, highlight_duration: 0.36 }
   - { at: 3.10, type: mouse-click, x: 238, y: 235, move_duration: 0.30, settle: 0.18, highlight_duration: 0.36 }
