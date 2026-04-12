@@ -81,4 +81,34 @@ final class SettingsWindowLifecycleCoordinatorTests: XCTestCase {
         XCTAssertFalse(SettingsWindowLifecycleCoordinator.isSettingsWindow(otherWindow))
     }
 
+    func testCoordinatorIdentifiesActiveSettingsWindow() {
+        let window = MockWindow(
+            identifier: NSUserInterfaceItemIdentifier("settings"),
+            isVisible: true,
+            isOnActiveSpace: true,
+            isKeyWindow: true
+        )
+
+        XCTAssertTrue(SettingsWindowLifecycleCoordinator.isActiveSettingsWindow(window))
+        XCTAssertEqual(SettingsWindowLifecycleCoordinator.activationPolicy(for: window), .regular)
+    }
+
+    func testActivationPolicyFallsBackToAccessoryWhenSettingsWindowIsNotActive() {
+        let backgroundWindow = MockWindow(
+            identifier: NSUserInterfaceItemIdentifier("settings"),
+            isVisible: true,
+            isOnActiveSpace: true
+        )
+        let nonSettingsWindow = MockWindow(
+            identifier: NSUserInterfaceItemIdentifier("other"),
+            isVisible: true,
+            isOnActiveSpace: true,
+            isKeyWindow: true
+        )
+
+        XCTAssertFalse(SettingsWindowLifecycleCoordinator.isActiveSettingsWindow(backgroundWindow))
+        XCTAssertEqual(SettingsWindowLifecycleCoordinator.activationPolicy(for: backgroundWindow), .accessory)
+        XCTAssertEqual(SettingsWindowLifecycleCoordinator.activationPolicy(for: nonSettingsWindow), .accessory)
+        XCTAssertEqual(SettingsWindowLifecycleCoordinator.activationPolicy(for: nil), .accessory)
+    }
 }

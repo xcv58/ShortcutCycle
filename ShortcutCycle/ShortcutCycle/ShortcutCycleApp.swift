@@ -272,8 +272,16 @@ struct SettingsWindowObserver: NSViewRepresentable {
     }
 
     final class Coordinator {
+        private let setActivationPolicy: (NSApplication.ActivationPolicy) -> Void
+        private var observers: [NSObjectProtocol] = []
         private var keyEventMonitor: Any?
         private weak var observedWindow: NSWindow?
+
+        init(
+            setActivationPolicy: ((NSApplication.ActivationPolicy) -> Void)? = nil
+        ) {
+            self.setActivationPolicy = setActivationPolicy ?? Self.defaultSetActivationPolicy
+        }
 
         func observe(window: NSWindow) {
             guard observedWindow !== window else { return }
@@ -281,6 +289,8 @@ struct SettingsWindowObserver: NSViewRepresentable {
             observedWindow = window
 
             window.identifier = NSUserInterfaceItemIdentifier("settings")
+            registerWindowLifecycleObservers(for: window)
+            scheduleActivationPolicySync()
 
             keyEventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
                 self?.handleKeyDown(event)
@@ -334,7 +344,51 @@ struct SettingsWindowObserver: NSViewRepresentable {
             return window.firstResponder as? NSView
         }
 
+        func syncActivationPolicy() {
+            setActivationPolicy(SettingsWindowLifecycleCoordinator.activationPolicy(for: observedWindow))
+        }
+
+        func scheduleActivationPolicySync() {
+            DispatchQueue.main.async { [weak self] in
+                self?.syncActivationPolicy()
+            }
+        }
+
+        private func registerWindowLifecycleObservers(for window: NSWindow) {
+            let center = NotificationCenter.default
+            let immediateNames: [Notification.Name] = [
+                NSWindow.didBecomeKeyNotification,
+                NSWindow.didBecomeMainNotification
+            ]
+            observers.append(contentsOf: immediateNames.map { name in
+                center.addObserver(forName: name, object: window, queue: .main) { [weak self] _ in
+                    self?.syncActivationPolicy()
+                }
+            })
+
+            let deferredNames: [Notification.Name] = [
+                NSWindow.didResignKeyNotification,
+                NSWindow.didResignMainNotification,
+                NSWindow.willCloseNotification
+            ]
+            observers.append(contentsOf: deferredNames.map { name in
+                center.addObserver(forName: name, object: window, queue: .main) { [weak self] _ in
+                    self?.scheduleActivationPolicySync()
+                }
+            })
+        }
+
+        private static func defaultSetActivationPolicy(_ policy: NSApplication.ActivationPolicy) {
+            #if DEBUG
+            guard ScreenshotArguments.current == nil else { return }
+            #endif
+            NSApp.setActivationPolicy(policy)
+        }
+
         private func removeObservers() {
+            observers.forEach(NotificationCenter.default.removeObserver)
+            observers.removeAll()
+
             if let keyEventMonitor {
                 NSEvent.removeMonitor(keyEventMonitor)
                 self.keyEventMonitor = nil

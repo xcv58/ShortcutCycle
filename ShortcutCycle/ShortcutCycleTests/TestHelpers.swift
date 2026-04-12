@@ -8,14 +8,20 @@ import AppKit
 final class MockWindow: NSWindow {
     private let mockIsVisible: Bool
     private let mockIsOnActiveSpace: Bool
+    private let mockIsKeyWindow: Bool
+    private let mockIsMainWindow: Bool
 
     init(
         identifier: NSUserInterfaceItemIdentifier?,
         isVisible: Bool,
-        isOnActiveSpace: Bool
+        isOnActiveSpace: Bool,
+        isKeyWindow: Bool = false,
+        isMainWindow: Bool = false
     ) {
         self.mockIsVisible = isVisible
         self.mockIsOnActiveSpace = isOnActiveSpace
+        self.mockIsKeyWindow = isKeyWindow
+        self.mockIsMainWindow = isMainWindow
         super.init(
             contentRect: .zero,
             styleMask: [],
@@ -31,5 +37,13 @@ final class MockWindow: NSWindow {
 
     override var isOnActiveSpace: Bool {
         mockIsOnActiveSpace
+    }
+
+    override var isKeyWindow: Bool {
+        mockIsKeyWindow
+    }
+
+    override var isMainWindow: Bool {
+        mockIsMainWindow
     }
 }
