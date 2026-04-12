@@ -209,6 +209,11 @@ Keep this source image reasonably sized for the `2880x1800` output workflow; it 
 
 From the repository root:
 
+Prerequisite:
+
+- `generate_screenshots.py` requires Pillow
+- install it with `pip3 install Pillow`
+
 ```bash
 python3 scripts/generate_screenshots.py
 ```

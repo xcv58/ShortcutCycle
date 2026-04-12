@@ -11,7 +11,12 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
-from PIL import Image, ImageChops, ImageColor, ImageDraw, ImageFilter
+try:
+    from PIL import Image, ImageChops, ImageColor, ImageDraw, ImageFilter
+except ImportError:
+    print("Error: 'Pillow' library is not installed.", file=sys.stderr)
+    print("Please install it with: pip3 install Pillow", file=sys.stderr)
+    sys.exit(1)
 
 
 SCRIPT_PATH = Path(__file__).resolve()

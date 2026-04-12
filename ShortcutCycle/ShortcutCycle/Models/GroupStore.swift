@@ -39,7 +39,8 @@ public class GroupStore: ObservableObject {
     private let backupDebounceInterval: TimeInterval
     private var lastBackupTime: Date = .distantPast
 
-    // Internal init for testing
+    // Public so the app target and tests can construct stores with custom dependencies
+    // from the separate ShortcutCycleCore module.
     public init(
         userDefaults: UserDefaults = .standard,
         backupDebounceInterval: TimeInterval = 60.0,
