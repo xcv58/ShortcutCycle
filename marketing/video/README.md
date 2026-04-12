@@ -28,8 +28,10 @@ python3 scripts/video_pipeline.py build-set --set launch
 
 ## Current Scope
 
-The first implemented vertical slice targets the Reddit overview cut.
+The pipeline now supports the real-capture docs and launch flows.
 
-- `overview-main` generates a deterministic synthetic source clip and publishes it to `docs/assets/videos/1.mp4`.
-- `reddit-overview` reuses that source clip and prepends the generated intro card before publishing `marketing/reddit/output/shortcutcycle-reddit-cut.mp4`.
-- The current source footage is built from scripted app-style surfaces and real app icons, so it does not depend on Accessibility window choreography or the live desktop state.
+- `marketing-default` is the stable settings fixture used by `settings-story`.
+- `marketing-story` is the storytelling fixture used by `overview-main` and `hud-story`.
+- `overview-main` is prepared for repeated group switching across `Essentials` and `Explore` with Calculator as the bridge app and a tracked Preview PDF for deterministic content.
+- `hud-story` is prepared for alternating compact and grid HUD beats with longer holds and subtle shortcut badges so the workflow reads clearly on video.
+- `reddit-overview` still composes from `overview-main`, but the next capture run should regenerate that source clip before publishing.

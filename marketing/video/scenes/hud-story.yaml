@@ -1,12 +1,11 @@
-id: overview-main
-description: Core overview demo reused by the Reddit cut
+id: hud-story
+description: Real HUD storytelling clip with a compact group and a large group
 profile: default
 fixture: marketing-story
-fallback_source_clip: docs/assets/videos/1.mp4
 publish_capture_to:
-  - docs/assets/videos/1.mp4
+  - docs/assets/videos/2.mp4
 capture:
-  duration: 11.6
+  duration: 15.8
 prepare_urls:
   - set-setting?key=showHUD&value=true
   - set-setting?key=showShortcutInHUD&value=true
@@ -31,12 +30,7 @@ launch_apps:
   - com.apple.FontBook
   - com.apple.Chess
 prepare_after_launch:
-  - { type: sleep, seconds: 1.0 }
-  - { type: activate-app, bundle_id: com.apple.calculator }
-  - type: osascript
-    lines:
-      - tell application "System Events" to tell process "Calculator" to click menu item "Scientific" of menu "View" of menu bar 1
-  - { type: sleep, seconds: 0.4 }
+  - { type: sleep, seconds: 1.2 }
   - { type: open-file, bundle_id: com.apple.Preview, path: marketing/video/assets/shortcutcycle-demo.pdf }
   - { type: sleep, seconds: 0.6 }
   - { type: hide-other-apps, except_bundle_ids: [com.xcv58.ShortcutCycle, com.apple.iCal, com.apple.calculator, com.apple.helpviewer, com.apple.FontBook, com.apple.Dictionary, com.apple.Preview, com.apple.Chess] }
@@ -50,9 +44,7 @@ window_layouts:
   "com.apple.Chess": [230, 86, 1460, 930]
 initial_frontmost_app: com.apple.calculator
 actions:
-  - { at: 1.00, type: shortcut-sequence, shortcut: option+1, tap_count: 3, pre_hold: 0.42, between_taps: 0.34, post_hold: 0.82, show_shortcut_overlay: true, overlay_duration: 0.95 }
-  - { at: 3.95, type: shortcut-sequence, shortcut: option+3, tap_count: 3, pre_hold: 0.42, between_taps: 0.34, post_hold: 0.82, show_shortcut_overlay: true, overlay_duration: 0.95 }
-  - { at: 6.90, type: shortcut-sequence, shortcut: option+1, tap_count: 2, pre_hold: 0.42, between_taps: 0.34, post_hold: 0.78, show_shortcut_overlay: true, overlay_duration: 0.95 }
-  - { at: 9.55, type: shortcut-sequence, shortcut: option+3, tap_count: 2, pre_hold: 0.42, between_taps: 0.34, post_hold: 0.78, show_shortcut_overlay: true, overlay_duration: 0.95 }
-trim_hints:
-  - { label: full, start: 0.20, end: 11.35 }
+  - { at: 0.95, type: shortcut-sequence, shortcut: option+1, tap_count: 2, pre_hold: 0.60, between_taps: 0.34, post_hold: 0.82, show_shortcut_overlay: true, overlay_duration: 0.95 }
+  - { at: 4.55, type: shortcut-sequence, shortcut: option+5, tap_count: 3, pre_hold: 0.70, between_taps: 0.34, post_hold: 0.80, show_shortcut_overlay: true, overlay_duration: 0.95 }
+  - { at: 8.65, type: shortcut-sequence, shortcut: option+1, tap_count: 2, pre_hold: 0.60, between_taps: 0.34, post_hold: 0.78, show_shortcut_overlay: true, overlay_duration: 0.95 }
+  - { at: 12.25, type: shortcut-sequence, shortcut: option+5, tap_count: 2, pre_hold: 0.70, between_taps: 0.34, post_hold: 0.78, show_shortcut_overlay: true, overlay_duration: 0.95 }

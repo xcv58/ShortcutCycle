@@ -1,5 +1,5 @@
 id: marketing-default
-description: Built-in and common apps used for the overview marketing demo
+description: Stable fixture used by the settings walkthrough capture
 settings:
   language: en
   appearance: light
@@ -12,8 +12,8 @@ groups:
     is_enabled: true
     open_app_if_needed: true
     apps:
-      - { id: 10000000-0000-4000-8000-000000000011, name: Clock, bundle_id: com.apple.clock }
       - { id: 10000000-0000-4000-8000-000000000012, name: Calendar, bundle_id: com.apple.iCal }
+      - { id: 10000000-0000-4000-8000-000000000014, name: Dictionary, bundle_id: com.apple.Dictionary }
       - { id: 10000000-0000-4000-8000-000000000013, name: Calculator, bundle_id: com.apple.calculator }
   - id: 10000000-0000-4000-8000-000000000002
     name: Projects
@@ -24,3 +24,19 @@ groups:
       - { id: 10000000-0000-4000-8000-000000000021, name: Font Book, bundle_id: com.apple.FontBook }
       - { id: 10000000-0000-4000-8000-000000000022, name: TextEdit, bundle_id: com.apple.TextEdit }
       - { id: 10000000-0000-4000-8000-000000000023, name: Dictionary, bundle_id: com.apple.Dictionary }
+  - id: 10000000-0000-4000-8000-000000000003
+    name: Many Apps
+    shortcut: option+5
+    is_enabled: true
+    open_app_if_needed: true
+    apps:
+      - { id: 10000000-0000-4000-8000-000000000032, name: Calendar, bundle_id: com.apple.iCal }
+      - { id: 10000000-0000-4000-8000-000000000036, name: Dictionary, bundle_id: com.apple.Dictionary }
+      - { id: 10000000-0000-4000-8000-000000000034, name: Font Book, bundle_id: com.apple.FontBook }
+      - { id: 10000000-0000-4000-8000-000000000033, name: Calculator, bundle_id: com.apple.calculator }
+      - { id: 10000000-0000-4000-8000-000000000035, name: TextEdit, bundle_id: com.apple.TextEdit }
+      - { id: 10000000-0000-4000-8000-000000000037, name: Preview, bundle_id: com.apple.Preview }
+      - { id: 10000000-0000-4000-8000-000000000038, name: Tips, bundle_id: com.apple.helpviewer }
+      - { id: 10000000-0000-4000-8000-000000000039, name: Activity Monitor, bundle_id: com.apple.ActivityMonitor }
+      - { id: 10000000-0000-4000-8000-00000000003A, name: QuickTime Player, bundle_id: com.apple.QuickTimePlayerX }
+      - { id: 10000000-0000-4000-8000-00000000003B, name: Script Editor, bundle_id: com.apple.ScriptEditor2 }

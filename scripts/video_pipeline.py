@@ -44,16 +44,24 @@ DEFAULT_BOLD_FONT = "/System/Library/Fonts/Supplemental/Arial Bold.ttf"
 OVERVIEW_BACKGROUND_PATH = REPO_ROOT / "scripts" / "assets" / "background.jpeg"
 
 KNOWN_APP_BUNDLES = {
+    "com.apple.ActivityMonitor": Path("/System/Applications/Utilities/Activity Monitor.app"),
+    "com.apple.Chess": Path("/System/Applications/Chess.app"),
     "com.apple.calculator": Path("/System/Applications/Calculator.app"),
     "com.apple.clock": Path("/System/Applications/Clock.app"),
+    "com.apple.Console": Path("/System/Applications/Utilities/Console.app"),
     "com.apple.Dictionary": Path("/System/Applications/Dictionary.app"),
     "com.apple.FontBook": Path("/System/Applications/Font Book.app"),
+    "com.apple.Image_Capture": Path("/System/Applications/Image Capture.app"),
     "com.apple.Preview": Path("/System/Applications/Preview.app"),
+    "com.apple.QuickTimePlayerX": Path("/System/Applications/QuickTime Player.app"),
+    "com.apple.ScriptEditor2": Path("/System/Applications/Utilities/Script Editor.app"),
+    "com.apple.Terminal": Path("/System/Applications/Utilities/Terminal.app"),
     "com.apple.TV": Path("/System/Applications/TV.app"),
     "com.apple.TextEdit": Path("/System/Applications/TextEdit.app"),
     "com.apple.helpviewer": Path("/System/Applications/Tips.app"),
     "com.apple.news": Path("/System/Applications/News.app"),
     "com.apple.stocks": Path("/System/Applications/Stocks.app"),
+    "com.apple.systempreferences": Path("/System/Applications/System Settings.app"),
     "com.apple.weather": Path("/System/Applications/Weather.app"),
 }
 
@@ -288,19 +296,37 @@ def integration_query_result_path(profile: dict[str, Any]) -> Path:
     return integration_container_root(profile) / "Data" / "tmp" / "shortcutcycle-result.json"
 
 
+def shortcutcycle_process_count() -> int:
+    result = run(["pgrep", "-x", "ShortcutCycle"], capture_output=True, check=False)
+    if result.returncode != 0:
+        return 0
+    return len([line for line in result.stdout.splitlines() if line.strip()])
+
+
 def quit_integration_app(profile: dict[str, Any]) -> None:
-    run(
-        ["osascript", "-e", f'tell application id "{bundle_id(profile)}" to quit'],
-        capture_output=True,
-        check=False,
-    )
-    time.sleep(1.0)
+    run(["pkill", "-x", "ShortcutCycle"], capture_output=True, check=False)
+    deadline = time.monotonic() + 8.0
+    while time.monotonic() < deadline:
+        if shortcutcycle_process_count() == 0:
+            time.sleep(0.4)
+            return
+        time.sleep(0.2)
+
+    run(["pkill", "-9", "-x", "ShortcutCycle"], capture_output=True, check=False)
+    time.sleep(0.6)
 
 
 def launch_integration_app(profile: dict[str, Any]) -> None:
     bundle = app_bundle_path(profile)
-    run(["open", str(bundle)], check=True)
-    time.sleep(float(profile.get("launch_settle_seconds", 3.0)))
+    run(["open", "-n", str(bundle)], check=True)
+
+    deadline = time.monotonic() + float(profile.get("launch_settle_seconds", 3.0)) + 5.0
+    while time.monotonic() < deadline:
+        if shortcutcycle_process_count() > 0:
+            time.sleep(float(profile.get("launch_settle_seconds", 3.0)))
+            return
+        time.sleep(0.2)
+    raise PipelineError("Timed out waiting for ShortcutCycle to launch")
 
 
 def shortcut_payload(shortcut: str) -> str:
@@ -366,9 +392,58 @@ def prefs_payload_for_fixture(fixture: dict[str, Any]) -> dict[str, Any]:
     return plist
 
 
+def iso8601_timestamp(timestamp: int) -> str:
+    return datetime.utcfromtimestamp(timestamp).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def settings_export_payload_for_fixture(fixture: dict[str, Any]) -> dict[str, Any]:
+    settings = fixture.get("settings", {})
+    export_groups: list[dict[str, Any]] = []
+    shortcuts: dict[str, dict[str, int]] = {}
+
+    for group in fixture["groups"]:
+        export_groups.append(
+            {
+                "id": group["id"],
+                "name": group["name"],
+                "apps": [
+                    {
+                        "id": app["id"],
+                        "bundleIdentifier": app["bundle_id"],
+                        "name": app["name"],
+                    }
+                    for app in group["apps"]
+                ],
+                "isEnabled": bool(group.get("is_enabled", True)),
+                "lastModified": iso8601_timestamp(FIXED_LAST_MODIFIED),
+                "openAppIfNeeded": bool(group.get("open_app_if_needed", False)),
+            }
+        )
+        shortcuts[group["id"]] = json.loads(shortcut_payload(group["shortcut"]))
+
+    return {
+        "version": 3,
+        "exportDate": iso8601_timestamp(FIXED_LAST_MODIFIED),
+        "groups": export_groups,
+        "settings": {
+            "showHUD": bool(settings.get("show_hud", True)),
+            "showShortcutInHUD": bool(settings.get("show_shortcut_in_hud", True)),
+            "selectedLanguage": str(settings.get("language", "system")),
+            "appTheme": str(settings.get("appearance", "system")),
+        },
+        "shortcuts": shortcuts,
+    }
+
+
+def fixture_import_path(profile: dict[str, Any]) -> Path:
+    return integration_container_root(profile) / "Data" / "tmp" / "shortcutcycle-fixture.json"
+
+
 def seed_fixture(profile: dict[str, Any], fixture_id: str) -> None:
     fixture = load_fixture(fixture_id)
     payload = prefs_payload_for_fixture(fixture)
+    if profile.get("settings_window_frame"):
+        payload["NSWindow Frame settings"] = str(profile["settings_window_frame"])
     destination = preferences_path(profile)
     destination.parent.mkdir(parents=True, exist_ok=True)
 
@@ -398,8 +473,9 @@ def seed_fixture(profile: dict[str, Any], fixture_id: str) -> None:
 
 
 def open_url(profile: dict[str, Any], url: str) -> None:
+    bundle = app_bundle_path(profile)
     subprocess.Popen(
-        ["open", "-b", bundle_id(profile), url],
+        ["open", "-a", str(bundle), url],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
@@ -435,20 +511,32 @@ def application_name(bundle_identifier: str) -> str:
 def position_front_window(bundle_identifier: str, bounds: list[int]) -> None:
     app_name = application_name(bundle_identifier)
     x, y, width, height = (int(value) for value in bounds)
+    wait_for_window(app_name)
     run(
-        [
-            "osascript",
-            "-e",
-            f'tell application id "{bundle_identifier}" to activate',
-            "-e",
-            "delay 0.35",
-            "-e",
-            f'tell application "System Events" to tell process "{app_name}" to set position of front window to {{{x}, {y}}}',
-            "-e",
-            f'tell application "System Events" to tell process "{app_name}" to set size of front window to {{{width}, {height}}}',
-        ],
+        ["osascript", "-e", f'tell application id "{bundle_identifier}" to activate'],
         capture_output=True,
         check=True,
+    )
+    helper_path = compile_window_frame_helper()
+    result = run(
+        [str(helper_path), bundle_identifier, str(x), str(y), str(width), str(height)],
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode == 0:
+        return
+
+    run_osascript(
+        [
+            f'tell application id "{bundle_identifier}" to activate',
+            'tell application "System Events"',
+            f'tell process "{app_name}"',
+            "if (count of windows) is 0 then error number -1728",
+            f"set position of window 1 to {{{x}, {y}}}",
+            f"try\nset size of window 1 to {{{width}, {height}}}\nend try",
+            "end tell",
+            "end tell",
+        ]
     )
 
 
@@ -459,6 +547,30 @@ def run_osascript(lines: list[str]) -> None:
     for line in lines:
         command.extend(["-e", line])
     run(command, capture_output=True, check=True)
+
+
+def hide_other_apps(except_bundle_ids: list[str]) -> None:
+    visible_names = sorted({application_name(bundle_id) for bundle_id in except_bundle_ids})
+    if not visible_names:
+        return
+
+    escaped_names = [name.replace('"', '\\"') for name in visible_names]
+    except_list = ", ".join(f'"{name}"' for name in escaped_names)
+    run_osascript(
+        [
+            'tell application "System Events"',
+            'set visibleProcNames to name of every application process whose background only is false',
+            'repeat with procName in visibleProcNames',
+            f'if ({except_list}) does not contain (contents of procName) then',
+            'try',
+            'set visible of application process (contents of procName) to false',
+            'end try',
+            'end if',
+            'end repeat',
+            'end tell',
+        ]
+    )
+    time.sleep(0.3)
 
 
 def run_prepare_step(step: dict[str, Any]) -> None:
@@ -489,6 +601,12 @@ def run_prepare_step(step: dict[str, Any]) -> None:
             raise PipelineError("osascript prepare step expects a list of lines")
         run_osascript([str(line) for line in raw_lines])
         return
+    if step_type == "hide-other-apps":
+        raw_bundle_ids = step.get("except_bundle_ids", [])
+        if not isinstance(raw_bundle_ids, list):
+            raise PipelineError("hide-other-apps prepare step expects except_bundle_ids list")
+        hide_other_apps([str(bundle_id) for bundle_id in raw_bundle_ids])
+        return
     raise PipelineError(f"Unsupported prepare step: {step_type}")
 
 
@@ -503,7 +621,13 @@ def stage_windows(scene: dict[str, Any]) -> None:
     if not bounds and not layouts:
         return
 
-    for bundle_identifier in scene.get("launch_apps", []):
+    raw_targets = scene.get("window_stage_apps")
+    if not isinstance(raw_targets, list) or not raw_targets:
+        raw_targets = scene.get("launch_apps", [])
+    if not raw_targets and isinstance(layouts, dict):
+        raw_targets = list(layouts.keys())
+
+    for bundle_identifier in raw_targets:
         bundle_id_value = str(bundle_identifier)
         resolved_bounds = layouts.get(bundle_id_value, bounds)
         if not resolved_bounds:
@@ -555,7 +679,7 @@ def setting_url_command(key: str, value: str) -> str:
 
 
 def group_selector(group_id: str) -> str:
-    return f"groupId={quote(group_id)}"
+    return f"id={quote(group_id)}"
 
 
 def compile_shortcut_helper() -> Path:
@@ -567,8 +691,8 @@ import CoreGraphics
 import Foundation
 
 let arguments = Array(CommandLine.arguments.dropFirst())
-guard arguments.count == 6 else {
-    fputs("usage: post_shortcut_sequence <modifierName> <modifierKeyCode> <keyCode> <tapCount> <preHoldMicros> <betweenTapMicros>\\n", stderr)
+guard arguments.count == 7 else {
+    fputs("usage: post_shortcut_sequence <modifierName> <modifierKeyCode> <keyCode> <tapCount> <preHoldMicros> <betweenTapMicros> <postHoldMicros>\\n", stderr)
     exit(2)
 }
 
@@ -577,7 +701,8 @@ guard
     let keyCode = Int(arguments[2]),
     let tapCount = Int(arguments[3]),
     let preHoldMicros = UInt32(arguments[4]),
-    let betweenTapMicros = UInt32(arguments[5])
+    let betweenTapMicros = UInt32(arguments[5]),
+    let postHoldMicros = UInt32(arguments[6])
 else {
     fputs("invalid numeric arguments\\n", stderr)
     exit(2)
@@ -620,7 +745,7 @@ for index in 0..<tapCount {
         usleep(betweenTapMicros)
     }
 }
-usleep(420_000)
+usleep(postHoldMicros)
 post(CGKeyCode(modifierKeyCode), false)
 """
     current_source = source_path.read_text(encoding="utf-8") if source_path.exists() else None
@@ -628,6 +753,249 @@ post(CGKeyCode(modifierKeyCode), false)
         source_path.write_text(source, encoding="utf-8")
         run(["swiftc", str(source_path), "-o", str(binary_path)], check=True)
     return require_file(binary_path, "shortcut helper binary")
+
+
+def compile_mouse_helper() -> Path:
+    ensure_directories()
+    source_path = BIN_DIR / "post_mouse_click.swift"
+    binary_path = BIN_DIR / "post_mouse_click"
+    source = """import Cocoa
+import CoreGraphics
+import Foundation
+
+let arguments = Array(CommandLine.arguments.dropFirst())
+guard arguments.count == 5 else {
+    fputs("usage: post_mouse_click <x> <y> <moveDurationMicros> <clickHoldMicros> <settleMicros>\\n", stderr)
+    exit(2)
+}
+
+guard
+    let x = Double(arguments[0]),
+    let y = Double(arguments[1]),
+    let moveDurationMicros = UInt32(arguments[2]),
+    let clickHoldMicros = UInt32(arguments[3]),
+    let settleMicros = UInt32(arguments[4])
+else {
+    fputs("invalid numeric arguments\\n", stderr)
+    exit(2)
+}
+
+let target = CGPoint(x: x, y: y)
+
+func postMove(_ point: CGPoint) {
+    guard let event = CGEvent(mouseEventSource: nil, mouseType: .mouseMoved, mouseCursorPosition: point, mouseButton: .left) else {
+        return
+    }
+    event.post(tap: .cghidEventTap)
+}
+
+func postMouse(_ type: CGEventType, _ point: CGPoint) {
+    guard let event = CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: point, mouseButton: .left) else {
+        return
+    }
+    event.post(tap: .cghidEventTap)
+}
+
+let start = CGEvent(source: nil)?.location ?? target
+let stepCount = max(1, Int(moveDurationMicros / 16_000))
+for step in 1...stepCount {
+    let progress = Double(step) / Double(stepCount)
+    let point = CGPoint(
+        x: start.x + (target.x - start.x) * progress,
+        y: start.y + (target.y - start.y) * progress
+    )
+    postMove(point)
+    usleep(step == stepCount ? 1_000 : max(1, moveDurationMicros / UInt32(stepCount)))
+}
+
+postMouse(.leftMouseDown, target)
+usleep(clickHoldMicros)
+postMouse(.leftMouseUp, target)
+usleep(settleMicros)
+"""
+    current_source = source_path.read_text(encoding="utf-8") if source_path.exists() else None
+    if current_source != source or not binary_path.exists():
+        source_path.write_text(source, encoding="utf-8")
+        run(["swiftc", str(source_path), "-o", str(binary_path)], check=True)
+    return require_file(binary_path, "mouse helper binary")
+
+
+def compile_key_helper() -> Path:
+    ensure_directories()
+    source_path = BIN_DIR / "post_key_code.swift"
+    binary_path = BIN_DIR / "post_key_code"
+    source = """import Cocoa
+import CoreGraphics
+import Foundation
+
+let arguments = Array(CommandLine.arguments.dropFirst())
+guard arguments.count == 3 else {
+    fputs("usage: post_key_code <keyCode> <count> <intervalMicros>\\n", stderr)
+    exit(2)
+}
+
+guard
+    let keyCode = Int(arguments[0]),
+    let count = Int(arguments[1]),
+    let intervalMicros = UInt32(arguments[2])
+else {
+    fputs("invalid numeric arguments\\n", stderr)
+    exit(2)
+}
+
+func post(_ down: Bool) {
+    guard let event = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(keyCode), keyDown: down) else {
+        return
+    }
+    event.post(tap: .cghidEventTap)
+}
+
+for index in 0..<max(1, count) {
+    post(true)
+    usleep(40_000)
+    post(false)
+    if index < count - 1 {
+        usleep(intervalMicros)
+    }
+}
+"""
+    current_source = source_path.read_text(encoding="utf-8") if source_path.exists() else None
+    if current_source != source or not binary_path.exists():
+        source_path.write_text(source, encoding="utf-8")
+        run(["swiftc", str(source_path), "-o", str(binary_path)], check=True)
+    return require_file(binary_path, "key helper binary")
+
+
+def compile_scroll_helper() -> Path:
+    ensure_directories()
+    source_path = BIN_DIR / "post_mouse_scroll.swift"
+    binary_path = BIN_DIR / "post_mouse_scroll"
+    source = """import Cocoa
+import CoreGraphics
+import Foundation
+
+let arguments = Array(CommandLine.arguments.dropFirst())
+guard arguments.count == 6 else {
+    fputs("usage: post_mouse_scroll <x> <y> <moveDurationMicros> <deltaY> <count> <intervalMicros>\\n", stderr)
+    exit(2)
+}
+
+guard
+    let x = Double(arguments[0]),
+    let y = Double(arguments[1]),
+    let moveDurationMicros = UInt32(arguments[2]),
+    let deltaY = Int32(arguments[3]),
+    let count = Int(arguments[4]),
+    let intervalMicros = UInt32(arguments[5])
+else {
+    fputs("invalid numeric arguments\\n", stderr)
+    exit(2)
+}
+
+let target = CGPoint(x: x, y: y)
+
+func postMove(_ point: CGPoint) {
+    guard let event = CGEvent(mouseEventSource: nil, mouseType: .mouseMoved, mouseCursorPosition: point, mouseButton: .left) else {
+        return
+    }
+    event.post(tap: .cghidEventTap)
+}
+
+let start = CGEvent(source: nil)?.location ?? target
+let stepCount = max(1, Int(moveDurationMicros / 16_000))
+for step in 1...stepCount {
+    let progress = Double(step) / Double(stepCount)
+    let point = CGPoint(
+        x: start.x + (target.x - start.x) * progress,
+        y: start.y + (target.y - start.y) * progress
+    )
+    postMove(point)
+    usleep(step == stepCount ? 1_000 : max(1, moveDurationMicros / UInt32(stepCount)))
+}
+
+for index in 0..<max(1, count) {
+    guard let event = CGEvent(scrollWheelEvent2Source: nil, units: .line, wheelCount: 1, wheel1: deltaY, wheel2: 0, wheel3: 0) else {
+        continue
+    }
+    event.location = target
+    event.post(tap: .cghidEventTap)
+    if index < count - 1 {
+        usleep(intervalMicros)
+    }
+}
+"""
+    current_source = source_path.read_text(encoding="utf-8") if source_path.exists() else None
+    if current_source != source or not binary_path.exists():
+        source_path.write_text(source, encoding="utf-8")
+        run(["swiftc", str(source_path), "-o", str(binary_path)], check=True)
+    return require_file(binary_path, "scroll helper binary")
+
+
+def compile_window_frame_helper() -> Path:
+    ensure_directories()
+    source_path = BIN_DIR / "set_window_frame.swift"
+    binary_path = BIN_DIR / "set_window_frame"
+    source = """import Cocoa
+import ApplicationServices
+import Foundation
+
+let arguments = Array(CommandLine.arguments.dropFirst())
+guard arguments.count == 5 else {
+    fputs("usage: set_window_frame <bundleId> <x> <y> <width> <height>\\n", stderr)
+    exit(2)
+}
+
+let bundleId = arguments[0]
+guard
+    let x = Double(arguments[1]),
+    let y = Double(arguments[2]),
+    let width = Double(arguments[3]),
+    let height = Double(arguments[4])
+else {
+    fputs("invalid numeric arguments\\n", stderr)
+    exit(2)
+}
+
+guard let app = NSWorkspace.shared.runningApplications.first(where: { $0.bundleIdentifier == bundleId }) else {
+    fputs("app not running\\n", stderr)
+    exit(1)
+}
+
+_ = app.activate(options: [.activateAllWindows])
+Thread.sleep(forTimeInterval: 0.2)
+
+let axApp = AXUIElementCreateApplication(app.processIdentifier)
+var position = CGPoint(x: x, y: y)
+var size = CGSize(width: width, height: height)
+
+func currentWindows() -> [AXUIElement] {
+    var value: CFTypeRef?
+    let result = AXUIElementCopyAttributeValue(axApp, kAXWindowsAttribute as CFString, &value)
+    guard result == .success, let array = value as? [AXUIElement] else { return [] }
+    return array
+}
+
+for _ in 0..<40 {
+    if let window = currentWindows().first,
+       let positionValue = AXValueCreate(.cgPoint, &position),
+       let sizeValue = AXValueCreate(.cgSize, &size) {
+        let setPosition = AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, positionValue)
+        let setSize = AXUIElementSetAttributeValue(window, kAXSizeAttribute as CFString, sizeValue)
+        if setPosition == .success && setSize == .success {
+            exit(0)
+        }
+    }
+    Thread.sleep(forTimeInterval: 0.15)
+}
+
+fputs("failed to set window frame\\n", stderr)
+exit(1)
+"""
+    current_source = source_path.read_text(encoding="utf-8") if source_path.exists() else None
+    if current_source != source or not binary_path.exists():
+        source_path.write_text(source, encoding="utf-8")
+        run(["swiftc", str(source_path), "-o", str(binary_path)], check=True)
+    return require_file(binary_path, "window frame helper binary")
 
 
 def parse_shortcut(shortcut: str) -> tuple[str, int, int]:
@@ -644,7 +1012,7 @@ def parse_shortcut(shortcut: str) -> tuple[str, int, int]:
     return modifier, MODIFIER_KEY_CODES[modifier], SHORTCUT_KEY_CODES[key]
 
 
-def post_shortcut_sequence(shortcut: str, tap_count: int, pre_hold: float, between_taps: float) -> None:
+def post_shortcut_sequence(shortcut: str, tap_count: int, pre_hold: float, between_taps: float, post_hold: float) -> None:
     modifier_name, modifier_key_code, key_code = parse_shortcut(shortcut)
     helper_path = compile_shortcut_helper()
     run(
@@ -656,6 +1024,54 @@ def post_shortcut_sequence(shortcut: str, tap_count: int, pre_hold: float, betwe
             str(tap_count),
             str(int(pre_hold * 1_000_000)),
             str(int(between_taps * 1_000_000)),
+            str(int(post_hold * 1_000_000)),
+        ],
+        capture_output=True,
+        check=True,
+    )
+
+
+def post_mouse_click(x: int, y: int, move_duration: float, click_hold: float, settle: float) -> None:
+    helper_path = compile_mouse_helper()
+    run(
+        [
+            str(helper_path),
+            str(x),
+            str(y),
+            str(int(move_duration * 1_000_000)),
+            str(int(click_hold * 1_000_000)),
+            str(int(settle * 1_000_000)),
+        ],
+        capture_output=True,
+        check=True,
+    )
+
+
+def post_key_code(key_code: int, count: int, interval: float) -> None:
+    helper_path = compile_key_helper()
+    run(
+        [
+            str(helper_path),
+            str(key_code),
+            str(max(1, count)),
+            str(int(interval * 1_000_000)),
+        ],
+        capture_output=True,
+        check=True,
+    )
+
+
+def post_mouse_scroll(x: int, y: int, move_duration: float, delta_y: int, count: int, interval: float) -> None:
+    helper_path = compile_scroll_helper()
+    run(
+        [
+            str(helper_path),
+            str(x),
+            str(y),
+            str(int(move_duration * 1_000_000)),
+            str(delta_y),
+            str(max(1, count)),
+            str(int(interval * 1_000_000)),
         ],
         capture_output=True,
         check=True,
@@ -673,14 +1089,16 @@ def ensure_group(profile: dict[str, Any], group_name: str) -> dict[str, Any]:
             return group
 
     url_command(profile, f"create-group?name={quote(group_name)}")
-    time.sleep(0.25)
-    groups_payload = url_query(profile, "list-groups")
-    groups = groups_payload.get("data", [])
-    if not isinstance(groups, list):
-        raise PipelineError("Unexpected list-groups payload after create-group")
-    for group in groups:
-        if str(group.get("name", "")).lower() == group_name.lower():
-            return group
+    deadline = time.monotonic() + 3.0
+    while time.monotonic() < deadline:
+        time.sleep(0.25)
+        groups_payload = url_query(profile, "list-groups")
+        groups = groups_payload.get("data", [])
+        if not isinstance(groups, list):
+            raise PipelineError("Unexpected list-groups payload after create-group")
+        for group in groups:
+            if str(group.get("name", "")).lower() == group_name.lower():
+                return group
     raise PipelineError(f"Failed to create group via URL automation: {group_name}")
 
 
@@ -750,6 +1168,175 @@ def publish_scene_capture(scene: dict[str, Any], capture_path: Path) -> None:
         destination_path = REPO_ROOT / str(destination)
         destination_path.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(capture_path, destination_path)
+
+
+def click_highlight_asset() -> Path:
+    ensure_directories()
+    output_path = BIN_DIR / "click-highlight.png"
+    if output_path.exists():
+        return output_path
+
+    size = 96
+    image = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(image)
+    draw.ellipse((12, 12, size - 12, size - 12), outline=(255, 214, 120, 210), width=6)
+    image.save(output_path)
+    return output_path
+
+
+def slugify(value: str) -> str:
+    return "".join(character.lower() if character.isalnum() else "-" for character in value).strip("-")
+
+
+def display_shortcut(shortcut: str) -> str:
+    parts = [part.strip() for part in shortcut.split("+") if part.strip()]
+    if not parts:
+        return shortcut
+
+    modifiers = parts[:-1]
+    key = parts[-1].upper()
+    if modifiers == ["option"]:
+        return f"Opt {key}"
+    if modifiers == ["command"]:
+        return f"Cmd {key}"
+    if modifiers == ["shift"]:
+        return f"Shift {key}"
+    if modifiers == ["control"]:
+        return f"Ctrl {key}"
+
+    return " + ".join(part.title() for part in modifiers + [key])
+
+
+def shortcut_badge_asset(shortcut: str, group_name: str) -> Path:
+    ensure_directories()
+    output_path = BIN_DIR / f"shortcut-badge-{slugify(shortcut)}-{slugify(group_name)}.png"
+    shortcut_label = display_shortcut(shortcut)
+    font = font_for_ui(24, bold=True)
+    shortcut_bounds = ImageDraw.Draw(Image.new("RGBA", (1, 1))).textbbox((0, 0), shortcut_label, font=font)
+    group_bounds = ImageDraw.Draw(Image.new("RGBA", (1, 1))).textbbox((0, 0), group_name, font=font)
+    content_width = (shortcut_bounds[2] - shortcut_bounds[0]) + 22 + (group_bounds[2] - group_bounds[0])
+    width = max(228, content_width + 48)
+    height = 58
+    cache_key = f"{slugify(shortcut_label)}-{slugify(group_name)}-{width}"
+    output_path = BIN_DIR / f"shortcut-badge-{cache_key}.png"
+    if output_path.exists():
+        return output_path
+
+    image = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    draw_shadow(image, (0, 0, width, height), radius=22, blur=14, fill=(8, 14, 24, 62))
+
+    badge = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(badge)
+    draw.rounded_rectangle((0, 0, width, height), radius=22, fill=(10, 16, 26, 154))
+    draw.text((20, 16), shortcut_label, font=font, fill="#FFFFFF")
+    draw.text((20 + (shortcut_bounds[2] - shortcut_bounds[0]) + 22, 16), group_name, font=font, fill="#D4DEE9")
+    image.alpha_composite(badge)
+    image.save(output_path)
+    return output_path
+
+
+def apply_click_highlights(scene: dict[str, Any], capture_path: Path) -> None:
+    click_actions = [action for action in scene.get("actions", []) if action.get("type") == "mouse-click" and action.get("highlight", True)]
+    if not click_actions:
+        return
+
+    highlight_path = click_highlight_asset()
+    capture_duration = float(ffprobe_stream(capture_path)["format"]["duration"])
+    temp_output = capture_path.with_name(f"{capture_path.stem}-clicks{capture_path.suffix}")
+    command = ["ffmpeg", "-y", "-i", str(capture_path)]
+    filter_parts: list[str] = []
+    previous = "[0:v]"
+
+    for index, action in enumerate(click_actions, start=1):
+        command.extend(["-loop", "1", "-i", str(highlight_path)])
+        x = int(action["x"]) - 60
+        y = int(action["y"]) - 60
+        start = float(action["at"])
+        duration = float(action.get("highlight_duration", 0.45))
+        output_label = f"[v{index}]"
+        filter_parts.append(
+            f"{previous}[{index}:v]overlay={x}:{y}:enable='between(t,{start:.3f},{start + duration:.3f})'{output_label}"
+        )
+        previous = output_label
+
+    command.extend(
+        [
+            "-filter_complex",
+            ";".join(filter_parts),
+            "-map",
+            previous,
+            "-t",
+            f"{capture_duration:.3f}",
+            "-shortest",
+            "-an",
+            "-c:v",
+            "libx264",
+            "-pix_fmt",
+            "yuv420p",
+            "-movflags",
+            "+faststart",
+            str(temp_output),
+        ]
+    )
+    run(command, check=True)
+    temp_output.replace(capture_path)
+
+
+def shortcut_group_names(scene: dict[str, Any]) -> dict[str, str]:
+    fixture = load_fixture(str(scene["fixture"]))
+    return {str(group["shortcut"]): str(group["name"]) for group in fixture.get("groups", [])}
+
+
+def apply_shortcut_overlays(scene: dict[str, Any], capture_path: Path) -> None:
+    shortcut_actions = [
+        action
+        for action in scene.get("actions", [])
+        if action.get("type") == "shortcut-sequence" and action.get("show_shortcut_overlay", False)
+    ]
+    if not shortcut_actions:
+        return
+
+    group_names = shortcut_group_names(scene)
+    capture_duration = float(ffprobe_stream(capture_path)["format"]["duration"])
+    temp_output = capture_path.with_name(f"{capture_path.stem}-shortcuts{capture_path.suffix}")
+    command = ["ffmpeg", "-y", "-i", str(capture_path)]
+    filter_parts: list[str] = []
+    previous = "[0:v]"
+
+    for index, action in enumerate(shortcut_actions, start=1):
+        shortcut = str(action["shortcut"])
+        group_name = group_names.get(shortcut, str(action.get("overlay_group_name", "ShortcutCycle")))
+        badge_path = shortcut_badge_asset(shortcut, group_name)
+        command.extend(["-loop", "1", "-i", str(badge_path)])
+        start = max(0.0, float(action["at"]) - 0.08)
+        duration = float(action.get("overlay_duration", 0.90))
+        output_label = f"[v{index}]"
+        filter_parts.append(
+            f"{previous}[{index}:v]overlay=84:76:enable='between(t,{start:.3f},{start + duration:.3f})'{output_label}"
+        )
+        previous = output_label
+
+    command.extend(
+        [
+            "-filter_complex",
+            ";".join(filter_parts),
+            "-map",
+            previous,
+            "-t",
+            f"{capture_duration:.3f}",
+            "-shortest",
+            "-an",
+            "-c:v",
+            "libx264",
+            "-pix_fmt",
+            "yuv420p",
+            "-movflags",
+            "+faststart",
+            str(temp_output),
+        ]
+    )
+    run(command, check=True)
+    temp_output.replace(capture_path)
 
 
 def shortcut_display(shortcut: str) -> str:
@@ -1554,11 +2141,41 @@ def execute_capture_action(profile: dict[str, Any], action: dict[str, Any]) -> N
             int(action.get("tap_count", 1)),
             float(action.get("pre_hold", 0.12)),
             float(action.get("between_taps", 0.26)),
+            float(action.get("post_hold", 0.42)),
         )
     elif action_type == "open-url":
         open_url(profile, str(action["url"]))
     elif action_type == "launch-app":
         launch_app(str(action["bundle_id"]))
+    elif action_type == "activate-app":
+        run(
+            ["osascript", "-e", f'tell application id "{str(action["bundle_id"])}" to activate'],
+            capture_output=True,
+            check=True,
+        )
+    elif action_type == "mouse-click":
+        post_mouse_click(
+            int(action["x"]),
+            int(action["y"]),
+            float(action.get("move_duration", 0.30)),
+            float(action.get("click_hold", 0.05)),
+            float(action.get("settle", 0.14)),
+        )
+    elif action_type == "key-code":
+        post_key_code(
+            int(action["key_code"]),
+            int(action.get("count", 1)),
+            float(action.get("interval", 0.14)),
+        )
+    elif action_type == "scroll-wheel":
+        post_mouse_scroll(
+            int(action["x"]),
+            int(action["y"]),
+            float(action.get("move_duration", 0.20)),
+            int(action.get("delta_y", -3)),
+            int(action.get("count", 1)),
+            float(action.get("interval", 0.18)),
+        )
     else:
         raise PipelineError(f"Unsupported capture action: {action_type}")
 
@@ -1575,12 +2192,17 @@ def capture_scene(scene_id: str, run_id: str) -> Path:
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     quit_integration_app(profile)
-    if not bool(scene.get("skip_seed", False)):
-        seed_fixture(profile, scene["fixture"])
-
     run_prepare_steps([step for step in scene.get("prepare_before_launch", []) if isinstance(step, dict)])
 
+    did_seed_fixture = not bool(scene.get("skip_seed", False))
+    if did_seed_fixture:
+        seed_fixture(profile, scene["fixture"])
+
     launch_integration_app(profile)
+    time.sleep(0.6)
+
+    if did_seed_fixture:
+        seed_fixture_via_url(profile, scene["fixture"])
 
     for command in scene.get("prepare_urls", []):
         url_command(profile, str(command))
@@ -1631,6 +2253,8 @@ def capture_scene(scene_id: str, run_id: str) -> Path:
         recorder.wait(timeout=15)
 
     require_file(output_path, "captured scene output")
+    apply_click_highlights(scene, output_path)
+    apply_shortcut_overlays(scene, output_path)
     publish_scene_capture(scene, output_path)
     return output_path
 
