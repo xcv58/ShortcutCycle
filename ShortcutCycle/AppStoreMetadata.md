@@ -16,7 +16,7 @@ Stop endlessly tabbing. Group your apps by context—Web, Code, Social—and cyc
 - Add currently running apps to a group with one click from the group editor.
 - Get suggested shortcut ideas for groups that do not have a hotkey yet.
 - Use new Settings keyboard shortcuts to jump between groups, reorder them, and toggle appearance faster.
-- Enjoy clearer first-run setup and more reliable switching when quick-tapping, holding to reveal the HUD, restoring minimized apps, or working with Settings on another Space.
+- Enjoy clearer first-run setup and more reliable switching when quick-tapping, holding to reveal the HUD, using multi-profile apps, or working with Settings on another Space.
 
 ## App Icon
 `ShortcutCycle/ShortcutCycle/Assets.xcassets/AppIcon.appiconset/1024.png`
