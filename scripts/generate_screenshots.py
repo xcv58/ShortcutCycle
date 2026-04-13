@@ -154,55 +154,12 @@ def wait_for_window_info(process: subprocess.Popen[str], window_info_path: Path,
     )
 
 
-def run_internal_capture(
-    spec: CaptureSpec,
-    output_path: Path,
-    scratch_home: Path,
-    *,
-    expected_size: tuple[int, int] | None = OUTPUT_SIZE,
-) -> None:
-    command = [
-        str(APP_BINARY),
-        "--screenshot-scene", spec.scene,
-        "--screenshot-theme", spec.theme,
-        "--screenshot-language", spec.language,
-        "--screenshot-output", str(output_path),
-    ]
-
-    if spec.group:
-        command.extend(["--screenshot-group", spec.group])
-    if spec.variant:
-        command.extend(["--screenshot-variant", spec.variant])
-    if BACKGROUND_IMAGE_PATH.exists():
-        command.extend(["--screenshot-background", str(BACKGROUND_IMAGE_PATH)])
-
-    env = screenshot_environment(scratch_home)
-    result = subprocess.run(
-        command,
-        cwd=PACKAGE_ROOT,
-        env=env,
-        check=True,
-        text=True,
-        capture_output=True,
-        timeout=25,
-    )
-
-    if result.stdout.strip():
-        print(result.stdout.strip())
-    if result.stderr.strip():
-        print(result.stderr.strip())
-
-    if expected_size is not None:
-        validate_png_dimensions(output_path)
-
-
 def run_capture(
     spec: CaptureSpec,
     output_path: Path,
     scratch_home: Path,
     *,
     expected_size: tuple[int, int] | None = OUTPUT_SIZE,
-    allow_internal_fallback: bool = True,
 ) -> None:
     output_path.unlink(missing_ok=True)
     window_info_path = scratch_home / "window-info.json"
@@ -272,19 +229,9 @@ def run_capture(
                 time.sleep(0.25)
                 continue
 
-            if not allow_internal_fallback:
-                raise RuntimeError(
-                    f"External capture failed for {spec.filename}: {error}\nSTDOUT:\n{stdout}\nSTDERR:\n{stderr}"
-                ) from error
-
-            print(f"Falling back to internal capture for {spec.filename}: {error}")
-            if stdout.strip():
-                print(stdout.strip())
-            if stderr.strip():
-                print(stderr.strip())
-            run_internal_capture(spec, output_path, scratch_home, expected_size=expected_size)
-            time.sleep(0.2)
-            return
+            raise RuntimeError(
+                f"External capture failed for {spec.filename}: {error}\nSTDOUT:\n{stdout}\nSTDERR:\n{stderr}"
+            ) from error
 
     raise RuntimeError(f"Failed to capture {spec.filename}")
 
@@ -666,7 +613,6 @@ def main() -> int:
                     output_path,
                     scratch_home,
                     expected_size=None,
-                    allow_internal_fallback=False,
                 )
                 print(f"  staged {output_path.name}")
 
@@ -680,7 +626,6 @@ def main() -> int:
                     output_path,
                     scratch_home,
                     expected_size=None if spec.scene == "menu-popover" else OUTPUT_SIZE,
-                    allow_internal_fallback=spec.scene != "menu-popover",
                 )
                 print(f"  staged {output_path.name}")
 

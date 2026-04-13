@@ -32,6 +32,12 @@ python3 scripts/video_pipeline.py build-set --set docs
 python3 scripts/video_pipeline.py build-set --set launch
 ```
 
+## Prerequisites
+
+- Install Python deps: `pip3 install PyYAML Pillow`
+- Build the integration app into `.artifacts/xcode-integration/DerivedData/Build/Products/Debug/ShortcutCycle.app`
+- If automatic AVFoundation screen detection picks the wrong device, set `SHORTCUTCYCLE_CAPTURE_DEVICE` to an explicit ffmpeg device string such as `3:none`
+
 ## Current Scope
 
 The pipeline now supports the real-capture docs and launch flows.

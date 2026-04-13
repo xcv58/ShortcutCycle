@@ -5,7 +5,9 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import plistlib
+import re
 import shutil
 import signal
 import subprocess
@@ -17,8 +19,19 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import quote
 
-import yaml
-from PIL import Image, ImageColor, ImageDraw, ImageFilter, ImageFont
+try:
+    import yaml
+except ImportError:
+    yaml = None
+
+try:
+    from PIL import Image, ImageColor, ImageDraw, ImageFilter, ImageFont
+except ImportError:
+    Image = None
+    ImageColor = None
+    ImageDraw = None
+    ImageFilter = None
+    ImageFont = None
 
 
 SCRIPT_PATH = Path(__file__).resolve()
@@ -160,6 +173,31 @@ class PipelineError(RuntimeError):
     pass
 
 
+def ensure_yaml_dependency() -> None:
+    if yaml is None:
+        raise PipelineError("Missing Python dependency: PyYAML. Install it with: pip3 install PyYAML")
+
+
+def ensure_pillow_dependency() -> None:
+    if Image is None:
+        raise PipelineError("Missing Python dependency: Pillow. Install it with: pip3 install Pillow")
+
+
+def ensure_runtime_dependencies() -> None:
+    missing: list[str] = []
+    if yaml is None:
+        missing.append("PyYAML")
+    if Image is None:
+        missing.append("Pillow")
+    if missing:
+        raise PipelineError(
+            "Missing Python dependencies: "
+            + ", ".join(missing)
+            + ". Install them with: pip3 install "
+            + " ".join(missing)
+        )
+
+
 def run(
     command: list[str],
     *,
@@ -204,6 +242,7 @@ def require_path(path: Path, description: str) -> Path:
 
 
 def load_yaml(path: Path) -> dict[str, Any]:
+    ensure_yaml_dependency()
     require_file(path, "manifest")
     with path.open("r", encoding="utf-8") as handle:
         data = yaml.safe_load(handle)
@@ -244,7 +283,7 @@ def load_set(set_id: str) -> dict[str, Any]:
 
 
 def app_bundle_path(profile: dict[str, Any]) -> Path:
-    return require_path(REPO_ROOT / profile["app_bundle_path"], "integration app bundle")
+    return require_path(expand_repo_path(str(profile["app_bundle_path"])), "integration app bundle")
 
 
 def bundle_id(profile: dict[str, Any]) -> str:
@@ -260,9 +299,60 @@ def expand_repo_path(path_value: str) -> Path:
 
 def preferences_path(profile: dict[str, Any]) -> Path:
     raw_path = profile.get("preferences_path")
-    if not raw_path:
-        raise PipelineError("Profile is missing preferences_path for direct fixture seeding")
-    return expand_repo_path(str(raw_path))
+    if raw_path:
+        return expand_repo_path(str(raw_path))
+    return integration_container_root(profile) / "Data" / "Library" / "Preferences" / f"{bundle_id(profile)}.plist"
+
+
+def list_avfoundation_video_devices() -> list[tuple[str, str]]:
+    result = run(
+        ["ffmpeg", "-f", "avfoundation", "-list_devices", "true", "-i", ""],
+        capture_output=True,
+        check=False,
+    )
+    output = f"{result.stdout}\n{result.stderr}"
+    devices: list[tuple[str, str]] = []
+    in_video_section = False
+
+    for raw_line in output.splitlines():
+        line = raw_line.strip()
+        if "AVFoundation video devices" in line:
+            in_video_section = True
+            continue
+        if "AVFoundation audio devices" in line:
+            in_video_section = False
+            continue
+        if not in_video_section:
+            continue
+        match = re.search(r"\[(\d+)\]\s+(.+)$", line)
+        if match:
+            devices.append((match.group(1), match.group(2).strip()))
+
+    return devices
+
+
+def resolved_capture_device(profile: dict[str, Any]) -> str:
+    override = os.environ.get("SHORTCUTCYCLE_CAPTURE_DEVICE")
+    if override:
+        return override
+
+    configured = str(profile.get("capture_device", "auto:none"))
+    if not configured.startswith("auto"):
+        return configured
+
+    _, _, audio_device = configured.partition(":")
+    audio_device = audio_device or "none"
+    devices = list_avfoundation_video_devices()
+    for device_id, name in devices:
+        if "capture screen" in name.lower():
+            return f"{device_id}:{audio_device}"
+
+    available = ", ".join(f"[{device_id}] {name}" for device_id, name in devices) or "none"
+    raise PipelineError(
+        "Could not resolve an AVFoundation screen capture device automatically. "
+        "Set SHORTCUTCYCLE_CAPTURE_DEVICE to an explicit ffmpeg device like '3:none'. "
+        f"Available video devices: {available}"
+    )
 
 
 def output_size(profile: dict[str, Any]) -> tuple[int, int]:
@@ -2269,7 +2359,7 @@ def capture_scene(scene_id: str, run_id: str) -> Path:
         "-framerate",
         str(frame_rate(profile)),
         "-i",
-        str(profile["capture_device"]),
+        resolved_capture_device(profile),
         "-an",
         "-c:v",
         "libx264",
@@ -2675,16 +2765,30 @@ def doctor() -> int:
         if not ok:
             failures += 1
 
-    default_profile = load_profile(DEFAULT_PROFILE_ID)
-    bundle = REPO_ROOT / default_profile["app_bundle_path"]
-    print_status("integration app bundle", bundle.exists(), str(bundle))
-    if not bundle.exists():
+    if yaml is None:
+        print_status("profile manifests", False, "install PyYAML to inspect profile-dependent checks")
         failures += 1
+    else:
+        default_profile = load_profile(DEFAULT_PROFILE_ID)
+        bundle = app_bundle_path(default_profile)
+        print_status("integration app bundle", bundle.exists(), str(bundle))
+        if not bundle.exists():
+            failures += 1
 
-    fallback_clip = REPO_ROOT / load_scene("overview-main")["fallback_source_clip"]
-    print_status("overview fallback clip", fallback_clip.exists(), str(fallback_clip))
-    if not fallback_clip.exists():
-        failures += 1
+        preferences = preferences_path(default_profile)
+        print_status("preferences path", True, str(preferences))
+
+        try:
+            capture_device = resolved_capture_device(default_profile)
+            print_status("capture device", True, capture_device)
+        except PipelineError as error:
+            print_status("capture device", False, str(error))
+            failures += 1
+
+        fallback_clip = REPO_ROOT / load_scene("overview-main")["fallback_source_clip"]
+        print_status("overview fallback clip", fallback_clip.exists(), str(fallback_clip))
+        if not fallback_clip.exists():
+            failures += 1
 
     background = OVERVIEW_BACKGROUND_PATH
     print_status("overview background", background.exists(), str(background))
@@ -2769,6 +2873,8 @@ def main() -> int:
 
     if args.command == "doctor":
         return doctor()
+
+    ensure_runtime_dependencies()
 
     run_id = getattr(args, "run_id", None) or now_run_id()
 
