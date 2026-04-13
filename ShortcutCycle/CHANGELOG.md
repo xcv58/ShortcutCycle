@@ -12,7 +12,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - **First-launch onboarding**: On first manual launch, ShortcutCycle now opens Settings with a welcome banner to make the menu bar-based app model clearer.
 - **Language sync**: Changing the app language now updates bundled controls more consistently, including shortcut recorders and imported settings.
-- **Backup comparison guidance**: The Automatic Backup Browser now defaults comparisons to the next older backup and explains how to pick a different baseline.
+- **Backup comparison guidance**: The Automatic Backup Browser now explains that comparisons default to the next older backup and points to the "Changes from" picker for choosing a different baseline.
 
 ### Fixed
 - **Narrow group editor layout**: Cycling Mode controls now remain readable and properly aligned in narrow group editor layouts.
