@@ -37,6 +37,12 @@ struct GeneralSettingsView: View {
     @State private var clipboardImportSummary = ""
     @State private var pendingClipboardExport: SettingsExport?
 
+    #if DEBUG
+    private var isScreenshotMode: Bool {
+        ScreenshotMode.usesSyntheticControls
+    }
+    #endif
+
     var body: some View {
         content
         .navigationTitle("General".localized(language: selectedLanguage))
@@ -147,11 +153,37 @@ struct GeneralSettingsView: View {
                 .listRowInsets(EdgeInsets())
                 .padding()
 
+                #if DEBUG
+                if isScreenshotMode {
+                    screenshotToggleRow("Show HUD when switching".localized(language: selectedLanguage), isOn: showHUD)
+                } else {
+                    Toggle("Show HUD when switching".localized(language: selectedLanguage), isOn: $showHUD)
+                        .toggleStyle(SwitchToggleStyle(tint: Color(nsColor: .controlAccentColor)))
+                        .tint(.accentColor)
+                }
+                #else
                 Toggle("Show HUD when switching".localized(language: selectedLanguage), isOn: $showHUD)
+                    .toggleStyle(SwitchToggleStyle(tint: Color(nsColor: .controlAccentColor)))
+                    .tint(.accentColor)
+                #endif
 
                 if showHUD {
+                    #if DEBUG
+                    if isScreenshotMode {
+                        screenshotToggleRow("Show shortcut in HUD".localized(language: selectedLanguage), isOn: showShortcutInHUD)
+                            .padding(.leading)
+                    } else {
+                        Toggle("Show shortcut in HUD".localized(language: selectedLanguage), isOn: $showShortcutInHUD)
+                            .toggleStyle(SwitchToggleStyle(tint: Color(nsColor: .controlAccentColor)))
+                            .tint(.accentColor)
+                            .padding(.leading)
+                    }
+                    #else
                     Toggle("Show shortcut in HUD".localized(language: selectedLanguage), isOn: $showShortcutInHUD)
+                        .toggleStyle(SwitchToggleStyle(tint: Color(nsColor: .controlAccentColor)))
+                        .tint(.accentColor)
                         .padding(.leading)
+                    #endif
 
                     Text("Displays the keyboard shortcut used to trigger the switch.".localized(language: selectedLanguage))
                         .font(.caption)
@@ -165,8 +197,19 @@ struct GeneralSettingsView: View {
             }
 
             Section {
+                #if DEBUG
+                if isScreenshotMode {
+                    screenshotToggleRow("Open at Login".localized(language: selectedLanguage), isOn: launchAtLogin.isEnabled)
+                } else {
+                    Toggle("Open at Login".localized(language: selectedLanguage), isOn: $launchAtLogin.isEnabled)
+                        .toggleStyle(SwitchToggleStyle(tint: Color(nsColor: .controlAccentColor)))
+                        .tint(.accentColor)
+                }
+                #else
                 Toggle("Open at Login".localized(language: selectedLanguage), isOn: $launchAtLogin.isEnabled)
-                    .toggleStyle(.switch)
+                    .toggleStyle(SwitchToggleStyle(tint: Color(nsColor: .controlAccentColor)))
+                    .tint(.accentColor)
+                #endif
 
                 Picker("Appearance".localized(language: selectedLanguage), selection: $appTheme) {
                     ForEach(AppTheme.allCases) { theme in
@@ -184,7 +227,7 @@ struct GeneralSettingsView: View {
                 )) {
                     Text("\("System Default".localized(language: "system")) (\(LanguageManager.shared.supportedLanguages.first { $0.code == LanguageManager.shared.systemLanguageCode }?.name ?? "English"))").tag("system")
                     ForEach(LanguageManager.shared.supportedLanguages, id: \.code) { language in
-                        Text(language.displayName()).tag(language.code)
+                        Text(language.displayName(in: LanguageManager.shared.locale)).tag(language.code)
                     }
                 }
                 .pickerStyle(.menu)
@@ -282,6 +325,16 @@ struct GeneralSettingsView: View {
         .scrollContentBackground(colorScheme == .dark ? .hidden : .automatic)
         .background(SettingsChromePalette.windowBackground(for: colorScheme))
     }
+
+    #if DEBUG
+    private func screenshotToggleRow(_ title: String, isOn: Bool) -> some View {
+        HStack(spacing: 12) {
+            Text(title)
+            Spacer()
+            ScreenshotAccentSwitch(isOn: isOn)
+        }
+    }
+    #endif
 
     // MARK: - Export/Import Actions
     

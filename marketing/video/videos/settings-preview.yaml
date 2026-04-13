@@ -1,0 +1,23 @@
+id: settings-preview
+description: Canonical settings preview with generated intro card
+profile: default
+publish_to:
+  - docs/assets/videos/3.mp4
+  - ShortcutCycle/App Store Connect Assets/Preview Videos/3.mp4
+sequence:
+  - type: card
+    template: intro-social
+    duration: 1.0
+    title: Set up groups in seconds
+    content_offset_y: -30
+    lines:
+      - "Groups"
+      - "Theme"
+      - "Language"
+      - "Shortcuts"
+  - { type: scene, scene: settings-story, trim_start: 0.20, trim_end: 14.25 }
+validate:
+  resolution: [1920, 1080]
+  frame_rate: 30
+  max_duration: 16.0
+  audio: false

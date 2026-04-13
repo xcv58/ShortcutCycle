@@ -1,5 +1,4 @@
 import SwiftUI
-import KeyboardShortcuts
 #if canImport(ShortcutCycleCore)
 import ShortcutCycleCore
 #endif
@@ -248,15 +247,9 @@ struct AppCommands: Commands {
 
 // MARK: - Settings Window Observer
 
-/// Observes the settings window so close callbacks can react to dismissal.
+/// Observes the settings window so focus-related affordances can react to key navigation.
 struct SettingsWindowObserver: NSViewRepresentable {
-    let onWindowWillClose: () -> Void
-
-    init(onWindowWillClose: @escaping () -> Void = {}) {
-        self.onWindowWillClose = onWindowWillClose
-    }
-
-    func makeCoordinator() -> Coordinator { Coordinator(onWindowWillClose: onWindowWillClose) }
+    func makeCoordinator() -> Coordinator { Coordinator() }
 
     func makeNSView(context: Context) -> NSView {
         let view = ObserverView()
@@ -279,13 +272,15 @@ struct SettingsWindowObserver: NSViewRepresentable {
     }
 
     final class Coordinator {
-        private let onWindowWillClose: () -> Void
-        private var observer: NSObjectProtocol?
+        private let setActivationPolicy: (NSApplication.ActivationPolicy) -> Void
+        private var observers: [NSObjectProtocol] = []
         private var keyEventMonitor: Any?
         private weak var observedWindow: NSWindow?
 
-        init(onWindowWillClose: @escaping () -> Void = {}) {
-            self.onWindowWillClose = onWindowWillClose
+        init(
+            setActivationPolicy: ((NSApplication.ActivationPolicy) -> Void)? = nil
+        ) {
+            self.setActivationPolicy = setActivationPolicy ?? Self.defaultSetActivationPolicy
         }
 
         func observe(window: NSWindow) {
@@ -294,19 +289,8 @@ struct SettingsWindowObserver: NSViewRepresentable {
             observedWindow = window
 
             window.identifier = NSUserInterfaceItemIdentifier("settings")
-
-            observer = NotificationCenter.default.addObserver(
-                forName: NSWindow.willCloseNotification,
-                object: window,
-                queue: .main
-            ) { _ in
-                Task { @MainActor [weak self] in
-                    self?.onWindowWillClose()
-                }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    NSApp.setActivationPolicy(.accessory)
-                }
-            }
+            registerWindowLifecycleObservers(for: window)
+            scheduleActivationPolicySync()
 
             keyEventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
                 self?.handleKeyDown(event)
@@ -360,11 +344,50 @@ struct SettingsWindowObserver: NSViewRepresentable {
             return window.firstResponder as? NSView
         }
 
-        private func removeObservers() {
-            if let observer {
-                NotificationCenter.default.removeObserver(observer)
-                self.observer = nil
+        func syncActivationPolicy() {
+            setActivationPolicy(SettingsWindowLifecycleCoordinator.activationPolicy(for: observedWindow))
+        }
+
+        func scheduleActivationPolicySync() {
+            DispatchQueue.main.async { [weak self] in
+                self?.syncActivationPolicy()
             }
+        }
+
+        private func registerWindowLifecycleObservers(for window: NSWindow) {
+            let center = NotificationCenter.default
+            let immediateNames: [Notification.Name] = [
+                NSWindow.didBecomeKeyNotification,
+                NSWindow.didBecomeMainNotification
+            ]
+            observers.append(contentsOf: immediateNames.map { name in
+                center.addObserver(forName: name, object: window, queue: .main) { [weak self] _ in
+                    self?.syncActivationPolicy()
+                }
+            })
+
+            let deferredNames: [Notification.Name] = [
+                NSWindow.didResignKeyNotification,
+                NSWindow.didResignMainNotification,
+                NSWindow.willCloseNotification
+            ]
+            observers.append(contentsOf: deferredNames.map { name in
+                center.addObserver(forName: name, object: window, queue: .main) { [weak self] _ in
+                    self?.scheduleActivationPolicySync()
+                }
+            })
+        }
+
+        private static func defaultSetActivationPolicy(_ policy: NSApplication.ActivationPolicy) {
+            #if DEBUG
+            guard ScreenshotArguments.current == nil else { return }
+            #endif
+            NSApp.setActivationPolicy(policy)
+        }
+
+        private func removeObservers() {
+            observers.forEach(NotificationCenter.default.removeObserver)
+            observers.removeAll()
 
             if let keyEventMonitor {
                 NSEvent.removeMonitor(keyEventMonitor)
@@ -809,18 +832,41 @@ enum ShortcutCycleURLRouter {
 
 @main
 struct ShortcutCycleApp: App {
-    @StateObject private var store = GroupStore.shared
+    @StateObject private var store: GroupStore
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
-    @AppStorage("appTheme") private var appTheme: AppTheme = .system
     @StateObject private var localeObserver = LocaleObserver()
 
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     init() {
-        // Setup shortcut manager
+        #if DEBUG
+        if let screenshotArguments = ScreenshotArguments.current {
+            ScreenshotRuntime.primeDefaults(for: screenshotArguments)
+            LaunchAtLoginManager.setScreenshotOverride(isEnabled: true)
+
+            let screenshotStore = ScreenshotRuntime.makeStore()
+            ScreenshotRuntime.seed(store: screenshotStore, for: screenshotArguments)
+            ScreenshotWindowLifecycle.configure(store: screenshotStore)
+            _store = StateObject(wrappedValue: screenshotStore)
+        } else {
+            WelcomeExperiencePolicy.isScreenshotModeEnabled = false
+            LaunchAtLoginManager.setScreenshotOverride(isEnabled: nil)
+            RunningAppQuickAddCatalog.shared.setOverrideApps(nil)
+            _store = StateObject(wrappedValue: GroupStore.shared)
+
+            // Setup shortcut manager
+            Task { @MainActor in
+                ShortcutManager.shared.registerAllShortcuts()
+            }
+        }
+        #else
+        _store = StateObject(wrappedValue: GroupStore.shared)
+
         Task { @MainActor in
             ShortcutManager.shared.registerAllShortcuts()
         }
+        #endif
+
         // Sync AppleLanguages so third-party bundles (e.g. KeyboardShortcuts) use the
         // correct locale. Must run before any view creates a KeyboardShortcuts.Recorder.
         let selected = UserDefaults.standard.string(forKey: "selectedLanguage") ?? "system"
@@ -828,8 +874,18 @@ struct ShortcutCycleApp: App {
     }
 
     var body: some Scene {
+        #if DEBUG
+        let isScreenshotMode = ScreenshotArguments.current != nil
+        #else
+        let isScreenshotMode = false
+        #endif
+
         // Menu bar extra
-        MenuBarExtra("Shortcut Cycle", systemImage: "command.square.fill") {
+        MenuBarExtra(
+            "Shortcut Cycle",
+            systemImage: "command.square.fill",
+            isInserted: .constant(!isScreenshotMode)
+        ) {
             MenuBarView(selectedLanguage: selectedLanguage)
                 .environmentObject(store)
                 .id("\(selectedLanguage)-\(localeObserver.id)") // Force redraw on language or system locale change
@@ -859,8 +915,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var suppressAutomaticWelcomeForCurrentLaunch = false
 
     func applicationWillFinishLaunching(_ notification: Notification) {
-        // Run as a menu bar app (no dock icon)
+        #if DEBUG
+        if ScreenshotArguments.current != nil {
+            NSApp.setActivationPolicy(.regular)
+        } else {
+            // Run as a menu bar app (no dock icon)
+            NSApp.setActivationPolicy(.accessory)
+        }
+        #else
         NSApp.setActivationPolicy(.accessory)
+        #endif
 
         // Register for URL events directly via Apple Events.
         // This is more reliable than application(_:open:) or .onOpenURL,
@@ -874,6 +938,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidBecomeActive(_ notification: Notification) {
+        #if DEBUG
+        guard ScreenshotArguments.current == nil else { return }
+        #endif
         guard !hasEvaluatedInitialManualActivation else { return }
         hasEvaluatedInitialManualActivation = true
 
@@ -884,16 +951,36 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        #if DEBUG
+        guard let screenshotArguments = ScreenshotArguments.current else { return }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            ScreenshotWindowLifecycle.present(arguments: screenshotArguments)
+        }
+        #endif
+    }
+
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        #if DEBUG
+        guard ScreenshotArguments.current == nil else { return false }
+        #endif
         guard !flag else { return false }
         ShortcutCycleURLRouter.openSettingsFromOutsideView()
         return true
+    }
+
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        false
     }
 
     @objc private func handleURLEvent(
         _ event: NSAppleEventDescriptor,
         withReply reply: NSAppleEventDescriptor
     ) {
+        #if DEBUG
+        guard ScreenshotArguments.current == nil else { return }
+        #endif
         // Apple Events are delivered before applicationDidBecomeActive on a URL-scheme
         // cold launch, so setting this flag here reliably prevents auto-open of Settings
         // when the launch was triggered externally (e.g. shortcutcycle:// URL).

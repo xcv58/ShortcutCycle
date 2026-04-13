@@ -1,0 +1,12 @@
+id: default
+description: Default local capture profile for marketing videos
+bundle_id: com.xcv58.ShortcutCycle
+app_bundle_path: .artifacts/xcode-integration/DerivedData/Build/Products/Debug/ShortcutCycle.app
+frame_rate: 30
+output_size: [1920, 1080]
+capture_device: auto:none
+capture_pixel_format: bgr0
+launch_settle_seconds: 3.0
+app_launch_stagger_seconds: 0.6
+record_tail_seconds: 0.6
+settings_window_frame: "160 58 1600 1010 0 0 1920 1200 "

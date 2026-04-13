@@ -139,28 +139,17 @@ We need **3 screencasts**, each **15-30 seconds** long. We will use `KeyCastr` t
 **Strategy:** Alternating Light/Dark mode.
 
 ### Tools & Setup
-Use the following **Hammerspoon script** to toggle window size to exactly 1440x900 (which is 2x density for 2880x1800):
+Preferred workflow:
 
-```lua
--- Shortcut to resize the focused window to 1440x900
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "R", function()
-  local win = hs.window.focusedWindow()
-  if win then
-    local f = win:frame()
-    -- Set the width and height
-    f.w = 1440
-    f.h = 900
-    -- Center the window
-    local screen = win:screen()
-    local max = screen:frame()
-    f.x = max.x + (max.w / 2) - (f.w / 2)
-    f.y = max.y + (max.h / 2) - (f.h / 2)
-    win:setFrame(f, 0)
-  else
-    hs.alert.show("No focused window found")
-  end
-end)
+```bash
+python3 scripts/generate_screenshots.py
 ```
+
+Implementation details and fixture rules live in:
+
+- `planning/screenshot-automation.md`
+
+The older manual Hammerspoon-based process is no longer the primary path.
 
 ### Shot List
 

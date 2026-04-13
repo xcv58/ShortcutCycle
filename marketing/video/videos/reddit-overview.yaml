@@ -1,0 +1,21 @@
+id: reddit-overview
+description: Canonical overview preview with generated intro card
+profile: reddit
+publish_to:
+  - docs/assets/videos/1.mp4
+  - ShortcutCycle/App Store Connect Assets/Preview Videos/1.mp4
+  - marketing/reddit/output/shortcutcycle-reddit-cut.mp4
+sequence:
+  - type: card
+    template: intro-social
+    duration: 1.0
+    title: One shortcut per group
+    rows:
+      - { shortcut: "⌥1", label: "Essentials" }
+      - { shortcut: "⌥3", label: "Explore" }
+  - { type: scene, scene: overview-main, trim_start: 0.20, trim_end: 11.35 }
+validate:
+  resolution: [1920, 1080]
+  frame_rate: 30
+  max_duration: 13.0
+  audio: false

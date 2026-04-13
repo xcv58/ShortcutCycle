@@ -24,7 +24,7 @@ FILES_TO_PROCESS = {
     "General Dark.png": "general-dark",
     "Group Light.png": "group-light",
     "Group Dark.png": "group-dark",
-    "Menubar and languages.png": "menubar-languages",
+    "Menu Bar.png": "menu-bar",
     "Automatic Backups.png": "automatic-backups",
     "Automatic Backups Dark.png": "automatic-backups-dark",
 }

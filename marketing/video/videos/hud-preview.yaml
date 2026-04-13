@@ -1,0 +1,20 @@
+id: hud-preview
+description: Canonical HUD preview with generated intro card
+profile: default
+publish_to:
+  - docs/assets/videos/2.mp4
+  - ShortcutCycle/App Store Connect Assets/Preview Videos/2.mp4
+sequence:
+  - type: card
+    template: intro-social
+    duration: 1.0
+    title: Hold to preview
+    rows:
+      - { shortcut: "⌥1", label: "Essentials" }
+      - { shortcut: "⌥5", label: "All Apps" }
+  - { type: scene, scene: hud-story, trim_start: 0.20, trim_end: 15.70 }
+validate:
+  resolution: [1920, 1080]
+  frame_rate: 30
+  max_duration: 17.0
+  audio: false

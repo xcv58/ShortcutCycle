@@ -1,0 +1,29 @@
+id: settings-story
+description: Real settings walkthrough showing group selection and general preferences
+profile: default
+fixture: marketing-default
+source_clip: marketing/video/sources/settings-story.mp4
+capture:
+  duration: 14.4
+prepare_urls:
+  - open-settings?tab=groups
+  - select-group?group=Tools
+prepare_after_launch:
+  - { type: sleep, seconds: 1.1 }
+  - { type: hide-other-apps, except_bundle_ids: [com.xcv58.ShortcutCycle] }
+window_stage_apps:
+  - com.xcv58.ShortcutCycle
+window_layouts:
+  "com.xcv58.ShortcutCycle": [160, 58, 1600, 1010]
+initial_frontmost_app: com.xcv58.ShortcutCycle
+actions:
+  - { at: 1.35, type: mouse-click, x: 238, y: 181, move_duration: 0.30, settle: 0.18, highlight_duration: 0.36 }
+  - { at: 3.10, type: mouse-click, x: 238, y: 235, move_duration: 0.30, settle: 0.18, highlight_duration: 0.36 }
+  - { at: 4.85, type: mouse-click, x: 1112, y: 84, move_duration: 0.36, settle: 0.28, highlight_duration: 0.36 }
+  - { at: 6.60, type: mouse-click, x: 1246, y: 639, move_duration: 0.36, settle: 0.18, highlight_duration: 0.36 }
+  - { at: 8.20, type: mouse-click, x: 1256, y: 681, move_duration: 0.36, settle: 0.24, highlight_duration: 0.36 }
+  - { at: 8.70, type: key-code, key_code: 125, count: 4, interval: 0.18 }
+  - { at: 9.65, type: key-code, key_code: 36, count: 1, interval: 0.10 }
+  - { at: 11.30, type: mouse-click, x: 960, y: 723, move_duration: 0.40, settle: 0.20, highlight_duration: 0.36 }
+  - { at: 12.10, type: scroll-wheel, x: 960, y: 918, move_duration: 0.18, delta_y: -3, count: 2, interval: 0.24 }
+  - { at: 13.05, type: scroll-wheel, x: 960, y: 918, move_duration: 0.10, delta_y: -3, count: 2, interval: 0.24 }

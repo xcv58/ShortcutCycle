@@ -71,6 +71,8 @@ private final class LocalizationResolver: NSObject {
     }
 
     private func bundle(for languageCode: String) -> Bundle? {
+        let resourceBundle = localizationResourceBundle
+
         lock.lock()
         if let cachedBundle = bundleByLanguageCode[languageCode] {
             lock.unlock()
@@ -83,7 +85,9 @@ private final class LocalizationResolver: NSObject {
         }
         lock.unlock()
 
-        guard let path = Bundle.main.path(forResource: languageCode, ofType: "lproj"),
+        let resolvedResourceCode = resolvedResourceCode(for: languageCode, in: resourceBundle) ?? languageCode
+
+        guard let path = resourceBundle.path(forResource: resolvedResourceCode, ofType: "lproj"),
               let bundle = Bundle(path: path) else {
             lock.lock()
             missingBundleCodes.insert(languageCode)
@@ -95,6 +99,30 @@ private final class LocalizationResolver: NSObject {
         bundleByLanguageCode[languageCode] = bundle
         lock.unlock()
         return bundle
+    }
+
+    private func resolvedResourceCode(for languageCode: String, in bundle: Bundle) -> String? {
+        if bundle.localizations.contains(languageCode) {
+            return languageCode
+        }
+
+        let normalizedCode = languageCode.lowercased()
+
+        if let exactCaseInsensitiveMatch = bundle.localizations.first(where: {
+            $0.lowercased() == normalizedCode
+        }) {
+            return exactCaseInsensitiveMatch
+        }
+
+        return Bundle.preferredLocalizations(from: bundle.localizations, forPreferences: [languageCode]).first
+    }
+
+    private var localizationResourceBundle: Bundle {
+#if SWIFT_PACKAGE
+        return Bundle.module
+#else
+        return Bundle(for: LocalizationResolver.self)
+#endif
     }
 }
 

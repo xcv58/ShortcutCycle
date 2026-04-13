@@ -1,0 +1,49 @@
+id: hud-story
+description: Real HUD storytelling clip with a compact group and a large group
+profile: default
+fixture: marketing-story
+source_clip: marketing/video/sources/hud-story.mp4
+capture:
+  duration: 15.8
+prepare_urls:
+  - set-setting?key=showHUD&value=true
+  - set-setting?key=showShortcutInHUD&value=true
+prepare_before_launch:
+  - { type: quit-app, bundle_id: com.apple.iCal }
+  - { type: quit-app, bundle_id: com.apple.calculator }
+  - { type: quit-app, bundle_id: com.apple.Chess }
+  - { type: quit-app, bundle_id: com.apple.FontBook }
+  - { type: quit-app, bundle_id: com.apple.Dictionary }
+  - { type: quit-app, bundle_id: com.apple.Preview }
+  - { type: quit-app, bundle_id: com.apple.Image_Capture }
+  - { type: quit-app, bundle_id: com.apple.ActivityMonitor }
+  - { type: quit-app, bundle_id: com.apple.QuickTimePlayerX }
+  - { type: quit-app, bundle_id: com.apple.systempreferences }
+  - { type: quit-app, bundle_id: com.apple.helpviewer }
+launch_apps:
+  - com.apple.iCal
+  - com.apple.calculator
+  - com.apple.Dictionary
+  - com.apple.Preview
+  - com.apple.helpviewer
+  - com.apple.FontBook
+  - com.apple.Chess
+prepare_after_launch:
+  - { type: sleep, seconds: 1.2 }
+  - { type: open-file, bundle_id: com.apple.Preview, path: marketing/video/assets/shortcutcycle-demo.pdf }
+  - { type: sleep, seconds: 0.6 }
+  - { type: hide-other-apps, except_bundle_ids: [com.xcv58.ShortcutCycle, com.apple.iCal, com.apple.calculator, com.apple.helpviewer, com.apple.FontBook, com.apple.Dictionary, com.apple.Preview, com.apple.Chess] }
+window_layouts:
+  "com.apple.iCal": [180, 52, 1535, 1035]
+  "com.apple.calculator": [720, 82, 880, 955]
+  "com.apple.Dictionary": [185, 62, 1505, 995]
+  "com.apple.Preview": [175, 72, 1490, 960]
+  "com.apple.helpviewer": [150, 58, 1540, 995]
+  "com.apple.FontBook": [190, 62, 1510, 1000]
+  "com.apple.Chess": [230, 86, 1460, 930]
+initial_frontmost_app: com.apple.calculator
+actions:
+  - { at: 0.95, type: shortcut-sequence, shortcut: option+1, tap_count: 2, pre_hold: 0.60, between_taps: 0.34, post_hold: 0.82, show_shortcut_overlay: true, overlay_duration: 0.95 }
+  - { at: 4.55, type: shortcut-sequence, shortcut: option+5, tap_count: 3, pre_hold: 0.70, between_taps: 0.34, post_hold: 0.80, show_shortcut_overlay: true, overlay_duration: 0.95 }
+  - { at: 8.65, type: shortcut-sequence, shortcut: option+1, tap_count: 2, pre_hold: 0.60, between_taps: 0.34, post_hold: 0.78, show_shortcut_overlay: true, overlay_duration: 0.95 }
+  - { at: 12.25, type: shortcut-sequence, shortcut: option+5, tap_count: 2, pre_hold: 0.70, between_taps: 0.34, post_hold: 0.78, show_shortcut_overlay: true, overlay_duration: 0.95 }

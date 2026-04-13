@@ -836,6 +836,42 @@ class HUDManager: @preconcurrency ObservableObject {
             }
         }
     }
+
+    #if DEBUG
+    func presentScreenshotHUD(items: [HUDAppItem], activeAppId: String, shortcut: String?) -> NSWindow? {
+        resetForScreenshotPresentation()
+        prepareHUD(items: items, activeAppId: activeAppId, shortcut: shortcut, reveal: true)
+        sessionPhase = .revealed
+        window?.sharingType = .readOnly
+        return window
+    }
+
+    private func resetForScreenshotPresentation() {
+        hideTimer?.invalidate()
+        hideTimer = nil
+        revealTimer?.invalidate()
+        revealTimer = nil
+        loopTimer?.invalidate()
+        loopTimer = nil
+
+        clearEventMonitors()
+        clearKeyUpMonitors()
+
+        if let observer = appResignObserver {
+            NotificationCenter.default.removeObserver(observer)
+            appResignObserver = nil
+        }
+
+        lastRequestTime = nil
+        lastLocalKeyDownTime = nil
+        isRepeatingLoopActive = false
+        currentLoopKey = nil
+        isLoopKeyHeld = false
+        pendingActiveAppId = nil
+        onSelectCallback = nil
+        onFinalizeCallback = nil
+    }
+    #endif
     
     /// Hide the HUD
     func hide() {

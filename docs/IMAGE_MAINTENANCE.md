@@ -8,37 +8,53 @@ The landing page uses optimized WebP images located in `docs/assets/images/`. Th
 
 ## Image Generation
 
-The `scripts/optimize_images.py` script automatically generates two versions of each screenshot to support responsive loading:
+The preferred workflow is:
+
+```bash
+python3 scripts/generate_screenshots.py
+```
+
+That script:
+
+1. Builds the app
+2. Regenerates the raw App Store PNG screenshots in `ShortcutCycle/App Store Connect Assets/Screenshots/`
+3. Rebuilds the optimized website images in `docs/assets/images/`
+
+Under the hood, `scripts/optimize_images.py` generates two versions of each screenshot to support responsive loading:
 
 1.  **Large (Default)**: 1800px width (Retina/Desktop). Filename format: `name.webp`
 2.  **Small**: 900px width (Mobile/Standard). Filename format: `name-small.webp`
 
 ## How to Update Images
 
-If you have updated the screenshots (e.g. for a new feature) or the app icon, follow these steps to regenerate the web assets:
+If you have updated the UI and want to regenerate both the App Store screenshots and the website images:
 
-1.  **Update Source Files**: Ensure the new screenshots are in `ShortcutCycle/App Store Connect Assets/Screenshots/` with the same filenames as before.
-    - `HUD Light.png`
-    - `HUD-Grid Light.png`
-    - ...etc
-    
-    If you added *new* files, you will need to add them to the `FILES_TO_PROCESS` dictionary in `scripts/optimize_images.py`.
-
-2.  **Run the Optimization Script**:
-    From the project root directory, run:
+1.  Run the screenshot generator from the project root:
 
     ```bash
-    python3 scripts/optimize_images.py
+    python3 scripts/generate_screenshots.py
     ```
 
-    **Prerequisites**:
-    - Python 3
-    - Pillow library (`pip3 install Pillow`)
+2.  Verify:
+    - `ShortcutCycle/App Store Connect Assets/Screenshots/` contains the refreshed `2880x1800` PNGs
+    - `docs/assets/images/` contains the refreshed `.webp` and `-small.webp` derivatives
+    - `docs/index.html` still looks correct in a browser
 
-3.  **Verify**:
-    - Check `docs/assets/images/` to ensure both `.webp` and `-small.webp` files are updated.
-    - Check `docs/index.html` in your browser.
-    - Commit the changes to `docs/assets/images/`.
+3.  Commit both the raw PNG changes and the derived website assets.
+
+## Web-Only Refresh
+
+If you only changed the raw screenshot PNGs manually and do not need to rerun the app harness, you can still refresh the website assets directly:
+
+```bash
+python3 scripts/optimize_images.py
+```
+
+If you added new source filenames, also update the `FILES_TO_PROCESS` dictionary in `scripts/optimize_images.py`.
+
+**Prerequisites**:
+- Python 3
+- Pillow library (`pip3 install Pillow`)
 
 ## Why this setup?
 
