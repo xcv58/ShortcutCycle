@@ -282,8 +282,12 @@ def load_set(set_id: str) -> dict[str, Any]:
     return load_yaml(SETS_DIR / f"{set_id}.yaml")
 
 
+def configured_app_bundle_path(profile: dict[str, Any]) -> Path:
+    return expand_repo_path(str(profile["app_bundle_path"]))
+
+
 def app_bundle_path(profile: dict[str, Any]) -> Path:
-    return require_path(expand_repo_path(str(profile["app_bundle_path"])), "integration app bundle")
+    return require_path(configured_app_bundle_path(profile), "integration app bundle")
 
 
 def bundle_id(profile: dict[str, Any]) -> str:
@@ -2770,7 +2774,7 @@ def doctor() -> int:
         failures += 1
     else:
         default_profile = load_profile(DEFAULT_PROFILE_ID)
-        bundle = app_bundle_path(default_profile)
+        bundle = configured_app_bundle_path(default_profile)
         print_status("integration app bundle", bundle.exists(), str(bundle))
         if not bundle.exists():
             failures += 1
