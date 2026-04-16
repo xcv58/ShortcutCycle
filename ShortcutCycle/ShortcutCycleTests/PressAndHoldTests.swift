@@ -667,6 +667,42 @@ final class PressAndHoldTests: XCTestCase {
     }
 
     @MainActor
+    func testFlagsChangedWithRequiredModifierStillHeldDoesNotFinalize() async throws {
+        var activateCount = 0
+        var finalizedAppIds: [String] = []
+        manager.activatePendingTargetApp = { _ in
+            activateCount += 1
+        }
+        manager.isKeyCurrentlyDown = { keyCode in
+            keyCode == 58 || keyCode == 61
+        }
+
+        manager.scheduleShow(
+            items: [HUDAppItem(bundleId: "com.test.option-still-held", pid: 89, name: "Option Still Held Target")],
+            activeAppId: "com.test.option-still-held::89",
+            modifierFlags: [.option],
+            shortcut: "Opt+1",
+            immediate: true,
+            onFinalize: { appId in
+                finalizedAppIds.append(appId)
+            }
+        )
+
+        XCTAssertTrue(manager.isVisible, "Immediate path should reveal the HUD before testing non-finalizing flags changes")
+        XCTAssertTrue(manager.isSessionActive, "HUD session should be active before the flags change")
+
+        let flagsHandler = try XCTUnwrap(latestLocalMonitorHandler(for: .flagsChanged))
+        _ = flagsHandler(try makeFlagsChangedEvent(modifierFlags: [.option]))
+        await Task.yield()
+        await Task.yield()
+
+        XCTAssertTrue(manager.isSessionActive, "Keeping the required modifier in the flagsChanged event should not end the HUD session")
+        XCTAssertTrue(manager.isVisible, "HUD should remain visible while the required modifier is still reported as held")
+        XCTAssertEqual(activateCount, 0, "A non-finalizing flags change must not activate the pending target")
+        XCTAssertTrue(finalizedAppIds.isEmpty, "A non-finalizing flags change must not fire finalize callbacks")
+    }
+
+    @MainActor
     func testBlindSwitchBeforeHUDPresentationKeepsSettingsOpen() async throws {
         let settingsWindow = MockWindow(
             identifier: NSUserInterfaceItemIdentifier("settings"),
