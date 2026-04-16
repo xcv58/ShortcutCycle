@@ -84,6 +84,9 @@ class HUDManager: @preconcurrency ObservableObject {
     var currentModifierFlags: () -> NSEvent.ModifierFlags = {
         NSEvent.modifierFlags
     }
+    var isKeyCurrentlyDown: (Int) -> Bool = { keyCode in
+        CGEventSource.keyState(.hidSystemState, key: CGKeyCode(keyCode))
+    }
     var isAppActive: () -> Bool = {
         NSApp?.isActive == true
     }
@@ -685,7 +688,17 @@ class HUDManager: @preconcurrency ObservableObject {
     }
     
     private func isKeyDown(_ keyCode: Int) -> Bool {
-        return CGEventSource.keyState(.hidSystemState, key: CGKeyCode(keyCode))
+        isKeyCurrentlyDown(keyCode)
+    }
+
+    private func areRequiredModifiersPresent(
+        in currentFlags: NSEvent.ModifierFlags,
+        required: NSEvent.ModifierFlags
+    ) -> Bool {
+        (!required.contains(.command) || currentFlags.contains(.command))
+            && (!required.contains(.option) || currentFlags.contains(.option))
+            && (!required.contains(.control) || currentFlags.contains(.control))
+            && (!required.contains(.shift) || currentFlags.contains(.shift))
     }
 
     private func checkModifiersHeld(currentFlags: NSEvent.ModifierFlags, required: NSEvent.ModifierFlags) -> Bool {
@@ -711,7 +724,9 @@ class HUDManager: @preconcurrency ObservableObject {
     private func handleFlagsChanged(event: NSEvent, required: NSEvent.ModifierFlags) {
         let currentFlags = event.modifierFlags
 
-        if !checkModifiersHeld(currentFlags: currentFlags, required: required) {
+        // For an actual flagsChanged event, trust the event payload. Re-querying HID
+        // state here can race one tick behind the release event and leave the HUD stuck.
+        if !areRequiredModifiersPresent(in: currentFlags, required: required) {
              finalizeSwitchAndHide()
         }
     }
