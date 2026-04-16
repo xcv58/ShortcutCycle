@@ -66,6 +66,7 @@ final class PressAndHoldTests: XCTestCase {
     // Saved originals for restoration in tearDown
     private var savedActivatePendingTargetApp: ((String) -> Void)!
     private var savedTargetLeavesCurrentSpace: ((HUDAppItem) -> Bool)!
+    private var savedIsKeyCurrentlyDown: ((Int) -> Bool)!
 
     override func setUp() async throws {
         // Setup mocks
@@ -84,6 +85,7 @@ final class PressAndHoldTests: XCTestCase {
         // Save originals before overriding (these use private methods, so restore by value)
         savedActivatePendingTargetApp = manager.activatePendingTargetApp
         savedTargetLeavesCurrentSpace = manager.targetLeavesCurrentSpace
+        savedIsKeyCurrentlyDown = manager.isKeyCurrentlyDown
 
         // Inject mocks
         manager.timeProvider = timeMock
@@ -105,6 +107,7 @@ final class PressAndHoldTests: XCTestCase {
             self?.removedMonitorCount += 1
         }
         manager.currentModifierFlags = { [] }
+        manager.isKeyCurrentlyDown = { _ in false }
         manager.isAppActive = { true }
         manager.settingsWindowsProvider = { [] }
         manager.appWindowsProvider = { [] }
@@ -151,6 +154,7 @@ final class PressAndHoldTests: XCTestCase {
         }
         manager.removeEventMonitor = { NSEvent.removeMonitor($0) }
         manager.currentModifierFlags = { NSEvent.modifierFlags }
+        manager.isKeyCurrentlyDown = savedIsKeyCurrentlyDown
         manager.isAppActive = { NSApp?.isActive == true }
         manager.settingsWindowsProvider = { NSApp?.windows ?? [] }
         manager.appWindowsProvider = { NSApp?.windows ?? [] }
@@ -630,6 +634,72 @@ final class PressAndHoldTests: XCTestCase {
         XCTAssertFalse(manager.isSessionActive, "Dropping any required modifier should finalize the HUD session")
         XCTAssertFalse(manager.isVisible, "HUD should hide once one of the required modifiers is released")
         XCTAssertEqual(activateCount, 1, "Finalizing after a partial modifier release should still activate the pending target once")
+    }
+
+    @MainActor
+    func testFlagsChangedReleaseTrustsEventFlagsWhenHardwareStateLags() async throws {
+        var activateCount = 0
+        manager.activatePendingTargetApp = { _ in
+            activateCount += 1
+        }
+        manager.isKeyCurrentlyDown = { keyCode in
+            keyCode == 58 || keyCode == 61
+        }
+
+        manager.scheduleShow(
+            items: [HUDAppItem(bundleId: "com.test.stale-option", pid: 88, name: "Stale Option Target")],
+            activeAppId: "com.test.stale-option::88",
+            modifierFlags: [.option],
+            shortcut: "Opt+1",
+            immediate: true
+        )
+
+        XCTAssertTrue(manager.isVisible, "Immediate path should reveal the HUD before testing release handling")
+
+        let flagsHandler = try XCTUnwrap(latestLocalMonitorHandler(for: .flagsChanged))
+        _ = flagsHandler(try makeFlagsChangedEvent(modifierFlags: []))
+        await Task.yield()
+        await Task.yield()
+
+        XCTAssertFalse(manager.isSessionActive, "A release event should end the HUD session even if HID state still reports the modifier as down")
+        XCTAssertFalse(manager.isVisible, "HUD should hide when the release event reports that all required modifiers are up")
+        XCTAssertEqual(activateCount, 1, "The pending target should still activate exactly once on release")
+    }
+
+    @MainActor
+    func testFlagsChangedWithRequiredModifierStillHeldDoesNotFinalize() async throws {
+        var activateCount = 0
+        var finalizedAppIds: [String] = []
+        manager.activatePendingTargetApp = { _ in
+            activateCount += 1
+        }
+        manager.isKeyCurrentlyDown = { keyCode in
+            keyCode == 58 || keyCode == 61
+        }
+
+        manager.scheduleShow(
+            items: [HUDAppItem(bundleId: "com.test.option-still-held", pid: 89, name: "Option Still Held Target")],
+            activeAppId: "com.test.option-still-held::89",
+            modifierFlags: [.option],
+            shortcut: "Opt+1",
+            immediate: true,
+            onFinalize: { appId in
+                finalizedAppIds.append(appId)
+            }
+        )
+
+        XCTAssertTrue(manager.isVisible, "Immediate path should reveal the HUD before testing non-finalizing flags changes")
+        XCTAssertTrue(manager.isSessionActive, "HUD session should be active before the flags change")
+
+        let flagsHandler = try XCTUnwrap(latestLocalMonitorHandler(for: .flagsChanged))
+        _ = flagsHandler(try makeFlagsChangedEvent(modifierFlags: [.option]))
+        await Task.yield()
+        await Task.yield()
+
+        XCTAssertTrue(manager.isSessionActive, "Keeping the required modifier in the flagsChanged event should not end the HUD session")
+        XCTAssertTrue(manager.isVisible, "HUD should remain visible while the required modifier is still reported as held")
+        XCTAssertEqual(activateCount, 0, "A non-finalizing flags change must not activate the pending target")
+        XCTAssertTrue(finalizedAppIds.isEmpty, "A non-finalizing flags change must not fire finalize callbacks")
     }
 
     @MainActor
