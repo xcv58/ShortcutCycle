@@ -309,8 +309,12 @@ final class PressAndHoldTests: XCTestCase {
     }
 
     @MainActor
-    func testDelayedShowReinstallsGlobalReleaseFallbackAfterReveal() async {
+    func testDelayedShowReinstallsGlobalReleaseFallbackAfterReveal() async throws {
         manager.currentModifierFlags = { [.command, .shift] }
+        var activateCount = 0
+        manager.activatePendingTargetApp = { _ in
+            activateCount += 1
+        }
 
         manager.scheduleShow(
             items: [HUDAppItem(bundleId: "com.test.1", name: "Test 1", icon: nil)],
@@ -346,6 +350,15 @@ final class PressAndHoldTests: XCTestCase {
             2,
             "Revealed HUD should reinstall a global keyUp fallback in addition to the local monitor"
         )
+
+        let flagsHandler = try XCTUnwrap(latestGlobalMonitorHandler(for: .flagsChanged))
+        flagsHandler(try makeFlagsChangedEvent(modifierFlags: []))
+        await Task.yield()
+        await Task.yield()
+
+        XCTAssertFalse(manager.isSessionActive, "The revealed global release fallback should end the HUD session")
+        XCTAssertFalse(manager.isVisible, "The revealed global release fallback should hide the HUD on modifier release")
+        XCTAssertEqual(activateCount, 1, "The pending target should activate exactly once when the global release fallback fires")
     }
 
     @MainActor

@@ -738,6 +738,10 @@ class HUDManager: @preconcurrency ObservableObject {
     }
 
     private func finalizeSwitchAndHide() {
+        guard sessionPhase != .idle else {
+            return
+        }
+
         // Modifiers released
         revealTimer?.invalidate()
         revealTimer = nil
@@ -888,6 +892,26 @@ class HUDManager: @preconcurrency ObservableObject {
     
     /// Hide the HUD
     func hide() {
+        guard sessionPhase != .idle
+            || window != nil
+            || currentSelectedAppId != nil
+            || currentShortcut != nil
+            || pendingActiveAppId != nil
+            || hideTimer != nil
+            || revealTimer != nil
+            || loopTimer != nil
+            || currentLoopKey != nil
+            || isLoopKeyHeld
+            || isRepeatingLoopActive
+            || lastRequestTime != nil
+            || lastLocalKeyDownTime != nil
+            || !eventMonitors.isEmpty
+            || !keyUpMonitors.isEmpty
+            || appResignObserver != nil
+        else {
+            return
+        }
+
         fireOnFinalizeIfNeeded()
         let hadRevealedHUD = isHUDRevealedThisSession()
         window?.orderOut(nil)
