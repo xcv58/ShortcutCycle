@@ -30,6 +30,44 @@ struct MenuBarView: View {
         #endif
     }
 
+    // MARK: - Group list sizing
+
+    /// Approximate rendered height of a single `MenuBarGroupRow`
+    /// (body-font HStack with `.padding(.vertical, 6)` → ~29pt).
+    /// Update this if the row's padding or typography changes.
+    private static let groupRowHeight: CGFloat = 29
+
+    /// Maximum number of group rows visible without scrolling.
+    /// Beyond this the ScrollView scrolls; the popover never grows further.
+    private static let maxVisibleGroupRows = 10
+
+    /// Height of the "No groups created yet" placeholder.
+    private static let emptyGroupListHeight: CGFloat = 60
+
+    /// Upper bound on the group-list frame — hard cap that always applies,
+    /// regardless of whether the measured height arrived yet.
+    private static var groupListMaxHeight: CGFloat {
+        CGFloat(maxVisibleGroupRows) * groupRowHeight
+    }
+
+    /// First-paint height estimate for the group list.
+    ///
+    /// `MenuBarExtra` sizes its host window from the initial layout pass,
+    /// which runs before `GeometryReader` can report the measured content
+    /// height via `HeightPreferenceKey`. Falling back to `nil` there was
+    /// non-deterministic across machines and sometimes produced a 0-height
+    /// ScrollView that clipped all groups. Seeding the frame with a
+    /// group-count-derived estimate gives the first pass a concrete size;
+    /// the preference-driven update below then refines it to the exact
+    /// measured value.
+    private var estimatedListHeight: CGFloat {
+        let count = store.groups.count
+        let estimated = count == 0
+            ? Self.emptyGroupListHeight
+            : CGFloat(count) * Self.groupRowHeight
+        return min(estimated, Self.groupListMaxHeight)
+    }
+
     private var launchAtLoginBinding: Binding<Bool> {
         #if DEBUG
         if let screenshotLaunchAtLogin {
@@ -84,7 +122,7 @@ struct MenuBarView: View {
                     }
                 )
             }
-            .frame(height: listHeight > 0 ? min(listHeight, 800) : nil)
+            .frame(height: listHeight > 0 ? min(listHeight, Self.groupListMaxHeight) : estimatedListHeight)
             .onPreferenceChange(HeightPreferenceKey.self) { height in
                 listHeight = height
             }
