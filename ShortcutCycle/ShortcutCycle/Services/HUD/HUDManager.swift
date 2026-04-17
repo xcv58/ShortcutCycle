@@ -466,11 +466,10 @@ class HUDManager: @preconcurrency ObservableObject {
         }
 
         addFlagsMonitor(false)
-        if sessionPhase != .revealed {
-            // During the invisible preparation phase we watch both scopes. Once the
-            // HUD is revealed we re-install local-only monitoring.
-            addFlagsMonitor(true)
-        }
+        // ShortcutCycle runs as an accessory app and presents the HUD in a
+        // non-activating panel. Keep a global fallback even after reveal because
+        // local key delivery is not reliable once focus shifts away from the app.
+        addFlagsMonitor(true)
 
         if sessionPhase == .revealed {
             // Give a tiny grace period for state to settle or for fast release.
@@ -515,8 +514,7 @@ class HUDManager: @preconcurrency ObservableObject {
                 }
             }
 
-            if sessionPhase != .revealed,
-               let keyMonitor = addGlobalEventMonitor(.keyUp, handleKeyUp) {
+            if let keyMonitor = addGlobalEventMonitor(.keyUp, handleKeyUp) {
                 keyUpMonitors.append(keyMonitor)
             }
 
@@ -740,6 +738,10 @@ class HUDManager: @preconcurrency ObservableObject {
     }
 
     private func finalizeSwitchAndHide() {
+        guard sessionPhase != .idle else {
+            return
+        }
+
         // Modifiers released
         revealTimer?.invalidate()
         revealTimer = nil
@@ -890,6 +892,26 @@ class HUDManager: @preconcurrency ObservableObject {
     
     /// Hide the HUD
     func hide() {
+        guard sessionPhase != .idle
+            || window != nil
+            || currentSelectedAppId != nil
+            || currentShortcut != nil
+            || pendingActiveAppId != nil
+            || hideTimer != nil
+            || revealTimer != nil
+            || loopTimer != nil
+            || currentLoopKey != nil
+            || isLoopKeyHeld
+            || isRepeatingLoopActive
+            || lastRequestTime != nil
+            || lastLocalKeyDownTime != nil
+            || !eventMonitors.isEmpty
+            || !keyUpMonitors.isEmpty
+            || appResignObserver != nil
+        else {
+            return
+        }
+
         fireOnFinalizeIfNeeded()
         let hadRevealedHUD = isHUDRevealedThisSession()
         window?.orderOut(nil)

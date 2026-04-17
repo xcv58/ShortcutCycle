@@ -309,6 +309,59 @@ final class PressAndHoldTests: XCTestCase {
     }
 
     @MainActor
+    func testDelayedShowReinstallsGlobalReleaseFallbackAfterReveal() async throws {
+        manager.currentModifierFlags = { [.command, .shift] }
+        var activateCount = 0
+        manager.activatePendingTargetApp = { _ in
+            activateCount += 1
+        }
+
+        manager.scheduleShow(
+            items: [HUDAppItem(bundleId: "com.test.1", name: "Test 1", icon: nil)],
+            activeAppId: "com.test.current",
+            modifierFlags: [.command, .shift],
+            shortcut: "Cmd+Shift+J",
+            activeKey: .j
+        )
+
+        XCTAssertEqual(
+            globalMonitorMasks.filter { $0 == .flagsChanged }.count,
+            1,
+            "Prepared HUD should register one global flagsChanged fallback before reveal"
+        )
+        XCTAssertEqual(
+            globalMonitorMasks.filter { $0 == .keyUp }.count,
+            1,
+            "Prepared HUD should register one global keyUp fallback before reveal"
+        )
+
+        timerMock.fireLastNonRepeatingTimer()
+        await Task.yield()
+        await Task.yield()
+
+        XCTAssertTrue(manager.isVisible, "Reveal timer should transition the HUD into the visible state")
+        XCTAssertEqual(
+            globalMonitorMasks.filter { $0 == .flagsChanged }.count,
+            2,
+            "Revealed HUD should reinstall a global flagsChanged fallback in addition to the local monitor"
+        )
+        XCTAssertEqual(
+            globalMonitorMasks.filter { $0 == .keyUp }.count,
+            2,
+            "Revealed HUD should reinstall a global keyUp fallback in addition to the local monitor"
+        )
+
+        let flagsHandler = try XCTUnwrap(latestGlobalMonitorHandler(for: .flagsChanged))
+        flagsHandler(try makeFlagsChangedEvent(modifierFlags: []))
+        await Task.yield()
+        await Task.yield()
+
+        XCTAssertFalse(manager.isSessionActive, "The revealed global release fallback should end the HUD session")
+        XCTAssertFalse(manager.isVisible, "The revealed global release fallback should hide the HUD on modifier release")
+        XCTAssertEqual(activateCount, 1, "The pending target should activate exactly once when the global release fallback fires")
+    }
+
+    @MainActor
     func testDelayedShowClosesOffSpaceSettingsWindowBeforeHUDActivation() async {
         let settingsWindow = MockWindow(
             identifier: NSUserInterfaceItemIdentifier("settings"),
