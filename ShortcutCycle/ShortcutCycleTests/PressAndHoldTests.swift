@@ -309,6 +309,46 @@ final class PressAndHoldTests: XCTestCase {
     }
 
     @MainActor
+    func testDelayedShowReinstallsGlobalReleaseFallbackAfterReveal() async {
+        manager.currentModifierFlags = { [.command, .shift] }
+
+        manager.scheduleShow(
+            items: [HUDAppItem(bundleId: "com.test.1", name: "Test 1", icon: nil)],
+            activeAppId: "com.test.current",
+            modifierFlags: [.command, .shift],
+            shortcut: "Cmd+Shift+J",
+            activeKey: .j
+        )
+
+        XCTAssertEqual(
+            globalMonitorMasks.filter { $0 == .flagsChanged }.count,
+            1,
+            "Prepared HUD should register one global flagsChanged fallback before reveal"
+        )
+        XCTAssertEqual(
+            globalMonitorMasks.filter { $0 == .keyUp }.count,
+            1,
+            "Prepared HUD should register one global keyUp fallback before reveal"
+        )
+
+        timerMock.fireLastNonRepeatingTimer()
+        await Task.yield()
+        await Task.yield()
+
+        XCTAssertTrue(manager.isVisible, "Reveal timer should transition the HUD into the visible state")
+        XCTAssertEqual(
+            globalMonitorMasks.filter { $0 == .flagsChanged }.count,
+            2,
+            "Revealed HUD should reinstall a global flagsChanged fallback in addition to the local monitor"
+        )
+        XCTAssertEqual(
+            globalMonitorMasks.filter { $0 == .keyUp }.count,
+            2,
+            "Revealed HUD should reinstall a global keyUp fallback in addition to the local monitor"
+        )
+    }
+
+    @MainActor
     func testDelayedShowClosesOffSpaceSettingsWindowBeforeHUDActivation() async {
         let settingsWindow = MockWindow(
             identifier: NSUserInterfaceItemIdentifier("settings"),
