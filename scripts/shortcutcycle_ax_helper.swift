@@ -14,6 +14,7 @@ enum HelperError: Error, CustomStringConvertible {
     case tabNotFound(String)
     case scrollAreaNotFound(String)
     case scrollFailed(String)
+    case frameUnavailable(String)
     case unsupportedCommand(String)
 
     var description: String {
@@ -36,6 +37,8 @@ enum HelperError: Error, CustomStringConvertible {
             return "Could not find scroll area '\(target)'"
         case .scrollFailed(let direction):
             return "Could not scroll \(direction)"
+        case .frameUnavailable(let target):
+            return "Could not resolve frame for '\(target)'"
         case .unsupportedCommand(let command):
             return "Unsupported command '\(command)'"
         }
@@ -129,17 +132,21 @@ func press(_ element: AXElement) -> AXError {
 }
 
 func selectGroup(named name: String) throws {
+    let row = try groupRow(named: name)
+    let result = setSelected(row)
+    guard result == .success else {
+        throw HelperError.rowNotFound(name)
+    }
+}
+
+func groupRow(named name: String) throws -> AXElement {
     let window = try shortcutCycleWindow()
     guard let outline = firstOutline(in: window),
           let rows = axAttribute(outline, kAXRowsAttribute) as? [AXElement],
           let row = rows.first(where: { rowContainsText($0, target: name) }) else {
         throw HelperError.rowNotFound(name)
     }
-
-    let result = setSelected(row)
-    guard result == .success else {
-        throw HelperError.rowNotFound(name)
-    }
+    return row
 }
 
 func openSheetIfPresent(in window: AXElement) -> AXElement? {
@@ -147,6 +154,14 @@ func openSheetIfPresent(in window: AXElement) -> AXElement? {
 }
 
 func selectBackupRow(index: Int) throws {
+    let row = try backupRow(index: index)
+    let result = setSelected(row)
+    guard result == .success else {
+        throw HelperError.backupRowOutOfRange(index)
+    }
+}
+
+func backupRow(index: Int) throws -> AXElement {
     let window = try shortcutCycleWindow()
     guard let sheet = openSheetIfPresent(in: window),
           let outline = firstOutline(in: sheet),
@@ -158,14 +173,17 @@ func selectBackupRow(index: Int) throws {
     guard rows.indices.contains(resolvedIndex) else {
         throw HelperError.backupRowOutOfRange(index)
     }
-
-    let result = setSelected(rows[resolvedIndex])
-    guard result == .success else {
-        throw HelperError.backupRowOutOfRange(index)
-    }
+    return rows[resolvedIndex]
 }
 
 func clickButton(named name: String) throws {
+    let result = press(try button(named: name))
+    guard result == .success else {
+        throw HelperError.buttonNotFound(name)
+    }
+}
+
+func button(named name: String) throws -> AXElement {
     let window = try shortcutCycleWindow()
     let candidates = [window] + descendants(of: window)
     guard let button = candidates.first(where: {
@@ -178,14 +196,18 @@ func clickButton(named name: String) throws {
     }) else {
         throw HelperError.buttonNotFound(name)
     }
-
-    let result = press(button)
-    guard result == .success else {
-        throw HelperError.buttonNotFound(name)
-    }
+    return button
 }
 
 func setTab(named name: String) throws {
+    let tab = try tab(named: name)
+    let result = press(tab)
+    guard result == .success else {
+        throw HelperError.tabNotFound(name)
+    }
+}
+
+func tab(named name: String) throws -> AXElement {
     let window = try shortcutCycleWindow()
     let candidates = [window] + descendants(of: window)
     guard let tab = candidates.first(where: {
@@ -198,11 +220,42 @@ func setTab(named name: String) throws {
     }) else {
         throw HelperError.tabNotFound(name)
     }
+    return tab
+}
 
-    let result = AXUIElementSetAttributeValue(tab, kAXValueAttribute as CFString, kCFBooleanTrue)
-    guard result == .success else {
-        throw HelperError.tabNotFound(name)
+func framePayload(for element: AXElement, target: String) throws -> [String: Double] {
+    var position = CGPoint.zero
+    var size = CGSize.zero
+    guard let rawPositionValue = axAttribute(element, kAXPositionAttribute),
+          let rawSizeValue = axAttribute(element, kAXSizeAttribute) else {
+        throw HelperError.frameUnavailable(target)
     }
+
+    let positionValue = rawPositionValue as! AXValue
+    let sizeValue = rawSizeValue as! AXValue
+    guard AXValueGetValue(positionValue, .cgPoint, &position),
+          AXValueGetValue(sizeValue, .cgSize, &size) else {
+        throw HelperError.frameUnavailable(target)
+    }
+
+    let screenFrame = NSScreen.main?.frame ?? NSRect(x: 0, y: 0, width: 1, height: 1)
+    return [
+        "x": Double(position.x),
+        "y": Double(position.y),
+        "width": Double(size.width),
+        "height": Double(size.height),
+        "screenX": Double(screenFrame.origin.x),
+        "screenY": Double(screenFrame.origin.y),
+        "screenWidth": Double(screenFrame.size.width),
+        "screenHeight": Double(screenFrame.size.height)
+    ]
+}
+
+func printFrame(_ element: AXElement, target: String) throws {
+    let payload = try framePayload(for: element, target: target)
+    let data = try JSONSerialization.data(withJSONObject: payload, options: [.sortedKeys])
+    FileHandle.standardOutput.write(data)
+    FileHandle.standardOutput.write(Data("\n".utf8))
 }
 
 func scrollArea(target: String, in window: AXElement) -> AXElement? {
@@ -283,17 +336,31 @@ do {
     case "select-group":
         guard arguments.count >= 2 else { throw HelperError.unsupportedCommand(command) }
         try selectGroup(named: arguments[1])
+    case "frame-group":
+        guard arguments.count >= 2 else { throw HelperError.unsupportedCommand(command) }
+        try printFrame(try groupRow(named: arguments[1]), target: arguments[1])
     case "select-backup-row":
         guard arguments.count >= 2, let index = Int(arguments[1]) else {
             throw HelperError.unsupportedCommand(command)
         }
         try selectBackupRow(index: index)
+    case "frame-backup-row":
+        guard arguments.count >= 2, let index = Int(arguments[1]) else {
+            throw HelperError.unsupportedCommand(command)
+        }
+        try printFrame(try backupRow(index: index), target: arguments[1])
     case "click-button":
         guard arguments.count >= 2 else { throw HelperError.unsupportedCommand(command) }
         try clickButton(named: arguments[1])
+    case "frame-button":
+        guard arguments.count >= 2 else { throw HelperError.unsupportedCommand(command) }
+        try printFrame(try button(named: arguments[1]), target: arguments[1])
     case "set-tab":
         guard arguments.count >= 2 else { throw HelperError.unsupportedCommand(command) }
         try setTab(named: arguments[1])
+    case "frame-tab":
+        guard arguments.count >= 2 else { throw HelperError.unsupportedCommand(command) }
+        try printFrame(try tab(named: arguments[1]), target: arguments[1])
     case "scroll":
         guard arguments.count >= 2 else { throw HelperError.unsupportedCommand(command) }
         let count = arguments.count >= 3 ? Int(arguments[2]) ?? 1 : 1

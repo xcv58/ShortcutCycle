@@ -64,6 +64,7 @@ KNOWN_APP_BUNDLES = {
     "com.apple.Chess": Path("/System/Applications/Chess.app"),
     "com.apple.calculator": Path("/System/Applications/Calculator.app"),
     "com.apple.clock": Path("/System/Applications/Clock.app"),
+    "com.apple.ColorSyncUtility": Path("/System/Applications/Utilities/ColorSync Utility.app"),
     "com.apple.Console": Path("/System/Applications/Utilities/Console.app"),
     "com.apple.Dictionary": Path("/System/Applications/Dictionary.app"),
     "com.apple.FontBook": Path("/System/Applications/Font Book.app"),
@@ -761,21 +762,19 @@ def url_command(profile: dict[str, Any], command: str) -> None:
 
 def url_query(profile: dict[str, Any], command: str, *, timeout: float = 5.0) -> dict[str, Any]:
     result_path = result_file_path(profile)
-    previous_mtime = result_path.stat().st_mtime if result_path.exists() else 0.0
+    result_path.unlink(missing_ok=True)
     url_command(profile, command)
 
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         if result_path.exists():
-            current_mtime = result_path.stat().st_mtime
-            if current_mtime >= previous_mtime:
-                try:
-                    payload = json.loads(result_path.read_text(encoding="utf-8"))
-                except json.JSONDecodeError:
-                    time.sleep(0.1)
-                    continue
-                if payload.get("command") == command.split("?", 1)[0]:
-                    return payload
+            try:
+                payload = json.loads(result_path.read_text(encoding="utf-8"))
+            except json.JSONDecodeError:
+                time.sleep(0.1)
+                continue
+            if payload.get("command") == command.split("?", 1)[0]:
+                return payload
         time.sleep(0.15)
     raise PipelineError(f"Timed out waiting for URL query result: {command}")
 
@@ -1058,6 +1057,32 @@ def run_shortcutcycle_ax(profile: dict[str, Any], command: str, *arguments: obje
         capture_output=True,
         check=True,
     )
+
+
+def shortcutcycle_ax_output(profile: dict[str, Any], command: str, *arguments: object) -> str:
+    helper_path = compile_shortcutcycle_ax_helper()
+    env = os.environ.copy()
+    env["SHORTCUTCYCLE_AX_APP_PATH"] = str(app_bundle_path(profile))
+    result = run(
+        [str(helper_path), command, *[str(argument) for argument in arguments]],
+        env=env,
+        capture_output=True,
+        check=True,
+    )
+    return result.stdout
+
+
+def shortcutcycle_ax_frame(profile: dict[str, Any], command: str, *arguments: object) -> dict[str, float]:
+    payload = json.loads(shortcutcycle_ax_output(profile, command, *arguments))
+    if not isinstance(payload, dict):
+        raise PipelineError(f"Unexpected AX frame payload for {command}")
+    return {str(key): float(value) for key, value in payload.items()}
+
+
+def attach_semantic_highlight(profile: dict[str, Any], action: dict[str, Any], command: str, *arguments: object) -> None:
+    if action.get("highlight", True) is False:
+        return
+    action["_highlight_rect"] = shortcutcycle_ax_frame(profile, command, *arguments)
 
 
 def compile_window_frame_helper() -> Path:
@@ -1466,25 +1491,58 @@ def shortcut_badge_asset(shortcut: str, group_name: str) -> Path:
 
 
 def apply_click_highlights(scene: dict[str, Any], capture_path: Path) -> None:
-    click_actions = [action for action in scene.get("actions", []) if action.get("type") == "mouse-click" and action.get("highlight", True)]
-    if not click_actions:
+    highlight_actions: list[dict[str, Any]] = []
+    for action in scene.get("actions", []):
+        if action.get("highlight", True) is False:
+            continue
+        if action.get("type") == "mouse-click":
+            highlight_actions.append(
+                {
+                    "at": float(action["at"]),
+                    "x": float(action["x"]),
+                    "y": float(action["y"]),
+                    "duration": float(action.get("highlight_duration", 0.45)),
+                }
+            )
+            continue
+
+        rect = action.get("_highlight_rect")
+        if isinstance(rect, dict):
+            highlight_actions.append(
+                {
+                    "at": float(action["at"]),
+                    "x": float(rect["x"]) + float(rect["width"]) / 2,
+                    "y": float(rect["y"]) + float(rect["height"]) / 2,
+                    "screen_width": float(rect.get("screenWidth", 0)),
+                    "screen_height": float(rect.get("screenHeight", 0)),
+                    "duration": float(action.get("highlight_duration", 0.55)),
+                }
+            )
+
+    if not highlight_actions:
         return
 
     highlight_path = click_highlight_asset()
     highlight_image = Image.open(highlight_path)
     highlight_width, highlight_height = highlight_image.size
-    capture_duration = float(ffprobe_stream(capture_path)["format"]["duration"])
+    payload = ffprobe_stream(capture_path)
+    capture_duration = float(payload["format"]["duration"])
+    video_stream = next((stream for stream in payload["streams"] if stream.get("codec_type") == "video"), None)
+    capture_width = float(video_stream["width"]) if video_stream else 0
+    capture_height = float(video_stream["height"]) if video_stream else 0
     temp_output = capture_path.with_name(f"{capture_path.stem}-clicks{capture_path.suffix}")
     command = ["ffmpeg", "-y", "-i", str(capture_path)]
     filter_parts: list[str] = []
     previous = "[0:v]"
 
-    for index, action in enumerate(click_actions, start=1):
+    for index, action in enumerate(highlight_actions, start=1):
         command.extend(["-loop", "1", "-i", str(highlight_path)])
-        x = int(action["x"]) - highlight_width // 2
-        y = int(action["y"]) - highlight_height // 2
+        scale_x = capture_width / float(action["screen_width"]) if action.get("screen_width") and capture_width else 1.0
+        scale_y = capture_height / float(action["screen_height"]) if action.get("screen_height") and capture_height else scale_x
+        x = int(float(action["x"]) * scale_x) - highlight_width // 2
+        y = int(float(action["y"]) * scale_y) - highlight_height // 2
         start = float(action["at"])
-        duration = float(action.get("highlight_duration", 0.45))
+        duration = float(action["duration"])
         output_label = f"[v{index}]"
         filter_parts.append(
             f"{previous}[{index}:v]overlay={x}:{y}:enable='between(t,{start:.3f},{start + duration:.3f})'{output_label}"
@@ -2387,15 +2445,19 @@ def execute_capture_action(profile: dict[str, Any], action: dict[str, Any]) -> N
         )
     elif action_type == "select-group":
         run_shortcutcycle_ax(profile, "select-group", str(action["group"]))
+        attach_semantic_highlight(profile, action, "frame-group", str(action["group"]))
     elif action_type == "set-tab":
         run_shortcutcycle_ax(profile, "set-tab", str(action["tab"]))
+        attach_semantic_highlight(profile, action, "frame-tab", str(action["tab"]))
     elif action_type == "click-button":
         button_name = str(action.get("button", action.get("title", "")))
         if not button_name:
             raise PipelineError("click-button action expects button or title")
+        attach_semantic_highlight(profile, action, "frame-button", button_name)
         run_shortcutcycle_ax(profile, "click-button", button_name)
     elif action_type == "select-backup-row":
         run_shortcutcycle_ax(profile, "select-backup-row", int(action["index"]))
+        attach_semantic_highlight(profile, action, "frame-backup-row", int(action["index"]))
     elif action_type == "scroll-area":
         run_shortcutcycle_ax(
             profile,
@@ -2449,9 +2511,6 @@ def capture_scene(scene_id: str, run_id: str) -> Path:
         quit_integration_app(profile)
         run_prepare_steps([step for step in scene.get("prepare_before_launch", []) if isinstance(step, dict)])
 
-        if clean_background:
-            backdrop = start_capture_backdrop(str(capture_settings.get("background_color", "#F7F5EF")))
-
         did_seed_fixture = not bool(scene.get("skip_seed", False))
         if did_seed_fixture:
             seed_fixture(profile, scene["fixture"])
@@ -2481,6 +2540,7 @@ def capture_scene(scene_id: str, run_id: str) -> Path:
             if not target_bundle_ids:
                 target_bundle_ids.append(str(profile.get("bundle_id", "com.xcv58.ShortcutCycle")))
             hide_other_apps(target_bundle_ids)
+            backdrop = start_capture_backdrop(str(capture_settings.get("background_color", "#F7F5EF")))
 
         if scene.get("window_bounds") or scene.get("window_layouts"):
             stage_windows(scene)

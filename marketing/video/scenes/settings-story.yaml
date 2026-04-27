@@ -4,23 +4,21 @@ profile: default
 fixture: marketing-default
 source_clip: marketing/video/sources/settings-story.mp4
 capture:
-  duration: 14.4
+  duration: 8.8
   clean_background: true
   background_color: "#F7F5EF"
 prepare_urls:
   - open-settings?tab=groups
-  - select-group?group=Tools
+  - select-group?group=Writing
 prepare_after_launch:
   - { type: sleep, seconds: 1.1 }
   - { type: hide-other-apps, except_bundle_ids: [com.xcv58.ShortcutCycle] }
 window_stage_apps:
   - com.xcv58.ShortcutCycle
 window_layouts:
-  "com.xcv58.ShortcutCycle": [160, 58, 1600, 1010]
+  "com.xcv58.ShortcutCycle": [160, 58, 1600, 520]
 initial_frontmost_app: com.xcv58.ShortcutCycle
 actions:
-  - { at: 1.35, type: select-group, group: Projects }
-  - { at: 3.10, type: select-group, group: Many Apps }
-  - { at: 4.85, type: set-tab, tab: General }
-  - { at: 6.60, type: open-url, url: "shortcutcycle://open-backup-browser" }
-  - { at: 8.20, type: select-backup-row, index: 4 }
+  - { at: 1.35, type: select-group, group: Tools }
+  - { at: 3.10, type: select-group, group: Showcase }
+  - { at: 4.85, type: open-url, url: "shortcutcycle://open-settings?tab=general" }

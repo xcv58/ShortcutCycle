@@ -11,8 +11,8 @@ sequence:
     duration: 1.0
     title: One shortcut per group
     rows:
-      - { shortcut: "⌥1", label: "Essentials" }
-      - { shortcut: "⌥3", label: "Explore" }
+      - { shortcut: "⌥1", label: "Writing" }
+      - { shortcut: "⌥3", label: "Tools" }
   - { type: scene, scene: overview-main, trim_start: 0.20, trim_end: 11.35 }
 validate:
   resolution: [1920, 1080]
