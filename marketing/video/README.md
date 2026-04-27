@@ -47,3 +47,15 @@ The pipeline now supports the real-capture docs and launch flows.
 - `overview-main` is prepared for repeated group switching across `Essentials` and `Explore` with Calculator as the bridge app and a tracked Preview PDF for deterministic content.
 - `hud-story` is prepared for alternating compact and grid HUD beats with longer holds and subtle shortcut badges so the workflow reads clearly on video.
 - `reddit-overview`, `hud-preview`, and `settings-preview` are the canonical processed videos. They publish the same intro-card style to the website and App Store preview outputs by default.
+
+## Semantic Settings Capture
+
+`settings-story` uses semantic accessibility actions instead of coordinate clicks. Supported ShortcutCycle settings actions include:
+
+- `select-group` with `group`
+- `set-tab` with `tab`
+- `click-button` with `button`
+- `select-backup-row` with `index`
+- `scroll-area` with optional `direction`, `count`, and `target`
+
+Set `capture.clean_background: true` on real screen captures to launch a temporary neutral backdrop behind the app. This keeps full-screen AVFoundation captures clean even when unrelated windows are open on the desktop.

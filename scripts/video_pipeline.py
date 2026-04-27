@@ -56,6 +56,7 @@ FIXED_LAST_MODIFIED = 796_953_600
 DEFAULT_REGULAR_FONT = "/System/Library/Fonts/Supplemental/Arial.ttf"
 DEFAULT_BOLD_FONT = "/System/Library/Fonts/Supplemental/Arial Bold.ttf"
 OVERVIEW_BACKGROUND_PATH = REPO_ROOT / "scripts" / "assets" / "background.jpeg"
+SHORTCUTCYCLE_AX_HELPER_SOURCE = REPO_ROOT / "scripts" / "shortcutcycle_ax_helper.swift"
 VERTICAL_CROP_BIAS = 40
 
 KNOWN_APP_BUNDLES = {
@@ -202,12 +203,14 @@ def run(
     command: list[str],
     *,
     cwd: Path | None = None,
+    env: dict[str, str] | None = None,
     capture_output: bool = True,
     check: bool = True,
 ) -> subprocess.CompletedProcess[str]:
     result = subprocess.run(
         command,
         cwd=cwd,
+        env=env,
         text=True,
         capture_output=capture_output,
         check=False,
@@ -1034,6 +1037,29 @@ for index in 0..<max(1, count) {
     return require_file(binary_path, "scroll helper binary")
 
 
+def compile_shortcutcycle_ax_helper() -> Path:
+    ensure_directories()
+    source_path = require_file(SHORTCUTCYCLE_AX_HELPER_SOURCE, "ShortcutCycle AX helper source")
+    binary_path = BIN_DIR / "shortcutcycle_ax_helper"
+    source_mtime = source_path.stat().st_mtime
+    needs_compile = not binary_path.exists() or binary_path.stat().st_mtime < source_mtime
+    if needs_compile:
+        run(["swiftc", str(source_path), "-o", str(binary_path)], check=True)
+    return require_file(binary_path, "ShortcutCycle AX helper binary")
+
+
+def run_shortcutcycle_ax(profile: dict[str, Any], command: str, *arguments: object) -> None:
+    helper_path = compile_shortcutcycle_ax_helper()
+    env = os.environ.copy()
+    env["SHORTCUTCYCLE_AX_APP_PATH"] = str(app_bundle_path(profile))
+    run(
+        [str(helper_path), command, *[str(argument) for argument in arguments]],
+        env=env,
+        capture_output=True,
+        check=True,
+    )
+
+
 def compile_window_frame_helper() -> Path:
     ensure_directories()
     source_path = BIN_DIR / "set_window_frame.swift"
@@ -1099,6 +1125,77 @@ exit(1)
         source_path.write_text(source, encoding="utf-8")
         run(["swiftc", str(source_path), "-o", str(binary_path)], check=True)
     return require_file(binary_path, "window frame helper binary")
+
+
+def compile_capture_backdrop_helper() -> Path:
+    ensure_directories()
+    source_path = BIN_DIR / "capture_backdrop.swift"
+    binary_path = BIN_DIR / "capture_backdrop"
+    source = """import AppKit
+import Foundation
+
+let arguments = Array(CommandLine.arguments.dropFirst())
+let hex = arguments.first ?? "#F7F5EF"
+
+func color(from value: String) -> NSColor {
+    let cleaned = value.trimmingCharacters(in: CharacterSet(charactersIn: "#"))
+    guard cleaned.count == 6, let raw = Int(cleaned, radix: 16) else {
+        return NSColor(calibratedRed: 0.97, green: 0.96, blue: 0.93, alpha: 1.0)
+    }
+    let red = CGFloat((raw >> 16) & 0xff) / 255.0
+    let green = CGFloat((raw >> 8) & 0xff) / 255.0
+    let blue = CGFloat(raw & 0xff) / 255.0
+    return NSColor(calibratedRed: red, green: green, blue: blue, alpha: 1.0)
+}
+
+let app = NSApplication.shared
+app.setActivationPolicy(.accessory)
+
+let frame = NSScreen.main?.frame ?? NSRect(x: 0, y: 0, width: 1920, height: 1080)
+let window = NSWindow(
+    contentRect: frame,
+    styleMask: [.borderless],
+    backing: .buffered,
+    defer: false
+)
+window.title = "ShortcutCycle Capture Backdrop"
+window.backgroundColor = color(from: hex)
+window.isOpaque = true
+window.ignoresMouseEvents = true
+window.level = .normal
+window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
+window.orderFrontRegardless()
+
+app.run()
+"""
+    current_source = source_path.read_text(encoding="utf-8") if source_path.exists() else None
+    if current_source != source or not binary_path.exists():
+        source_path.write_text(source, encoding="utf-8")
+        run(["swiftc", str(source_path), "-o", str(binary_path)], check=True)
+    return require_file(binary_path, "capture backdrop helper binary")
+
+
+def start_capture_backdrop(color: str) -> subprocess.Popen[str]:
+    helper_path = compile_capture_backdrop_helper()
+    process = subprocess.Popen(
+        [str(helper_path), color],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        text=True,
+    )
+    time.sleep(0.4)
+    return process
+
+
+def stop_process(process: subprocess.Popen[str] | None, *, timeout: float = 5.0) -> None:
+    if process is None or process.poll() is not None:
+        return
+    process.terminate()
+    try:
+        process.wait(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.wait(timeout=timeout)
 
 
 def parse_shortcut(shortcut: str) -> tuple[str, int, int]:
@@ -2288,6 +2385,25 @@ def execute_capture_action(profile: dict[str, Any], action: dict[str, Any]) -> N
             capture_output=True,
             check=True,
         )
+    elif action_type == "select-group":
+        run_shortcutcycle_ax(profile, "select-group", str(action["group"]))
+    elif action_type == "set-tab":
+        run_shortcutcycle_ax(profile, "set-tab", str(action["tab"]))
+    elif action_type == "click-button":
+        button_name = str(action.get("button", action.get("title", "")))
+        if not button_name:
+            raise PipelineError("click-button action expects button or title")
+        run_shortcutcycle_ax(profile, "click-button", button_name)
+    elif action_type == "select-backup-row":
+        run_shortcutcycle_ax(profile, "select-backup-row", int(action["index"]))
+    elif action_type == "scroll-area":
+        run_shortcutcycle_ax(
+            profile,
+            "scroll",
+            str(action.get("direction", "down")),
+            int(action.get("count", 1)),
+            str(action.get("target", "first")),
+        )
     elif action_type == "mouse-click":
         post_mouse_click(
             int(action["x"]),
@@ -2326,55 +2442,71 @@ def capture_scene(scene_id: str, run_id: str) -> Path:
     output_path = raw_scene_path(scene_id, run_id)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    quit_integration_app(profile)
-    run_prepare_steps([step for step in scene.get("prepare_before_launch", []) if isinstance(step, dict)])
-
-    did_seed_fixture = not bool(scene.get("skip_seed", False))
-    if did_seed_fixture:
-        seed_fixture(profile, scene["fixture"])
-
-    launch_integration_app(profile)
-    time.sleep(0.6)
-
-    if did_seed_fixture:
-        seed_fixture_via_url(profile, scene["fixture"])
-
-    for command in scene.get("prepare_urls", []):
-        url_command(profile, str(command))
-        time.sleep(0.15)
-
-    for bundle_identifier in scene.get("launch_apps", []):
-        launch_app(str(bundle_identifier))
-        time.sleep(float(profile.get("app_launch_stagger_seconds", 0.6)))
-
-    run_prepare_steps([step for step in scene.get("prepare_after_launch", []) if isinstance(step, dict)])
-
-    if scene.get("window_bounds") or scene.get("window_layouts"):
-        stage_windows(scene)
-
-    duration = float(capture_settings["duration"])
-    ffmpeg_command = [
-        "ffmpeg",
-        "-y",
-        "-f",
-        "avfoundation",
-        "-pixel_format",
-        str(profile.get("capture_pixel_format", "bgr0")),
-        "-framerate",
-        str(frame_rate(profile)),
-        "-i",
-        resolved_capture_device(profile),
-        "-an",
-        "-c:v",
-        "libx264",
-        "-pix_fmt",
-        "yuv420p",
-        str(output_path),
-    ]
-    recorder = subprocess.Popen(ffmpeg_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-    start = time.monotonic()
+    clean_background = bool(capture_settings.get("clean_background", scene.get("clean_background", False)))
+    backdrop: subprocess.Popen[str] | None = None
+    recorder: subprocess.Popen[str] | None = None
     try:
+        quit_integration_app(profile)
+        run_prepare_steps([step for step in scene.get("prepare_before_launch", []) if isinstance(step, dict)])
+
+        if clean_background:
+            backdrop = start_capture_backdrop(str(capture_settings.get("background_color", "#F7F5EF")))
+
+        did_seed_fixture = not bool(scene.get("skip_seed", False))
+        if did_seed_fixture:
+            seed_fixture(profile, scene["fixture"])
+
+        launch_integration_app(profile)
+        time.sleep(0.6)
+
+        if did_seed_fixture:
+            seed_fixture_via_url(profile, scene["fixture"])
+
+        for command in scene.get("prepare_urls", []):
+            url_command(profile, str(command))
+            time.sleep(0.15)
+
+        for bundle_identifier in scene.get("launch_apps", []):
+            launch_app(str(bundle_identifier))
+            time.sleep(float(profile.get("app_launch_stagger_seconds", 0.6)))
+
+        run_prepare_steps([step for step in scene.get("prepare_after_launch", []) if isinstance(step, dict)])
+
+        if clean_background:
+            target_bundle_ids = []
+            raw_targets = scene.get("window_stage_apps")
+            if isinstance(raw_targets, list):
+                target_bundle_ids.extend(str(bundle_id) for bundle_id in raw_targets)
+            target_bundle_ids.extend(str(bundle_id) for bundle_id in scene.get("launch_apps", []))
+            if not target_bundle_ids:
+                target_bundle_ids.append(str(profile.get("bundle_id", "com.xcv58.ShortcutCycle")))
+            hide_other_apps(target_bundle_ids)
+
+        if scene.get("window_bounds") or scene.get("window_layouts"):
+            stage_windows(scene)
+
+        duration = float(capture_settings["duration"])
+        ffmpeg_command = [
+            "ffmpeg",
+            "-y",
+            "-f",
+            "avfoundation",
+            "-pixel_format",
+            str(profile.get("capture_pixel_format", "bgr0")),
+            "-framerate",
+            str(frame_rate(profile)),
+            "-i",
+            resolved_capture_device(profile),
+            "-an",
+            "-c:v",
+            "libx264",
+            "-pix_fmt",
+            "yuv420p",
+            str(output_path),
+        ]
+        recorder = subprocess.Popen(ffmpeg_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+        start = time.monotonic()
         for action in sorted(scene.get("actions", []), key=lambda item: float(item["at"])):
             while time.monotonic() - start < float(action["at"]):
                 time.sleep(0.02)
@@ -2384,8 +2516,14 @@ def capture_scene(scene_id: str, run_id: str) -> Path:
         while time.monotonic() - start < target_duration:
             time.sleep(0.05)
     finally:
-        recorder.send_signal(signal.SIGINT)
-        recorder.wait(timeout=15)
+        if recorder is not None and recorder.poll() is None:
+            recorder.send_signal(signal.SIGINT)
+            try:
+                recorder.wait(timeout=15)
+            except subprocess.TimeoutExpired:
+                recorder.kill()
+                recorder.wait(timeout=5)
+        stop_process(backdrop)
 
     require_file(output_path, "captured scene output")
     apply_click_highlights(scene, output_path)
@@ -2799,10 +2937,15 @@ def doctor() -> int:
     if not background.exists():
         failures += 1
 
+    ax_helper = SHORTCUTCYCLE_AX_HELPER_SOURCE
+    print_status("ShortcutCycle AX helper", ax_helper.exists(), str(ax_helper))
+    if not ax_helper.exists():
+        failures += 1
+
     print_status(
         "accessibility scripting",
         True,
-        "not required for the current synthetic overview capture path",
+        "required for semantic settings capture actions",
     )
     return 1 if failures else 0
 
