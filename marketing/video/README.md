@@ -58,4 +58,6 @@ The pipeline now supports the real-capture docs and launch flows.
 - `select-backup-row` with `index`
 - `scroll-area` with optional `direction`, `count`, and `target`
 
-Set `capture.clean_background: true` on real screen captures to launch a temporary backdrop behind the app. `capture.background_image` can point at a repo image, and semantic settings actions automatically get a post-production cursor plus click highlight so AX-driven captures still read like visible clicks.
+Set `capture.clean_background: true` on real screen captures to launch a temporary backdrop behind the app. `capture.background_image` can point at a repo image. Set `capture.hide_cursor: true` to request cursor-free AVFoundation capture and temporarily park/restore the real macOS cursor at the cropped screen edge, which avoids leaking the live pointer into polished videos. `capture.recording_warmup_seconds` can add a short buffer after ffmpeg starts so semantic action timestamps stay aligned with post-production highlights.
+
+Semantic settings actions automatically get a post-production cursor plus click highlight so AX-driven captures still read like visible clicks.

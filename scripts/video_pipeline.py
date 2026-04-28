@@ -1247,6 +1247,93 @@ app.run()
     return require_file(binary_path, "capture backdrop helper binary")
 
 
+def compile_cursor_visibility_helper() -> Path:
+    ensure_directories()
+    source_path = BIN_DIR / "cursor_visibility.swift"
+    binary_path = BIN_DIR / "cursor_visibility"
+    source = """import AppKit
+import CoreGraphics
+import Foundation
+
+let arguments = Array(CommandLine.arguments.dropFirst())
+let command = arguments.first ?? "position"
+
+func currentPosition() -> CGPoint {
+    CGEvent(source: nil)?.location ?? CGPoint(x: 0, y: 0)
+}
+
+func moveCursor(to point: CGPoint) {
+    CGWarpMouseCursorPosition(point)
+    CGAssociateMouseAndMouseCursorPosition(boolean_t(1))
+}
+
+func printJSON(_ payload: [String: Double]) {
+    guard let data = try? JSONSerialization.data(withJSONObject: payload, options: [.sortedKeys]) else {
+        exit(1)
+    }
+    FileHandle.standardOutput.write(data)
+    FileHandle.standardOutput.write(Data("\\n".utf8))
+}
+
+switch command {
+case "position":
+    let position = currentPosition()
+    printJSON(["x": Double(position.x), "y": Double(position.y)])
+case "move":
+    guard arguments.count == 3, let x = Double(arguments[1]), let y = Double(arguments[2]) else {
+        fputs("usage: cursor_visibility move <x> <y>\\n", stderr)
+        exit(2)
+    }
+    moveCursor(to: CGPoint(x: x, y: y))
+case "stash":
+    let frame = NSScreen.main?.frame ?? NSRect(x: 0, y: 0, width: 1920, height: 1200)
+    // Use the top edge so parking the cursor never wakes the Dock.
+    moveCursor(to: CGPoint(x: frame.maxX - 2, y: frame.minY + 2))
+case "screen":
+    let frame = NSScreen.main?.frame ?? NSRect(x: 0, y: 0, width: 1920, height: 1200)
+    printJSON([
+        "x": Double(frame.origin.x),
+        "y": Double(frame.origin.y),
+        "width": Double(frame.width),
+        "height": Double(frame.height),
+        "maxX": Double(frame.maxX),
+        "maxY": Double(frame.maxY),
+    ])
+default:
+    fputs("usage: cursor_visibility position|move|stash|screen\\n", stderr)
+    exit(2)
+}
+"""
+    current_source = source_path.read_text(encoding="utf-8") if source_path.exists() else None
+    if current_source != source or not binary_path.exists():
+        source_path.write_text(source, encoding="utf-8")
+        run(["swiftc", str(source_path), "-o", str(binary_path)], check=True)
+    return require_file(binary_path, "cursor visibility helper binary")
+
+
+def cursor_visibility_output(*arguments: object) -> str:
+    helper_path = compile_cursor_visibility_helper()
+    result = run(
+        [str(helper_path), *[str(argument) for argument in arguments]],
+        capture_output=True,
+        check=True,
+    )
+    return result.stdout
+
+
+def cursor_position() -> tuple[float, float]:
+    payload = json.loads(cursor_visibility_output("position"))
+    return float(payload["x"]), float(payload["y"])
+
+
+def move_cursor(x: float, y: float) -> None:
+    cursor_visibility_output("move", x, y)
+
+
+def stash_cursor() -> None:
+    cursor_visibility_output("stash")
+
+
 def start_capture_backdrop(color: str) -> subprocess.Popen[str]:
     helper_path = compile_capture_backdrop_helper()
     process = subprocess.Popen(
@@ -2567,11 +2654,11 @@ def execute_capture_action(profile: dict[str, Any], action: dict[str, Any]) -> N
             check=True,
         )
     elif action_type == "select-group":
-        run_shortcutcycle_ax(profile, "select-group", str(action["group"]))
         attach_semantic_highlight(profile, action, "frame-group", str(action["group"]))
+        run_shortcutcycle_ax(profile, "select-group", str(action["group"]))
     elif action_type == "set-tab":
-        run_shortcutcycle_ax(profile, "set-tab", str(action["tab"]))
         attach_semantic_highlight(profile, action, "frame-tab", str(action["tab"]))
+        run_shortcutcycle_ax(profile, "set-tab", str(action["tab"]))
     elif action_type == "click-button":
         button_name = str(action.get("button", action.get("title", "")))
         if not button_name:
@@ -2579,8 +2666,8 @@ def execute_capture_action(profile: dict[str, Any], action: dict[str, Any]) -> N
         attach_semantic_highlight(profile, action, "frame-button", button_name)
         run_shortcutcycle_ax(profile, "click-button", button_name)
     elif action_type == "select-backup-row":
-        run_shortcutcycle_ax(profile, "select-backup-row", int(action["index"]))
         attach_semantic_highlight(profile, action, "frame-backup-row", int(action["index"]))
+        run_shortcutcycle_ax(profile, "select-backup-row", int(action["index"]))
     elif action_type == "scroll-area":
         run_shortcutcycle_ax(
             profile,
@@ -2628,8 +2715,11 @@ def capture_scene(scene_id: str, run_id: str) -> Path:
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     clean_background = bool(capture_settings.get("clean_background", scene.get("clean_background", False)))
+    hide_cursor = bool(capture_settings.get("hide_cursor", False))
+    recording_warmup_seconds = float(capture_settings.get("recording_warmup_seconds", 0.0))
     backdrop: subprocess.Popen[str] | None = None
     recorder: subprocess.Popen[str] | None = None
+    cursor_restore_position: tuple[float, float] | None = None
     try:
         quit_integration_app(profile)
         run_prepare_steps([step for step in scene.get("prepare_before_launch", []) if isinstance(step, dict)])
@@ -2671,6 +2761,11 @@ def capture_scene(scene_id: str, run_id: str) -> Path:
         if scene.get("window_bounds") or scene.get("window_layouts"):
             stage_windows(scene)
 
+        if hide_cursor:
+            cursor_restore_position = cursor_position()
+            stash_cursor()
+            time.sleep(0.12)
+
         duration = float(capture_settings["duration"])
         ffmpeg_command = [
             "ffmpeg",
@@ -2681,16 +2776,24 @@ def capture_scene(scene_id: str, run_id: str) -> Path:
             str(profile.get("capture_pixel_format", "bgr0")),
             "-framerate",
             str(frame_rate(profile)),
-            "-i",
-            resolved_capture_device(profile),
-            "-an",
-            "-c:v",
-            "libx264",
-            "-pix_fmt",
-            "yuv420p",
-            str(output_path),
         ]
+        if hide_cursor:
+            ffmpeg_command.extend(["-capture_cursor", "0", "-capture_mouse_clicks", "0"])
+        ffmpeg_command.extend(
+            [
+                "-i",
+                resolved_capture_device(profile),
+                "-an",
+                "-c:v",
+                "libx264",
+                "-pix_fmt",
+                "yuv420p",
+                str(output_path),
+            ]
+        )
         recorder = subprocess.Popen(ffmpeg_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if recording_warmup_seconds > 0:
+            time.sleep(recording_warmup_seconds)
 
         start = time.monotonic()
         for action in sorted(scene.get("actions", []), key=lambda item: float(item["at"])):
@@ -2709,6 +2812,8 @@ def capture_scene(scene_id: str, run_id: str) -> Path:
             except subprocess.TimeoutExpired:
                 recorder.kill()
                 recorder.wait(timeout=5)
+        if cursor_restore_position is not None:
+            move_cursor(*cursor_restore_position)
         stop_process(backdrop)
 
     require_file(output_path, "captured scene output")

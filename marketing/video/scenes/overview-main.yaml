@@ -9,6 +9,7 @@ capture:
   clean_background: true
   background_color: "#F7F5EF"
   background_image: marketing/video/assets/video-background.JPG
+  hide_cursor: true
 prepare_urls:
   - set-setting?key=showHUD&value=true
   - set-setting?key=showShortcutInHUD&value=true

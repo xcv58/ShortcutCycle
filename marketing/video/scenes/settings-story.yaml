@@ -8,6 +8,8 @@ capture:
   clean_background: true
   background_color: "#F7F5EF"
   background_image: marketing/video/assets/video-background.JPG
+  hide_cursor: true
+  recording_warmup_seconds: 1.0
 prepare_urls:
   - open-settings?tab=groups
   - select-group?group=Writing
