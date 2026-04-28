@@ -7,6 +7,7 @@ capture:
   duration: 15.8
   clean_background: true
   background_color: "#F7F5EF"
+  background_image: marketing/video/assets/video-background.JPG
 prepare_urls:
   - set-setting?key=showHUD&value=true
   - set-setting?key=showShortcutInHUD&value=true
@@ -53,6 +54,10 @@ window_layouts:
 initial_frontmost_app: com.apple.calculator
 actions:
   - { at: 0.95, type: shortcut-sequence, shortcut: option+1, tap_count: 2, pre_hold: 0.60, between_taps: 0.34, post_hold: 0.82, show_shortcut_overlay: true, overlay_duration: 0.95 }
-  - { at: 4.55, type: shortcut-sequence, shortcut: option+5, tap_count: 3, pre_hold: 0.70, between_taps: 0.34, post_hold: 0.80, show_shortcut_overlay: true, overlay_duration: 0.95 }
-  - { at: 8.65, type: shortcut-sequence, shortcut: option+1, tap_count: 2, pre_hold: 0.60, between_taps: 0.34, post_hold: 0.78, show_shortcut_overlay: true, overlay_duration: 0.95 }
-  - { at: 12.25, type: shortcut-sequence, shortcut: option+5, tap_count: 2, pre_hold: 0.70, between_taps: 0.34, post_hold: 0.78, show_shortcut_overlay: true, overlay_duration: 0.95 }
+  - { at: 3.10, type: activate-app, bundle_id: com.apple.Preview }
+  - { at: 4.55, type: shortcut-sequence, shortcut: option+5, tap_count: 2, pre_hold: 0.70, between_taps: 0.34, post_hold: 0.80, show_shortcut_overlay: true, overlay_duration: 0.95 }
+  - { at: 6.90, type: activate-app, bundle_id: com.apple.FontBook }
+  - { at: 8.35, type: shortcut-sequence, shortcut: option+1, tap_count: 1, pre_hold: 0.60, between_taps: 0.34, post_hold: 0.78, show_shortcut_overlay: true, overlay_duration: 0.95 }
+  - { at: 9.85, type: activate-app, bundle_id: com.apple.TextEdit }
+  - { at: 11.45, type: shortcut-sequence, shortcut: option+5, tap_count: 5, pre_hold: 0.55, between_taps: 0.25, post_hold: 0.55, show_shortcut_overlay: true, overlay_duration: 0.95 }
+  - { at: 14.15, type: activate-app, bundle_id: com.apple.Image_Capture }

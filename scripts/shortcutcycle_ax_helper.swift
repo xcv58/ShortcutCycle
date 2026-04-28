@@ -123,6 +123,12 @@ func rowContainsText(_ row: AXElement, target: String) -> Bool {
     return texts.contains(target)
 }
 
+func elementMatchesText(_ element: AXElement, target: String) -> Bool {
+    elementTitle(element) == target ||
+        elementDescription(element) == target ||
+        stringValue(element) == target
+}
+
 func setSelected(_ element: AXElement) -> AXError {
     AXUIElementSetAttributeValue(element, kAXSelectedAttribute as CFString, kCFBooleanTrue)
 }
@@ -211,16 +217,37 @@ func tab(named name: String) throws -> AXElement {
     let window = try shortcutCycleWindow()
     let candidates = [window] + descendants(of: window)
     guard let tab = candidates.first(where: {
-        elementRole($0) == kAXRadioButtonRole as String &&
-        (
-            elementTitle($0) == name ||
-            elementDescription($0) == name ||
-            stringValue($0) == name
-        )
+        [kAXRadioButtonRole as String, kAXButtonRole as String].contains(elementRole($0)) &&
+        elementMatchesText($0, target: name)
     }) else {
         throw HelperError.tabNotFound(name)
     }
     return tab
+}
+
+func textElement(named name: String) throws -> AXElement {
+    let window = try shortcutCycleWindow()
+    let candidates = [window] + descendants(of: window)
+    let matches = candidates.filter {
+        elementRole($0) != kAXWindowRole as String && elementMatchesText($0, target: name)
+    }
+    guard let element = matches.min(by: { frameArea($0) < frameArea($1) }) else {
+        throw HelperError.frameUnavailable(name)
+    }
+    return element
+}
+
+func frameArea(_ element: AXElement) -> CGFloat {
+    var size = CGSize.zero
+    guard let rawSizeValue = axAttribute(element, kAXSizeAttribute) else {
+        return CGFloat.greatestFiniteMagnitude
+    }
+
+    let sizeValue = rawSizeValue as! AXValue
+    guard AXValueGetValue(sizeValue, .cgSize, &size) else {
+        return CGFloat.greatestFiniteMagnitude
+    }
+    return size.width * size.height
 }
 
 func framePayload(for element: AXElement, target: String) throws -> [String: Double] {
@@ -361,6 +388,9 @@ do {
     case "frame-tab":
         guard arguments.count >= 2 else { throw HelperError.unsupportedCommand(command) }
         try printFrame(try tab(named: arguments[1]), target: arguments[1])
+    case "frame-text":
+        guard arguments.count >= 2 else { throw HelperError.unsupportedCommand(command) }
+        try printFrame(try textElement(named: arguments[1]), target: arguments[1])
     case "scroll":
         guard arguments.count >= 2 else { throw HelperError.unsupportedCommand(command) }
         let count = arguments.count >= 3 ? Int(arguments[2]) ?? 1 : 1

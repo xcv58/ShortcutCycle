@@ -1160,7 +1160,7 @@ def compile_capture_backdrop_helper() -> Path:
 import Foundation
 
 let arguments = Array(CommandLine.arguments.dropFirst())
-let hex = arguments.first ?? "#F7F5EF"
+let background = arguments.first ?? "#F7F5EF"
 
 func color(from value: String) -> NSColor {
     let cleaned = value.trimmingCharacters(in: CharacterSet(charactersIn: "#"))
@@ -1171,6 +1171,52 @@ func color(from value: String) -> NSColor {
     let green = CGFloat((raw >> 8) & 0xff) / 255.0
     let blue = CGFloat(raw & 0xff) / 255.0
     return NSColor(calibratedRed: red, green: green, blue: blue, alpha: 1.0)
+}
+
+final class BackdropView: NSView {
+    let fallbackColor: NSColor
+    let image: NSImage?
+
+    init(frame: NSRect, background: String) {
+        if FileManager.default.fileExists(atPath: background) {
+            self.image = NSImage(contentsOfFile: background)
+            self.fallbackColor = NSColor(calibratedRed: 0.88, green: 0.94, blue: 0.94, alpha: 1.0)
+        } else {
+            self.image = nil
+            self.fallbackColor = color(from: background)
+        }
+        super.init(frame: frame)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        fallbackColor.setFill()
+        bounds.fill()
+
+        guard let image else { return }
+        let imageSize = image.size
+        guard imageSize.width > 0, imageSize.height > 0 else { return }
+
+        let scale = max(bounds.width / imageSize.width, bounds.height / imageSize.height)
+        let drawSize = NSSize(width: imageSize.width * scale, height: imageSize.height * scale)
+        let drawRect = NSRect(
+            x: bounds.midX - drawSize.width / 2,
+            y: bounds.midY - drawSize.height / 2,
+            width: drawSize.width,
+            height: drawSize.height
+        )
+        image.draw(
+            in: drawRect,
+            from: NSRect(origin: .zero, size: imageSize),
+            operation: .copy,
+            fraction: 1.0,
+            respectFlipped: true,
+            hints: [.interpolation: NSImageInterpolation.high]
+        )
+    }
 }
 
 let app = NSApplication.shared
@@ -1184,7 +1230,8 @@ let window = NSWindow(
     defer: false
 )
 window.title = "ShortcutCycle Capture Backdrop"
-window.backgroundColor = color(from: hex)
+window.backgroundColor = NSColor.clear
+window.contentView = BackdropView(frame: frame, background: background)
 window.isOpaque = true
 window.ignoresMouseEvents = true
 window.level = .normal
@@ -1427,14 +1474,37 @@ def publish_scene_source(scene: dict[str, Any], capture_path: Path) -> None:
 
 def click_highlight_asset() -> Path:
     ensure_directories()
-    output_path = BIN_DIR / "click-highlight-v2.png"
+    output_path = BIN_DIR / "click-highlight-v3.png"
     if output_path.exists():
         return output_path
 
-    size = 72
+    size = 118
     image = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(image)
-    draw.ellipse((10, 10, size - 10, size - 10), outline=(255, 214, 120, 152), width=4)
+    draw.ellipse((8, 8, size - 8, size - 8), outline=(255, 185, 72, 220), width=7)
+    draw.ellipse((27, 27, size - 27, size - 27), outline=(40, 171, 190, 135), width=4)
+    draw.ellipse((size // 2 - 7, size // 2 - 7, size // 2 + 7, size // 2 + 7), fill=(255, 185, 72, 240))
+    image.save(output_path)
+    return output_path
+
+
+def cursor_pointer_asset() -> Path:
+    ensure_directories()
+    output_path = BIN_DIR / "cursor-pointer-v1.png"
+    if output_path.exists():
+        return output_path
+
+    image = Image.new("RGBA", (64, 82), (0, 0, 0, 0))
+    shadow = Image.new("RGBA", image.size, (0, 0, 0, 0))
+    shadow_draw = ImageDraw.Draw(shadow)
+    points = [(8, 6), (8, 61), (23, 47), (34, 75), (45, 70), (34, 43), (55, 43)]
+    shadow_draw.polygon([(x + 4, y + 5) for x, y in points], fill=(0, 0, 0, 92))
+    shadow = shadow.filter(ImageFilter.GaussianBlur(2.5))
+    image.alpha_composite(shadow)
+
+    draw = ImageDraw.Draw(image)
+    draw.polygon(points, fill=(255, 255, 255, 255), outline=(12, 19, 31, 235))
+    draw.line(points + [points[0]], fill=(12, 19, 31, 235), width=3, joint="curve")
     image.save(output_path)
     return output_path
 
@@ -1502,6 +1572,7 @@ def apply_click_highlights(scene: dict[str, Any], capture_path: Path) -> None:
                     "x": float(action["x"]),
                     "y": float(action["y"]),
                     "duration": float(action.get("highlight_duration", 0.45)),
+                    "move_duration": float(action.get("move_duration", 0.35)),
                 }
             )
             continue
@@ -1515,7 +1586,8 @@ def apply_click_highlights(scene: dict[str, Any], capture_path: Path) -> None:
                     "y": float(rect["y"]) + float(rect["height"]) / 2,
                     "screen_width": float(rect.get("screenWidth", 0)),
                     "screen_height": float(rect.get("screenHeight", 0)),
-                    "duration": float(action.get("highlight_duration", 0.55)),
+                    "duration": float(action.get("highlight_duration", 0.95)),
+                    "move_duration": float(action.get("move_duration", 0.40)),
                 }
             )
 
@@ -1525,6 +1597,11 @@ def apply_click_highlights(scene: dict[str, Any], capture_path: Path) -> None:
     highlight_path = click_highlight_asset()
     highlight_image = Image.open(highlight_path)
     highlight_width, highlight_height = highlight_image.size
+    cursor_path = cursor_pointer_asset()
+    cursor_image = Image.open(cursor_path)
+    cursor_width, cursor_height = cursor_image.size
+    cursor_tip_x = 8
+    cursor_tip_y = 6
     payload = ffprobe_stream(capture_path)
     capture_duration = float(payload["format"]["duration"])
     video_stream = next((stream for stream in payload["streams"] if stream.get("codec_type") == "video"), None)
@@ -1534,18 +1611,62 @@ def apply_click_highlights(scene: dict[str, Any], capture_path: Path) -> None:
     command = ["ffmpeg", "-y", "-i", str(capture_path)]
     filter_parts: list[str] = []
     previous = "[0:v]"
+    input_index = 1
+    last_cursor_position: tuple[float, float] | None = None
+
+    def clamp(value: float, minimum: float, maximum: float) -> float:
+        if maximum < minimum:
+            return minimum
+        return max(minimum, min(maximum, value))
 
     for index, action in enumerate(highlight_actions, start=1):
         command.extend(["-loop", "1", "-i", str(highlight_path)])
+        ring_input = input_index
+        input_index += 1
+        command.extend(["-loop", "1", "-i", str(cursor_path)])
+        cursor_input = input_index
+        input_index += 1
+
         scale_x = capture_width / float(action["screen_width"]) if action.get("screen_width") and capture_width else 1.0
         scale_y = capture_height / float(action["screen_height"]) if action.get("screen_height") and capture_height else scale_x
-        x = int(float(action["x"]) * scale_x) - highlight_width // 2
-        y = int(float(action["y"]) * scale_y) - highlight_height // 2
+        target_x = clamp(float(action["x"]) * scale_x, 0, capture_width)
+        target_y = clamp(float(action["y"]) * scale_y, 0, capture_height)
+        ring_x = int(target_x) - highlight_width // 2
+        ring_y = int(target_y) - highlight_height // 2
         start = float(action["at"])
         duration = float(action["duration"])
-        output_label = f"[v{index}]"
+        ring_end = min(capture_duration, start + duration)
+        ring_label = f"[v{index}r]"
         filter_parts.append(
-            f"{previous}[{index}:v]overlay={x}:{y}:enable='between(t,{start:.3f},{start + duration:.3f})'{output_label}"
+            f"{previous}[{ring_input}:v]overlay={ring_x}:{ring_y}:enable='between(t,{start:.3f},{ring_end:.3f})'{ring_label}"
+        )
+
+        target_cursor_x = clamp(target_x - cursor_tip_x, 0, capture_width - cursor_width)
+        target_cursor_y = clamp(target_y - cursor_tip_y, 0, capture_height - cursor_height)
+        if last_cursor_position is None:
+            start_cursor_x = clamp(target_cursor_x - 240, 0, capture_width - cursor_width)
+            start_cursor_y = clamp(target_cursor_y - 130, 0, capture_height - cursor_height)
+        else:
+            start_cursor_x, start_cursor_y = last_cursor_position
+        last_cursor_position = (target_cursor_x, target_cursor_y)
+
+        move_duration = max(0.08, float(action.get("move_duration", 0.40)))
+        move_start = max(0.0, start - move_duration)
+        cursor_end = min(capture_duration, ring_end + 0.22)
+        move_denominator = max(start - move_start, 0.001)
+        x_expr = (
+            f"if(lte(t,{start:.3f}),"
+            f"{start_cursor_x:.1f}+({target_cursor_x:.1f}-{start_cursor_x:.1f})*(t-{move_start:.3f})/{move_denominator:.3f},"
+            f"{target_cursor_x:.1f})"
+        )
+        y_expr = (
+            f"if(lte(t,{start:.3f}),"
+            f"{start_cursor_y:.1f}+({target_cursor_y:.1f}-{start_cursor_y:.1f})*(t-{move_start:.3f})/{move_denominator:.3f},"
+            f"{target_cursor_y:.1f})"
+        )
+        output_label = f"[v{index}c]"
+        filter_parts.append(
+            f"{ring_label}[{cursor_input}:v]overlay=x='{x_expr}':y='{y_expr}':enable='between(t,{move_start:.3f},{cursor_end:.3f})'{output_label}"
         )
         previous = output_label
 
@@ -2434,6 +2555,8 @@ def execute_capture_action(profile: dict[str, Any], action: dict[str, Any]) -> N
             float(action.get("post_hold", 0.42)),
         )
     elif action_type == "open-url":
+        if action.get("highlight_text"):
+            attach_semantic_highlight(profile, action, "frame-text", str(action["highlight_text"]))
         open_url(profile, str(action["url"]))
     elif action_type == "launch-app":
         launch_app(str(action["bundle_id"]))
@@ -2540,7 +2663,10 @@ def capture_scene(scene_id: str, run_id: str) -> Path:
             if not target_bundle_ids:
                 target_bundle_ids.append(str(profile.get("bundle_id", "com.xcv58.ShortcutCycle")))
             hide_other_apps(target_bundle_ids)
-            backdrop = start_capture_backdrop(str(capture_settings.get("background_color", "#F7F5EF")))
+            background_value = str(capture_settings.get("background_color", "#F7F5EF"))
+            if capture_settings.get("background_image"):
+                background_value = str(require_file(expand_repo_path(str(capture_settings["background_image"])), "capture background image"))
+            backdrop = start_capture_backdrop(background_value)
 
         if scene.get("window_bounds") or scene.get("window_layouts"):
             stage_windows(scene)
@@ -2623,6 +2749,33 @@ def draw_centered_text(
     draw.multiline_text((x, y), text, font=font, fill=fill, align="center")
 
 
+def cover_image(path: Path, width: int, height: int) -> Image.Image:
+    image = Image.open(path).convert("RGB")
+    resample = getattr(getattr(Image, "Resampling", Image), "LANCZOS")
+    scale = max(width / image.width, height / image.height)
+    resized_width = int(math.ceil(image.width * scale))
+    resized_height = int(math.ceil(image.height * scale))
+    image = image.resize((resized_width, resized_height), resample)
+    left = max(0, (resized_width - width) // 2)
+    top = max(0, (resized_height - height) // 2)
+    return image.crop((left, top, left + width, top + height))
+
+
+def render_template_background(template: dict[str, Any], width: int, height: int) -> Image.Image:
+    background_image = template.get("background_image")
+    if background_image:
+        image = cover_image(require_file(expand_repo_path(str(background_image)), "template background image"), width, height).convert("RGBA")
+        blur = float(template.get("background_blur", 0))
+        if blur > 0:
+            image = image.filter(ImageFilter.GaussianBlur(blur))
+        overlay_alpha = int(template.get("background_overlay_alpha", 62))
+        if overlay_alpha > 0:
+            image.alpha_composite(Image.new("RGBA", (width, height), (3, 8, 13, overlay_alpha)))
+        return image.convert("RGB")
+
+    return Image.new("RGB", (width, height), ImageColor.getrgb(template.get("background_color", DEFAULT_TEMPLATE_BG)))
+
+
 def render_shortcut_intro_card(
     template: dict[str, Any],
     title: str,
@@ -2632,7 +2785,7 @@ def render_shortcut_intro_card(
     output_path: Path,
 ) -> None:
     width, height = template.get("size", [1920, 1080])
-    image = Image.new("RGB", (int(width), int(height)), ImageColor.getrgb(template.get("background_color", DEFAULT_TEMPLATE_BG)))
+    image = render_template_background(template, int(width), int(height))
     draw = ImageDraw.Draw(image)
 
     panel = template["panel"]

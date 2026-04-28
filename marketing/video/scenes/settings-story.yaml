@@ -4,9 +4,10 @@ profile: default
 fixture: marketing-default
 source_clip: marketing/video/sources/settings-story.mp4
 capture:
-  duration: 8.8
+  duration: 9.4
   clean_background: true
   background_color: "#F7F5EF"
+  background_image: marketing/video/assets/video-background.JPG
 prepare_urls:
   - open-settings?tab=groups
   - select-group?group=Writing
@@ -16,9 +17,9 @@ prepare_after_launch:
 window_stage_apps:
   - com.xcv58.ShortcutCycle
 window_layouts:
-  "com.xcv58.ShortcutCycle": [160, 58, 1600, 520]
+  "com.xcv58.ShortcutCycle": [192, 96, 1536, 864]
 initial_frontmost_app: com.xcv58.ShortcutCycle
 actions:
-  - { at: 1.35, type: select-group, group: Tools }
-  - { at: 3.10, type: select-group, group: Showcase }
-  - { at: 4.85, type: open-url, url: "shortcutcycle://open-settings?tab=general" }
+  - { at: 1.35, type: select-group, group: Tools, highlight_duration: 1.05 }
+  - { at: 3.15, type: select-group, group: Showcase, highlight_duration: 1.05 }
+  - { at: 5.05, type: open-url, url: "shortcutcycle://open-settings?tab=general", highlight_text: General, highlight_duration: 1.15 }

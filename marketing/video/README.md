@@ -45,7 +45,7 @@ The pipeline now supports the real-capture docs and launch flows.
 - `marketing-default` is the stable settings fixture used by `settings-story`.
 - `marketing-story` is the storytelling fixture used by `overview-main` and `hud-story`.
 - `overview-main` is prepared for repeated group switching across privacy-safe `Writing` and `Tools` groups with controlled TextEdit/Preview demo assets.
-- `hud-story` is prepared for alternating compact and grid HUD beats across `Writing` and `Showcase` with longer holds and subtle shortcut badges so the workflow reads clearly on video.
+- `hud-story` is prepared for alternating compact and grid HUD beats across `Writing` and `Showcase`, with Showcase ordered so the visible app switches stay distinct.
 - `reddit-overview`, `hud-preview`, and `settings-preview` are the canonical processed videos. They publish the same intro-card style to the website and App Store preview outputs by default.
 
 ## Semantic Settings Capture
@@ -58,4 +58,4 @@ The pipeline now supports the real-capture docs and launch flows.
 - `select-backup-row` with `index`
 - `scroll-area` with optional `direction`, `count`, and `target`
 
-Set `capture.clean_background: true` on real screen captures to launch a temporary neutral backdrop behind the app. This keeps full-screen AVFoundation captures clean even when unrelated windows are open on the desktop.
+Set `capture.clean_background: true` on real screen captures to launch a temporary backdrop behind the app. `capture.background_image` can point at a repo image, and semantic settings actions automatically get a post-production cursor plus click highlight so AX-driven captures still read like visible clicks.
