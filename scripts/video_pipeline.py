@@ -2665,6 +2665,12 @@ def execute_capture_action(profile: dict[str, Any], action: dict[str, Any]) -> N
             raise PipelineError("click-button action expects button or title")
         attach_semantic_highlight(profile, action, "frame-button", button_name)
         run_shortcutcycle_ax(profile, "click-button", button_name)
+    elif action_type == "click-control":
+        control_name = str(action.get("control", action.get("title", "")))
+        if not control_name:
+            raise PipelineError("click-control action expects control or title")
+        attach_semantic_highlight(profile, action, "frame-control", control_name)
+        run_shortcutcycle_ax(profile, "click-control", control_name)
     elif action_type == "select-backup-row":
         attach_semantic_highlight(profile, action, "frame-backup-row", int(action["index"]))
         run_shortcutcycle_ax(profile, "select-backup-row", int(action["index"]))
@@ -2721,6 +2727,11 @@ def capture_scene(scene_id: str, run_id: str) -> Path:
     recorder: subprocess.Popen[str] | None = None
     cursor_restore_position: tuple[float, float] | None = None
     try:
+        if hide_cursor:
+            cursor_restore_position = cursor_position()
+            stash_cursor()
+            time.sleep(0.25)
+
         quit_integration_app(profile)
         run_prepare_steps([step for step in scene.get("prepare_before_launch", []) if isinstance(step, dict)])
 
@@ -2760,11 +2771,6 @@ def capture_scene(scene_id: str, run_id: str) -> Path:
 
         if scene.get("window_bounds") or scene.get("window_layouts"):
             stage_windows(scene)
-
-        if hide_cursor:
-            cursor_restore_position = cursor_position()
-            stash_cursor()
-            time.sleep(0.12)
 
         duration = float(capture_settings["duration"])
         ffmpeg_command = [

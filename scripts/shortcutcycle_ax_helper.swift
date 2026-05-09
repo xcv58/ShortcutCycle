@@ -11,6 +11,7 @@ enum HelperError: Error, CustomStringConvertible {
     case rowNotFound(String)
     case backupRowOutOfRange(Int)
     case buttonNotFound(String)
+    case controlNotFound(String)
     case tabNotFound(String)
     case scrollAreaNotFound(String)
     case scrollFailed(String)
@@ -31,6 +32,8 @@ enum HelperError: Error, CustomStringConvertible {
             return "Backup row index \(index) is out of range"
         case .buttonNotFound(let title):
             return "Could not find button '\(title)'"
+        case .controlNotFound(let title):
+            return "Could not find control '\(title)'"
         case .tabNotFound(let title):
             return "Could not find tab '\(title)'"
         case .scrollAreaNotFound(let target):
@@ -189,6 +192,50 @@ func clickButton(named name: String) throws {
     }
 }
 
+func clickControl(named name: String) throws {
+    let result = press(try control(named: name))
+    guard result == .success else {
+        throw HelperError.controlNotFound(name)
+    }
+}
+
+func control(named name: String) throws -> AXElement {
+    let window = try shortcutCycleWindow()
+    let interactiveRoles = [
+        kAXButtonRole as String,
+        kAXCheckBoxRole as String,
+        kAXPopUpButtonRole as String,
+        kAXRadioButtonRole as String
+    ]
+    let candidates = [window] + descendants(of: window)
+    if let directMatch = candidates.first(where: {
+        interactiveRoles.contains(elementRole($0)) && elementMatchesText($0, target: name)
+    }) {
+        return directMatch
+    }
+
+    if let label = candidates.first(where: {
+        !interactiveRoles.contains(elementRole($0)) && elementMatchesText($0, target: name)
+    }), let labelFrame = elementFrame(label) {
+        let rowControls = candidates.compactMap { element -> (AXElement, CGRect)? in
+            guard interactiveRoles.contains(elementRole(element)),
+                  let frame = elementFrame(element),
+                  frame.midX >= labelFrame.midX,
+                  abs(frame.midY - labelFrame.midY) < 32 else {
+                return nil
+            }
+            return (element, frame)
+        }
+        if let control = rowControls.min(by: {
+            abs($0.1.midY - labelFrame.midY) < abs($1.1.midY - labelFrame.midY)
+        })?.0 {
+            return control
+        }
+    }
+
+    throw HelperError.controlNotFound(name)
+}
+
 func button(named name: String) throws -> AXElement {
     let window = try shortcutCycleWindow()
     let candidates = [window] + descendants(of: window)
@@ -238,16 +285,27 @@ func textElement(named name: String) throws -> AXElement {
 }
 
 func frameArea(_ element: AXElement) -> CGFloat {
-    var size = CGSize.zero
-    guard let rawSizeValue = axAttribute(element, kAXSizeAttribute) else {
+    guard let frame = elementFrame(element) else {
         return CGFloat.greatestFiniteMagnitude
+    }
+    return frame.width * frame.height
+}
+
+func elementFrame(_ element: AXElement) -> CGRect? {
+    var position = CGPoint.zero
+    var size = CGSize.zero
+    guard let rawPositionValue = axAttribute(element, kAXPositionAttribute),
+          let rawSizeValue = axAttribute(element, kAXSizeAttribute) else {
+        return nil
     }
 
+    let positionValue = rawPositionValue as! AXValue
     let sizeValue = rawSizeValue as! AXValue
-    guard AXValueGetValue(sizeValue, .cgSize, &size) else {
-        return CGFloat.greatestFiniteMagnitude
+    guard AXValueGetValue(positionValue, .cgPoint, &position),
+          AXValueGetValue(sizeValue, .cgSize, &size) else {
+        return nil
     }
-    return size.width * size.height
+    return CGRect(origin: position, size: size)
 }
 
 func framePayload(for element: AXElement, target: String) throws -> [String: Double] {
@@ -382,6 +440,12 @@ do {
     case "frame-button":
         guard arguments.count >= 2 else { throw HelperError.unsupportedCommand(command) }
         try printFrame(try button(named: arguments[1]), target: arguments[1])
+    case "click-control":
+        guard arguments.count >= 2 else { throw HelperError.unsupportedCommand(command) }
+        try clickControl(named: arguments[1])
+    case "frame-control":
+        guard arguments.count >= 2 else { throw HelperError.unsupportedCommand(command) }
+        try printFrame(try control(named: arguments[1]), target: arguments[1])
     case "set-tab":
         guard arguments.count >= 2 else { throw HelperError.unsupportedCommand(command) }
         try setTab(named: arguments[1])
