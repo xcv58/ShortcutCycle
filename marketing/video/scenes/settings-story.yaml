@@ -4,7 +4,7 @@ profile: default
 fixture: marketing-default
 source_clip: marketing/video/sources/settings-story.mp4
 capture:
-  duration: 13.8
+  duration: 15.8
   clean_background: true
   background_color: "#F7F5EF"
   background_image: marketing/video/assets/video-background.JPG
@@ -25,6 +25,6 @@ actions:
   - { at: 1.35, type: select-group, group: Tools, highlight_duration: 1.05 }
   - { at: 3.15, type: select-group, group: Showcase, highlight_duration: 1.05 }
   - { at: 5.05, type: open-url, url: "shortcutcycle://open-settings?tab=general", highlight_text: General, highlight_duration: 1.05 }
-  - { at: 6.70, type: click-control, control: Language, highlight_duration: 1.25 }
-  - { at: 8.65, type: key-code, key_code: 53, count: 1, interval: 0.10, highlight: false }
-  - { at: 9.55, type: click-button, button: Shortcuts, highlight_duration: 1.10 }
+  - { at: 6.65, type: open-url, url: "shortcutcycle://set-setting?key=appTheme&value=dark", highlight_text: Appearance, highlight_duration: 1.15 }
+  - { at: 8.65, type: open-url, url: "shortcutcycle://set-setting?key=selectedLanguage&value=ja", highlight_text: Language, highlight_duration: 1.15 }
+  - { at: 11.05, type: click-button, button: ショートカット, highlight_duration: 1.10 }
