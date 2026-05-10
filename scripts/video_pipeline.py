@@ -47,9 +47,11 @@ VIDEOS_DIR = VIDEO_ROOT / "videos"
 ARTIFACTS_ROOT = REPO_ROOT / ".artifacts" / "video"
 RAW_DIR = ARTIFACTS_ROOT / "raw"
 CARDS_DIR = ARTIFACTS_ROOT / "cards"
+PROCESSED_SCENES_DIR = ARTIFACTS_ROOT / "scenes"
 RENDERS_DIR = ARTIFACTS_ROOT / "renders"
 REPORTS_DIR = ARTIFACTS_ROOT / "reports"
 BIN_DIR = ARTIFACTS_ROOT / "bin"
+SETTINGS_BACKUPS_DIR = ARTIFACTS_ROOT / "settings-backups"
 DEFAULT_PROFILE_ID = "default"
 DEFAULT_TEMPLATE_BG = "#0A0E15"
 FIXED_LAST_MODIFIED = 796_953_600
@@ -225,7 +227,7 @@ def run(
 
 
 def ensure_directories() -> None:
-    for directory in (RAW_DIR, CARDS_DIR, RENDERS_DIR, REPORTS_DIR, BIN_DIR):
+    for directory in (RAW_DIR, CARDS_DIR, PROCESSED_SCENES_DIR, RENDERS_DIR, REPORTS_DIR, BIN_DIR, SETTINGS_BACKUPS_DIR):
         directory.mkdir(parents=True, exist_ok=True)
 
 
@@ -312,6 +314,64 @@ def preferences_path(profile: dict[str, Any]) -> Path:
     return integration_container_root(profile) / "Data" / "Library" / "Preferences" / f"{bundle_id(profile)}.plist"
 
 
+def settings_backup_manifest_path(run_id: str, scene_id: str) -> Path:
+    return SETTINGS_BACKUPS_DIR / run_id / scene_id / "manifest.json"
+
+
+def flush_preferences_cache() -> None:
+    run(["killall", "cfprefsd"], capture_output=True, check=False)
+    time.sleep(0.2)
+
+
+def backup_integration_settings(profile: dict[str, Any], scene_id: str, run_id: str, *, was_running: bool) -> dict[str, Any]:
+    preferences = preferences_path(profile)
+    backup_dir = settings_backup_manifest_path(run_id, scene_id).parent
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    backup_file = backup_dir / preferences.name
+    flush_preferences_cache()
+    existed = preferences.exists()
+
+    if existed:
+        shutil.copy2(preferences, backup_file)
+    else:
+        backup_file.unlink(missing_ok=True)
+
+    manifest: dict[str, Any] = {
+        "scene_id": scene_id,
+        "run_id": run_id,
+        "bundle_id": bundle_id(profile),
+        "preferences_path": str(preferences),
+        "backup_file": str(backup_file),
+        "existed": existed,
+        "was_running": was_running,
+    }
+    settings_backup_manifest_path(run_id, scene_id).write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    return manifest
+
+
+def restore_integration_settings(profile: dict[str, Any], backup: dict[str, Any]) -> None:
+    quit_integration_app(profile)
+    flush_preferences_cache()
+
+    preferences = Path(str(backup["preferences_path"]))
+    if bool(backup.get("existed", False)):
+        backup_file = require_file(Path(str(backup["backup_file"])), "ShortcutCycle settings backup")
+        preferences.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(backup_file, preferences)
+    else:
+        preferences.unlink(missing_ok=True)
+
+    flush_preferences_cache()
+    if bool(backup.get("existed", False)):
+        if not preferences.exists() or preferences.read_bytes() != Path(str(backup["backup_file"])).read_bytes():
+            raise PipelineError(f"Failed to restore ShortcutCycle preferences from {backup['backup_file']}")
+    elif preferences.exists():
+        raise PipelineError(f"Failed to remove ShortcutCycle preferences at {preferences}")
+
+    if bool(backup.get("was_running", False)):
+        launch_integration_app(profile)
+
+
 def list_avfoundation_video_devices() -> list[tuple[str, str]]:
     result = run(
         ["ffmpeg", "-f", "avfoundation", "-list_devices", "true", "-i", ""],
@@ -376,11 +436,22 @@ def raw_scene_path(scene_id: str, run_id: str) -> Path:
     return RAW_DIR / run_id / f"{scene_id}.mp4"
 
 
+def processed_scene_path(scene_id: str, run_id: str) -> Path:
+    return PROCESSED_SCENES_DIR / run_id / f"{scene_id}.mp4"
+
+
 def scene_source_path(scene: dict[str, Any]) -> Path | None:
     source_clip = scene.get("source_clip")
     if not source_clip:
         return None
     return REPO_ROOT / str(source_clip)
+
+
+def scene_metadata_path(scene: dict[str, Any]) -> Path | None:
+    source_path = scene_source_path(scene)
+    if source_path is None:
+        return None
+    return source_path.with_suffix(".metadata.json")
 
 
 def cards_video_dir(video_id: str, run_id: str) -> Path:
@@ -1559,6 +1630,73 @@ def publish_scene_source(scene: dict[str, Any], capture_path: Path) -> None:
     shutil.copy2(capture_path, source_path)
 
 
+def write_scene_metadata(scene: dict[str, Any]) -> None:
+    metadata_path = scene_metadata_path(scene)
+    if metadata_path is None:
+        return
+
+    actions: list[dict[str, Any]] = []
+    for index, action in enumerate(scene.get("actions", [])):
+        entry: dict[str, Any] = {
+            "index": index,
+            "type": str(action.get("type", "")),
+            "at": float(action.get("at", 0.0)),
+        }
+        highlight_rect = action.get("_highlight_rect")
+        if isinstance(highlight_rect, dict):
+            entry["highlight_rect"] = {
+                str(key): float(value)
+                for key, value in highlight_rect.items()
+                if isinstance(value, int | float)
+            }
+        actions.append(entry)
+
+    metadata_path.parent.mkdir(parents=True, exist_ok=True)
+    metadata_path.write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "scene_id": str(scene["id"]),
+                "actions": actions,
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+
+def apply_scene_metadata(scene: dict[str, Any]) -> None:
+    metadata_path = scene_metadata_path(scene)
+    if metadata_path is None or not metadata_path.exists():
+        return
+
+    payload = json.loads(metadata_path.read_text(encoding="utf-8"))
+    action_metadata = payload.get("actions", [])
+    if not isinstance(action_metadata, list):
+        raise PipelineError(f"Unexpected scene metadata actions in {metadata_path}")
+
+    actions = scene.get("actions", [])
+    for entry in action_metadata:
+        if not isinstance(entry, dict) or "highlight_rect" not in entry:
+            continue
+        index = int(entry.get("index", -1))
+        if index < 0 or index >= len(actions):
+            continue
+        if str(actions[index].get("type", "")) != str(entry.get("type", "")):
+            continue
+        highlight_rect = entry["highlight_rect"]
+        if isinstance(highlight_rect, dict):
+            actions[index]["_highlight_rect"] = dict(highlight_rect)
+
+
+def load_scene_for_postprocess(scene_id: str) -> dict[str, Any]:
+    scene = load_scene(scene_id)
+    apply_scene_metadata(scene)
+    return scene
+
+
 def click_highlight_asset() -> Path:
     ensure_directories()
     output_path = BIN_DIR / "click-highlight-v3.png"
@@ -1640,25 +1778,17 @@ def shortcut_badge_asset(shortcut: str, group_name: str, *, render_scale: float 
     outer_pad = scaled(24)
     width = pill_width + outer_pad * 2
     height = pill_height + outer_pad * 2
-    cache_key = f"v6-{int(round(render_scale * 100))}-{slugify(shortcut_label)}-{slugify(group_name)}-{pill_width}"
+    cache_key = f"v7-{int(round(render_scale * 100))}-{slugify(shortcut_label)}-{slugify(group_name)}-{pill_width}"
     output_path = BIN_DIR / f"shortcut-badge-{cache_key}.png"
     if output_path.exists():
         return output_path
 
     image = Image.new("RGBA", (width, height), (0, 0, 0, 0))
     pill_box = (outer_pad, outer_pad, outer_pad + pill_width, outer_pad + pill_height)
-    draw_shadow(
-        image,
-        pill_box,
-        radius=scaled(30),
-        blur=scaled(16),
-        fill=(4, 9, 18, 108),
-    )
-
     badge = Image.new("RGBA", (width, height), (0, 0, 0, 0))
     draw = ImageDraw.Draw(badge)
     badge_box = pill_box
-    draw.rounded_rectangle(badge_box, radius=scaled(30), fill=(7, 12, 22, 250))
+    draw.rounded_rectangle(badge_box, radius=scaled(30), fill=(7, 12, 22, 255))
     draw.rounded_rectangle(
         badge_box,
         radius=scaled(30),
@@ -1676,7 +1806,7 @@ def shortcut_badge_asset(shortcut: str, group_name: str, *, render_scale: float 
     draw.rounded_rectangle(
         key_box,
         radius=scaled(14),
-        fill=(241, 247, 255, 250),
+        fill=(241, 247, 255, 255),
         outline=(255, 255, 255, 150),
         width=scaled(1),
     )
@@ -2805,13 +2935,17 @@ def capture_scene(scene_id: str, run_id: str) -> Path:
     backdrop: subprocess.Popen[str] | None = None
     recorder: subprocess.Popen[str] | None = None
     cursor_restore_position: tuple[float, float] | None = None
+    settings_backup: dict[str, Any] | None = None
     try:
         if hide_cursor:
             cursor_restore_position = cursor_position()
             stash_cursor()
             time.sleep(0.25)
 
+        was_running = shortcutcycle_process_count() > 0
         quit_integration_app(profile)
+        settings_backup = backup_integration_settings(profile, scene_id, run_id, was_running=was_running)
+
         run_prepare_steps([step for step in scene.get("prepare_before_launch", []) if isinstance(step, dict)])
 
         did_seed_fixture = not bool(scene.get("skip_seed", False))
@@ -2900,12 +3034,13 @@ def capture_scene(scene_id: str, run_id: str) -> Path:
         if cursor_restore_position is not None:
             move_cursor(*cursor_restore_position)
         stop_process(backdrop)
+        if settings_backup is not None:
+            restore_integration_settings(profile, settings_backup)
 
     require_file(output_path, "captured scene output")
-    apply_click_highlights(scene, output_path)
-    apply_shortcut_overlays(scene, output_path)
+    write_scene_metadata(scene)
     publish_scene_source(scene, output_path)
-    publish_scene_capture(scene, output_path)
+    publish_scene_capture(scene, prepare_processed_scene(scene_id, run_id))
     return output_path
 
 
@@ -3118,6 +3253,17 @@ def resolve_scene_source(scene_id: str, run_id: str) -> Path:
     return require_file(REPO_ROOT / fallback_source, f"fallback source clip for {scene_id}")
 
 
+def prepare_processed_scene(scene_id: str, run_id: str) -> Path:
+    scene = load_scene_for_postprocess(scene_id)
+    source_path = resolve_scene_source(scene_id, run_id)
+    output_path = processed_scene_path(scene_id, run_id)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source_path, output_path)
+    apply_click_highlights(scene, output_path)
+    apply_shortcut_overlays(scene, output_path)
+    return output_path
+
+
 def render_scene_segment(
     scene_id: str,
     run_id: str,
@@ -3128,7 +3274,7 @@ def render_scene_segment(
     width: int,
     height: int,
 ) -> Path:
-    source_path = resolve_scene_source(scene_id, run_id)
+    source_path = prepare_processed_scene(scene_id, run_id)
     run(
         [
             "ffmpeg",
@@ -3408,11 +3554,21 @@ def parse_args() -> argparse.Namespace:
     build_parser.add_argument("--video", required=True)
     build_parser.add_argument("--run-id")
     build_parser.add_argument("--recapture", action="store_true")
+    build_parser.add_argument(
+        "--rerender-only",
+        action="store_true",
+        help="Explicitly reuse clean scene sources and rerun post-processing without recording the desktop.",
+    )
 
     build_set_parser = subparsers.add_parser("build-set")
     build_set_parser.add_argument("--set", required=True)
     build_set_parser.add_argument("--run-id")
     build_set_parser.add_argument("--recapture", action="store_true")
+    build_set_parser.add_argument(
+        "--rerender-only",
+        action="store_true",
+        help="Explicitly reuse clean scene sources and rerun post-processing without recording the desktop.",
+    )
 
     return parser.parse_args()
 
@@ -3449,6 +3605,8 @@ def main() -> int:
         return 0
 
     if args.command == "build":
+        if bool(args.recapture) and bool(args.rerender_only):
+            raise PipelineError("--recapture and --rerender-only cannot be used together")
         result = build_video(args.video, run_id, recapture=bool(args.recapture))
         print(result["render"])
         for path in result["published"]:
@@ -3456,6 +3614,8 @@ def main() -> int:
         return 0
 
     if args.command == "build-set":
+        if bool(args.recapture) and bool(args.rerender_only):
+            raise PipelineError("--recapture and --rerender-only cannot be used together")
         results = build_set(args.set, run_id, recapture=bool(args.recapture))
         for result in results:
             print(result["render"])

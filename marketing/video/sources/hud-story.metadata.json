@@ -1,0 +1,26 @@
+{
+  "actions": [
+    {
+      "at": 0.95,
+      "index": 0,
+      "type": "shortcut-sequence"
+    },
+    {
+      "at": 3.45,
+      "index": 1,
+      "type": "shortcut-sequence"
+    },
+    {
+      "at": 6.35,
+      "index": 2,
+      "type": "shortcut-sequence"
+    },
+    {
+      "at": 8.95,
+      "index": 3,
+      "type": "shortcut-sequence"
+    }
+  ],
+  "scene_id": "hud-story",
+  "version": 1
+}
