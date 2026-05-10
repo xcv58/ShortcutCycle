@@ -56,6 +56,7 @@ The pipeline now supports the real-capture docs and launch flows.
 - `set-tab` with `tab`
 - `click-button` with `button`
 - `click-control` with `control`
+- `click-radio` with `group` and `index`
 - `select-backup-row` with `index`
 - `scroll-area` with optional `direction`, `count`, and `target`
 

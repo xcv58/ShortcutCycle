@@ -12,6 +12,7 @@ enum HelperError: Error, CustomStringConvertible {
     case backupRowOutOfRange(Int)
     case buttonNotFound(String)
     case controlNotFound(String)
+    case radioButtonNotFound(String, Int)
     case tabNotFound(String)
     case scrollAreaNotFound(String)
     case scrollFailed(String)
@@ -34,6 +35,8 @@ enum HelperError: Error, CustomStringConvertible {
             return "Could not find button '\(title)'"
         case .controlNotFound(let title):
             return "Could not find control '\(title)'"
+        case .radioButtonNotFound(let group, let index):
+            return "Could not find radio button \(index) in group '\(group)'"
         case .tabNotFound(let title):
             return "Could not find tab '\(title)'"
         case .scrollAreaNotFound(let target):
@@ -234,6 +237,42 @@ func control(named name: String) throws -> AXElement {
     }
 
     throw HelperError.controlNotFound(name)
+}
+
+func clickRadioButton(groupName: String, index: Int) throws {
+    let result = press(try radioButton(groupName: groupName, index: index))
+    guard result == .success else {
+        throw HelperError.radioButtonNotFound(groupName, index)
+    }
+}
+
+func radioButton(groupName: String, index: Int) throws -> AXElement {
+    let window = try shortcutCycleWindow()
+    let candidates = [window] + descendants(of: window)
+    let groups = candidates.filter { elementRole($0) == kAXRadioGroupRole as String }
+
+    let matchedGroup = groups.first { elementMatchesText($0, target: groupName) } ?? groups.first { group in
+        guard let groupFrame = elementFrame(group),
+              let label = candidates.first(where: {
+                  elementRole($0) != kAXRadioGroupRole as String && elementMatchesText($0, target: groupName)
+              }),
+              let labelFrame = elementFrame(label) else {
+            return false
+        }
+        return groupFrame.midX >= labelFrame.midX && abs(groupFrame.midY - labelFrame.midY) < 32
+    }
+
+    guard let matchedGroup,
+          let buttons = axAttribute(matchedGroup, kAXChildrenAttribute) as? [AXElement] else {
+        throw HelperError.radioButtonNotFound(groupName, index)
+    }
+
+    let radioButtons = buttons.filter { elementRole($0) == kAXRadioButtonRole as String }
+    let resolvedIndex = index - 1
+    guard radioButtons.indices.contains(resolvedIndex) else {
+        throw HelperError.radioButtonNotFound(groupName, index)
+    }
+    return radioButtons[resolvedIndex]
 }
 
 func button(named name: String) throws -> AXElement {
@@ -446,6 +485,16 @@ do {
     case "frame-control":
         guard arguments.count >= 2 else { throw HelperError.unsupportedCommand(command) }
         try printFrame(try control(named: arguments[1]), target: arguments[1])
+    case "click-radio":
+        guard arguments.count >= 3, let index = Int(arguments[2]) else {
+            throw HelperError.unsupportedCommand(command)
+        }
+        try clickRadioButton(groupName: arguments[1], index: index)
+    case "frame-radio":
+        guard arguments.count >= 3, let index = Int(arguments[2]) else {
+            throw HelperError.unsupportedCommand(command)
+        }
+        try printFrame(try radioButton(groupName: arguments[1], index: index), target: "\(arguments[1]) \(index)")
     case "set-tab":
         guard arguments.count >= 2 else { throw HelperError.unsupportedCommand(command) }
         try setTab(named: arguments[1])
