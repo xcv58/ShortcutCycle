@@ -1635,45 +1635,54 @@ def shortcut_badge_asset(shortcut: str, group_name: str, *, render_scale: float 
     group_bounds = helper_draw.textbbox((0, 0), group_name, font=group_font)
     key_width = max(scaled(82), shortcut_bounds[2] - shortcut_bounds[0] + scaled(34))
     content_width = key_width + scaled(22) + (group_bounds[2] - group_bounds[0])
-    width = max(scaled(390), content_width + scaled(56))
-    height = scaled(96)
-    cache_key = f"v5-{int(round(render_scale * 100))}-{slugify(shortcut_label)}-{slugify(group_name)}-{width}"
+    pill_width = max(scaled(390), content_width + scaled(56))
+    pill_height = scaled(96)
+    outer_pad = scaled(24)
+    width = pill_width + outer_pad * 2
+    height = pill_height + outer_pad * 2
+    cache_key = f"v6-{int(round(render_scale * 100))}-{slugify(shortcut_label)}-{slugify(group_name)}-{pill_width}"
     output_path = BIN_DIR / f"shortcut-badge-{cache_key}.png"
     if output_path.exists():
         return output_path
 
     image = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    pill_box = (outer_pad, outer_pad, outer_pad + pill_width, outer_pad + pill_height)
     draw_shadow(
         image,
-        (scaled(8), scaled(6), width - scaled(8), height - scaled(6)),
+        pill_box,
         radius=scaled(30),
-        blur=scaled(18),
-        fill=(4, 9, 18, 122),
+        blur=scaled(16),
+        fill=(4, 9, 18, 108),
     )
 
     badge = Image.new("RGBA", (width, height), (0, 0, 0, 0))
     draw = ImageDraw.Draw(badge)
-    badge_box = (scaled(8), scaled(6), width - scaled(8), height - scaled(6))
-    draw.rounded_rectangle(badge_box, radius=scaled(30), fill=(8, 13, 23, 224))
+    badge_box = pill_box
+    draw.rounded_rectangle(badge_box, radius=scaled(30), fill=(7, 12, 22, 250))
     draw.rounded_rectangle(
         badge_box,
         radius=scaled(30),
-        outline=(255, 255, 255, 54),
+        outline=(45, 61, 82, 120),
         width=scaled(1),
     )
-    draw.text((scaled(30), scaled(18)), "SHORTCUT PRESSED", font=label_font, fill="#8FB4CE")
+    draw.text((outer_pad + scaled(30), outer_pad + scaled(18)), "SHORTCUT PRESSED", font=label_font, fill="#9EC4DF")
 
-    key_box = (scaled(28), scaled(42), scaled(28) + key_width, scaled(78))
+    key_box = (
+        outer_pad + scaled(28),
+        outer_pad + scaled(42),
+        outer_pad + scaled(28) + key_width,
+        outer_pad + scaled(78),
+    )
     draw.rounded_rectangle(
         key_box,
         radius=scaled(14),
-        fill=(238, 246, 255, 238),
-        outline=(255, 255, 255, 110),
+        fill=(241, 247, 255, 250),
+        outline=(255, 255, 255, 150),
         width=scaled(1),
     )
     key_x = key_box[0] + (key_width - (shortcut_bounds[2] - shortcut_bounds[0])) / 2
-    draw.text((key_x, scaled(43)), shortcut_label, font=key_font, fill="#111827")
-    draw.text((key_box[2] + scaled(22), scaled(45)), group_name, font=group_font, fill="#F7FBFF")
+    draw.text((key_x, outer_pad + scaled(43)), shortcut_label, font=key_font, fill="#111827")
+    draw.text((key_box[2] + scaled(22), outer_pad + scaled(45)), group_name, font=group_font, fill="#F7FBFF")
     image.alpha_composite(badge)
     image.save(output_path)
     return output_path
