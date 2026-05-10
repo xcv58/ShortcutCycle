@@ -1619,29 +1619,61 @@ def display_shortcut(shortcut: str) -> str:
     return " + ".join(part.title() for part in modifiers + [key])
 
 
-def shortcut_badge_asset(shortcut: str, group_name: str) -> Path:
+def shortcut_badge_asset(shortcut: str, group_name: str, *, render_scale: float = 1.0) -> Path:
     ensure_directories()
-    output_path = BIN_DIR / f"shortcut-badge-{slugify(shortcut)}-{slugify(group_name)}.png"
     shortcut_label = display_shortcut(shortcut)
-    font = font_for_ui(24, bold=True)
-    shortcut_bounds = ImageDraw.Draw(Image.new("RGBA", (1, 1))).textbbox((0, 0), shortcut_label, font=font)
-    group_bounds = ImageDraw.Draw(Image.new("RGBA", (1, 1))).textbbox((0, 0), group_name, font=font)
-    content_width = (shortcut_bounds[2] - shortcut_bounds[0]) + 22 + (group_bounds[2] - group_bounds[0])
-    width = max(228, content_width + 48)
-    height = 58
-    cache_key = f"{slugify(shortcut_label)}-{slugify(group_name)}-{width}"
+    render_scale = max(1.0, float(render_scale))
+
+    def scaled(value: int | float) -> int:
+        return max(1, int(round(float(value) * render_scale)))
+
+    label_font = font_for_ui(scaled(17), bold=True)
+    key_font = font_for_ui(scaled(30), bold=True)
+    group_font = font_for_ui(scaled(28), bold=True)
+    helper_draw = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
+    shortcut_bounds = helper_draw.textbbox((0, 0), shortcut_label, font=key_font)
+    group_bounds = helper_draw.textbbox((0, 0), group_name, font=group_font)
+    key_width = max(scaled(82), shortcut_bounds[2] - shortcut_bounds[0] + scaled(34))
+    content_width = key_width + scaled(22) + (group_bounds[2] - group_bounds[0])
+    width = max(scaled(390), content_width + scaled(56))
+    height = scaled(96)
+    cache_key = f"v5-{int(round(render_scale * 100))}-{slugify(shortcut_label)}-{slugify(group_name)}-{width}"
     output_path = BIN_DIR / f"shortcut-badge-{cache_key}.png"
     if output_path.exists():
         return output_path
 
     image = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-    draw_shadow(image, (0, 0, width, height), radius=22, blur=14, fill=(8, 14, 24, 62))
+    draw_shadow(
+        image,
+        (scaled(8), scaled(6), width - scaled(8), height - scaled(6)),
+        radius=scaled(30),
+        blur=scaled(18),
+        fill=(4, 9, 18, 122),
+    )
 
     badge = Image.new("RGBA", (width, height), (0, 0, 0, 0))
     draw = ImageDraw.Draw(badge)
-    draw.rounded_rectangle((0, 0, width, height), radius=22, fill=(10, 16, 26, 154))
-    draw.text((20, 16), shortcut_label, font=font, fill="#FFFFFF")
-    draw.text((20 + (shortcut_bounds[2] - shortcut_bounds[0]) + 22, 16), group_name, font=font, fill="#D4DEE9")
+    badge_box = (scaled(8), scaled(6), width - scaled(8), height - scaled(6))
+    draw.rounded_rectangle(badge_box, radius=scaled(30), fill=(8, 13, 23, 224))
+    draw.rounded_rectangle(
+        badge_box,
+        radius=scaled(30),
+        outline=(255, 255, 255, 54),
+        width=scaled(1),
+    )
+    draw.text((scaled(30), scaled(18)), "SHORTCUT PRESSED", font=label_font, fill="#8FB4CE")
+
+    key_box = (scaled(28), scaled(42), scaled(28) + key_width, scaled(78))
+    draw.rounded_rectangle(
+        key_box,
+        radius=scaled(14),
+        fill=(238, 246, 255, 238),
+        outline=(255, 255, 255, 110),
+        width=scaled(1),
+    )
+    key_x = key_box[0] + (key_width - (shortcut_bounds[2] - shortcut_bounds[0])) / 2
+    draw.text((key_x, scaled(43)), shortcut_label, font=key_font, fill="#111827")
+    draw.text((key_box[2] + scaled(22), scaled(45)), group_name, font=group_font, fill="#F7FBFF")
     image.alpha_composite(badge)
     image.save(output_path)
     return output_path
@@ -1795,7 +1827,24 @@ def apply_shortcut_overlays(scene: dict[str, Any], capture_path: Path) -> None:
         return
 
     group_names = shortcut_group_names(scene)
-    capture_duration = float(ffprobe_stream(capture_path)["format"]["duration"])
+    payload = ffprobe_stream(capture_path)
+    capture_duration = float(payload["format"]["duration"])
+    video_stream = next((stream for stream in payload["streams"] if stream.get("codec_type") == "video"), None)
+    if video_stream is None:
+        raise PipelineError(f"No video stream found in {capture_path}")
+    capture_width = float(video_stream["width"])
+    capture_height = float(video_stream["height"])
+    profile = load_profile(str(scene["profile"]))
+    output_width, output_height = output_size(profile)
+    render_scale = max(output_width / capture_width, output_height / capture_height)
+    scaled_width = capture_width * render_scale
+    scaled_height = capture_height * render_scale
+    crop_x = max((scaled_width - output_width) / 2, 0)
+    crop_y = max((scaled_height - output_height) / 2 - VERTICAL_CROP_BIAS, 0)
+    source_pixels_per_output_pixel = 1 / render_scale
+    desired_right = 96
+    desired_top = 96
+
     temp_output = capture_path.with_name(f"{capture_path.stem}-shortcuts{capture_path.suffix}")
     command = ["ffmpeg", "-y", "-i", str(capture_path)]
     filter_parts: list[str] = []
@@ -1804,13 +1853,21 @@ def apply_shortcut_overlays(scene: dict[str, Any], capture_path: Path) -> None:
     for index, action in enumerate(shortcut_actions, start=1):
         shortcut = str(action["shortcut"])
         group_name = group_names.get(shortcut, str(action.get("overlay_group_name", "ShortcutCycle")))
-        badge_path = shortcut_badge_asset(shortcut, group_name)
+        badge_path = shortcut_badge_asset(
+            shortcut,
+            group_name,
+            render_scale=source_pixels_per_output_pixel,
+        )
+        with Image.open(badge_path) as badge_image:
+            badge_width, _ = badge_image.size
+        overlay_x = int(round((output_width - desired_right + crop_x) / render_scale - badge_width))
+        overlay_y = int(round((desired_top + crop_y) / render_scale))
         command.extend(["-loop", "1", "-i", str(badge_path)])
         start = max(0.0, float(action["at"]) - 0.08)
         duration = float(action.get("overlay_duration", 0.90))
         output_label = f"[v{index}]"
         filter_parts.append(
-            f"{previous}[{index}:v]overlay=main_w-overlay_w-84:76:enable='between(t,{start:.3f},{start + duration:.3f})'{output_label}"
+            f"{previous}[{index}:v]overlay={overlay_x}:{overlay_y}:enable='between(t,{start:.3f},{start + duration:.3f})'{output_label}"
         )
         previous = output_label
 
