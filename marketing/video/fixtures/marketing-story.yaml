@@ -33,7 +33,6 @@ groups:
       - { id: 20000000-0000-4000-8000-000000000031, name: Font Book, bundle_id: com.apple.FontBook }
       - { id: 20000000-0000-4000-8000-000000000032, name: Chess, bundle_id: com.apple.Chess }
       - { id: 20000000-0000-4000-8000-000000000033, name: Image Capture, bundle_id: com.apple.Image_Capture }
-      - { id: 20000000-0000-4000-8000-000000000034, name: Script Editor, bundle_id: com.apple.ScriptEditor2 }
       - { id: 20000000-0000-4000-8000-000000000035, name: ColorSync Utility, bundle_id: com.apple.ColorSyncUtility }
       - { id: 20000000-0000-4000-8000-000000000036, name: Calculator, bundle_id: com.apple.calculator }
       - { id: 20000000-0000-4000-8000-000000000037, name: Tips, bundle_id: com.apple.helpviewer }

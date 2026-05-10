@@ -78,7 +78,7 @@ func stringValue(_ element: AXElement) -> String? {
 
 func descendants(of element: AXElement) -> [AXElement] {
     var result: [AXElement] = []
-    for key in [kAXChildrenAttribute, kAXRowsAttribute] {
+    for key in [kAXChildrenAttribute, kAXVisibleChildrenAttribute, kAXRowsAttribute] {
         if let children = axAttribute(element, key) as? [AXElement] {
             for child in children {
                 result.append(child)
@@ -87,6 +87,11 @@ func descendants(of element: AXElement) -> [AXElement] {
         }
     }
     return result
+}
+
+func shortcutCycleAppElement() throws -> AXElement {
+    let app = try preferredShortcutCycleApp()
+    return AXUIElementCreateApplication(app.processIdentifier)
 }
 
 func preferredShortcutCycleApp() throws -> NSRunningApplication {
@@ -244,6 +249,31 @@ func clickRadioButton(groupName: String, index: Int) throws {
     guard result == .success else {
         throw HelperError.radioButtonNotFound(groupName, index)
     }
+}
+
+func clickMenuItem(named name: String) throws {
+    let result = press(try menuItem(named: name))
+    guard result == .success else {
+        throw HelperError.controlNotFound(name)
+    }
+}
+
+func menuItem(named name: String) throws -> AXElement {
+    let app = try shortcutCycleAppElement()
+    let candidates = [app] + descendants(of: app)
+    guard let item = candidates.first(where: {
+        elementRole($0) == kAXMenuItemRole as String && elementMatchesText($0, target: name)
+    }) ?? candidates.first(where: {
+        elementRole($0) == kAXMenuItemRole as String &&
+            (
+                elementTitle($0).contains(name) ||
+                elementDescription($0).contains(name) ||
+                (stringValue($0)?.contains(name) ?? false)
+            )
+    }) else {
+        throw HelperError.controlNotFound(name)
+    }
+    return item
 }
 
 func radioButton(groupName: String, index: Int) throws -> AXElement {
@@ -485,6 +515,12 @@ do {
     case "frame-control":
         guard arguments.count >= 2 else { throw HelperError.unsupportedCommand(command) }
         try printFrame(try control(named: arguments[1]), target: arguments[1])
+    case "click-menu-item":
+        guard arguments.count >= 2 else { throw HelperError.unsupportedCommand(command) }
+        try clickMenuItem(named: arguments[1])
+    case "frame-menu-item":
+        guard arguments.count >= 2 else { throw HelperError.unsupportedCommand(command) }
+        try printFrame(try menuItem(named: arguments[1]), target: arguments[1])
     case "click-radio":
         guard arguments.count >= 3, let index = Int(arguments[2]) else {
             throw HelperError.unsupportedCommand(command)

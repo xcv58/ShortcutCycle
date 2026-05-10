@@ -27,6 +27,5 @@ actions:
   - { at: 5.05, type: open-url, url: "shortcutcycle://open-settings?tab=general", highlight_text: General, highlight_duration: 1.05 }
   - { at: 6.65, type: click-radio, group: Appearance, index: 3, highlight_duration: 1.15 }
   - { at: 8.65, type: click-control, control: Language, highlight_duration: 1.05 }
-  - { at: 9.60, type: key-code, key_code: 125, count: 4, interval: 0.08, highlight: false }
-  - { at: 10.05, type: key-code, key_code: 36, count: 1, interval: 0.08, highlight: false }
+  - { at: 9.60, type: click-menu-item, title: "Japanese / 日本語", highlight_duration: 0.90, move_duration: 0.28 }
   - { at: 12.00, type: click-button, button: ショートカット, highlight_duration: 1.10 }

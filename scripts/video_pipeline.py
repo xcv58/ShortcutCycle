@@ -2671,6 +2671,12 @@ def execute_capture_action(profile: dict[str, Any], action: dict[str, Any]) -> N
             raise PipelineError("click-control action expects control or title")
         attach_semantic_highlight(profile, action, "frame-control", control_name)
         run_shortcutcycle_ax(profile, "click-control", control_name)
+    elif action_type == "click-menu-item":
+        item_title = str(action.get("title", action.get("item", "")))
+        if not item_title:
+            raise PipelineError("click-menu-item action expects title or item")
+        attach_semantic_highlight(profile, action, "frame-menu-item", item_title)
+        run_shortcutcycle_ax(profile, "click-menu-item", item_title)
     elif action_type == "click-radio":
         group_name = str(action.get("group", action.get("control", "")))
         if not group_name:
