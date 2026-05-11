@@ -3,6 +3,7 @@ import AppKit
 import CoreGraphics
 import Foundation
 import KeyboardShortcuts
+import SwiftUI
 #if canImport(ScreenCaptureKit)
 import ScreenCaptureKit
 #endif

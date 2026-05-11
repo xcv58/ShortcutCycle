@@ -1,6 +1,7 @@
 #if DEBUG
 import AppKit
 import Foundation
+import UniformTypeIdentifiers
 #if canImport(ShortcutCycleCore)
 import ShortcutCycleCore
 #endif

@@ -7,7 +7,9 @@ enum SettingsWindowLifecycleCoordinator {
     }
 
     static func isActiveSettingsWindow(_ window: NSWindow) -> Bool {
-        isSettingsWindow(window) && window.isVisible && (window.isKeyWindow || window.isMainWindow)
+        isSettingsWindow(window)
+            && window.isVisible
+            && (window.isKeyWindow || window.isMainWindow || hasVisibleAttachedSheet(window))
     }
 
     static func anyVisibleSettingsWindow(in windows: [NSWindow]) -> NSWindow? {
@@ -28,5 +30,10 @@ enum SettingsWindowLifecycleCoordinator {
         }
 
         return .regular
+    }
+
+    private static func hasVisibleAttachedSheet(_ window: NSWindow) -> Bool {
+        guard let sheet = window.attachedSheet else { return false }
+        return sheet.isVisible
     }
 }
