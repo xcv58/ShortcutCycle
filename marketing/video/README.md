@@ -73,4 +73,6 @@ Semantic settings actions automatically get a post-production cursor plus click 
 
 ## Settings Safety
 
-Real captures quit ShortcutCycle, snapshot the app preferences plist, seed the requested fixture, and restore the original preferences in `finally` after recording. The restore path flushes `cfprefsd` before and after writing the backup and validates the plist before relaunching the app, so failed captures do not leave the machine in a demo fixture state.
+Single-scene captures quit ShortcutCycle, snapshot the app preferences plist, seed the requested fixture, and restore the original preferences in `finally` after recording. `build` and `build-set --recapture` take one session-level snapshot before any scene runs, then restore that same baseline once at the end. This prevents later scenes from accidentally treating a previous demo fixture as the user's original settings.
+
+The restore path flushes `cfprefsd` before and after writing the backup and validates the plist before relaunching the app, so failed captures do not leave the machine in a demo fixture state.

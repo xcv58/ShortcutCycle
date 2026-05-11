@@ -318,6 +318,10 @@ def settings_backup_manifest_path(run_id: str, scene_id: str) -> Path:
     return SETTINGS_BACKUPS_DIR / run_id / scene_id / "manifest.json"
 
 
+def settings_backup_key(profile: dict[str, Any]) -> str:
+    return str(preferences_path(profile))
+
+
 def flush_preferences_cache() -> None:
     run(["killall", "cfprefsd"], capture_output=True, check=False)
     time.sleep(0.2)
@@ -370,6 +374,55 @@ def restore_integration_settings(profile: dict[str, Any], backup: dict[str, Any]
 
     if bool(backup.get("was_running", False)):
         launch_integration_app(profile)
+
+
+SettingsBackupMap = dict[str, tuple[dict[str, Any], dict[str, Any]]]
+
+
+def scene_uses_real_capture(scene_id: str) -> bool:
+    scene = load_scene(scene_id)
+    capture_settings = scene.get("capture", {})
+    return capture_settings.get("mode") != "synthetic_overview"
+
+
+def scene_ids_for_video(video_id: str) -> list[str]:
+    video = load_video(video_id)
+    scene_ids: list[str] = []
+    for item in video["sequence"]:
+        if item["type"] != "scene":
+            continue
+        scene_id = str(item["scene"])
+        if scene_id not in scene_ids:
+            scene_ids.append(scene_id)
+    return scene_ids
+
+
+def prepare_session_settings_backups(scene_ids: list[str], run_id: str, label: str) -> SettingsBackupMap:
+    backups: SettingsBackupMap = {}
+    for scene_id in scene_ids:
+        if not scene_uses_real_capture(scene_id):
+            continue
+        scene = load_scene(scene_id)
+        profile = load_profile(scene["profile"])
+        key = settings_backup_key(profile)
+        if key in backups:
+            continue
+
+        was_running = shortcutcycle_process_count() > 0
+        quit_integration_app(profile)
+        backup_label = f"{label}-{slugify(bundle_id(profile))}"
+        backups[key] = (
+            profile,
+            backup_integration_settings(profile, backup_label, run_id, was_running=was_running),
+        )
+    return backups
+
+
+def restore_session_settings_backups(backups: SettingsBackupMap | None) -> None:
+    if not backups:
+        return
+    for profile, backup in backups.values():
+        restore_integration_settings(profile, backup)
 
 
 def list_avfoundation_video_devices() -> list[tuple[str, str]]:
@@ -2918,7 +2971,7 @@ def execute_capture_action(profile: dict[str, Any], action: dict[str, Any]) -> N
         raise PipelineError(f"Unsupported capture action: {action_type}")
 
 
-def capture_scene(scene_id: str, run_id: str) -> Path:
+def capture_scene(scene_id: str, run_id: str, *, settings_backups: SettingsBackupMap | None = None) -> Path:
     ensure_directories()
     scene = load_scene(scene_id)
     capture_settings = scene.get("capture", {})
@@ -2944,7 +2997,8 @@ def capture_scene(scene_id: str, run_id: str) -> Path:
 
         was_running = shortcutcycle_process_count() > 0
         quit_integration_app(profile)
-        settings_backup = backup_integration_settings(profile, scene_id, run_id, was_running=was_running)
+        if settings_backups is None or settings_backup_key(profile) not in settings_backups:
+            settings_backup = backup_integration_settings(profile, scene_id, run_id, was_running=was_running)
 
         run_prepare_steps([step for step in scene.get("prepare_before_launch", []) if isinstance(step, dict)])
 
@@ -3499,33 +3553,65 @@ def doctor() -> int:
     return 1 if failures else 0
 
 
-def build_video(video_id: str, run_id: str, *, recapture: bool) -> dict[str, Any]:
-    if recapture:
-        video = load_video(video_id)
-        seen_scenes: set[str] = set()
-        for item in video["sequence"]:
-            if item["type"] == "scene":
-                scene_id = str(item["scene"])
-                if scene_id not in seen_scenes:
-                    capture_scene(scene_id, run_id)
-                    seen_scenes.add(scene_id)
+def build_video(
+    video_id: str,
+    run_id: str,
+    *,
+    recapture: bool,
+    settings_backups: SettingsBackupMap | None = None,
+) -> dict[str, Any]:
+    owns_settings_backups = False
+    if recapture and settings_backups is None:
+        settings_backups = prepare_session_settings_backups(
+            scene_ids_for_video(video_id),
+            run_id,
+            f"build-{video_id}",
+        )
+        owns_settings_backups = True
 
-    render_path = render_video(video_id, run_id)
-    report = validate_video(video_id, run_id)
-    published = publish_video(video_id, run_id)
-    return {
-        "render": render_path,
-        "report": report,
-        "published": published,
-    }
+    try:
+        if recapture:
+            video = load_video(video_id)
+            seen_scenes: set[str] = set()
+            for item in video["sequence"]:
+                if item["type"] == "scene":
+                    scene_id = str(item["scene"])
+                    if scene_id not in seen_scenes:
+                        capture_scene(scene_id, run_id, settings_backups=settings_backups)
+                        seen_scenes.add(scene_id)
+
+        render_path = render_video(video_id, run_id)
+        report = validate_video(video_id, run_id)
+        published = publish_video(video_id, run_id)
+        return {
+            "render": render_path,
+            "report": report,
+            "published": published,
+        }
+    finally:
+        if owns_settings_backups:
+            restore_session_settings_backups(settings_backups)
 
 
 def build_set(set_id: str, run_id: str, *, recapture: bool) -> list[dict[str, Any]]:
     data = load_set(set_id)
-    results = []
-    for video_id in data.get("videos", []):
-        results.append(build_video(str(video_id), run_id, recapture=recapture))
-    return results
+    settings_backups: SettingsBackupMap | None = None
+    if recapture:
+        scene_ids: list[str] = []
+        for video_id in data.get("videos", []):
+            for scene_id in scene_ids_for_video(str(video_id)):
+                if scene_id not in scene_ids:
+                    scene_ids.append(scene_id)
+        settings_backups = prepare_session_settings_backups(scene_ids, run_id, f"build-set-{set_id}")
+
+    try:
+        results = []
+        for video_id in data.get("videos", []):
+            results.append(build_video(str(video_id), run_id, recapture=recapture, settings_backups=settings_backups))
+        return results
+    finally:
+        if recapture:
+            restore_session_settings_backups(settings_backups)
 
 
 def parse_args() -> argparse.Namespace:
