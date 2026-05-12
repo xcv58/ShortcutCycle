@@ -16,7 +16,7 @@ import tempfile
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 from urllib.parse import quote
 
 try:
@@ -1895,6 +1895,8 @@ def apply_click_highlights(scene: dict[str, Any], capture_path: Path) -> None:
                     "at": float(action["at"]),
                     "x": float(rect["x"]) + float(rect["width"]) / 2,
                     "y": float(rect["y"]) + float(rect["height"]) / 2,
+                    "screen_x": float(rect.get("screenX", 0)),
+                    "screen_y": float(rect.get("screenY", 0)),
                     "screen_width": float(rect.get("screenWidth", 0)),
                     "screen_height": float(rect.get("screenHeight", 0)),
                     "duration": float(action.get("highlight_duration", 0.95)),
@@ -1940,8 +1942,10 @@ def apply_click_highlights(scene: dict[str, Any], capture_path: Path) -> None:
 
         scale_x = capture_width / float(action["screen_width"]) if action.get("screen_width") and capture_width else 1.0
         scale_y = capture_height / float(action["screen_height"]) if action.get("screen_height") and capture_height else scale_x
-        target_x = clamp(float(action["x"]) * scale_x, 0, capture_width)
-        target_y = clamp(float(action["y"]) * scale_y, 0, capture_height)
+        screen_x = float(action.get("screen_x", 0))
+        screen_y = float(action.get("screen_y", 0))
+        target_x = clamp((float(action["x"]) - screen_x) * scale_x, 0, capture_width)
+        target_y = clamp((float(action["y"]) - screen_y) * scale_y, 0, capture_height)
         ring_x = int(target_x) - highlight_width // 2
         ring_y = int(target_y) - highlight_height // 2
         start = float(action["at"])
@@ -2989,6 +2993,24 @@ def capture_scene(scene_id: str, run_id: str, *, settings_backups: SettingsBacku
     recorder: subprocess.Popen[str] | None = None
     cursor_restore_position: tuple[float, float] | None = None
     settings_backup: dict[str, Any] | None = None
+    cleanup_errors: list[str] = []
+
+    def record_cleanup_error(label: str, cleanup: Callable[[], None]) -> None:
+        try:
+            cleanup()
+        except Exception as error:
+            cleanup_errors.append(f"{label}: {error}")
+
+    def stop_recorder() -> None:
+        if recorder is None or recorder.poll() is not None:
+            return
+        recorder.send_signal(signal.SIGINT)
+        try:
+            recorder.wait(timeout=15)
+        except subprocess.TimeoutExpired:
+            recorder.kill()
+            recorder.wait(timeout=5)
+
     try:
         if hide_cursor:
             cursor_restore_position = cursor_position()
@@ -3078,18 +3100,15 @@ def capture_scene(scene_id: str, run_id: str, *, settings_backups: SettingsBacku
         while time.monotonic() - start < target_duration:
             time.sleep(0.05)
     finally:
-        if recorder is not None and recorder.poll() is None:
-            recorder.send_signal(signal.SIGINT)
-            try:
-                recorder.wait(timeout=15)
-            except subprocess.TimeoutExpired:
-                recorder.kill()
-                recorder.wait(timeout=5)
+        record_cleanup_error("stop screen recorder", stop_recorder)
         if cursor_restore_position is not None:
-            move_cursor(*cursor_restore_position)
-        stop_process(backdrop)
+            record_cleanup_error("restore cursor position", lambda: move_cursor(*cursor_restore_position))
+        record_cleanup_error("stop capture backdrop", lambda: stop_process(backdrop))
         if settings_backup is not None:
-            restore_integration_settings(profile, settings_backup)
+            record_cleanup_error("restore ShortcutCycle settings", lambda: restore_integration_settings(profile, settings_backup))
+
+    if cleanup_errors:
+        raise PipelineError("Capture cleanup failed after attempting all cleanup steps: " + "; ".join(cleanup_errors))
 
     require_file(output_path, "captured scene output")
     write_scene_metadata(scene)
