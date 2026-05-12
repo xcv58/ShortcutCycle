@@ -2,6 +2,9 @@ id: intro-social
 kind: shortcut_intro
 size: [1920, 1080]
 background_color: "#0A0E15"
+background_image: marketing/video/assets/video-background.JPG
+background_blur: 1.5
+background_overlay_alpha: 72
 panel:
   width: 980
   height: 470

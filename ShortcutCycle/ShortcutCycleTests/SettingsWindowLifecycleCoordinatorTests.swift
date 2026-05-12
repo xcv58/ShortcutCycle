@@ -93,6 +93,40 @@ final class SettingsWindowLifecycleCoordinatorTests: XCTestCase {
         XCTAssertEqual(SettingsWindowLifecycleCoordinator.activationPolicy(for: window), .regular)
     }
 
+    func testCoordinatorKeepsSettingsActiveWhenVisibleSheetIsAttached() {
+        let sheet = MockWindow(
+            identifier: nil,
+            isVisible: true,
+            isOnActiveSpace: true
+        )
+        let window = MockWindow(
+            identifier: NSUserInterfaceItemIdentifier("settings"),
+            isVisible: true,
+            isOnActiveSpace: true,
+            attachedSheet: sheet
+        )
+
+        XCTAssertTrue(SettingsWindowLifecycleCoordinator.isActiveSettingsWindow(window))
+        XCTAssertEqual(SettingsWindowLifecycleCoordinator.activationPolicy(for: window), .regular)
+    }
+
+    func testHiddenAttachedSheetDoesNotKeepSettingsActive() {
+        let sheet = MockWindow(
+            identifier: nil,
+            isVisible: false,
+            isOnActiveSpace: true
+        )
+        let window = MockWindow(
+            identifier: NSUserInterfaceItemIdentifier("settings"),
+            isVisible: true,
+            isOnActiveSpace: true,
+            attachedSheet: sheet
+        )
+
+        XCTAssertFalse(SettingsWindowLifecycleCoordinator.isActiveSettingsWindow(window))
+        XCTAssertEqual(SettingsWindowLifecycleCoordinator.activationPolicy(for: window), .accessory)
+    }
+
     func testActivationPolicyFallsBackToAccessoryWhenSettingsWindowIsNotActive() {
         let backgroundWindow = MockWindow(
             identifier: NSUserInterfaceItemIdentifier("settings"),

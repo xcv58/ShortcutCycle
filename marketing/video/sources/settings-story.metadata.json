@@ -1,0 +1,111 @@
+{
+  "actions": [
+    {
+      "at": 1.35,
+      "highlight_rect": {
+        "height": 54.0,
+        "screenHeight": 1169.0,
+        "screenWidth": 1800.0,
+        "screenX": 0.0,
+        "screenY": 0.0,
+        "width": 220.0,
+        "x": 200.0,
+        "y": 202.0
+      },
+      "index": 0,
+      "type": "select-group"
+    },
+    {
+      "at": 3.15,
+      "highlight_rect": {
+        "height": 54.0,
+        "screenHeight": 1169.0,
+        "screenWidth": 1800.0,
+        "screenX": 0.0,
+        "screenY": 0.0,
+        "width": 220.0,
+        "x": 200.0,
+        "y": 256.0
+      },
+      "index": 1,
+      "type": "select-group"
+    },
+    {
+      "at": 5.05,
+      "highlight_rect": {
+        "height": 36.0,
+        "screenHeight": 1169.0,
+        "screenWidth": 1800.0,
+        "screenX": 0.0,
+        "screenY": 0.0,
+        "width": 72.5,
+        "x": 1075.5,
+        "y": 104.0
+      },
+      "index": 2,
+      "type": "open-url"
+    },
+    {
+      "at": 6.65,
+      "highlight_rect": {
+        "height": 24.0,
+        "screenHeight": 1169.0,
+        "screenWidth": 1800.0,
+        "screenX": 0.0,
+        "screenY": 0.0,
+        "width": 111.5,
+        "x": 1190.5,
+        "y": 666.0
+      },
+      "index": 3,
+      "type": "click-radio"
+    },
+    {
+      "at": 8.65,
+      "highlight_rect": {
+        "height": 24.0,
+        "screenHeight": 1169.0,
+        "screenWidth": 1800.0,
+        "screenX": 0.0,
+        "screenY": 0.0,
+        "width": 91.5,
+        "x": 1210.5,
+        "y": 707.5
+      },
+      "index": 4,
+      "type": "click-control"
+    },
+    {
+      "at": 9.6,
+      "highlight_rect": {
+        "height": 24.0,
+        "screenHeight": 1169.0,
+        "screenWidth": 1800.0,
+        "screenX": 0.0,
+        "screenY": 0.0,
+        "width": 277.0,
+        "x": 1198.0,
+        "y": 804.0
+      },
+      "index": 5,
+      "type": "click-menu-item"
+    },
+    {
+      "at": 12.0,
+      "highlight_rect": {
+        "height": 24.0,
+        "screenHeight": 1169.0,
+        "screenWidth": 1800.0,
+        "screenX": 0.0,
+        "screenY": 0.0,
+        "width": 684.0,
+        "x": 618.0,
+        "y": 749.5
+      },
+      "index": 6,
+      "type": "click-button"
+    }
+  ],
+  "scene_id": "settings-story",
+  "version": 1
+}

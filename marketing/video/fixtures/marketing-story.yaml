@@ -7,36 +7,35 @@ settings:
   show_shortcut_in_hud: true
 groups:
   - id: 20000000-0000-4000-8000-000000000001
-    name: Essentials
+    name: Writing
     shortcut: option+1
     is_enabled: true
     open_app_if_needed: true
     apps:
-      - { id: 20000000-0000-4000-8000-000000000011, name: Calendar, bundle_id: com.apple.iCal }
-      - { id: 20000000-0000-4000-8000-000000000012, name: Dictionary, bundle_id: com.apple.Dictionary }
-      - { id: 20000000-0000-4000-8000-000000000013, name: Preview, bundle_id: com.apple.Preview }
+      - { id: 20000000-0000-4000-8000-000000000011, name: TextEdit, bundle_id: com.apple.TextEdit }
+      - { id: 20000000-0000-4000-8000-000000000012, name: Preview, bundle_id: com.apple.Preview }
+      - { id: 20000000-0000-4000-8000-000000000013, name: Dictionary, bundle_id: com.apple.Dictionary }
   - id: 20000000-0000-4000-8000-000000000002
-    name: Explore
+    name: Tools
     shortcut: option+3
     is_enabled: true
     open_app_if_needed: true
     apps:
-      - { id: 20000000-0000-4000-8000-000000000021, name: Tips, bundle_id: com.apple.helpviewer }
+      - { id: 20000000-0000-4000-8000-000000000021, name: Calculator, bundle_id: com.apple.calculator }
       - { id: 20000000-0000-4000-8000-000000000022, name: Font Book, bundle_id: com.apple.FontBook }
-      - { id: 20000000-0000-4000-8000-000000000023, name: Chess, bundle_id: com.apple.Chess }
+      - { id: 20000000-0000-4000-8000-000000000023, name: Tips, bundle_id: com.apple.helpviewer }
   - id: 20000000-0000-4000-8000-000000000003
-    name: All Apps
+    name: Showcase
     shortcut: option+5
     is_enabled: true
     open_app_if_needed: true
     apps:
-      - { id: 20000000-0000-4000-8000-000000000031, name: Tips, bundle_id: com.apple.helpviewer }
-      - { id: 20000000-0000-4000-8000-000000000032, name: Font Book, bundle_id: com.apple.FontBook }
-      - { id: 20000000-0000-4000-8000-000000000033, name: Chess, bundle_id: com.apple.Chess }
-      - { id: 20000000-0000-4000-8000-000000000034, name: QuickTime Player, bundle_id: com.apple.QuickTimePlayerX }
-      - { id: 20000000-0000-4000-8000-000000000035, name: System Settings, bundle_id: com.apple.systempreferences }
-      - { id: 20000000-0000-4000-8000-000000000036, name: Image Capture, bundle_id: com.apple.Image_Capture }
-      - { id: 20000000-0000-4000-8000-000000000037, name: Activity Monitor, bundle_id: com.apple.ActivityMonitor }
-      - { id: 20000000-0000-4000-8000-000000000038, name: Calendar, bundle_id: com.apple.iCal }
-      - { id: 20000000-0000-4000-8000-000000000039, name: Dictionary, bundle_id: com.apple.Dictionary }
-      - { id: 20000000-0000-4000-8000-00000000003A, name: Preview, bundle_id: com.apple.Preview }
+      - { id: 20000000-0000-4000-8000-000000000031, name: Font Book, bundle_id: com.apple.FontBook }
+      - { id: 20000000-0000-4000-8000-000000000032, name: Chess, bundle_id: com.apple.Chess }
+      - { id: 20000000-0000-4000-8000-000000000033, name: Image Capture, bundle_id: com.apple.Image_Capture }
+      - { id: 20000000-0000-4000-8000-000000000035, name: ColorSync Utility, bundle_id: com.apple.ColorSyncUtility }
+      - { id: 20000000-0000-4000-8000-000000000036, name: Calculator, bundle_id: com.apple.calculator }
+      - { id: 20000000-0000-4000-8000-000000000037, name: Tips, bundle_id: com.apple.helpviewer }
+      - { id: 20000000-0000-4000-8000-000000000038, name: TextEdit, bundle_id: com.apple.TextEdit }
+      - { id: 20000000-0000-4000-8000-000000000039, name: Preview, bundle_id: com.apple.Preview }
+      - { id: 20000000-0000-4000-8000-00000000003A, name: Dictionary, bundle_id: com.apple.Dictionary }

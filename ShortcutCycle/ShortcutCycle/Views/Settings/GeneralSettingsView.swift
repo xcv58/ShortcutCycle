@@ -23,6 +23,7 @@ struct GeneralSettingsView: View {
     @State private var showImportSuccess = false
     @State private var errorMessage = ""
     @State private var pendingImportURL: URL?
+    @State private var hostingWindow: NSWindow?
 
     // Backup browser state
     @State private var showBackupBrowser = false
@@ -45,6 +46,7 @@ struct GeneralSettingsView: View {
 
     var body: some View {
         content
+        .background(SettingsWindowAccessor(window: $hostingWindow))
         .navigationTitle("General".localized(language: selectedLanguage))
         .alert("Export Failed".localized(language: selectedLanguage), isPresented: $showExportError) {
             Button("OK", role: .cancel) {}
@@ -349,7 +351,7 @@ struct GeneralSettingsView: View {
         savePanel.title = "Export Settings".localized(language: selectedLanguage)
         savePanel.message = "Choose where to save your settings".localized(language: selectedLanguage)
         
-        savePanel.begin { response in
+        presentPanel(savePanel) { response in
             guard response == .OK, let url = savePanel.url else { return }
             
             do {
@@ -370,11 +372,27 @@ struct GeneralSettingsView: View {
         openPanel.title = "Import Settings".localized(language: selectedLanguage)
         openPanel.message = "Select a ShortcutCycle settings file".localized(language: selectedLanguage)
         
-        openPanel.begin { response in
+        presentPanel(openPanel) { response in
             guard response == .OK, let url = openPanel.url else { return }
             pendingImportURL = url
             showImportConfirmation = true
         }
+    }
+
+    private func presentPanel(_ panel: NSSavePanel, completion: @escaping (NSApplication.ModalResponse) -> Void) {
+        if let window = panelPresentationWindow {
+            panel.beginSheetModal(for: window, completionHandler: completion)
+        } else {
+            panel.begin(completionHandler: completion)
+        }
+    }
+
+    private var panelPresentationWindow: NSWindow? {
+        if let hostingWindow {
+            return hostingWindow
+        }
+
+        return SettingsWindowLifecycleCoordinator.anyVisibleSettingsWindow(in: NSApp.windows)
     }
     
     private func performImport() {
@@ -456,6 +474,36 @@ struct GeneralSettingsView: View {
         store.applyImport(export)
         showClipboardImportSuccess = true
         pendingClipboardExport = nil
+    }
+}
+
+private struct SettingsWindowAccessor: NSViewRepresentable {
+    @Binding var window: NSWindow?
+
+    func makeNSView(context: Context) -> NSView {
+        let view = AccessorView()
+        view.onWindowChange = { newWindow in
+            window = newWindow
+        }
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        guard let accessorView = nsView as? AccessorView else { return }
+        accessorView.onWindowChange = { newWindow in
+            window = newWindow
+        }
+    }
+
+    private final class AccessorView: NSView {
+        var onWindowChange: ((NSWindow?) -> Void)?
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            DispatchQueue.main.async { [weak self] in
+                self?.onWindowChange?(self?.window)
+            }
+        }
     }
 }
 

@@ -15,9 +15,9 @@ sequence:
       - "Theme"
       - "Language"
       - "Shortcuts"
-  - { type: scene, scene: settings-story, trim_start: 0.20, trim_end: 14.25 }
+  - { type: scene, scene: settings-story, trim_start: 0.20, trim_end: 15.65 }
 validate:
   resolution: [1920, 1080]
   frame_rate: 30
-  max_duration: 16.0
+  max_duration: 17.0
   audio: false

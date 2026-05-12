@@ -16,7 +16,7 @@ import tempfile
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 from urllib.parse import quote
 
 try:
@@ -47,15 +47,18 @@ VIDEOS_DIR = VIDEO_ROOT / "videos"
 ARTIFACTS_ROOT = REPO_ROOT / ".artifacts" / "video"
 RAW_DIR = ARTIFACTS_ROOT / "raw"
 CARDS_DIR = ARTIFACTS_ROOT / "cards"
+PROCESSED_SCENES_DIR = ARTIFACTS_ROOT / "scenes"
 RENDERS_DIR = ARTIFACTS_ROOT / "renders"
 REPORTS_DIR = ARTIFACTS_ROOT / "reports"
 BIN_DIR = ARTIFACTS_ROOT / "bin"
+SETTINGS_BACKUPS_DIR = ARTIFACTS_ROOT / "settings-backups"
 DEFAULT_PROFILE_ID = "default"
 DEFAULT_TEMPLATE_BG = "#0A0E15"
 FIXED_LAST_MODIFIED = 796_953_600
 DEFAULT_REGULAR_FONT = "/System/Library/Fonts/Supplemental/Arial.ttf"
 DEFAULT_BOLD_FONT = "/System/Library/Fonts/Supplemental/Arial Bold.ttf"
 OVERVIEW_BACKGROUND_PATH = REPO_ROOT / "scripts" / "assets" / "background.jpeg"
+SHORTCUTCYCLE_AX_HELPER_SOURCE = REPO_ROOT / "scripts" / "shortcutcycle_ax_helper.swift"
 VERTICAL_CROP_BIAS = 40
 
 KNOWN_APP_BUNDLES = {
@@ -63,6 +66,7 @@ KNOWN_APP_BUNDLES = {
     "com.apple.Chess": Path("/System/Applications/Chess.app"),
     "com.apple.calculator": Path("/System/Applications/Calculator.app"),
     "com.apple.clock": Path("/System/Applications/Clock.app"),
+    "com.apple.ColorSyncUtility": Path("/System/Applications/Utilities/ColorSync Utility.app"),
     "com.apple.Console": Path("/System/Applications/Utilities/Console.app"),
     "com.apple.Dictionary": Path("/System/Applications/Dictionary.app"),
     "com.apple.FontBook": Path("/System/Applications/Font Book.app"),
@@ -202,12 +206,14 @@ def run(
     command: list[str],
     *,
     cwd: Path | None = None,
+    env: dict[str, str] | None = None,
     capture_output: bool = True,
     check: bool = True,
 ) -> subprocess.CompletedProcess[str]:
     result = subprocess.run(
         command,
         cwd=cwd,
+        env=env,
         text=True,
         capture_output=capture_output,
         check=False,
@@ -221,7 +227,7 @@ def run(
 
 
 def ensure_directories() -> None:
-    for directory in (RAW_DIR, CARDS_DIR, RENDERS_DIR, REPORTS_DIR, BIN_DIR):
+    for directory in (RAW_DIR, CARDS_DIR, PROCESSED_SCENES_DIR, RENDERS_DIR, REPORTS_DIR, BIN_DIR, SETTINGS_BACKUPS_DIR):
         directory.mkdir(parents=True, exist_ok=True)
 
 
@@ -308,6 +314,117 @@ def preferences_path(profile: dict[str, Any]) -> Path:
     return integration_container_root(profile) / "Data" / "Library" / "Preferences" / f"{bundle_id(profile)}.plist"
 
 
+def settings_backup_manifest_path(run_id: str, scene_id: str) -> Path:
+    return SETTINGS_BACKUPS_DIR / run_id / scene_id / "manifest.json"
+
+
+def settings_backup_key(profile: dict[str, Any]) -> str:
+    return str(preferences_path(profile))
+
+
+def flush_preferences_cache() -> None:
+    run(["killall", "cfprefsd"], capture_output=True, check=False)
+    time.sleep(0.2)
+
+
+def backup_integration_settings(profile: dict[str, Any], scene_id: str, run_id: str, *, was_running: bool) -> dict[str, Any]:
+    preferences = preferences_path(profile)
+    backup_dir = settings_backup_manifest_path(run_id, scene_id).parent
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    backup_file = backup_dir / preferences.name
+    flush_preferences_cache()
+    existed = preferences.exists()
+
+    if existed:
+        shutil.copy2(preferences, backup_file)
+    else:
+        backup_file.unlink(missing_ok=True)
+
+    manifest: dict[str, Any] = {
+        "scene_id": scene_id,
+        "run_id": run_id,
+        "bundle_id": bundle_id(profile),
+        "preferences_path": str(preferences),
+        "backup_file": str(backup_file),
+        "existed": existed,
+        "was_running": was_running,
+    }
+    settings_backup_manifest_path(run_id, scene_id).write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    return manifest
+
+
+def restore_integration_settings(profile: dict[str, Any], backup: dict[str, Any]) -> None:
+    quit_integration_app(profile)
+    flush_preferences_cache()
+
+    preferences = Path(str(backup["preferences_path"]))
+    if bool(backup.get("existed", False)):
+        backup_file = require_file(Path(str(backup["backup_file"])), "ShortcutCycle settings backup")
+        preferences.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(backup_file, preferences)
+    else:
+        preferences.unlink(missing_ok=True)
+
+    flush_preferences_cache()
+    if bool(backup.get("existed", False)):
+        if not preferences.exists() or preferences.read_bytes() != Path(str(backup["backup_file"])).read_bytes():
+            raise PipelineError(f"Failed to restore ShortcutCycle preferences from {backup['backup_file']}")
+    elif preferences.exists():
+        raise PipelineError(f"Failed to remove ShortcutCycle preferences at {preferences}")
+
+    if bool(backup.get("was_running", False)):
+        launch_integration_app(profile)
+
+
+SettingsBackupMap = dict[str, tuple[dict[str, Any], dict[str, Any]]]
+
+
+def scene_uses_real_capture(scene_id: str) -> bool:
+    scene = load_scene(scene_id)
+    capture_settings = scene.get("capture", {})
+    return capture_settings.get("mode") != "synthetic_overview"
+
+
+def scene_ids_for_video(video_id: str) -> list[str]:
+    video = load_video(video_id)
+    scene_ids: list[str] = []
+    for item in video["sequence"]:
+        if item["type"] != "scene":
+            continue
+        scene_id = str(item["scene"])
+        if scene_id not in scene_ids:
+            scene_ids.append(scene_id)
+    return scene_ids
+
+
+def prepare_session_settings_backups(scene_ids: list[str], run_id: str, label: str) -> SettingsBackupMap:
+    backups: SettingsBackupMap = {}
+    for scene_id in scene_ids:
+        if not scene_uses_real_capture(scene_id):
+            continue
+        scene = load_scene(scene_id)
+        profile = load_profile(scene["profile"])
+        key = settings_backup_key(profile)
+        if key in backups:
+            continue
+
+        was_running = shortcutcycle_process_count() > 0
+        quit_integration_app(profile)
+        backup_label = f"{label}-{slugify(bundle_id(profile))}"
+        backups[key] = (
+            profile,
+            backup_integration_settings(profile, backup_label, run_id, was_running=was_running),
+        )
+    return backups
+
+
+def restore_session_settings_backups(backups: SettingsBackupMap | None) -> None:
+    if not backups:
+        return
+    for profile, backup in backups.values():
+        restore_integration_settings(profile, backup)
+
+
 def list_avfoundation_video_devices() -> list[tuple[str, str]]:
     result = run(
         ["ffmpeg", "-f", "avfoundation", "-list_devices", "true", "-i", ""],
@@ -372,11 +489,22 @@ def raw_scene_path(scene_id: str, run_id: str) -> Path:
     return RAW_DIR / run_id / f"{scene_id}.mp4"
 
 
+def processed_scene_path(scene_id: str, run_id: str) -> Path:
+    return PROCESSED_SCENES_DIR / run_id / f"{scene_id}.mp4"
+
+
 def scene_source_path(scene: dict[str, Any]) -> Path | None:
     source_clip = scene.get("source_clip")
     if not source_clip:
         return None
     return REPO_ROOT / str(source_clip)
+
+
+def scene_metadata_path(scene: dict[str, Any]) -> Path | None:
+    source_path = scene_source_path(scene)
+    if source_path is None:
+        return None
+    return source_path.with_suffix(".metadata.json")
 
 
 def cards_video_dir(video_id: str, run_id: str) -> Path:
@@ -758,21 +886,19 @@ def url_command(profile: dict[str, Any], command: str) -> None:
 
 def url_query(profile: dict[str, Any], command: str, *, timeout: float = 5.0) -> dict[str, Any]:
     result_path = result_file_path(profile)
-    previous_mtime = result_path.stat().st_mtime if result_path.exists() else 0.0
+    result_path.unlink(missing_ok=True)
     url_command(profile, command)
 
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         if result_path.exists():
-            current_mtime = result_path.stat().st_mtime
-            if current_mtime >= previous_mtime:
-                try:
-                    payload = json.loads(result_path.read_text(encoding="utf-8"))
-                except json.JSONDecodeError:
-                    time.sleep(0.1)
-                    continue
-                if payload.get("command") == command.split("?", 1)[0]:
-                    return payload
+            try:
+                payload = json.loads(result_path.read_text(encoding="utf-8"))
+            except json.JSONDecodeError:
+                time.sleep(0.1)
+                continue
+            if payload.get("command") == command.split("?", 1)[0]:
+                return payload
         time.sleep(0.15)
     raise PipelineError(f"Timed out waiting for URL query result: {command}")
 
@@ -1034,6 +1160,55 @@ for index in 0..<max(1, count) {
     return require_file(binary_path, "scroll helper binary")
 
 
+def compile_shortcutcycle_ax_helper() -> Path:
+    ensure_directories()
+    source_path = require_file(SHORTCUTCYCLE_AX_HELPER_SOURCE, "ShortcutCycle AX helper source")
+    binary_path = BIN_DIR / "shortcutcycle_ax_helper"
+    source_mtime = source_path.stat().st_mtime
+    needs_compile = not binary_path.exists() or binary_path.stat().st_mtime < source_mtime
+    if needs_compile:
+        run(["swiftc", str(source_path), "-o", str(binary_path)], check=True)
+    return require_file(binary_path, "ShortcutCycle AX helper binary")
+
+
+def run_shortcutcycle_ax(profile: dict[str, Any], command: str, *arguments: object) -> None:
+    helper_path = compile_shortcutcycle_ax_helper()
+    env = os.environ.copy()
+    env["SHORTCUTCYCLE_AX_APP_PATH"] = str(app_bundle_path(profile))
+    run(
+        [str(helper_path), command, *[str(argument) for argument in arguments]],
+        env=env,
+        capture_output=True,
+        check=True,
+    )
+
+
+def shortcutcycle_ax_output(profile: dict[str, Any], command: str, *arguments: object) -> str:
+    helper_path = compile_shortcutcycle_ax_helper()
+    env = os.environ.copy()
+    env["SHORTCUTCYCLE_AX_APP_PATH"] = str(app_bundle_path(profile))
+    result = run(
+        [str(helper_path), command, *[str(argument) for argument in arguments]],
+        env=env,
+        capture_output=True,
+        check=True,
+    )
+    return result.stdout
+
+
+def shortcutcycle_ax_frame(profile: dict[str, Any], command: str, *arguments: object) -> dict[str, float]:
+    payload = json.loads(shortcutcycle_ax_output(profile, command, *arguments))
+    if not isinstance(payload, dict):
+        raise PipelineError(f"Unexpected AX frame payload for {command}")
+    return {str(key): float(value) for key, value in payload.items()}
+
+
+def attach_semantic_highlight(profile: dict[str, Any], action: dict[str, Any], command: str, *arguments: object) -> None:
+    if action.get("highlight", True) is False:
+        return
+    action["_highlight_rect"] = shortcutcycle_ax_frame(profile, command, *arguments)
+
+
 def compile_window_frame_helper() -> Path:
     ensure_directories()
     source_path = BIN_DIR / "set_window_frame.swift"
@@ -1099,6 +1274,211 @@ exit(1)
         source_path.write_text(source, encoding="utf-8")
         run(["swiftc", str(source_path), "-o", str(binary_path)], check=True)
     return require_file(binary_path, "window frame helper binary")
+
+
+def compile_capture_backdrop_helper() -> Path:
+    ensure_directories()
+    source_path = BIN_DIR / "capture_backdrop.swift"
+    binary_path = BIN_DIR / "capture_backdrop"
+    source = """import AppKit
+import Foundation
+
+let arguments = Array(CommandLine.arguments.dropFirst())
+let background = arguments.first ?? "#F7F5EF"
+
+func color(from value: String) -> NSColor {
+    let cleaned = value.trimmingCharacters(in: CharacterSet(charactersIn: "#"))
+    guard cleaned.count == 6, let raw = Int(cleaned, radix: 16) else {
+        return NSColor(calibratedRed: 0.97, green: 0.96, blue: 0.93, alpha: 1.0)
+    }
+    let red = CGFloat((raw >> 16) & 0xff) / 255.0
+    let green = CGFloat((raw >> 8) & 0xff) / 255.0
+    let blue = CGFloat(raw & 0xff) / 255.0
+    return NSColor(calibratedRed: red, green: green, blue: blue, alpha: 1.0)
+}
+
+final class BackdropView: NSView {
+    let fallbackColor: NSColor
+    let image: NSImage?
+
+    init(frame: NSRect, background: String) {
+        if FileManager.default.fileExists(atPath: background) {
+            self.image = NSImage(contentsOfFile: background)
+            self.fallbackColor = NSColor(calibratedRed: 0.88, green: 0.94, blue: 0.94, alpha: 1.0)
+        } else {
+            self.image = nil
+            self.fallbackColor = color(from: background)
+        }
+        super.init(frame: frame)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        fallbackColor.setFill()
+        bounds.fill()
+
+        guard let image else { return }
+        let imageSize = image.size
+        guard imageSize.width > 0, imageSize.height > 0 else { return }
+
+        let scale = max(bounds.width / imageSize.width, bounds.height / imageSize.height)
+        let drawSize = NSSize(width: imageSize.width * scale, height: imageSize.height * scale)
+        let drawRect = NSRect(
+            x: bounds.midX - drawSize.width / 2,
+            y: bounds.midY - drawSize.height / 2,
+            width: drawSize.width,
+            height: drawSize.height
+        )
+        image.draw(
+            in: drawRect,
+            from: NSRect(origin: .zero, size: imageSize),
+            operation: .copy,
+            fraction: 1.0,
+            respectFlipped: true,
+            hints: [.interpolation: NSImageInterpolation.high]
+        )
+    }
+}
+
+let app = NSApplication.shared
+app.setActivationPolicy(.accessory)
+
+let frame = NSScreen.main?.frame ?? NSRect(x: 0, y: 0, width: 1920, height: 1080)
+let window = NSWindow(
+    contentRect: frame,
+    styleMask: [.borderless],
+    backing: .buffered,
+    defer: false
+)
+window.title = "ShortcutCycle Capture Backdrop"
+window.backgroundColor = NSColor.clear
+window.contentView = BackdropView(frame: frame, background: background)
+window.isOpaque = true
+window.ignoresMouseEvents = true
+window.level = .normal
+window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
+window.orderFrontRegardless()
+
+app.run()
+"""
+    current_source = source_path.read_text(encoding="utf-8") if source_path.exists() else None
+    if current_source != source or not binary_path.exists():
+        source_path.write_text(source, encoding="utf-8")
+        run(["swiftc", str(source_path), "-o", str(binary_path)], check=True)
+    return require_file(binary_path, "capture backdrop helper binary")
+
+
+def compile_cursor_visibility_helper() -> Path:
+    ensure_directories()
+    source_path = BIN_DIR / "cursor_visibility.swift"
+    binary_path = BIN_DIR / "cursor_visibility"
+    source = """import AppKit
+import CoreGraphics
+import Foundation
+
+let arguments = Array(CommandLine.arguments.dropFirst())
+let command = arguments.first ?? "position"
+
+func currentPosition() -> CGPoint {
+    CGEvent(source: nil)?.location ?? CGPoint(x: 0, y: 0)
+}
+
+func moveCursor(to point: CGPoint) {
+    CGWarpMouseCursorPosition(point)
+    CGAssociateMouseAndMouseCursorPosition(boolean_t(1))
+}
+
+func printJSON(_ payload: [String: Double]) {
+    guard let data = try? JSONSerialization.data(withJSONObject: payload, options: [.sortedKeys]) else {
+        exit(1)
+    }
+    FileHandle.standardOutput.write(data)
+    FileHandle.standardOutput.write(Data("\\n".utf8))
+}
+
+switch command {
+case "position":
+    let position = currentPosition()
+    printJSON(["x": Double(position.x), "y": Double(position.y)])
+case "move":
+    guard arguments.count == 3, let x = Double(arguments[1]), let y = Double(arguments[2]) else {
+        fputs("usage: cursor_visibility move <x> <y>\\n", stderr)
+        exit(2)
+    }
+    moveCursor(to: CGPoint(x: x, y: y))
+case "stash":
+    let frame = NSScreen.main?.frame ?? NSRect(x: 0, y: 0, width: 1920, height: 1200)
+    // Use the top edge so parking the cursor never wakes the Dock.
+    moveCursor(to: CGPoint(x: frame.maxX - 2, y: frame.minY + 2))
+case "screen":
+    let frame = NSScreen.main?.frame ?? NSRect(x: 0, y: 0, width: 1920, height: 1200)
+    printJSON([
+        "x": Double(frame.origin.x),
+        "y": Double(frame.origin.y),
+        "width": Double(frame.width),
+        "height": Double(frame.height),
+        "maxX": Double(frame.maxX),
+        "maxY": Double(frame.maxY),
+    ])
+default:
+    fputs("usage: cursor_visibility position|move|stash|screen\\n", stderr)
+    exit(2)
+}
+"""
+    current_source = source_path.read_text(encoding="utf-8") if source_path.exists() else None
+    if current_source != source or not binary_path.exists():
+        source_path.write_text(source, encoding="utf-8")
+        run(["swiftc", str(source_path), "-o", str(binary_path)], check=True)
+    return require_file(binary_path, "cursor visibility helper binary")
+
+
+def cursor_visibility_output(*arguments: object) -> str:
+    helper_path = compile_cursor_visibility_helper()
+    result = run(
+        [str(helper_path), *[str(argument) for argument in arguments]],
+        capture_output=True,
+        check=True,
+    )
+    return result.stdout
+
+
+def cursor_position() -> tuple[float, float]:
+    payload = json.loads(cursor_visibility_output("position"))
+    return float(payload["x"]), float(payload["y"])
+
+
+def move_cursor(x: float, y: float) -> None:
+    cursor_visibility_output("move", x, y)
+
+
+def stash_cursor() -> None:
+    cursor_visibility_output("stash")
+
+
+def start_capture_backdrop(color: str) -> subprocess.Popen[str]:
+    helper_path = compile_capture_backdrop_helper()
+    process = subprocess.Popen(
+        [str(helper_path), color],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        text=True,
+    )
+    time.sleep(0.4)
+    return process
+
+
+def stop_process(process: subprocess.Popen[str] | None, *, timeout: float = 5.0) -> None:
+    if process is None or process.poll() is not None:
+        return
+    process.terminate()
+    try:
+        process.wait(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.wait(timeout=timeout)
 
 
 def parse_shortcut(shortcut: str) -> tuple[str, int, int]:
@@ -1303,16 +1683,106 @@ def publish_scene_source(scene: dict[str, Any], capture_path: Path) -> None:
     shutil.copy2(capture_path, source_path)
 
 
+def write_scene_metadata(scene: dict[str, Any]) -> None:
+    metadata_path = scene_metadata_path(scene)
+    if metadata_path is None:
+        return
+
+    actions: list[dict[str, Any]] = []
+    for index, action in enumerate(scene.get("actions", [])):
+        entry: dict[str, Any] = {
+            "index": index,
+            "type": str(action.get("type", "")),
+            "at": float(action.get("at", 0.0)),
+        }
+        highlight_rect = action.get("_highlight_rect")
+        if isinstance(highlight_rect, dict):
+            entry["highlight_rect"] = {
+                str(key): float(value)
+                for key, value in highlight_rect.items()
+                if isinstance(value, int | float)
+            }
+        actions.append(entry)
+
+    metadata_path.parent.mkdir(parents=True, exist_ok=True)
+    metadata_path.write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "scene_id": str(scene["id"]),
+                "actions": actions,
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+
+def apply_scene_metadata(scene: dict[str, Any]) -> None:
+    metadata_path = scene_metadata_path(scene)
+    if metadata_path is None or not metadata_path.exists():
+        return
+
+    payload = json.loads(metadata_path.read_text(encoding="utf-8"))
+    action_metadata = payload.get("actions", [])
+    if not isinstance(action_metadata, list):
+        raise PipelineError(f"Unexpected scene metadata actions in {metadata_path}")
+
+    actions = scene.get("actions", [])
+    for entry in action_metadata:
+        if not isinstance(entry, dict) or "highlight_rect" not in entry:
+            continue
+        index = int(entry.get("index", -1))
+        if index < 0 or index >= len(actions):
+            continue
+        if str(actions[index].get("type", "")) != str(entry.get("type", "")):
+            continue
+        highlight_rect = entry["highlight_rect"]
+        if isinstance(highlight_rect, dict):
+            actions[index]["_highlight_rect"] = dict(highlight_rect)
+
+
+def load_scene_for_postprocess(scene_id: str) -> dict[str, Any]:
+    scene = load_scene(scene_id)
+    apply_scene_metadata(scene)
+    return scene
+
+
 def click_highlight_asset() -> Path:
     ensure_directories()
-    output_path = BIN_DIR / "click-highlight-v2.png"
+    output_path = BIN_DIR / "click-highlight-v3.png"
     if output_path.exists():
         return output_path
 
-    size = 72
+    size = 118
     image = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(image)
-    draw.ellipse((10, 10, size - 10, size - 10), outline=(255, 214, 120, 152), width=4)
+    draw.ellipse((8, 8, size - 8, size - 8), outline=(255, 185, 72, 220), width=7)
+    draw.ellipse((27, 27, size - 27, size - 27), outline=(40, 171, 190, 135), width=4)
+    draw.ellipse((size // 2 - 7, size // 2 - 7, size // 2 + 7, size // 2 + 7), fill=(255, 185, 72, 240))
+    image.save(output_path)
+    return output_path
+
+
+def cursor_pointer_asset() -> Path:
+    ensure_directories()
+    output_path = BIN_DIR / "cursor-pointer-v1.png"
+    if output_path.exists():
+        return output_path
+
+    image = Image.new("RGBA", (64, 82), (0, 0, 0, 0))
+    shadow = Image.new("RGBA", image.size, (0, 0, 0, 0))
+    shadow_draw = ImageDraw.Draw(shadow)
+    points = [(8, 6), (8, 61), (23, 47), (34, 75), (45, 70), (34, 43), (55, 43)]
+    shadow_draw.polygon([(x + 4, y + 5) for x, y in points], fill=(0, 0, 0, 92))
+    shadow = shadow.filter(ImageFilter.GaussianBlur(2.5))
+    image.alpha_composite(shadow)
+
+    draw = ImageDraw.Draw(image)
+    draw.polygon(points, fill=(255, 255, 255, 255), outline=(12, 19, 31, 235))
+    draw.line(points + [points[0]], fill=(12, 19, 31, 235), width=3, joint="curve")
     image.save(output_path)
     return output_path
 
@@ -1340,57 +1810,178 @@ def display_shortcut(shortcut: str) -> str:
     return " + ".join(part.title() for part in modifiers + [key])
 
 
-def shortcut_badge_asset(shortcut: str, group_name: str) -> Path:
+def shortcut_badge_asset(shortcut: str, group_name: str, *, render_scale: float = 1.0) -> Path:
     ensure_directories()
-    output_path = BIN_DIR / f"shortcut-badge-{slugify(shortcut)}-{slugify(group_name)}.png"
     shortcut_label = display_shortcut(shortcut)
-    font = font_for_ui(24, bold=True)
-    shortcut_bounds = ImageDraw.Draw(Image.new("RGBA", (1, 1))).textbbox((0, 0), shortcut_label, font=font)
-    group_bounds = ImageDraw.Draw(Image.new("RGBA", (1, 1))).textbbox((0, 0), group_name, font=font)
-    content_width = (shortcut_bounds[2] - shortcut_bounds[0]) + 22 + (group_bounds[2] - group_bounds[0])
-    width = max(228, content_width + 48)
-    height = 58
-    cache_key = f"{slugify(shortcut_label)}-{slugify(group_name)}-{width}"
+    render_scale = max(1.0, float(render_scale))
+
+    def scaled(value: int | float) -> int:
+        return max(1, int(round(float(value) * render_scale)))
+
+    label_font = font_for_ui(scaled(17), bold=True)
+    key_font = font_for_ui(scaled(30), bold=True)
+    group_font = font_for_ui(scaled(28), bold=True)
+    helper_draw = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
+    shortcut_bounds = helper_draw.textbbox((0, 0), shortcut_label, font=key_font)
+    group_bounds = helper_draw.textbbox((0, 0), group_name, font=group_font)
+    key_width = max(scaled(82), shortcut_bounds[2] - shortcut_bounds[0] + scaled(34))
+    content_width = key_width + scaled(22) + (group_bounds[2] - group_bounds[0])
+    pill_width = max(scaled(390), content_width + scaled(56))
+    pill_height = scaled(96)
+    outer_pad = scaled(24)
+    width = pill_width + outer_pad * 2
+    height = pill_height + outer_pad * 2
+    cache_key = f"v7-{int(round(render_scale * 100))}-{slugify(shortcut_label)}-{slugify(group_name)}-{pill_width}"
     output_path = BIN_DIR / f"shortcut-badge-{cache_key}.png"
     if output_path.exists():
         return output_path
 
     image = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-    draw_shadow(image, (0, 0, width, height), radius=22, blur=14, fill=(8, 14, 24, 62))
-
+    pill_box = (outer_pad, outer_pad, outer_pad + pill_width, outer_pad + pill_height)
     badge = Image.new("RGBA", (width, height), (0, 0, 0, 0))
     draw = ImageDraw.Draw(badge)
-    draw.rounded_rectangle((0, 0, width, height), radius=22, fill=(10, 16, 26, 154))
-    draw.text((20, 16), shortcut_label, font=font, fill="#FFFFFF")
-    draw.text((20 + (shortcut_bounds[2] - shortcut_bounds[0]) + 22, 16), group_name, font=font, fill="#D4DEE9")
+    badge_box = pill_box
+    draw.rounded_rectangle(badge_box, radius=scaled(30), fill=(7, 12, 22, 255))
+    draw.rounded_rectangle(
+        badge_box,
+        radius=scaled(30),
+        outline=(45, 61, 82, 120),
+        width=scaled(1),
+    )
+    draw.text((outer_pad + scaled(30), outer_pad + scaled(18)), "SHORTCUT PRESSED", font=label_font, fill="#9EC4DF")
+
+    key_box = (
+        outer_pad + scaled(28),
+        outer_pad + scaled(42),
+        outer_pad + scaled(28) + key_width,
+        outer_pad + scaled(78),
+    )
+    draw.rounded_rectangle(
+        key_box,
+        radius=scaled(14),
+        fill=(241, 247, 255, 255),
+        outline=(255, 255, 255, 150),
+        width=scaled(1),
+    )
+    key_x = key_box[0] + (key_width - (shortcut_bounds[2] - shortcut_bounds[0])) / 2
+    draw.text((key_x, outer_pad + scaled(43)), shortcut_label, font=key_font, fill="#111827")
+    draw.text((key_box[2] + scaled(22), outer_pad + scaled(45)), group_name, font=group_font, fill="#F7FBFF")
     image.alpha_composite(badge)
     image.save(output_path)
     return output_path
 
 
 def apply_click_highlights(scene: dict[str, Any], capture_path: Path) -> None:
-    click_actions = [action for action in scene.get("actions", []) if action.get("type") == "mouse-click" and action.get("highlight", True)]
-    if not click_actions:
+    highlight_actions: list[dict[str, Any]] = []
+    for action in scene.get("actions", []):
+        if action.get("highlight", True) is False:
+            continue
+        if action.get("type") == "mouse-click":
+            highlight_actions.append(
+                {
+                    "at": float(action["at"]),
+                    "x": float(action["x"]),
+                    "y": float(action["y"]),
+                    "duration": float(action.get("highlight_duration", 0.45)),
+                    "move_duration": float(action.get("move_duration", 0.35)),
+                }
+            )
+            continue
+
+        rect = action.get("_highlight_rect")
+        if isinstance(rect, dict):
+            highlight_actions.append(
+                {
+                    "at": float(action["at"]),
+                    "x": float(rect["x"]) + float(rect["width"]) / 2,
+                    "y": float(rect["y"]) + float(rect["height"]) / 2,
+                    "screen_x": float(rect.get("screenX", 0)),
+                    "screen_y": float(rect.get("screenY", 0)),
+                    "screen_width": float(rect.get("screenWidth", 0)),
+                    "screen_height": float(rect.get("screenHeight", 0)),
+                    "duration": float(action.get("highlight_duration", 0.95)),
+                    "move_duration": float(action.get("move_duration", 0.40)),
+                }
+            )
+
+    if not highlight_actions:
         return
 
     highlight_path = click_highlight_asset()
     highlight_image = Image.open(highlight_path)
     highlight_width, highlight_height = highlight_image.size
-    capture_duration = float(ffprobe_stream(capture_path)["format"]["duration"])
+    cursor_path = cursor_pointer_asset()
+    cursor_image = Image.open(cursor_path)
+    cursor_width, cursor_height = cursor_image.size
+    cursor_tip_x = 8
+    cursor_tip_y = 6
+    payload = ffprobe_stream(capture_path)
+    capture_duration = float(payload["format"]["duration"])
+    video_stream = next((stream for stream in payload["streams"] if stream.get("codec_type") == "video"), None)
+    capture_width = float(video_stream["width"]) if video_stream else 0
+    capture_height = float(video_stream["height"]) if video_stream else 0
     temp_output = capture_path.with_name(f"{capture_path.stem}-clicks{capture_path.suffix}")
     command = ["ffmpeg", "-y", "-i", str(capture_path)]
     filter_parts: list[str] = []
     previous = "[0:v]"
+    input_index = 1
+    last_cursor_position: tuple[float, float] | None = None
 
-    for index, action in enumerate(click_actions, start=1):
+    def clamp(value: float, minimum: float, maximum: float) -> float:
+        if maximum < minimum:
+            return minimum
+        return max(minimum, min(maximum, value))
+
+    for index, action in enumerate(highlight_actions, start=1):
         command.extend(["-loop", "1", "-i", str(highlight_path)])
-        x = int(action["x"]) - highlight_width // 2
-        y = int(action["y"]) - highlight_height // 2
+        ring_input = input_index
+        input_index += 1
+        command.extend(["-loop", "1", "-i", str(cursor_path)])
+        cursor_input = input_index
+        input_index += 1
+
+        scale_x = capture_width / float(action["screen_width"]) if action.get("screen_width") and capture_width else 1.0
+        scale_y = capture_height / float(action["screen_height"]) if action.get("screen_height") and capture_height else scale_x
+        screen_x = float(action.get("screen_x", 0))
+        screen_y = float(action.get("screen_y", 0))
+        target_x = clamp((float(action["x"]) - screen_x) * scale_x, 0, capture_width)
+        target_y = clamp((float(action["y"]) - screen_y) * scale_y, 0, capture_height)
+        ring_x = int(target_x) - highlight_width // 2
+        ring_y = int(target_y) - highlight_height // 2
         start = float(action["at"])
-        duration = float(action.get("highlight_duration", 0.45))
-        output_label = f"[v{index}]"
+        duration = float(action["duration"])
+        ring_end = min(capture_duration, start + duration)
+        ring_label = f"[v{index}r]"
         filter_parts.append(
-            f"{previous}[{index}:v]overlay={x}:{y}:enable='between(t,{start:.3f},{start + duration:.3f})'{output_label}"
+            f"{previous}[{ring_input}:v]overlay={ring_x}:{ring_y}:enable='between(t,{start:.3f},{ring_end:.3f})'{ring_label}"
+        )
+
+        target_cursor_x = clamp(target_x - cursor_tip_x, 0, capture_width - cursor_width)
+        target_cursor_y = clamp(target_y - cursor_tip_y, 0, capture_height - cursor_height)
+        if last_cursor_position is None:
+            start_cursor_x = clamp(target_cursor_x - 240, 0, capture_width - cursor_width)
+            start_cursor_y = clamp(target_cursor_y - 130, 0, capture_height - cursor_height)
+        else:
+            start_cursor_x, start_cursor_y = last_cursor_position
+        last_cursor_position = (target_cursor_x, target_cursor_y)
+
+        move_duration = max(0.08, float(action.get("move_duration", 0.40)))
+        move_start = max(0.0, start - move_duration)
+        cursor_end = min(capture_duration, ring_end + 0.22)
+        move_denominator = max(start - move_start, 0.001)
+        x_expr = (
+            f"if(lte(t,{start:.3f}),"
+            f"{start_cursor_x:.1f}+({target_cursor_x:.1f}-{start_cursor_x:.1f})*(t-{move_start:.3f})/{move_denominator:.3f},"
+            f"{target_cursor_x:.1f})"
+        )
+        y_expr = (
+            f"if(lte(t,{start:.3f}),"
+            f"{start_cursor_y:.1f}+({target_cursor_y:.1f}-{start_cursor_y:.1f})*(t-{move_start:.3f})/{move_denominator:.3f},"
+            f"{target_cursor_y:.1f})"
+        )
+        output_label = f"[v{index}c]"
+        filter_parts.append(
+            f"{ring_label}[{cursor_input}:v]overlay=x='{x_expr}':y='{y_expr}':enable='between(t,{move_start:.3f},{cursor_end:.3f})'{output_label}"
         )
         previous = output_label
 
@@ -1432,7 +2023,24 @@ def apply_shortcut_overlays(scene: dict[str, Any], capture_path: Path) -> None:
         return
 
     group_names = shortcut_group_names(scene)
-    capture_duration = float(ffprobe_stream(capture_path)["format"]["duration"])
+    payload = ffprobe_stream(capture_path)
+    capture_duration = float(payload["format"]["duration"])
+    video_stream = next((stream for stream in payload["streams"] if stream.get("codec_type") == "video"), None)
+    if video_stream is None:
+        raise PipelineError(f"No video stream found in {capture_path}")
+    capture_width = float(video_stream["width"])
+    capture_height = float(video_stream["height"])
+    profile = load_profile(str(scene["profile"]))
+    output_width, output_height = output_size(profile)
+    render_scale = max(output_width / capture_width, output_height / capture_height)
+    scaled_width = capture_width * render_scale
+    scaled_height = capture_height * render_scale
+    crop_x = max((scaled_width - output_width) / 2, 0)
+    crop_y = max((scaled_height - output_height) / 2 - VERTICAL_CROP_BIAS, 0)
+    source_pixels_per_output_pixel = 1 / render_scale
+    desired_right = 96
+    desired_top = 96
+
     temp_output = capture_path.with_name(f"{capture_path.stem}-shortcuts{capture_path.suffix}")
     command = ["ffmpeg", "-y", "-i", str(capture_path)]
     filter_parts: list[str] = []
@@ -1441,13 +2049,21 @@ def apply_shortcut_overlays(scene: dict[str, Any], capture_path: Path) -> None:
     for index, action in enumerate(shortcut_actions, start=1):
         shortcut = str(action["shortcut"])
         group_name = group_names.get(shortcut, str(action.get("overlay_group_name", "ShortcutCycle")))
-        badge_path = shortcut_badge_asset(shortcut, group_name)
+        badge_path = shortcut_badge_asset(
+            shortcut,
+            group_name,
+            render_scale=source_pixels_per_output_pixel,
+        )
+        with Image.open(badge_path) as badge_image:
+            badge_width, _ = badge_image.size
+        overlay_x = int(round((output_width - desired_right + crop_x) / render_scale - badge_width))
+        overlay_y = int(round((desired_top + crop_y) / render_scale))
         command.extend(["-loop", "1", "-i", str(badge_path)])
         start = max(0.0, float(action["at"]) - 0.08)
         duration = float(action.get("overlay_duration", 0.90))
         output_label = f"[v{index}]"
         filter_parts.append(
-            f"{previous}[{index}:v]overlay=main_w-overlay_w-84:76:enable='between(t,{start:.3f},{start + duration:.3f})'{output_label}"
+            f"{previous}[{index}:v]overlay={overlay_x}:{overlay_y}:enable='between(t,{start:.3f},{start + duration:.3f})'{output_label}"
         )
         previous = output_label
 
@@ -2279,6 +2895,8 @@ def execute_capture_action(profile: dict[str, Any], action: dict[str, Any]) -> N
             float(action.get("post_hold", 0.42)),
         )
     elif action_type == "open-url":
+        if action.get("highlight_text"):
+            attach_semantic_highlight(profile, action, "frame-text", str(action["highlight_text"]))
         open_url(profile, str(action["url"]))
     elif action_type == "launch-app":
         launch_app(str(action["bundle_id"]))
@@ -2287,6 +2905,48 @@ def execute_capture_action(profile: dict[str, Any], action: dict[str, Any]) -> N
             ["osascript", "-e", f'tell application id "{str(action["bundle_id"])}" to activate'],
             capture_output=True,
             check=True,
+        )
+    elif action_type == "select-group":
+        attach_semantic_highlight(profile, action, "frame-group", str(action["group"]))
+        run_shortcutcycle_ax(profile, "select-group", str(action["group"]))
+    elif action_type == "set-tab":
+        attach_semantic_highlight(profile, action, "frame-tab", str(action["tab"]))
+        run_shortcutcycle_ax(profile, "set-tab", str(action["tab"]))
+    elif action_type == "click-button":
+        button_name = str(action.get("button", action.get("title", "")))
+        if not button_name:
+            raise PipelineError("click-button action expects button or title")
+        attach_semantic_highlight(profile, action, "frame-button", button_name)
+        run_shortcutcycle_ax(profile, "click-button", button_name)
+    elif action_type == "click-control":
+        control_name = str(action.get("control", action.get("title", "")))
+        if not control_name:
+            raise PipelineError("click-control action expects control or title")
+        attach_semantic_highlight(profile, action, "frame-control", control_name)
+        run_shortcutcycle_ax(profile, "click-control", control_name)
+    elif action_type == "click-menu-item":
+        item_title = str(action.get("title", action.get("item", "")))
+        if not item_title:
+            raise PipelineError("click-menu-item action expects title or item")
+        attach_semantic_highlight(profile, action, "frame-menu-item", item_title)
+        run_shortcutcycle_ax(profile, "click-menu-item", item_title)
+    elif action_type == "click-radio":
+        group_name = str(action.get("group", action.get("control", "")))
+        if not group_name:
+            raise PipelineError("click-radio action expects group or control")
+        index = int(action["index"])
+        attach_semantic_highlight(profile, action, "frame-radio", group_name, index)
+        run_shortcutcycle_ax(profile, "click-radio", group_name, index)
+    elif action_type == "select-backup-row":
+        attach_semantic_highlight(profile, action, "frame-backup-row", int(action["index"]))
+        run_shortcutcycle_ax(profile, "select-backup-row", int(action["index"]))
+    elif action_type == "scroll-area":
+        run_shortcutcycle_ax(
+            profile,
+            "scroll",
+            str(action.get("direction", "down")),
+            int(action.get("count", 1)),
+            str(action.get("target", "first")),
         )
     elif action_type == "mouse-click":
         post_mouse_click(
@@ -2315,7 +2975,7 @@ def execute_capture_action(profile: dict[str, Any], action: dict[str, Any]) -> N
         raise PipelineError(f"Unsupported capture action: {action_type}")
 
 
-def capture_scene(scene_id: str, run_id: str) -> Path:
+def capture_scene(scene_id: str, run_id: str, *, settings_backups: SettingsBackupMap | None = None) -> Path:
     ensure_directories()
     scene = load_scene(scene_id)
     capture_settings = scene.get("capture", {})
@@ -2326,55 +2986,111 @@ def capture_scene(scene_id: str, run_id: str) -> Path:
     output_path = raw_scene_path(scene_id, run_id)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    quit_integration_app(profile)
-    run_prepare_steps([step for step in scene.get("prepare_before_launch", []) if isinstance(step, dict)])
+    clean_background = bool(capture_settings.get("clean_background", scene.get("clean_background", False)))
+    hide_cursor = bool(capture_settings.get("hide_cursor", False))
+    recording_warmup_seconds = float(capture_settings.get("recording_warmup_seconds", 0.0))
+    backdrop: subprocess.Popen[str] | None = None
+    recorder: subprocess.Popen[str] | None = None
+    cursor_restore_position: tuple[float, float] | None = None
+    settings_backup: dict[str, Any] | None = None
+    cleanup_errors: list[str] = []
 
-    did_seed_fixture = not bool(scene.get("skip_seed", False))
-    if did_seed_fixture:
-        seed_fixture(profile, scene["fixture"])
+    def record_cleanup_error(label: str, cleanup: Callable[[], None]) -> None:
+        try:
+            cleanup()
+        except Exception as error:
+            cleanup_errors.append(f"{label}: {error}")
 
-    launch_integration_app(profile)
-    time.sleep(0.6)
+    def stop_recorder() -> None:
+        if recorder is None or recorder.poll() is not None:
+            return
+        recorder.send_signal(signal.SIGINT)
+        try:
+            recorder.wait(timeout=15)
+        except subprocess.TimeoutExpired:
+            recorder.kill()
+            recorder.wait(timeout=5)
 
-    if did_seed_fixture:
-        seed_fixture_via_url(profile, scene["fixture"])
-
-    for command in scene.get("prepare_urls", []):
-        url_command(profile, str(command))
-        time.sleep(0.15)
-
-    for bundle_identifier in scene.get("launch_apps", []):
-        launch_app(str(bundle_identifier))
-        time.sleep(float(profile.get("app_launch_stagger_seconds", 0.6)))
-
-    run_prepare_steps([step for step in scene.get("prepare_after_launch", []) if isinstance(step, dict)])
-
-    if scene.get("window_bounds") or scene.get("window_layouts"):
-        stage_windows(scene)
-
-    duration = float(capture_settings["duration"])
-    ffmpeg_command = [
-        "ffmpeg",
-        "-y",
-        "-f",
-        "avfoundation",
-        "-pixel_format",
-        str(profile.get("capture_pixel_format", "bgr0")),
-        "-framerate",
-        str(frame_rate(profile)),
-        "-i",
-        resolved_capture_device(profile),
-        "-an",
-        "-c:v",
-        "libx264",
-        "-pix_fmt",
-        "yuv420p",
-        str(output_path),
-    ]
-    recorder = subprocess.Popen(ffmpeg_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-    start = time.monotonic()
     try:
+        if hide_cursor:
+            cursor_restore_position = cursor_position()
+            stash_cursor()
+            time.sleep(0.25)
+
+        was_running = shortcutcycle_process_count() > 0
+        quit_integration_app(profile)
+        if settings_backups is None or settings_backup_key(profile) not in settings_backups:
+            settings_backup = backup_integration_settings(profile, scene_id, run_id, was_running=was_running)
+
+        run_prepare_steps([step for step in scene.get("prepare_before_launch", []) if isinstance(step, dict)])
+
+        did_seed_fixture = not bool(scene.get("skip_seed", False))
+        if did_seed_fixture:
+            seed_fixture(profile, scene["fixture"])
+
+        launch_integration_app(profile)
+        time.sleep(0.6)
+
+        if did_seed_fixture:
+            seed_fixture_via_url(profile, scene["fixture"])
+
+        for command in scene.get("prepare_urls", []):
+            url_command(profile, str(command))
+            time.sleep(0.15)
+
+        for bundle_identifier in scene.get("launch_apps", []):
+            launch_app(str(bundle_identifier))
+            time.sleep(float(profile.get("app_launch_stagger_seconds", 0.6)))
+
+        run_prepare_steps([step for step in scene.get("prepare_after_launch", []) if isinstance(step, dict)])
+
+        if clean_background:
+            target_bundle_ids = []
+            raw_targets = scene.get("window_stage_apps")
+            if isinstance(raw_targets, list):
+                target_bundle_ids.extend(str(bundle_id) for bundle_id in raw_targets)
+            target_bundle_ids.extend(str(bundle_id) for bundle_id in scene.get("launch_apps", []))
+            if not target_bundle_ids:
+                target_bundle_ids.append(str(profile.get("bundle_id", "com.xcv58.ShortcutCycle")))
+            hide_other_apps(target_bundle_ids)
+            background_value = str(capture_settings.get("background_color", "#F7F5EF"))
+            if capture_settings.get("background_image"):
+                background_value = str(require_file(expand_repo_path(str(capture_settings["background_image"])), "capture background image"))
+            backdrop = start_capture_backdrop(background_value)
+
+        if scene.get("window_bounds") or scene.get("window_layouts"):
+            stage_windows(scene)
+
+        duration = float(capture_settings["duration"])
+        ffmpeg_command = [
+            "ffmpeg",
+            "-y",
+            "-f",
+            "avfoundation",
+            "-pixel_format",
+            str(profile.get("capture_pixel_format", "bgr0")),
+            "-framerate",
+            str(frame_rate(profile)),
+        ]
+        if hide_cursor:
+            ffmpeg_command.extend(["-capture_cursor", "0", "-capture_mouse_clicks", "0"])
+        ffmpeg_command.extend(
+            [
+                "-i",
+                resolved_capture_device(profile),
+                "-an",
+                "-c:v",
+                "libx264",
+                "-pix_fmt",
+                "yuv420p",
+                str(output_path),
+            ]
+        )
+        recorder = subprocess.Popen(ffmpeg_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if recording_warmup_seconds > 0:
+            time.sleep(recording_warmup_seconds)
+
+        start = time.monotonic()
         for action in sorted(scene.get("actions", []), key=lambda item: float(item["at"])):
             while time.monotonic() - start < float(action["at"]):
                 time.sleep(0.02)
@@ -2384,14 +3100,20 @@ def capture_scene(scene_id: str, run_id: str) -> Path:
         while time.monotonic() - start < target_duration:
             time.sleep(0.05)
     finally:
-        recorder.send_signal(signal.SIGINT)
-        recorder.wait(timeout=15)
+        record_cleanup_error("stop screen recorder", stop_recorder)
+        if cursor_restore_position is not None:
+            record_cleanup_error("restore cursor position", lambda: move_cursor(*cursor_restore_position))
+        record_cleanup_error("stop capture backdrop", lambda: stop_process(backdrop))
+        if settings_backup is not None:
+            record_cleanup_error("restore ShortcutCycle settings", lambda: restore_integration_settings(profile, settings_backup))
+
+    if cleanup_errors:
+        raise PipelineError("Capture cleanup failed after attempting all cleanup steps: " + "; ".join(cleanup_errors))
 
     require_file(output_path, "captured scene output")
-    apply_click_highlights(scene, output_path)
-    apply_shortcut_overlays(scene, output_path)
+    write_scene_metadata(scene)
     publish_scene_source(scene, output_path)
-    publish_scene_capture(scene, output_path)
+    publish_scene_capture(scene, prepare_processed_scene(scene_id, run_id))
     return output_path
 
 
@@ -2425,6 +3147,33 @@ def draw_centered_text(
     draw.multiline_text((x, y), text, font=font, fill=fill, align="center")
 
 
+def cover_image(path: Path, width: int, height: int) -> Image.Image:
+    image = Image.open(path).convert("RGB")
+    resample = getattr(getattr(Image, "Resampling", Image), "LANCZOS")
+    scale = max(width / image.width, height / image.height)
+    resized_width = int(math.ceil(image.width * scale))
+    resized_height = int(math.ceil(image.height * scale))
+    image = image.resize((resized_width, resized_height), resample)
+    left = max(0, (resized_width - width) // 2)
+    top = max(0, (resized_height - height) // 2)
+    return image.crop((left, top, left + width, top + height))
+
+
+def render_template_background(template: dict[str, Any], width: int, height: int) -> Image.Image:
+    background_image = template.get("background_image")
+    if background_image:
+        image = cover_image(require_file(expand_repo_path(str(background_image)), "template background image"), width, height).convert("RGBA")
+        blur = float(template.get("background_blur", 0))
+        if blur > 0:
+            image = image.filter(ImageFilter.GaussianBlur(blur))
+        overlay_alpha = int(template.get("background_overlay_alpha", 62))
+        if overlay_alpha > 0:
+            image.alpha_composite(Image.new("RGBA", (width, height), (3, 8, 13, overlay_alpha)))
+        return image.convert("RGB")
+
+    return Image.new("RGB", (width, height), ImageColor.getrgb(template.get("background_color", DEFAULT_TEMPLATE_BG)))
+
+
 def render_shortcut_intro_card(
     template: dict[str, Any],
     title: str,
@@ -2434,7 +3183,7 @@ def render_shortcut_intro_card(
     output_path: Path,
 ) -> None:
     width, height = template.get("size", [1920, 1080])
-    image = Image.new("RGB", (int(width), int(height)), ImageColor.getrgb(template.get("background_color", DEFAULT_TEMPLATE_BG)))
+    image = render_template_background(template, int(width), int(height))
     draw = ImageDraw.Draw(image)
 
     panel = template["panel"]
@@ -2577,6 +3326,17 @@ def resolve_scene_source(scene_id: str, run_id: str) -> Path:
     return require_file(REPO_ROOT / fallback_source, f"fallback source clip for {scene_id}")
 
 
+def prepare_processed_scene(scene_id: str, run_id: str) -> Path:
+    scene = load_scene_for_postprocess(scene_id)
+    source_path = resolve_scene_source(scene_id, run_id)
+    output_path = processed_scene_path(scene_id, run_id)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source_path, output_path)
+    apply_click_highlights(scene, output_path)
+    apply_shortcut_overlays(scene, output_path)
+    return output_path
+
+
 def render_scene_segment(
     scene_id: str,
     run_id: str,
@@ -2587,7 +3347,7 @@ def render_scene_segment(
     width: int,
     height: int,
 ) -> Path:
-    source_path = resolve_scene_source(scene_id, run_id)
+    source_path = prepare_processed_scene(scene_id, run_id)
     run(
         [
             "ffmpeg",
@@ -2799,41 +3559,78 @@ def doctor() -> int:
     if not background.exists():
         failures += 1
 
+    ax_helper = SHORTCUTCYCLE_AX_HELPER_SOURCE
+    print_status("ShortcutCycle AX helper", ax_helper.exists(), str(ax_helper))
+    if not ax_helper.exists():
+        failures += 1
+
     print_status(
         "accessibility scripting",
         True,
-        "not required for the current synthetic overview capture path",
+        "required for semantic settings capture actions",
     )
     return 1 if failures else 0
 
 
-def build_video(video_id: str, run_id: str, *, recapture: bool) -> dict[str, Any]:
-    if recapture:
-        video = load_video(video_id)
-        seen_scenes: set[str] = set()
-        for item in video["sequence"]:
-            if item["type"] == "scene":
-                scene_id = str(item["scene"])
-                if scene_id not in seen_scenes:
-                    capture_scene(scene_id, run_id)
-                    seen_scenes.add(scene_id)
+def build_video(
+    video_id: str,
+    run_id: str,
+    *,
+    recapture: bool,
+    settings_backups: SettingsBackupMap | None = None,
+) -> dict[str, Any]:
+    owns_settings_backups = False
+    if recapture and settings_backups is None:
+        settings_backups = prepare_session_settings_backups(
+            scene_ids_for_video(video_id),
+            run_id,
+            f"build-{video_id}",
+        )
+        owns_settings_backups = True
 
-    render_path = render_video(video_id, run_id)
-    report = validate_video(video_id, run_id)
-    published = publish_video(video_id, run_id)
-    return {
-        "render": render_path,
-        "report": report,
-        "published": published,
-    }
+    try:
+        if recapture:
+            video = load_video(video_id)
+            seen_scenes: set[str] = set()
+            for item in video["sequence"]:
+                if item["type"] == "scene":
+                    scene_id = str(item["scene"])
+                    if scene_id not in seen_scenes:
+                        capture_scene(scene_id, run_id, settings_backups=settings_backups)
+                        seen_scenes.add(scene_id)
+
+        render_path = render_video(video_id, run_id)
+        report = validate_video(video_id, run_id)
+        published = publish_video(video_id, run_id)
+        return {
+            "render": render_path,
+            "report": report,
+            "published": published,
+        }
+    finally:
+        if owns_settings_backups:
+            restore_session_settings_backups(settings_backups)
 
 
 def build_set(set_id: str, run_id: str, *, recapture: bool) -> list[dict[str, Any]]:
     data = load_set(set_id)
-    results = []
-    for video_id in data.get("videos", []):
-        results.append(build_video(str(video_id), run_id, recapture=recapture))
-    return results
+    settings_backups: SettingsBackupMap | None = None
+    if recapture:
+        scene_ids: list[str] = []
+        for video_id in data.get("videos", []):
+            for scene_id in scene_ids_for_video(str(video_id)):
+                if scene_id not in scene_ids:
+                    scene_ids.append(scene_id)
+        settings_backups = prepare_session_settings_backups(scene_ids, run_id, f"build-set-{set_id}")
+
+    try:
+        results = []
+        for video_id in data.get("videos", []):
+            results.append(build_video(str(video_id), run_id, recapture=recapture, settings_backups=settings_backups))
+        return results
+    finally:
+        if recapture:
+            restore_session_settings_backups(settings_backups)
 
 
 def parse_args() -> argparse.Namespace:
@@ -2862,11 +3659,21 @@ def parse_args() -> argparse.Namespace:
     build_parser.add_argument("--video", required=True)
     build_parser.add_argument("--run-id")
     build_parser.add_argument("--recapture", action="store_true")
+    build_parser.add_argument(
+        "--rerender-only",
+        action="store_true",
+        help="Explicitly reuse clean scene sources and rerun post-processing without recording the desktop.",
+    )
 
     build_set_parser = subparsers.add_parser("build-set")
     build_set_parser.add_argument("--set", required=True)
     build_set_parser.add_argument("--run-id")
     build_set_parser.add_argument("--recapture", action="store_true")
+    build_set_parser.add_argument(
+        "--rerender-only",
+        action="store_true",
+        help="Explicitly reuse clean scene sources and rerun post-processing without recording the desktop.",
+    )
 
     return parser.parse_args()
 
@@ -2903,6 +3710,8 @@ def main() -> int:
         return 0
 
     if args.command == "build":
+        if bool(args.recapture) and bool(args.rerender_only):
+            raise PipelineError("--recapture and --rerender-only cannot be used together")
         result = build_video(args.video, run_id, recapture=bool(args.recapture))
         print(result["render"])
         for path in result["published"]:
@@ -2910,6 +3719,8 @@ def main() -> int:
         return 0
 
     if args.command == "build-set":
+        if bool(args.recapture) and bool(args.rerender_only):
+            raise PipelineError("--recapture and --rerender-only cannot be used together")
         results = build_set(args.set, run_id, recapture=bool(args.recapture))
         for result in results:
             print(result["render"])
