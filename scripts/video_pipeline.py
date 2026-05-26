@@ -60,6 +60,10 @@ DEFAULT_BOLD_FONT = "/System/Library/Fonts/Supplemental/Arial Bold.ttf"
 OVERVIEW_BACKGROUND_PATH = REPO_ROOT / "scripts" / "assets" / "background.jpeg"
 SHORTCUTCYCLE_AX_HELPER_SOURCE = REPO_ROOT / "scripts" / "shortcutcycle_ax_helper.swift"
 VERTICAL_CROP_BIAS = 40
+APP_STORE_AUDIO_SOURCE = "anoisesrc=color=pink:amplitude=0.0001:sample_rate=48000"
+APP_STORE_AUDIO_BITRATE = "256k"
+APP_STORE_AUDIO_SAMPLE_RATE = "48000"
+SHORTCUT_OVERLAY_LEAD_SECONDS = 0.80
 
 KNOWN_APP_BUNDLES = {
     "com.apple.ActivityMonitor": Path("/System/Applications/Utilities/Activity Monitor.app"),
@@ -2040,6 +2044,9 @@ def apply_shortcut_overlays(scene: dict[str, Any], capture_path: Path) -> None:
     source_pixels_per_output_pixel = 1 / render_scale
     desired_right = 96
     desired_top = 96
+    overlay_defaults = scene.get("shortcut_overlay", {})
+    if not isinstance(overlay_defaults, dict):
+        overlay_defaults = {}
 
     temp_output = capture_path.with_name(f"{capture_path.stem}-shortcuts{capture_path.suffix}")
     command = ["ffmpeg", "-y", "-i", str(capture_path)]
@@ -2059,7 +2066,8 @@ def apply_shortcut_overlays(scene: dict[str, Any], capture_path: Path) -> None:
         overlay_x = int(round((output_width - desired_right + crop_x) / render_scale - badge_width))
         overlay_y = int(round((desired_top + crop_y) / render_scale))
         command.extend(["-loop", "1", "-i", str(badge_path)])
-        start = max(0.0, float(action["at"]) - 0.08)
+        lead = float(action.get("overlay_lead", overlay_defaults.get("lead", SHORTCUT_OVERLAY_LEAD_SECONDS)))
+        start = max(0.0, float(action["at"]) - lead)
         duration = float(action.get("overlay_duration", 0.90))
         output_label = f"[v{index}]"
         filter_parts.append(
@@ -3376,6 +3384,7 @@ def render_video(video_id: str, run_id: str) -> Path:
     ensure_directories()
     video = load_video(video_id)
     profile = load_profile(video["profile"])
+    validate = video.get("validate", {})
     width, height = output_size(profile)
     fps = frame_rate(profile)
 
@@ -3414,6 +3423,7 @@ def render_video(video_id: str, run_id: str) -> Path:
 
     output_path = render_output_path(video_id, run_id)
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    concat_output_path = output_path.with_name(f"{output_path.stem}.concat.mp4")
     run(
         [
             "ffmpeg",
@@ -3431,10 +3441,92 @@ def render_video(video_id: str, run_id: str) -> Path:
             "yuv420p",
             "-movflags",
             "+faststart",
-            str(output_path),
+            str(concat_output_path),
         ],
         check=True,
     )
+
+    payload = ffprobe_stream(concat_output_path)
+    duration = float(payload["format"]["duration"])
+    min_duration = float(validate.get("min_duration", 0) or 0)
+    target_duration = max(duration, min_duration)
+    pad_duration = max(0.0, target_duration - duration)
+    wants_audio = validate.get("audio") is True
+
+    if wants_audio or pad_duration > 0:
+        filter_parts = [
+            f"[0:v]tpad=stop_mode=clone:stop_duration={pad_duration:.3f}[v]",
+        ]
+        command = [
+            "ffmpeg",
+            "-y",
+            "-i",
+            str(concat_output_path),
+        ]
+        if wants_audio:
+            command.extend(["-f", "lavfi", "-i", APP_STORE_AUDIO_SOURCE])
+            filter_parts.append("[1:a]pan=stereo|c0=c0|c1=c0[a]")
+
+        command.extend(
+            [
+                "-filter_complex",
+                ";".join(filter_parts),
+                "-map",
+                "[v]",
+            ]
+        )
+        if wants_audio:
+            command.extend(
+                [
+                    "-map",
+                    "[a]",
+                ]
+            )
+        else:
+            command.append("-an")
+
+        command.extend(
+            [
+                "-t",
+                f"{target_duration:.3f}",
+                "-c:v",
+                "libx264",
+                "-profile:v",
+                "high",
+                "-level:v",
+                "4.0",
+                "-pix_fmt",
+                "yuv420p",
+                "-b:v",
+                "10M",
+                "-minrate",
+                "10M",
+                "-maxrate",
+                "10M",
+                "-bufsize",
+                "20M",
+                "-x264-params",
+                "nal-hrd=cbr:force-cfr=1",
+            ]
+        )
+        if wants_audio:
+            command.extend(
+                [
+                    "-c:a",
+                    "aac",
+                    "-b:a",
+                    APP_STORE_AUDIO_BITRATE,
+                    "-ar",
+                    APP_STORE_AUDIO_SAMPLE_RATE,
+                    "-ac",
+                    "2",
+                ]
+            )
+        command.extend(["-movflags", "+faststart", str(output_path)])
+        run(command, check=True)
+        concat_output_path.unlink(missing_ok=True)
+    else:
+        concat_output_path.replace(output_path)
     return output_path
 
 
@@ -3464,13 +3556,17 @@ def validate_video(video_id: str, run_id: str) -> dict[str, Any]:
     if video_stream is None:
         raise PipelineError(f"No video stream found in {output}")
 
+    audio_stream = next((stream for stream in payload["streams"] if stream.get("codec_type") == "audio"), None)
     report = {
         "path": str(output),
         "width": int(video_stream["width"]),
         "height": int(video_stream["height"]),
         "frame_rate": video_stream["r_frame_rate"],
         "duration": float(payload["format"]["duration"]),
-        "has_audio": any(stream.get("codec_type") == "audio" for stream in payload["streams"]),
+        "has_audio": audio_stream is not None,
+        "audio_codec": audio_stream.get("codec_name") if audio_stream else None,
+        "audio_sample_rate": audio_stream.get("sample_rate") if audio_stream else None,
+        "audio_channels": audio_stream.get("channels") if audio_stream else None,
     }
 
     if "resolution" in validate:
@@ -3486,8 +3582,22 @@ def validate_video(video_id: str, run_id: str) -> dict[str, Any]:
             f"Validation failed for {video_id}: duration {report['duration']:.2f}s exceeds {validate['max_duration']}s"
         )
 
+    if "min_duration" in validate and report["duration"] < float(validate["min_duration"]) - 0.05:
+        raise PipelineError(
+            f"Validation failed for {video_id}: duration {report['duration']:.2f}s is shorter than {validate['min_duration']}s"
+        )
+
     if validate.get("audio") is False and report["has_audio"]:
         raise PipelineError(f"Validation failed for {video_id}: expected silent output")
+    if validate.get("audio") is True:
+        if not report["has_audio"]:
+            raise PipelineError(f"Validation failed for {video_id}: expected an audio track")
+        if report["audio_codec"] != "aac":
+            raise PipelineError(f"Validation failed for {video_id}: expected AAC audio, got {report['audio_codec']}")
+        if int(report["audio_channels"] or 0) != 2:
+            raise PipelineError(f"Validation failed for {video_id}: expected stereo audio")
+        if int(report["audio_sample_rate"] or 0) not in (44100, 48000):
+            raise PipelineError(f"Validation failed for {video_id}: expected 44.1kHz or 48kHz audio")
 
     report_path = report_output_path(video_id, run_id)
     report_path.parent.mkdir(parents=True, exist_ok=True)

@@ -25,7 +25,9 @@ The pipeline prefers a scene's tracked `source_clip` when rendering. Fresh captu
 
 Scene capture no longer publishes final website or App Store outputs directly. Final deliverables come from the recipe-driven video layer so every public-facing clip can share the same intro-card treatment.
 
-Post-processing is intentionally separate from capture. Shortcut indicator badges, synthetic cursor movement, and click highlights are applied to derived scene files under `.artifacts/video/scenes/<run-id>/`, leaving `marketing/video/sources/*.mp4` clean. Capture-time semantic target rectangles are stored in `marketing/video/sources/*.metadata.json`, which lets post-processing rerun without driving the app again.
+Published App Store preview videos are finalized with an enabled stereo AAC track and padded when needed to satisfy Apple's 15-second minimum. The audio is an intentionally inaudible noise bed rather than a missing or empty track, because App Store Connect rejects H.264 previews without supported stereo audio.
+
+Post-processing is intentionally separate from capture. Shortcut indicator badges, synthetic cursor movement, and click highlights are applied to derived scene files under `.artifacts/video/scenes/<run-id>/`, leaving `marketing/video/sources/*.mp4` clean. Shortcut indicator badges lead the scripted shortcut moment so the viewer sees the cause before the HUD/app switch effect; set `shortcut_overlay.lead` on a scene or `overlay_lead` on an action to tune that timing without recapturing. Capture-time semantic target rectangles are stored in `marketing/video/sources/*.metadata.json`, which lets post-processing rerun without driving the app again.
 
 ## Primary Commands
 

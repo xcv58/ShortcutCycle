@@ -55,3 +55,22 @@ SC_MARKETING_VERSION=1.6 /bin/sh scripts/sync_project_version.sh
 - [ ] Metadata: 2880x1800 screenshots are ready for all supported languages.
 - [ ] Binary: the app has been validated and uploaded from Xcode.
 - [ ] Review: the submission has been sent for App Review.
+
+## 5. Read-Only Release Audit
+
+Before changing App Store Connect, run the local release auditor:
+
+```sh
+python3 scripts/app_store_release_audit.py
+```
+
+The release source of truth is `ShortcutCycle/AppStoreRelease.json`. It declares the target version, preferred App Store Connect build, release policy, App Store text fields, three preview videos, and the canonical 10 screenshots to upload from the generated screenshot set.
+
+For a browser-side comparison, capture the App Store Connect macOS version page with Computer Use, save the accessibility-tree text outside the repo, then pass it to the auditor:
+
+```sh
+python3 scripts/app_store_release_audit.py \
+  --asc-snapshot .artifacts/app-store-connect/macos-version-1.6.txt
+```
+
+The auditor is intentionally read-only. It reports `ready`, `blocked`, or `needs_confirmation` and treats App Store Connect actions such as saving metadata, uploading assets, selecting a build, changing release policy, or clicking **Add for Review** as explicit-confirmation steps.

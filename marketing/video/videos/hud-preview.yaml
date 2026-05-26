@@ -16,5 +16,6 @@ sequence:
 validate:
   resolution: [1920, 1080]
   frame_rate: 30
+  min_duration: 15.2
   max_duration: 17.0
-  audio: false
+  audio: true
