@@ -69,6 +69,9 @@
 /* Settings Shortcut */
 "Settings Window" = "Settings Window";
 "Shortcuts" = "Shortcuts";
+"Shortcut Already Used" = "Shortcut Already Used";
+"The shortcut %@ is already used by %@." = "The shortcut %@ is already used by %@.";
+"Choose a different shortcut to avoid triggering both actions." = "Choose a different shortcut to avoid triggering both actions.";
 
 "Add Group" = "Add Group";
 "Delete Group" = "Delete Group";

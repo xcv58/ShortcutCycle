@@ -70,6 +70,9 @@
 /* Settings Shortcut */
 "Settings Window" = "Okno ustawień";
 "Shortcuts" = "Skróty";
+"Shortcut Already Used" = "Skrót jest już używany";
+"The shortcut %@ is already used by %@." = "Skrót %@ jest już używany przez %@.";
+"Choose a different shortcut to avoid triggering both actions." = "Wybierz inny skrót, aby uniknąć uruchamiania obu działań.";
 "Add Group" = "Dodaj grupę";
 "Delete Group" = "Usuń grupę";
 "Toggle Sidebar" = "Przełącz pasek boczny";

@@ -30,6 +30,8 @@ struct GeneralSettingsView: View {
     @State private var showBackupBrowser = false
     @State private var manualBackupFeedback: String?
     @State private var showShortcutReferencePopover = false
+    @State private var settingsShortcutRefreshToken = 0
+    @State private var shortcutConflict: ShortcutAssignmentConflict?
 
     // Clipboard state
     @State private var showClipboardImportConfirmation = false
@@ -106,6 +108,13 @@ struct GeneralSettingsView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text("Your settings have been imported from clipboard.".localized(language: selectedLanguage))
+        }
+        .alert(item: $shortcutConflict) { conflict in
+            Alert(
+                title: Text("Shortcut Already Used".localized(language: selectedLanguage)),
+                message: Text(conflict.message(language: selectedLanguage)),
+                dismissButton: .default(Text("OK"))
+            )
         }
     }
 
@@ -238,12 +247,12 @@ struct GeneralSettingsView: View {
                 KeyboardShortcuts.Recorder(
                     "Settings Window".localized(language: selectedLanguage),
                     name: .toggleSettings
-                ) { _ in
+                ) { shortcut in
                     Task { @MainActor in
-                        ShortcutManager.shared.registerAllShortcuts()
+                        handleSettingsWindowShortcutChange(shortcut)
                     }
                 }
-                .id("settings-window-shortcut-\(selectedLanguage)")
+                .id("settings-window-shortcut-\(selectedLanguage)-\(settingsShortcutRefreshToken)")
 
                 Button {
                     showShortcutReferencePopover = true
@@ -348,6 +357,26 @@ struct GeneralSettingsView: View {
         }
     }
     #endif
+
+    @MainActor
+    private func handleSettingsWindowShortcutChange(_ shortcut: KeyboardShortcuts.Shortcut?) {
+        if let conflict = ShortcutAssignmentConflicts.conflict(
+            for: shortcut,
+            assigning: .settingsWindow,
+            groups: store.groups
+        ) {
+            KeyboardShortcuts.setShortcut(nil, for: .toggleSettings)
+            shortcutConflict = conflict
+        }
+
+        refreshSettingsShortcutState()
+    }
+
+    @MainActor
+    private func refreshSettingsShortcutState() {
+        settingsShortcutRefreshToken += 1
+        ShortcutManager.shared.registerAllShortcuts()
+    }
 
     // MARK: - Export/Import Actions
     

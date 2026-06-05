@@ -70,6 +70,9 @@
 /* Settings Shortcut */
 "Settings Window" = "设置窗口";
 "Shortcuts" = "快捷键";
+"Shortcut Already Used" = "快捷键已被使用";
+"The shortcut %@ is already used by %@." = "快捷键 %@ 已被 %@ 使用。";
+"Choose a different shortcut to avoid triggering both actions." = "请选择其他快捷键，避免同时触发两个操作。";
 
 "Add Group" = "添加群组";
 "Delete Group" = "删除群组";

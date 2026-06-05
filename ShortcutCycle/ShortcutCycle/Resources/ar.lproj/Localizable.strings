@@ -70,6 +70,9 @@
 /* Settings Shortcut */
 "Settings Window" = "نافذة الإعدادات";
 "Shortcuts" = "اختصارات";
+"Shortcut Already Used" = "الاختصار مستخدم بالفعل";
+"The shortcut %@ is already used by %@." = "الاختصار %@ مستخدم بالفعل بواسطة %@.";
+"Choose a different shortcut to avoid triggering both actions." = "اختر اختصارًا مختلفًا لتجنب تشغيل الإجراءين معًا.";
 
 "Add Group" = "إضافة مجموعة";
 "Delete Group" = "حذف المجموعة";

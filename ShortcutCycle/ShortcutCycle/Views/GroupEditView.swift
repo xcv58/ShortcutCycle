@@ -583,6 +583,7 @@ private struct GroupShortcutEditor: View {
 
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
     @State private var shortcutRefreshToken = 0
+    @State private var shortcutConflict: ShortcutAssignmentConflict?
 
     private var shortcutName: KeyboardShortcuts.Name {
         .forGroup(groupId)
@@ -621,7 +622,7 @@ private struct GroupShortcutEditor: View {
             VStack(alignment: .leading, spacing: 8) {
                 KeyboardShortcuts.Recorder(for: shortcutName, onChange: handleShortcutChange)
                     .padding(.leading, 4)
-                    .id("\(selectedLanguage)-\(groupId.uuidString)") // Recreate only when localization or target group changes
+                    .id("\(selectedLanguage)-\(groupId.uuidString)-\(shortcutRefreshToken)")
                     .task(id: groupId) {
                         GroupSwitchPerformanceTracker.shared.markRecorderMounted(for: groupId)
                     }
@@ -672,17 +673,48 @@ private struct GroupShortcutEditor: View {
         .task(id: groupId) {
             GroupSwitchPerformanceTracker.shared.markShortcutSectionVisible(for: groupId)
         }
+        .alert(item: $shortcutConflict) { conflict in
+            Alert(
+                title: Text("Shortcut Already Used".localized(language: selectedLanguage)),
+                message: Text(conflict.message(language: selectedLanguage)),
+                dismissButton: .default(Text("OK"))
+            )
+        }
     }
 
     @MainActor
     private func assignShortcut(_ shortcut: KeyboardShortcuts.Shortcut) {
+        guard !showConflictIfNeeded(for: shortcut) else {
+            return
+        }
+
         KeyboardShortcuts.setShortcut(shortcut, for: shortcutName)
         refreshShortcutState()
     }
 
     @MainActor
     private func handleShortcutChange(_ shortcut: KeyboardShortcuts.Shortcut?) {
+        if let shortcut, showConflictIfNeeded(for: shortcut) {
+            KeyboardShortcuts.setShortcut(nil, for: shortcutName)
+            refreshShortcutState()
+            return
+        }
+
         refreshShortcutState()
+    }
+
+    @MainActor
+    private func showConflictIfNeeded(for shortcut: KeyboardShortcuts.Shortcut) -> Bool {
+        guard let conflict = ShortcutAssignmentConflicts.conflict(
+            for: shortcut,
+            assigning: .group(id: groupId, name: group.name),
+            groups: store.groups
+        ) else {
+            return false
+        }
+
+        shortcutConflict = conflict
+        return true
     }
 
     @MainActor

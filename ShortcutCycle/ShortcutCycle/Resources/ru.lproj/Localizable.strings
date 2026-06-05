@@ -70,6 +70,9 @@
 /* Settings Shortcut */
 "Settings Window" = "Окно настроек";
 "Shortcuts" = "Горячие клавиши";
+"Shortcut Already Used" = "Сочетание уже используется";
+"The shortcut %@ is already used by %@." = "Сочетание %@ уже используется: %@.";
+"Choose a different shortcut to avoid triggering both actions." = "Выберите другое сочетание, чтобы не запускать оба действия.";
 "Add Group" = "Добавить группу";
 "Delete Group" = "Удалить группу";
 "Toggle Sidebar" = "Переключить боковую панель";
