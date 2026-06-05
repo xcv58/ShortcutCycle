@@ -38,12 +38,12 @@ public enum ShortcutSuggestions {
     }
 }
 
-enum ShortcutAssignmentOwner: Equatable {
+public enum ShortcutAssignmentOwner: Equatable {
     case settingsWindow
     case group(id: UUID, name: String)
     case appCommand(titleKey: String)
 
-    static func == (lhs: ShortcutAssignmentOwner, rhs: ShortcutAssignmentOwner) -> Bool {
+    public static func == (lhs: ShortcutAssignmentOwner, rhs: ShortcutAssignmentOwner) -> Bool {
         switch (lhs, rhs) {
         case (.settingsWindow, .settingsWindow):
             return true
@@ -56,7 +56,7 @@ enum ShortcutAssignmentOwner: Equatable {
         }
     }
 
-    var identifier: String {
+    fileprivate var identifier: String {
         switch self {
         case .settingsWindow:
             return "settingsWindow"
@@ -67,42 +67,42 @@ enum ShortcutAssignmentOwner: Equatable {
         }
     }
 
-    func displayName(language: String) -> String {
+    public func displayName(localize: (String) -> String) -> String {
         switch self {
         case .settingsWindow:
-            return "Settings Window".localized(language: language)
+            return localize("Settings Window")
         case let .group(_, name):
             let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
-            return trimmedName.isEmpty ? "Group Name".localized(language: language) : trimmedName
+            return trimmedName.isEmpty ? localize("Group Name") : trimmedName
         case let .appCommand(titleKey):
-            return titleKey.localized(language: language)
+            return localize(titleKey)
         }
     }
 }
 
-struct ShortcutAssignmentConflict: Equatable, Identifiable {
-    let shortcut: KeyboardShortcuts.Shortcut
-    let owner: ShortcutAssignmentOwner
+public struct ShortcutAssignmentConflict: Equatable, Identifiable {
+    public let shortcut: KeyboardShortcuts.Shortcut
+    public let owner: ShortcutAssignmentOwner
 
-    var id: String {
+    public var id: String {
         "\(shortcut.carbonKeyCode)-\(shortcut.carbonModifiers)-\(owner.identifier)"
     }
 
     @MainActor
-    func message(language: String) -> String {
+    public func message(localize: (String) -> String) -> String {
         let conflictMessage = String(
-            format: "The shortcut %@ is already used by %@.".localized(language: language),
+            format: localize("The shortcut %@ is already used by %@."),
             shortcut.description,
-            owner.displayName(language: language)
+            owner.displayName(localize: localize)
         )
-        let guidance = "Choose a different shortcut to avoid triggering both actions.".localized(language: language)
+        let guidance = localize("Choose a different shortcut to avoid triggering both actions.")
         return "\(conflictMessage)\n\n\(guidance)"
     }
 }
 
-enum ShortcutAssignmentConflicts {
+public enum ShortcutAssignmentConflicts {
     @MainActor
-    static func conflict(
+    public static func conflict(
         for shortcut: KeyboardShortcuts.Shortcut?,
         assigning owner: ShortcutAssignmentOwner,
         groups: [AppGroup]

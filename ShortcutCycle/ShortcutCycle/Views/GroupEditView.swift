@@ -680,7 +680,7 @@ private struct GroupShortcutEditor: View {
         .alert(item: $shortcutConflict) { conflict in
             Alert(
                 title: Text("Shortcut Already Used".localized(language: selectedLanguage)),
-                message: Text(conflict.message(language: selectedLanguage)),
+                message: Text(conflict.message { $0.localized(language: selectedLanguage) }),
                 dismissButton: .default(Text("OK".localized(language: selectedLanguage)))
             )
         }

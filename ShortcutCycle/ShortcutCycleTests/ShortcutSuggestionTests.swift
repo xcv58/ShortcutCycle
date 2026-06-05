@@ -187,7 +187,7 @@ final class ShortcutSuggestionTests: XCTestCase {
 
         XCTAssertEqual(conflict?.shortcut, shortcut)
         XCTAssertEqual(conflict?.owner, .appCommand(titleKey: "Next Group"))
-        XCTAssertEqual(conflict?.owner.displayName(language: "zh-Hans"), "下一个群组")
+        XCTAssertEqual(conflict?.owner.displayName { $0 == "Next Group" ? "下一个群组" : $0 }, "下一个群组")
     }
 
     @MainActor
