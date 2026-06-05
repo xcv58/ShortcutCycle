@@ -1,4 +1,5 @@
 import SwiftUI
+import KeyboardShortcuts
 import UniformTypeIdentifiers
 #if canImport(ShortcutCycleCore)
 import ShortcutCycleCore
@@ -233,6 +234,16 @@ struct GeneralSettingsView: View {
                     }
                 }
                 .pickerStyle(.menu)
+
+                KeyboardShortcuts.Recorder(
+                    "Settings Window".localized(language: selectedLanguage),
+                    name: .toggleSettings
+                ) { _ in
+                    Task { @MainActor in
+                        ShortcutManager.shared.registerAllShortcuts()
+                    }
+                }
+                .id("settings-window-shortcut-\(selectedLanguage)")
 
                 Button {
                     showShortcutReferencePopover = true

@@ -1,6 +1,12 @@
 import Foundation
 import AppKit
 
+enum SettingsWindowToggleAction: Equatable {
+    case open
+    case focus
+    case dismiss
+}
+
 enum SettingsWindowLifecycleCoordinator {
     static func isSettingsWindow(_ window: NSWindow) -> Bool {
         window.identifier?.rawValue == "settings"
@@ -30,6 +36,25 @@ enum SettingsWindowLifecycleCoordinator {
         }
 
         return .regular
+    }
+
+    static func toggleAction(for window: NSWindow?) -> SettingsWindowToggleAction {
+        guard let window, isSettingsWindow(window), window.isVisible else {
+            return .open
+        }
+
+        if isDismissibleSettingsWindow(window) {
+            return .dismiss
+        }
+
+        return .focus
+    }
+
+    static func isDismissibleSettingsWindow(_ window: NSWindow) -> Bool {
+        isSettingsWindow(window)
+            && window.isVisible
+            && window.isKeyWindow
+            && !hasVisibleAttachedSheet(window)
     }
 
     private static func hasVisibleAttachedSheet(_ window: NSWindow) -> Bool {

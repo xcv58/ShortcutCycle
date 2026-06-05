@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 - **Running app quick add**: The group editor now lets you add currently running apps with a single click, reducing the need to browse Finder when capturing an active workflow.
 - **Shortcut suggestions**: Groups without an assigned shortcut now surface suggested hotkeys to streamline initial setup.
 - **Expanded Settings shortcuts**: ShortcutCycle now adds more macOS-style commands while Settings is open, including Settings, appearance toggle, group navigation, and group reordering shortcuts.
+- **Optional Settings window shortcut**: Users can assign their own global shortcut in General settings to show, focus, or hide the Settings window. No shortcut is assigned by default.
 
 ### Changed
 - **First-launch onboarding**: On first manual launch, ShortcutCycle now opens Settings with a welcome banner to make the menu bar-based app model clearer.
