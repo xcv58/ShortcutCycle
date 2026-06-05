@@ -41,6 +41,7 @@ public enum ShortcutSuggestions {
 enum ShortcutAssignmentOwner: Equatable {
     case settingsWindow
     case group(id: UUID, name: String)
+    case appCommand(titleKey: String)
 
     static func == (lhs: ShortcutAssignmentOwner, rhs: ShortcutAssignmentOwner) -> Bool {
         switch (lhs, rhs) {
@@ -48,6 +49,8 @@ enum ShortcutAssignmentOwner: Equatable {
             return true
         case let (.group(lhsID, _), .group(rhsID, _)):
             return lhsID == rhsID
+        case let (.appCommand(lhsTitle), .appCommand(rhsTitle)):
+            return lhsTitle == rhsTitle
         default:
             return false
         }
@@ -59,6 +62,8 @@ enum ShortcutAssignmentOwner: Equatable {
             return "settingsWindow"
         case let .group(id, _):
             return "group-\(id.uuidString)"
+        case let .appCommand(titleKey):
+            return "appCommand-\(titleKey)"
         }
     }
 
@@ -69,6 +74,8 @@ enum ShortcutAssignmentOwner: Equatable {
         case let .group(_, name):
             let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
             return trimmedName.isEmpty ? "Group Name".localized(language: language) : trimmedName
+        case let .appCommand(titleKey):
+            return titleKey.localized(language: language)
         }
     }
 }
@@ -104,6 +111,10 @@ enum ShortcutAssignmentConflicts {
             return nil
         }
 
+        if let conflict = AppCommandShortcutConflicts.conflict(for: shortcut) {
+            return conflict
+        }
+
         if owner != .settingsWindow,
            KeyboardShortcuts.getShortcut(for: .toggleSettings) == shortcut {
             return ShortcutAssignmentConflict(shortcut: shortcut, owner: .settingsWindow)
@@ -120,5 +131,41 @@ enum ShortcutAssignmentConflicts {
         }
 
         return nil
+    }
+}
+
+enum AppCommandShortcutConflicts {
+    private struct AppCommandShortcut {
+        let titleKey: String
+        let shortcut: KeyboardShortcuts.Shortcut
+    }
+
+    private static let shortcuts: [AppCommandShortcut] = [
+        .init(titleKey: "Settings...", shortcut: .init(.comma, modifiers: [.command])),
+        .init(titleKey: "Add Group", shortcut: .init(.n, modifiers: [.command])),
+        .init(titleKey: "Delete Group", shortcut: .init(.delete, modifiers: [.command])),
+        .init(titleKey: "Toggle Sidebar", shortcut: .init(.s, modifiers: [.command, .control])),
+        .init(titleKey: "Toggle Appearance", shortcut: .init(.a, modifiers: [.command, .control])),
+        .init(titleKey: "Groups", shortcut: .init(.one, modifiers: [.command])),
+        .init(titleKey: "General", shortcut: .init(.two, modifiers: [.command])),
+        .init(titleKey: "Previous Group", shortcut: .init(.upArrow, modifiers: [.command])),
+        .init(titleKey: "Next Group", shortcut: .init(.downArrow, modifiers: [.command])),
+        .init(titleKey: "Previous Group", shortcut: .init(.leftBracket, modifiers: [.command])),
+        .init(titleKey: "Next Group", shortcut: .init(.rightBracket, modifiers: [.command])),
+        .init(titleKey: "Previous Group", shortcut: .init(.k, modifiers: [.command])),
+        .init(titleKey: "Next Group", shortcut: .init(.j, modifiers: [.command])),
+        .init(titleKey: "Move Group Up", shortcut: .init(.upArrow, modifiers: [.command, .option])),
+        .init(titleKey: "Move Group Down", shortcut: .init(.downArrow, modifiers: [.command, .option]))
+    ]
+
+    static func conflict(for shortcut: KeyboardShortcuts.Shortcut) -> ShortcutAssignmentConflict? {
+        guard let command = shortcuts.first(where: { $0.shortcut == shortcut }) else {
+            return nil
+        }
+
+        return ShortcutAssignmentConflict(
+            shortcut: shortcut,
+            owner: .appCommand(titleKey: command.titleKey)
+        )
     }
 }

@@ -168,6 +168,29 @@ final class ShortcutSuggestionTests: XCTestCase {
     }
 
     @MainActor
+    func testConflictDetectsAppCommandShortcutWhenAssigningShortcut() {
+        let previousSettingsShortcut = KeyboardShortcuts.getShortcut(for: .toggleSettings)
+        let group = AppGroup(id: UUID(), name: "Target")
+        let shortcut = KeyboardShortcuts.Shortcut(.downArrow, modifiers: [.command])
+        KeyboardShortcuts.setShortcut(nil, for: .toggleSettings)
+
+        defer {
+            KeyboardShortcuts.setShortcut(previousSettingsShortcut, for: .toggleSettings)
+            KeyboardShortcuts.setShortcut(nil, for: group.shortcutName)
+        }
+
+        let conflict = ShortcutAssignmentConflicts.conflict(
+            for: shortcut,
+            assigning: .group(id: group.id, name: group.name),
+            groups: [group]
+        )
+
+        XCTAssertEqual(conflict?.shortcut, shortcut)
+        XCTAssertEqual(conflict?.owner, .appCommand(titleKey: "Next Group"))
+        XCTAssertEqual(conflict?.owner.displayName(language: "zh-Hans"), "下一个群组")
+    }
+
+    @MainActor
     func testConflictIgnoresAssignedGroupShortcut() {
         let previousSettingsShortcut = KeyboardShortcuts.getShortcut(for: .toggleSettings)
         let group = AppGroup(id: UUID(), name: "Work")

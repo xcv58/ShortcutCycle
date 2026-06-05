@@ -70,9 +70,12 @@
 /* Settings Shortcut */
 "Settings Window" = "Ayarlar Penceresi";
 "Shortcuts" = "Kısayollar";
+"Record Shortcut" = "Kısayol Kaydet";
+"Press Shortcut" = "Kısayola Bas";
 "Shortcut Already Used" = "Kısayol zaten kullanılıyor";
 "The shortcut %@ is already used by %@." = "%@ kısayolu zaten %@ tarafından kullanılıyor.";
 "Choose a different shortcut to avoid triggering both actions." = "İki eylemin birden tetiklenmesini önlemek için farklı bir kısayol seçin.";
+"OK" = "Tamam";
 "Add Group" = "Grup Ekle";
 "Delete Group" = "Grubu Sil";
 "Toggle Sidebar" = "Kenar Çubuğunu Aç/Kapat";

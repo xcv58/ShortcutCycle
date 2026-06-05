@@ -70,9 +70,12 @@
 /* Settings Shortcut */
 "Settings Window" = "Fenêtre des paramètres";
 "Shortcuts" = "Raccourcis";
+"Record Shortcut" = "Enregistrer le raccourci";
+"Press Shortcut" = "Saisir un raccourci";
 "Shortcut Already Used" = "Raccourci déjà utilisé";
 "The shortcut %@ is already used by %@." = "Le raccourci %@ est déjà utilisé par %@.";
 "Choose a different shortcut to avoid triggering both actions." = "Choisissez un autre raccourci pour éviter de déclencher les deux actions.";
+"OK" = "OK";
 "Add Group" = "Ajouter un groupe";
 "Delete Group" = "Supprimer le groupe";
 "Toggle Sidebar" = "Afficher/masquer la barre latérale";

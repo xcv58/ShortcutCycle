@@ -113,7 +113,7 @@ struct GeneralSettingsView: View {
             Alert(
                 title: Text("Shortcut Already Used".localized(language: selectedLanguage)),
                 message: Text(conflict.message(language: selectedLanguage)),
-                dismissButton: .default(Text("OK"))
+                dismissButton: .default(Text("OK".localized(language: selectedLanguage)))
             )
         }
     }
@@ -244,13 +244,17 @@ struct GeneralSettingsView: View {
                 }
                 .pickerStyle(.menu)
 
-                KeyboardShortcuts.Recorder(
-                    "Settings Window".localized(language: selectedLanguage),
-                    name: .toggleSettings
-                ) { shortcut in
-                    Task { @MainActor in
-                        handleSettingsWindowShortcutChange(shortcut)
+                LabeledContent {
+                    LocalizedKeyboardShortcutRecorder(
+                        name: .toggleSettings,
+                        selectedLanguage: selectedLanguage
+                    ) { shortcut in
+                        Task { @MainActor in
+                            handleSettingsWindowShortcutChange(shortcut)
+                        }
                     }
+                } label: {
+                    Text("Settings Window".localized(language: selectedLanguage))
                 }
                 .id("settings-window-shortcut-\(selectedLanguage)-\(settingsShortcutRefreshToken)")
 

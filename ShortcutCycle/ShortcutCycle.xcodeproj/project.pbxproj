@@ -10,6 +10,8 @@
 		017 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 901 /* KeyboardShortcuts */; };
 		A1B200022F70000100C0DE01 /* ShortcutSuggestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B200012F70000100C0DE01 /* ShortcutSuggestion.swift */; };
 		A1B200032F70000100C0DE01 /* ShortcutSuggestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B200012F70000100C0DE01 /* ShortcutSuggestion.swift */; };
+		A1B200052F70000200C0DE01 /* LocalizedKeyboardShortcutRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B200042F70000200C0DE01 /* LocalizedKeyboardShortcutRecorder.swift */; };
+		A1B200062F70000200C0DE01 /* LocalizedKeyboardShortcutRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B200042F70000200C0DE01 /* LocalizedKeyboardShortcutRecorder.swift */; };
 		C0A1D0012FB0000100C0DE01 /* GroupSwitchPerformanceTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A1D0002FB0000100C0DE01 /* GroupSwitchPerformanceTracker.swift */; };
 		C0A1D0022FB0000100C0DE01 /* GroupSwitchPerformanceTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A1D0002FB0000100C0DE01 /* GroupSwitchPerformanceTracker.swift */; };
 		DF88A3762F300B110042E749 /* HUDManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3542F300B110042E749 /* HUDManager.swift */; };
@@ -113,6 +115,7 @@
 /* Begin PBXFileReference section */
 		100 /* ShortcutCycle.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ShortcutCycle.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1B200012F70000100C0DE01 /* ShortcutSuggestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutSuggestion.swift; sourceTree = "<group>"; };
+		A1B200042F70000200C0DE01 /* LocalizedKeyboardShortcutRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizedKeyboardShortcutRecorder.swift; sourceTree = "<group>"; };
 		C0A1D0002FB0000100C0DE01 /* GroupSwitchPerformanceTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupSwitchPerformanceTracker.swift; sourceTree = "<group>"; };
 		DF88A3372F300B110042E749 /* String+Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Localization.swift"; sourceTree = "<group>"; };
 		DF88A3392F300B110042E749 /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
@@ -408,6 +411,7 @@
 				DF88A36C2F300B110042E749 /* AppDropZoneView.swift */,
 				DF88A36D2F300B110042E749 /* GroupEditView.swift */,
 				DF88A36E2F300B110042E749 /* GroupListView.swift */,
+				A1B200042F70000200C0DE01 /* LocalizedKeyboardShortcutRecorder.swift */,
 				DF88A36F2F300B110042E749 /* MainView.swift */,
 				DF88A3702F300B110042E749 /* MenuBarView.swift */,
 				F1A200012FB1000100C0DE01 /* ScreenshotAccentSwitch.swift */,
@@ -592,6 +596,7 @@
 				DF88A3922F300C640042E749 /* GroupSettingsView.swift in Sources */,
 				DF88A3932F300C640042E749 /* GeneralSettingsView.swift in Sources */,
 				DF88A3942F300C6A0042E749 /* GroupEditView.swift in Sources */,
+				A1B200052F70000200C0DE01 /* LocalizedKeyboardShortcutRecorder.swift in Sources */,
 				DF88A3952F300C6A0042E749 /* MainView.swift in Sources */,
 				DF88A3962F300C6A0042E749 /* MenuBarView.swift in Sources */,
 				DF88A3972F300C6A0042E749 /* AppDropZoneView.swift in Sources */,
@@ -635,6 +640,7 @@
 				DF88A3B32F300CB10042E749 /* BackupBrowserView.swift in Sources */,
 				DF88A37E2F300B110042E749 /* HUDPreviewView.swift in Sources */,
 				DF88A37F2F300B110042E749 /* GroupSettingsView.swift in Sources */,
+				A1B200062F70000200C0DE01 /* LocalizedKeyboardShortcutRecorder.swift in Sources */,
 				DF88A3802F300B110042E749 /* AppSwitcherHUDView.swift in Sources */,
 				DF88A3812F300B110042E749 /* MainView.swift in Sources */,
 				DF88A3822F300B110042E749 /* AppSwitcher.swift in Sources */,

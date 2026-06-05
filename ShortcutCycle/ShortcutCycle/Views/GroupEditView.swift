@@ -620,7 +620,11 @@ private struct GroupShortcutEditor: View {
                 .font(.headline)
 
             VStack(alignment: .leading, spacing: 8) {
-                KeyboardShortcuts.Recorder(for: shortcutName, onChange: handleShortcutChange)
+                LocalizedKeyboardShortcutRecorder(
+                    name: shortcutName,
+                    selectedLanguage: selectedLanguage,
+                    onChange: handleShortcutChange
+                )
                     .padding(.leading, 4)
                     .id("\(selectedLanguage)-\(groupId.uuidString)-\(shortcutRefreshToken)")
                     .task(id: groupId) {
@@ -677,7 +681,7 @@ private struct GroupShortcutEditor: View {
             Alert(
                 title: Text("Shortcut Already Used".localized(language: selectedLanguage)),
                 message: Text(conflict.message(language: selectedLanguage)),
-                dismissButton: .default(Text("OK"))
+                dismissButton: .default(Text("OK".localized(language: selectedLanguage)))
             )
         }
     }

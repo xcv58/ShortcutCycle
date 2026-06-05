@@ -70,9 +70,12 @@
 /* Settings Shortcut */
 "Settings Window" = "Einstellungsfenster";
 "Shortcuts" = "Kurzbefehle";
+"Record Shortcut" = "Kurzbefehl aufnehmen";
+"Press Shortcut" = "Kurzbefehl wählen…";
 "Shortcut Already Used" = "Tastenkürzel bereits verwendet";
 "The shortcut %@ is already used by %@." = "Das Tastenkürzel %@ wird bereits von %@ verwendet.";
 "Choose a different shortcut to avoid triggering both actions." = "Wählen Sie ein anderes Tastenkürzel, damit nicht beide Aktionen ausgelöst werden.";
+"OK" = "OK";
 "Add Group" = "Gruppe hinzufügen";
 "Delete Group" = "Gruppe löschen";
 "Toggle Sidebar" = "Seitenleiste ein-/ausblenden";

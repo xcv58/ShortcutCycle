@@ -70,9 +70,12 @@
 /* Settings Shortcut */
 "Settings Window" = "نافذة الإعدادات";
 "Shortcuts" = "اختصارات";
+"Record Shortcut" = "سجل اختصاراً";
+"Press Shortcut" = "اضغط على الاختصار";
 "Shortcut Already Used" = "الاختصار مستخدم بالفعل";
 "The shortcut %@ is already used by %@." = "الاختصار %@ مستخدم بالفعل بواسطة %@.";
 "Choose a different shortcut to avoid triggering both actions." = "اختر اختصارًا مختلفًا لتجنب تشغيل الإجراءين معًا.";
+"OK" = "حسنًا";
 
 "Add Group" = "إضافة مجموعة";
 "Delete Group" = "حذف المجموعة";
