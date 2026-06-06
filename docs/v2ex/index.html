@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../assets/images/favicon-16.png">
+    <link rel="apple-touch-icon" href="../assets/images/app-icon.png">
+    <meta name="NEXT_PUBLIC_V2EX_TALLY_FORM_URL" content="https://tally.so/r/NpPVgO">
+
+    <title>ShortcutCycle V2EX 试用申请</title>
+    <meta name="description" content="ShortcutCycle V2EX 试用兑换码申请表。邮箱用于发放兑换码和后续一次反馈沟通，V2EX 用户名可选。">
+    <meta name="author" content="ShortcutCycle">
+    <link rel="canonical" href="https://s.jenny.media/v2ex">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://s.jenny.media/v2ex">
+    <meta property="og:title" content="ShortcutCycle V2EX 试用申请">
+    <meta property="og:description" content="ShortcutCycle V2EX 试用兑换码申请表。邮箱用于发放兑换码和后续一次反馈沟通，V2EX 用户名可选。">
+    <meta property="og:image" content="https://s.jenny.media/assets/images/app-icon.png">
+
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="ShortcutCycle V2EX 试用申请">
+    <meta name="twitter:description" content="ShortcutCycle V2EX 试用兑换码申请表。邮箱用于发放兑换码和后续一次反馈沟通，V2EX 用户名可选。">
+    <meta name="twitter:image" content="https://s.jenny.media/assets/images/app-icon.png">
+
+    <style>
+        :root {
+            --bg: #ffffff;
+            --text: #1d1d1f;
+            --border: #d2d2d7;
+            --nav-height: 58px;
+            --warning-bg: #fff8db;
+            --warning-border: #e8c547;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #0f0f12;
+                --text: #f5f5f7;
+                --border: #2c2c2e;
+                --warning-bg: #2d2815;
+                --warning-border: #8a6d1d;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Helvetica, Arial, sans-serif;
+            line-height: 1.65;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        a:focus-visible {
+            outline: 2px solid currentColor;
+            outline-offset: 4px;
+        }
+
+        .top-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: var(--nav-height);
+            padding: 10px max(18px, calc((100vw - 760px) / 2));
+            border-bottom: 1px solid var(--border);
+            background: var(--bg);
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            font-weight: 750;
+        }
+
+        .brand img {
+            width: 30px;
+            height: auto;
+        }
+
+        .home-link {
+            font-size: 0.9rem;
+            font-weight: 650;
+        }
+
+        .tally-frame {
+            display: none;
+            width: 100%;
+            min-height: 1180px;
+            border: 0;
+            background: var(--bg);
+        }
+
+        .tally-frame.visible {
+            display: block;
+        }
+
+        .setup-warning {
+            display: none;
+            width: min(calc(100% - 36px), 720px);
+            margin: 24px auto;
+            padding: 18px 20px;
+            border: 1px solid var(--warning-border);
+            border-radius: 18px;
+            background: var(--warning-bg);
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+
+        .setup-warning.visible {
+            display: block;
+        }
+
+        @media (max-width: 520px) {
+            .setup-warning {
+                border-radius: 16px;
+            }
+
+            .tally-frame {
+                min-height: 1300px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="top-nav" role="banner">
+        <a href="../" class="brand" aria-label="ShortcutCycle 首页">
+            <img src="../assets/images/brand-mark.png" width="36" height="24" alt="">
+            <span>ShortcutCycle</span>
+        </a>
+        <a href="../" class="home-link">主页</a>
+    </header>
+
+    <main id="main-content">
+        <p class="setup-warning" id="setup-warning">开发提示：未配置 NEXT_PUBLIC_V2EX_TALLY_FORM_URL。发布 Tally 表单后，把表单 URL 配置到这个变量或页面 meta 标签里。</p>
+        <iframe class="tally-frame" id="tally-frame" title="ShortcutCycle V2EX 试用申请表" loading="lazy"></iframe>
+    </main>
+
+    <script>
+        const TALLY_FORM_ENV_NAME = 'NEXT_PUBLIC_V2EX_TALLY_FORM_URL';
+        const formUrlMeta = document.querySelector(`meta[name="${TALLY_FORM_ENV_NAME}"]`);
+        const rawFormUrl = (window[TALLY_FORM_ENV_NAME] || formUrlMeta?.content || '').trim();
+        const setupWarning = document.getElementById('setup-warning');
+        const tallyFrame = document.getElementById('tally-frame');
+
+        function normalizeTallyUrl(value) {
+            try {
+                const url = new URL(value);
+                if (url.hostname !== 'tally.so') return '';
+
+                const match = url.pathname.match(/^\/(?:r|embed)\/([^/?#]+)/);
+                if (!match) return '';
+
+                const embedUrl = new URL(`/embed/${match[1]}`, url.origin);
+                return embedUrl.toString();
+            } catch (error) {
+                return '';
+            }
+        }
+
+        const tallyEmbedUrl = normalizeTallyUrl(rawFormUrl);
+
+        if (tallyEmbedUrl) {
+            tallyFrame.src = tallyEmbedUrl;
+            tallyFrame.classList.add('visible');
+        } else {
+            setupWarning.classList.add('visible');
+            if (rawFormUrl) {
+                console.warn(`${TALLY_FORM_ENV_NAME} must be a Tally share URL like https://tally.so/r/FORM_ID.`);
+            } else {
+                console.warn(`${TALLY_FORM_ENV_NAME} is not configured.`);
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,6 +1,7 @@
 .claude
 .artifacts/
 .env*
+!.env.example
 *.DMG
 # Xcode
 
