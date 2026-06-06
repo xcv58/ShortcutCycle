@@ -227,14 +227,14 @@ enum ScreenshotFixtureLibrary {
 
         let exports: [(name: String, export: SettingsExport, createdAt: Date)] = [
             (
-                "backup 2026-02-02 17-46-00.json",
+                "backup 2026-06-01 17-46-00.json",
                 makeExport(groups: comparisonGroups, theme: theme == .dark ? .light : .dark, language: language),
-                Date(timeIntervalSince1970: 1_770_074_760)
+                Date(timeIntervalSince1970: 1_780_335_960)
             ),
             (
-                "backup 2026-02-02 17-52-00.json",
+                "backup 2026-06-01 17-52-00.json",
                 makeExport(groups: groups, theme: theme, language: language),
-                Date(timeIntervalSince1970: 1_770_075_120)
+                Date(timeIntervalSince1970: 1_780_336_320)
             )
         ]
 
