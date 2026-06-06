@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/favicon-32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="../assets/images/favicon-16.png">
     <link rel="apple-touch-icon" href="../assets/images/app-icon.png">
-    <meta name="NEXT_PUBLIC_V2EX_FORM_ACTION" content="">
+    <meta name="NEXT_PUBLIC_V2EX_TALLY_FORM_URL" content="">
 
     <title>ShortcutCycle V2EX 试用申请</title>
     <meta name="description" content="ShortcutCycle V2EX 试用兑换码申请表。邮箱只用于发放兑换码和后续一次反馈沟通。">
@@ -33,9 +33,6 @@
             --muted: #6e6e73;
             --border: #d2d2d7;
             --accent: #0056b3;
-            --accent-hover: #004494;
-            --success: #167a3a;
-            --danger: #b42318;
             --warning-bg: #fff8db;
             --warning-border: #e8c547;
             --shadow: rgba(0, 0, 0, 0.08);
@@ -49,9 +46,6 @@
                 --muted: #a1a1aa;
                 --border: #2c2c2e;
                 --accent: #4da6ff;
-                --accent-hover: #73bcff;
-                --success: #7ee29a;
-                --danger: #ff8a80;
                 --warning-bg: #2d2815;
                 --warning-border: #8a6d1d;
                 --shadow: rgba(0, 0, 0, 0.42);
@@ -80,12 +74,6 @@
             color: var(--accent);
         }
 
-        button,
-        input,
-        textarea {
-            font: inherit;
-        }
-
         *:focus-visible {
             outline: 3px solid var(--accent);
             outline-offset: 2px;
@@ -108,7 +96,7 @@
         }
 
         .container {
-            width: min(calc(100% - 36px), 760px);
+            width: min(calc(100% - 36px), 780px);
             margin: 0 auto;
         }
 
@@ -153,8 +141,7 @@
         }
 
         .lede,
-        .privacy-note,
-        .form-help,
+        .notice,
         footer {
             color: var(--muted);
         }
@@ -170,156 +157,42 @@
             border: 1px solid var(--border);
             border-radius: 14px;
             background: var(--surface);
-            color: var(--muted);
             font-size: 0.95rem;
         }
 
-        .form-shell {
-            padding: clamp(22px, 5vw, 34px);
+        .embed-shell {
+            overflow: hidden;
             border: 1px solid var(--border);
             border-radius: 18px;
             background: var(--surface);
             box-shadow: 0 18px 50px var(--shadow);
         }
 
-        .form-grid {
-            display: grid;
-            gap: 18px;
-        }
-
-        .field {
-            display: grid;
-            gap: 8px;
-        }
-
-        label {
-            color: var(--text);
-            font-weight: 700;
-        }
-
-        .required {
-            color: var(--danger);
-        }
-
-        input[type="text"],
-        input[type="url"],
-        input[type="email"],
-        textarea {
-            width: 100%;
-            min-height: 48px;
-            padding: 12px 14px;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            background: var(--bg);
-            color: var(--text);
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        textarea {
-            min-height: 116px;
-            resize: vertical;
-        }
-
-        input::placeholder,
-        textarea::placeholder {
-            color: color-mix(in srgb, var(--muted) 68%, transparent);
-        }
-
-        input:focus,
-        textarea:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent);
-        }
-
-        .form-help,
-        .privacy-note {
-            margin: 0;
-            font-size: 0.92rem;
-        }
-
-        .checkbox-field {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            padding: 13px 14px;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            background: var(--bg);
-        }
-
-        .checkbox-field input {
-            width: 18px;
-            height: 18px;
-            margin-top: 5px;
-            accent-color: var(--accent);
-        }
-
-        .honeypot {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            margin: -1px;
-            padding: 0;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap;
-            border: 0;
-        }
-
-        .dev-warning {
+        .tally-frame {
             display: none;
-            padding: 12px 14px;
-            border: 1px solid var(--warning-border);
-            border-radius: 12px;
-            background: var(--warning-bg);
-            color: var(--text);
-            font-size: 0.92rem;
+            width: 100%;
+            min-height: 1040px;
+            border: 0;
+            background: transparent;
         }
 
-        .dev-warning.visible {
+        .tally-frame.visible {
             display: block;
         }
 
-        .submit-button {
-            width: fit-content;
-            min-height: 50px;
-            padding: 13px 28px;
-            border: 0;
-            border-radius: 999px;
-            background: var(--accent);
-            color: #fff;
-            cursor: pointer;
-            font-weight: 700;
-        }
-
-        .submit-button:hover {
-            background: var(--accent-hover);
-        }
-
-        .submit-button:disabled {
-            cursor: progress;
-            opacity: 0.72;
-        }
-
-        .form-actions {
-            display: grid;
-            gap: 12px;
-        }
-
-        .form-status {
-            min-height: 24px;
+        .setup-warning {
+            display: none;
             margin: 0;
+            padding: 18px 20px;
+            border: 1px solid var(--warning-border);
+            border-radius: 18px;
+            background: var(--warning-bg);
+            color: var(--text);
             font-size: 0.95rem;
-            font-weight: 650;
         }
 
-        .form-status.success {
-            color: var(--success);
-        }
-
-        .form-status.error {
-            color: var(--danger);
+        .setup-warning.visible {
+            display: block;
         }
 
         footer {
@@ -337,19 +210,20 @@
 
         @media (max-width: 520px) {
             .container {
-                width: min(calc(100% - 28px), 760px);
+                width: min(calc(100% - 28px), 780px);
             }
 
             main {
                 padding-top: 24px;
             }
 
-            .form-shell {
+            .embed-shell,
+            .setup-warning {
                 border-radius: 16px;
             }
 
-            .submit-button {
-                width: 100%;
+            .tally-frame {
+                min-height: 1120px;
             }
         }
     </style>
@@ -370,51 +244,15 @@
             <p class="eyebrow">V2EX 试用申请</p>
             <h1 id="page-title">申请 ShortcutCycle 试用兑换码</h1>
             <p class="lede">请填写 V2EX 用户名、邮箱和现在的 App / 窗口切换习惯。我会手动筛选并通过邮件发送兑换码，数量有限，可能无法每个人都发到。</p>
-            <p class="notice">这个静态页面本身不保存信息。提交后，信息会发送到我配置的表单端点；邮箱只用于这次发码和后续一次反馈沟通，不会公开展示，也不会用于广告追踪。</p>
+            <p class="notice">表单由 Tally 托管，提交内容会存储在 Tally，用于本次兑换码发放和后续一次反馈沟通。不会公开展示，也不会用于广告追踪。</p>
         </section>
 
-        <form class="form-shell" id="v2ex-form" method="post" novalidate>
-            <div class="form-grid">
-                <div class="dev-warning" id="dev-warning">开发提示：未配置 NEXT_PUBLIC_V2EX_FORM_ACTION。提交会被阻止，生产环境请配置真实表单端点。</div>
-
-                <div class="field">
-                    <label for="v2exUsername">V2EX 用户名 <span class="required" aria-hidden="true">*</span></label>
-                    <input id="v2exUsername" name="v2exUsername" type="text" autocomplete="nickname" placeholder="例如：jenny" required>
-                </div>
-
-                <div class="field">
-                    <label for="email">接收兑换码的邮箱 <span class="required" aria-hidden="true">*</span></label>
-                    <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
-                </div>
-
-                <div class="field">
-                    <label for="currentSwitcher">你现在主要怎么切换 App / 窗口？ <span class="required" aria-hidden="true">*</span></label>
-                    <textarea id="currentSwitcher" name="currentSwitcher" placeholder="例如：Command+Tab + AltTab；开发时主要在 Cursor / Terminal / Safari / Slack 之间切换。" required></textarea>
-                </div>
-
-                <div class="field">
-                    <label for="desiredGroups">你最想用 ShortcutCycle 管理哪几组 App？</label>
-                    <textarea id="desiredGroups" name="desiredGroups" placeholder="例如：Web: Safari/Chrome/Arc；Code: Cursor/Terminal；Chat: Slack/Messages/Discord"></textarea>
-                </div>
-
-                <label class="checkbox-field" for="willingToFeedback">
-                    <input id="willingToFeedback" name="willingToFeedback" type="checkbox" value="yes">
-                    <span>愿意在试用后简单反馈一下是否有用、哪里不好用</span>
-                </label>
-
-                <div class="honeypot" aria-hidden="true">
-                    <label for="website">Website</label>
-                    <input id="website" name="website" type="text" tabindex="-1" autocomplete="off">
-                </div>
-
-                <p class="privacy-note">提交内容包括上面的表单字段、当前页面 URL 和提交时间；不会收集浏览器 referrer，不会在浏览器本地保存提交内容，也没有 analytics / tracking。</p>
-
-                <div class="form-actions">
-                    <button class="submit-button" id="submit-button" type="submit">提交申请</button>
-                    <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
-                </div>
+        <section aria-label="V2EX 试用申请表">
+            <p class="setup-warning" id="setup-warning">开发提示：未配置 NEXT_PUBLIC_V2EX_TALLY_FORM_URL。发布 Tally 表单后，把表单 URL 配置到这个变量或页面 meta 标签里。</p>
+            <div class="embed-shell" id="embed-shell" hidden>
+                <iframe class="tally-frame" id="tally-frame" title="ShortcutCycle V2EX 试用申请表" loading="lazy"></iframe>
             </div>
-        </form>
+        </section>
     </main>
 
     <footer class="container" role="contentinfo">
@@ -426,97 +264,45 @@
     </footer>
 
     <script>
-        const FORM_ACTION_ENV_NAME = 'NEXT_PUBLIC_V2EX_FORM_ACTION';
-        const form = document.getElementById('v2ex-form');
-        const submitButton = document.getElementById('submit-button');
-        const formStatus = document.getElementById('form-status');
-        const devWarning = document.getElementById('dev-warning');
-        const formActionMeta = document.querySelector(`meta[name="${FORM_ACTION_ENV_NAME}"]`);
-        const formAction = (window[FORM_ACTION_ENV_NAME] || formActionMeta?.content || '').trim();
-        const isLocal = ['localhost', '127.0.0.1', '::1', ''].includes(window.location.hostname) || window.location.protocol === 'file:';
+        const TALLY_FORM_ENV_NAME = 'NEXT_PUBLIC_V2EX_TALLY_FORM_URL';
+        const formUrlMeta = document.querySelector(`meta[name="${TALLY_FORM_ENV_NAME}"]`);
+        const rawFormUrl = (window[TALLY_FORM_ENV_NAME] || formUrlMeta?.content || '').trim();
+        const setupWarning = document.getElementById('setup-warning');
+        const embedShell = document.getElementById('embed-shell');
+        const tallyFrame = document.getElementById('tally-frame');
 
-        if (!formAction) {
-            console.warn(`${FORM_ACTION_ENV_NAME} is not configured. V2EX form submissions are disabled until an endpoint is provided.`);
-            if (isLocal) {
-                devWarning.classList.add('visible');
-            }
-        } else {
-            form.setAttribute('action', formAction);
-        }
-
-        function setStatus(message, type) {
-            formStatus.textContent = message;
-            formStatus.className = `form-status ${type || ''}`.trim();
-        }
-
-        function validateForm() {
-            const requiredFields = ['v2exUsername', 'email', 'currentSwitcher'];
-            for (const fieldId of requiredFields) {
-                const field = document.getElementById(fieldId);
-                if (!field.value.trim()) {
-                    field.focus();
-                    setStatus('请先填写所有必填项。', 'error');
-                    return false;
-                }
-            }
-
-            const email = document.getElementById('email');
-            if (!email.checkValidity()) {
-                email.focus();
-                setStatus('请填写一个有效的邮箱地址。', 'error');
-                return false;
-            }
-
-            return true;
-        }
-
-        form.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            setStatus('', '');
-
-            if (!validateForm()) return;
-
-            const website = document.getElementById('website').value.trim();
-            if (website) {
-                setStatus('已收到，谢谢！如果名额合适，我会通过邮件发送兑换码。兑换码数量有限，可能无法每个人都发到。', 'success');
-                form.reset();
-                return;
-            }
-
-            if (!formAction) {
-                setStatus('提交失败。可以稍后再试，或者直接在 V2EX 帖子里提醒我表单有问题。', 'error');
-                return;
-            }
-
-            const formData = new FormData(form);
-            formData.append('pageUrl', window.location.href);
-            formData.append('submittedAt', new Date().toISOString());
-
-            submitButton.disabled = true;
-            submitButton.textContent = '提交中...';
-
+        function normalizeTallyUrl(value) {
             try {
-                const response = await fetch(formAction, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        Accept: 'application/json'
-                    }
-                });
+                const url = new URL(value);
+                if (url.hostname !== 'tally.so') return '';
 
-                if (!response.ok) {
-                    throw new Error(`Form endpoint returned ${response.status}`);
-                }
+                const match = url.pathname.match(/^\/(?:r|embed)\/([^/?#]+)/);
+                if (!match) return '';
 
-                form.reset();
-                setStatus('已收到，谢谢！如果名额合适，我会通过邮件发送兑换码。兑换码数量有限，可能无法每个人都发到。', 'success');
+                const embedUrl = new URL(`/embed/${match[1]}`, url.origin);
+                embedUrl.searchParams.set('alignLeft', '1');
+                embedUrl.searchParams.set('hideTitle', '1');
+                embedUrl.searchParams.set('transparentBackground', '1');
+                return embedUrl.toString();
             } catch (error) {
-                setStatus('提交失败。可以稍后再试，或者直接在 V2EX 帖子里提醒我表单有问题。', 'error');
-            } finally {
-                submitButton.disabled = false;
-                submitButton.textContent = '提交申请';
+                return '';
             }
-        });
+        }
+
+        const tallyEmbedUrl = normalizeTallyUrl(rawFormUrl);
+
+        if (tallyEmbedUrl) {
+            tallyFrame.src = tallyEmbedUrl;
+            tallyFrame.classList.add('visible');
+            embedShell.hidden = false;
+        } else {
+            setupWarning.classList.add('visible');
+            if (rawFormUrl) {
+                console.warn(`${TALLY_FORM_ENV_NAME} must be a Tally share URL like https://tally.so/r/FORM_ID.`);
+            } else {
+                console.warn(`${TALLY_FORM_ENV_NAME} is not configured.`);
+            }
+        }
     </script>
 </body>
 
