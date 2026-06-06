@@ -1,6 +1,7 @@
 .claude
 .artifacts/
 .env*
+!.env.example
 *.DMG
 # Xcode
 
@@ -31,7 +32,7 @@ __pycache__/
 Package.resolved
 
 ## CocoaPods
-# It is a debated topic whether to commit the Pods folder. 
+# It is a debated topic whether to commit the Pods folder.
 # Most teams prefer to exclude it and run 'pod install' instead.
 Pods/
 Podfile.lock
