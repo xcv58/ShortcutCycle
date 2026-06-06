@@ -3,14 +3,14 @@
     {
       "at": 1.35,
       "highlight_rect": {
-        "height": 54.0,
-        "screenHeight": 1169.0,
-        "screenWidth": 1800.0,
+        "height": 51.0,
+        "screenHeight": 1067.0,
+        "screenWidth": 2560.0,
         "screenX": 0.0,
         "screenY": 0.0,
         "width": 220.0,
         "x": 200.0,
-        "y": 202.0
+        "y": 199.0
       },
       "index": 0,
       "type": "select-group"
@@ -18,14 +18,14 @@
     {
       "at": 3.15,
       "highlight_rect": {
-        "height": 54.0,
-        "screenHeight": 1169.0,
-        "screenWidth": 1800.0,
+        "height": 51.0,
+        "screenHeight": 1067.0,
+        "screenWidth": 2560.0,
         "screenX": 0.0,
         "screenY": 0.0,
         "width": 220.0,
         "x": 200.0,
-        "y": 256.0
+        "y": 250.0
       },
       "index": 1,
       "type": "select-group"
@@ -34,8 +34,8 @@
       "at": 5.05,
       "highlight_rect": {
         "height": 36.0,
-        "screenHeight": 1169.0,
-        "screenWidth": 1800.0,
+        "screenHeight": 1067.0,
+        "screenWidth": 2560.0,
         "screenX": 0.0,
         "screenY": 0.0,
         "width": 72.5,
@@ -49,8 +49,8 @@
       "at": 6.65,
       "highlight_rect": {
         "height": 24.0,
-        "screenHeight": 1169.0,
-        "screenWidth": 1800.0,
+        "screenHeight": 1067.0,
+        "screenWidth": 2560.0,
         "screenX": 0.0,
         "screenY": 0.0,
         "width": 111.5,
@@ -64,8 +64,8 @@
       "at": 8.65,
       "highlight_rect": {
         "height": 24.0,
-        "screenHeight": 1169.0,
-        "screenWidth": 1800.0,
+        "screenHeight": 1067.0,
+        "screenWidth": 2560.0,
         "screenX": 0.0,
         "screenY": 0.0,
         "width": 91.5,
@@ -79,13 +79,13 @@
       "at": 9.6,
       "highlight_rect": {
         "height": 24.0,
-        "screenHeight": 1169.0,
-        "screenWidth": 1800.0,
+        "screenHeight": 1067.0,
+        "screenWidth": 2560.0,
         "screenX": 0.0,
         "screenY": 0.0,
         "width": 277.0,
         "x": 1198.0,
-        "y": 804.0
+        "y": 803.0
       },
       "index": 5,
       "type": "click-menu-item"
@@ -94,13 +94,13 @@
       "at": 12.0,
       "highlight_rect": {
         "height": 24.0,
-        "screenHeight": 1169.0,
-        "screenWidth": 1800.0,
+        "screenHeight": 1067.0,
+        "screenWidth": 2560.0,
         "screenX": 0.0,
         "screenY": 0.0,
         "width": 684.0,
         "x": 618.0,
-        "y": 749.5
+        "y": 790.5
       },
       "index": 6,
       "type": "click-button"
