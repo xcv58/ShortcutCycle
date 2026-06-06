@@ -369,7 +369,7 @@
         <section class="intro" aria-labelledby="page-title">
             <p class="eyebrow">V2EX 试用申请</p>
             <h1 id="page-title">申请 ShortcutCycle 试用兑换码</h1>
-            <p class="lede">请填写 V2EX 用户名、回复楼层链接和邮箱。我会手动筛选并通过邮件发送兑换码，数量有限，可能无法每个人都发到。</p>
+            <p class="lede">请填写 V2EX 用户名、邮箱和现在的 App / 窗口切换习惯。我会手动筛选并通过邮件发送兑换码，数量有限，可能无法每个人都发到。</p>
             <p class="notice">这个静态页面本身不保存信息。提交后，信息会发送到我配置的表单端点；邮箱只用于这次发码和后续一次反馈沟通，不会公开展示，也不会用于广告追踪。</p>
         </section>
 
@@ -380,12 +380,6 @@
                 <div class="field">
                     <label for="v2exUsername">V2EX 用户名 <span class="required" aria-hidden="true">*</span></label>
                     <input id="v2exUsername" name="v2exUsername" type="text" autocomplete="nickname" placeholder="例如：jenny" required>
-                </div>
-
-                <div class="field">
-                    <label for="v2exReplyUrl">V2EX 回复楼层链接 <span class="required" aria-hidden="true">*</span></label>
-                    <input id="v2exReplyUrl" name="v2exReplyUrl" type="url" inputmode="url" aria-describedby="v2exReplyUrl-help" placeholder="例如：https://www.v2ex.com/t/xxxxxx#reply12" required>
-                    <p class="form-help" id="v2exReplyUrl-help">请尽量填具体楼层链接，方便我对应到 V2EX 回复。</p>
                 </div>
 
                 <div class="field">
@@ -455,17 +449,8 @@
             formStatus.className = `form-status ${type || ''}`.trim();
         }
 
-        function isV2EXReplyUrl(value) {
-            try {
-                const url = new URL(value);
-                return /(^|\.)v2ex\.com$/i.test(url.hostname);
-            } catch (error) {
-                return false;
-            }
-        }
-
         function validateForm() {
-            const requiredFields = ['v2exUsername', 'v2exReplyUrl', 'email', 'currentSwitcher'];
+            const requiredFields = ['v2exUsername', 'email', 'currentSwitcher'];
             for (const fieldId of requiredFields) {
                 const field = document.getElementById(fieldId);
                 if (!field.value.trim()) {
@@ -479,13 +464,6 @@
             if (!email.checkValidity()) {
                 email.focus();
                 setStatus('请填写一个有效的邮箱地址。', 'error');
-                return false;
-            }
-
-            const replyUrl = document.getElementById('v2exReplyUrl');
-            if (!isV2EXReplyUrl(replyUrl.value.trim())) {
-                replyUrl.focus();
-                setStatus('V2EX 回复楼层链接需要是 v2ex.com 的 URL。', 'error');
                 return false;
             }
 
