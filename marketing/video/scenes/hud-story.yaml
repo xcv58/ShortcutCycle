@@ -23,6 +23,7 @@ prepare_before_launch:
   - { type: quit-app, bundle_id: com.apple.ScriptEditor2 }
   - { type: quit-app, bundle_id: com.apple.ColorSyncUtility }
   - { type: quit-app, bundle_id: com.apple.helpviewer }
+  - { type: quit-app, bundle_id: com.apple.weather }
 launch_apps:
   - com.apple.TextEdit
   - com.apple.calculator
