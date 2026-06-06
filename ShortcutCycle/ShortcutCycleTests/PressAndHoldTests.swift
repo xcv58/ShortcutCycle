@@ -354,15 +354,16 @@ final class PressAndHoldTests: XCTestCase {
     }
 
     @MainActor
-    func testDelayedShowReinstallsGlobalReleaseFallbackAfterReveal() async throws {
+    func testPreparedRevealReinstallsGlobalReleaseFallbackAfterReveal() async throws {
         manager.currentModifierFlags = { [.command, .shift] }
         var activateCount = 0
         manager.activatePendingTargetApp = { _ in
             activateCount += 1
         }
+        let items = [HUDAppItem(bundleId: "com.test.1", name: "Test 1", icon: nil)]
 
         manager.scheduleShow(
-            items: [HUDAppItem(bundleId: "com.test.1", name: "Test 1", icon: nil)],
+            items: items,
             activeAppId: "com.test.current",
             modifierFlags: [.command, .shift],
             shortcut: "Cmd+Shift+J",
@@ -380,10 +381,15 @@ final class PressAndHoldTests: XCTestCase {
             "Prepared HUD should register one global keyUp fallback before reveal"
         )
 
-        timerMock.fireLastNonRepeatingTimer()
+        manager.scheduleShow(
+            items: items,
+            activeAppId: "com.test.current",
+            modifierFlags: [.command, .shift],
+            shortcut: "Cmd+Shift+J",
+            activeKey: .j
+        )
 
-        let didReveal = await eventually { manager.isVisible }
-        XCTAssertTrue(didReveal, "Reveal timer should transition the HUD into the visible state")
+        XCTAssertTrue(manager.isVisible, "A second shortcut invocation should reveal the prepared HUD")
         XCTAssertEqual(
             globalMonitorMasks.filter { $0 == .flagsChanged }.count,
             2,
