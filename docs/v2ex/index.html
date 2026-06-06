@@ -28,27 +28,19 @@
     <style>
         :root {
             --bg: #ffffff;
-            --surface: #f5f5f7;
             --text: #1d1d1f;
-            --muted: #6e6e73;
             --border: #d2d2d7;
-            --accent: #0056b3;
             --warning-bg: #fff8db;
             --warning-border: #e8c547;
-            --shadow: rgba(0, 0, 0, 0.08);
         }
 
         @media (prefers-color-scheme: dark) {
             :root {
                 --bg: #0f0f12;
-                --surface: #1c1c1e;
                 --text: #f5f5f7;
-                --muted: #a1a1aa;
                 --border: #2c2c2e;
-                --accent: #4da6ff;
                 --warning-bg: #2d2815;
                 --warning-border: #8a6d1d;
-                --shadow: rgba(0, 0, 0, 0.42);
             }
         }
 
@@ -65,115 +57,12 @@
             line-height: 1.65;
         }
 
-        a {
-            color: inherit;
-            text-decoration: none;
-        }
-
-        a:hover {
-            color: var(--accent);
-        }
-
-        *:focus-visible {
-            outline: 3px solid var(--accent);
-            outline-offset: 2px;
-        }
-
-        .skip-link {
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 100;
-            padding: 8px 16px;
-            border-radius: 0 0 6px 0;
-            background: var(--accent);
-            color: #fff;
-            transform: translateY(-100%);
-        }
-
-        .skip-link:focus {
-            transform: translateY(0);
-        }
-
-        .container {
-            width: min(calc(100% - 36px), 780px);
-            margin: 0 auto;
-        }
-
-        header {
-            padding: 28px 0 12px;
-        }
-
-        .logo {
-            display: inline-flex;
-            align-items: center;
-            gap: 9px;
-            font-size: 1.12rem;
-            font-weight: 750;
-            letter-spacing: -0.02em;
-        }
-
-        .logo img {
-            width: 34px;
-            height: auto;
-        }
-
-        main {
-            padding: 36px 0 72px;
-        }
-
-        .intro {
-            margin-bottom: 24px;
-        }
-
-        .eyebrow {
-            margin: 0 0 10px;
-            color: var(--accent);
-            font-size: 0.92rem;
-            font-weight: 700;
-        }
-
-        h1 {
-            margin: 0 0 14px;
-            font-size: clamp(2.05rem, 8vw, 3.5rem);
-            line-height: 1.08;
-            letter-spacing: -0.03em;
-        }
-
-        .lede,
-        .notice,
-        footer {
-            color: var(--muted);
-        }
-
-        .lede {
-            margin: 0;
-            font-size: 1.05rem;
-        }
-
-        .notice {
-            margin-top: 18px;
-            padding: 14px 16px;
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            background: var(--surface);
-            font-size: 0.95rem;
-        }
-
-        .embed-shell {
-            overflow: hidden;
-            border: 1px solid var(--border);
-            border-radius: 18px;
-            background: var(--surface);
-            box-shadow: 0 18px 50px var(--shadow);
-        }
-
         .tally-frame {
             display: none;
             width: 100%;
-            min-height: 1040px;
+            min-height: 1180px;
             border: 0;
-            background: transparent;
+            background: var(--bg);
         }
 
         .tally-frame.visible {
@@ -182,7 +71,8 @@
 
         .setup-warning {
             display: none;
-            margin: 0;
+            width: min(calc(100% - 36px), 720px);
+            margin: 24px auto;
             padding: 18px 20px;
             border: 1px solid var(--warning-border);
             border-radius: 18px;
@@ -195,80 +85,29 @@
             display: block;
         }
 
-        footer {
-            padding: 0 0 36px;
-            font-size: 0.9rem;
-            text-align: center;
-        }
-
-        .footer-links {
-            display: flex;
-            justify-content: center;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-
         @media (max-width: 520px) {
-            .container {
-                width: min(calc(100% - 28px), 780px);
-            }
-
-            main {
-                padding-top: 24px;
-            }
-
-            .embed-shell,
             .setup-warning {
                 border-radius: 16px;
             }
 
             .tally-frame {
-                min-height: 1120px;
+                min-height: 1300px;
             }
         }
     </style>
 </head>
 
 <body>
-    <a href="#main-content" class="skip-link">跳到表单</a>
-
-    <header class="container" role="banner">
-        <a href="../" class="logo" aria-label="ShortcutCycle 首页">
-            <img src="../assets/images/brand-mark.png" width="36" height="24" alt="">
-            <span>ShortcutCycle</span>
-        </a>
-    </header>
-
-    <main class="container" id="main-content">
-        <section class="intro" aria-labelledby="page-title">
-            <p class="eyebrow">V2EX 试用申请</p>
-            <h1 id="page-title">申请 ShortcutCycle 试用兑换码</h1>
-            <p class="lede">请填写邮箱和现在的 App / 窗口切换习惯；V2EX 用户名可选。我会手动筛选并通过邮件发送兑换码，数量有限，可能无法每个人都发到。</p>
-            <p class="notice">表单由 Tally 托管。邮箱只用于发送兑换码和后续一次反馈沟通；V2EX 用户名为可选，如果填写，会和本次申请一起存储在 Tally。不会公开展示，也不会用于广告追踪。</p>
-        </section>
-
-        <section aria-label="V2EX 试用申请表">
-            <p class="setup-warning" id="setup-warning">开发提示：未配置 NEXT_PUBLIC_V2EX_TALLY_FORM_URL。发布 Tally 表单后，把表单 URL 配置到这个变量或页面 meta 标签里。</p>
-            <div class="embed-shell" id="embed-shell" hidden>
-                <iframe class="tally-frame" id="tally-frame" title="ShortcutCycle V2EX 试用申请表" loading="lazy"></iframe>
-            </div>
-        </section>
+    <main id="main-content">
+        <p class="setup-warning" id="setup-warning">开发提示：未配置 NEXT_PUBLIC_V2EX_TALLY_FORM_URL。发布 Tally 表单后，把表单 URL 配置到这个变量或页面 meta 标签里。</p>
+        <iframe class="tally-frame" id="tally-frame" title="ShortcutCycle V2EX 试用申请表" loading="lazy"></iframe>
     </main>
-
-    <footer class="container" role="contentinfo">
-        <div class="footer-links">
-            <a href="../">主页</a>
-            <a href="https://github.com/xcv58/ShortcutCycle">GitHub</a>
-            <a href="https://github.com/xcv58/ShortcutCycle/blob/master/PRIVACY_POLICY.md">隐私政策</a>
-        </div>
-    </footer>
 
     <script>
         const TALLY_FORM_ENV_NAME = 'NEXT_PUBLIC_V2EX_TALLY_FORM_URL';
         const formUrlMeta = document.querySelector(`meta[name="${TALLY_FORM_ENV_NAME}"]`);
         const rawFormUrl = (window[TALLY_FORM_ENV_NAME] || formUrlMeta?.content || '').trim();
         const setupWarning = document.getElementById('setup-warning');
-        const embedShell = document.getElementById('embed-shell');
         const tallyFrame = document.getElementById('tally-frame');
 
         function normalizeTallyUrl(value) {
@@ -280,9 +119,6 @@
                 if (!match) return '';
 
                 const embedUrl = new URL(`/embed/${match[1]}`, url.origin);
-                embedUrl.searchParams.set('alignLeft', '1');
-                embedUrl.searchParams.set('hideTitle', '1');
-                embedUrl.searchParams.set('transparentBackground', '1');
                 return embedUrl.toString();
             } catch (error) {
                 return '';
@@ -294,7 +130,6 @@
         if (tallyEmbedUrl) {
             tallyFrame.src = tallyEmbedUrl;
             tallyFrame.classList.add('visible');
-            embedShell.hidden = false;
         } else {
             setupWarning.classList.add('visible');
             if (rawFormUrl) {
