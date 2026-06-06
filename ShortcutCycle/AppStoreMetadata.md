@@ -12,7 +12,7 @@ Cycle apps by group, instantly.
 ## Promotional Text
 Stop endlessly tabbing. Group your apps by context—Web, Code, Social—and cycle through them with dedicated hotkeys. Build muscle memory and flow.
 
-## What's New (1.6)
+## What's New (1.7)
 - Add currently running apps to a group with one click from the group editor.
 - Get suggested shortcut ideas for groups that do not have a hotkey yet.
 - Use new Settings keyboard shortcuts to jump between groups, reorder them, and toggle appearance faster.

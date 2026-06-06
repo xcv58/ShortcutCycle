@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.6] - Unreleased
+## [1.7] - Unreleased
 
 ### Added
 - **Running app quick add**: The group editor now lets you add currently running apps with a single click, reducing the need to browse Finder when capturing an active workflow.
