@@ -69,6 +69,8 @@ final class PressAndHoldTests: XCTestCase {
     private var savedIsKeyCurrentlyDown: ((Int) -> Bool)!
 
     override func setUp() async throws {
+        _ = NSApplication.shared
+
         // Setup mocks
         manager = HUDManager.shared
         timeMock = MockTimeProvider()
@@ -291,6 +293,8 @@ final class PressAndHoldTests: XCTestCase {
 
     @MainActor
     func testDelayedShowPreparesInvisibleHUDBeforeReveal() async {
+        manager.currentModifierFlags = { [.option] }
+
         manager.scheduleShow(
             items: [HUDAppItem(bundleId: "com.test.1", name: "Test 1", icon: nil)],
             activeAppId: "com.test.current",
@@ -676,6 +680,7 @@ final class PressAndHoldTests: XCTestCase {
         manager.activatePendingTargetApp = { _ in
             activateCount += 1
         }
+        manager.currentModifierFlags = { [.command, .option] }
 
         manager.scheduleShow(
             items: [HUDAppItem(bundleId: "com.test.multi-mod", pid: 61, name: "Multi Mod Target")],
