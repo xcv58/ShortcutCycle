@@ -70,6 +70,12 @@
 /* Settings Shortcut */
 "Settings Window" = "設定ウィンドウ";
 "Shortcuts" = "ショートカット";
+"Record Shortcut" = "キーを記録";
+"Press Shortcut" = "キーを押してください";
+"Shortcut Already Used" = "ショートカットは使用済みです";
+"The shortcut %@ is already used by %@." = "ショートカット %@ はすでに %@ で使用されています。";
+"Choose a different shortcut to avoid triggering both actions." = "両方のアクションが実行されないように、別のショートカットを選択してください。";
+"OK" = "OK";
 "Add Group" = "グループを追加";
 "Delete Group" = "グループを削除";
 "Toggle Sidebar" = "サイドバーを切り替え";

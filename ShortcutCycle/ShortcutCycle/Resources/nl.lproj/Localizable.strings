@@ -70,6 +70,12 @@
 /* Settings Shortcut */
 "Settings Window" = "Instellingenvenster";
 "Shortcuts" = "Sneltoetsen";
+"Record Shortcut" = "Toetscombinatie opnemen";
+"Press Shortcut" = "Voer toetscombinatie in";
+"Shortcut Already Used" = "Sneltoets al in gebruik";
+"The shortcut %@ is already used by %@." = "De sneltoets %@ wordt al gebruikt door %@.";
+"Choose a different shortcut to avoid triggering both actions." = "Kies een andere sneltoets om te voorkomen dat beide acties worden geactiveerd.";
+"OK" = "OK";
 "Add Group" = "Groep toevoegen";
 "Delete Group" = "Groep verwijderen";
 "Toggle Sidebar" = "Zijbalk tonen/verbergen";

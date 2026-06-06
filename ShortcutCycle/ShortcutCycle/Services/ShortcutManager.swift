@@ -34,7 +34,6 @@ class ShortcutManager: @preconcurrency ObservableObject {
     
     /// Register all shortcuts from the group store
     func registerAllShortcuts() {
-#if DEBUG
         // Register the settings toggle shortcut once.
         // KeyboardShortcuts.onKeyDown appends handlers and does not replace existing ones.
         if !hasRegisteredToggleSettingsShortcut {
@@ -45,7 +44,6 @@ class ShortcutManager: @preconcurrency ObservableObject {
             }
             hasRegisteredToggleSettingsShortcut = true
         }
-#endif
         
         // Unregister all previously registered shortcuts first
         // This is crucial to handle deleted groups or disabled groups
@@ -125,21 +123,14 @@ class ShortcutManager: @preconcurrency ObservableObject {
     
     /// Handle the settings toggle shortcut
     private func handleToggleSettings() {
-        // Find if the settings window is already open
         let settingsWindow = NSApp.windows.first { window in
             SettingsWindowLifecycleCoordinator.isSettingsWindow(window)
         }
-        
-        if let window = settingsWindow, window.isVisible {
-            if window.isKeyWindow {
-                // If it's already the key window, close it to toggle off
-                window.close()
-            } else {
-                // If it's open but not key, bring it to front through the shared restore path.
-                ShortcutCycleURLRouter.openSettingsFromOutsideView()
-            }
-        } else {
-            // Window is closed, ordered out, or not in memory.
+
+        switch SettingsWindowLifecycleCoordinator.toggleAction(for: settingsWindow) {
+        case .dismiss:
+            settingsWindow?.close()
+        case .focus, .open:
             ShortcutCycleURLRouter.openSettingsFromOutsideView()
         }
     }

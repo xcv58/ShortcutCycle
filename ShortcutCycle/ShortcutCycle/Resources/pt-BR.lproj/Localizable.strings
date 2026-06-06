@@ -70,6 +70,12 @@
 /* Settings Shortcut */
 "Settings Window" = "Janela de Configurações";
 "Shortcuts" = "Atalhos";
+"Record Shortcut" = "Gravar Atalho";
+"Press Shortcut" = "Digite o Atalho";
+"Shortcut Already Used" = "Atalho já usado";
+"The shortcut %@ is already used by %@." = "O atalho %@ já é usado por %@.";
+"Choose a different shortcut to avoid triggering both actions." = "Escolha outro atalho para evitar acionar as duas ações.";
+"OK" = "OK";
 "Add Group" = "Adicionar grupo";
 "Delete Group" = "Excluir grupo";
 "Toggle Sidebar" = "Alternar barra lateral";

@@ -70,6 +70,12 @@
 /* Settings Shortcut */
 "Settings Window" = "Finestra impostazioni";
 "Shortcuts" = "Comandi rapidi";
+"Record Shortcut" = "Registra scorciatoia";
+"Press Shortcut" = "Premi scorciatoia";
+"Shortcut Already Used" = "Scorciatoia già in uso";
+"The shortcut %@ is already used by %@." = "La scorciatoia %@ è già usata da %@.";
+"Choose a different shortcut to avoid triggering both actions." = "Scegli una scorciatoia diversa per evitare di attivare entrambe le azioni.";
+"OK" = "OK";
 "Add Group" = "Aggiungi gruppo";
 "Delete Group" = "Elimina gruppo";
 "Toggle Sidebar" = "Mostra/nascondi barra laterale";

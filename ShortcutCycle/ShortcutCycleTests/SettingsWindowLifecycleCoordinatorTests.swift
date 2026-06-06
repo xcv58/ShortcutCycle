@@ -1,4 +1,5 @@
 import AppKit
+import KeyboardShortcuts
 import XCTest
 @testable import ShortcutCycle
 
@@ -144,5 +145,67 @@ final class SettingsWindowLifecycleCoordinatorTests: XCTestCase {
         XCTAssertEqual(SettingsWindowLifecycleCoordinator.activationPolicy(for: backgroundWindow), .accessory)
         XCTAssertEqual(SettingsWindowLifecycleCoordinator.activationPolicy(for: nonSettingsWindow), .accessory)
         XCTAssertEqual(SettingsWindowLifecycleCoordinator.activationPolicy(for: nil), .accessory)
+    }
+
+    func testToggleActionOpensWhenSettingsWindowIsMissingOrHidden() {
+        let hiddenWindow = MockWindow(
+            identifier: NSUserInterfaceItemIdentifier("settings"),
+            isVisible: false,
+            isOnActiveSpace: true,
+            isKeyWindow: true
+        )
+        let nonSettingsWindow = MockWindow(
+            identifier: NSUserInterfaceItemIdentifier("other"),
+            isVisible: true,
+            isOnActiveSpace: true,
+            isKeyWindow: true
+        )
+
+        XCTAssertEqual(SettingsWindowLifecycleCoordinator.toggleAction(for: nil), .open)
+        XCTAssertEqual(SettingsWindowLifecycleCoordinator.toggleAction(for: hiddenWindow), .open)
+        XCTAssertEqual(SettingsWindowLifecycleCoordinator.toggleAction(for: nonSettingsWindow), .open)
+    }
+
+    func testToggleActionFocusesVisibleBackgroundSettingsWindow() {
+        let window = MockWindow(
+            identifier: NSUserInterfaceItemIdentifier("settings"),
+            isVisible: true,
+            isOnActiveSpace: true
+        )
+
+        XCTAssertEqual(SettingsWindowLifecycleCoordinator.toggleAction(for: window), .focus)
+    }
+
+    func testToggleActionDismissesVisibleKeySettingsWindow() {
+        let window = MockWindow(
+            identifier: NSUserInterfaceItemIdentifier("settings"),
+            isVisible: true,
+            isOnActiveSpace: true,
+            isKeyWindow: true
+        )
+
+        XCTAssertEqual(SettingsWindowLifecycleCoordinator.toggleAction(for: window), .dismiss)
+    }
+
+    func testToggleActionFocusesSettingsWindowWhenVisibleSheetIsAttached() {
+        let sheet = MockWindow(
+            identifier: nil,
+            isVisible: true,
+            isOnActiveSpace: true
+        )
+        let window = MockWindow(
+            identifier: NSUserInterfaceItemIdentifier("settings"),
+            isVisible: true,
+            isOnActiveSpace: true,
+            isKeyWindow: true,
+            attachedSheet: sheet
+        )
+
+        XCTAssertEqual(SettingsWindowLifecycleCoordinator.toggleAction(for: window), .focus)
+        XCTAssertFalse(SettingsWindowLifecycleCoordinator.isDismissibleSettingsWindow(window))
+    }
+
+    func testToggleSettingsShortcutHasNoDefaultShortcut() {
+        XCTAssertNil(KeyboardShortcuts.Name.toggleSettings.defaultShortcut)
     }
 }
