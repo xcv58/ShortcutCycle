@@ -212,10 +212,15 @@ final class PressAndHoldTests: XCTestCase {
 
         while !condition(), Date() < deadline {
             await Task.yield()
+            pumpMainRunLoopBriefly()
             try? await Task.sleep(nanoseconds: 1_000_000)
         }
 
         return condition()
+    }
+
+    private func pumpMainRunLoopBriefly() {
+        RunLoop.main.run(until: Date().addingTimeInterval(0.001))
     }
 
     private func drainMainActorQueue(iterations: Int = 3) async {
