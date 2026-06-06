@@ -888,7 +888,7 @@ def url_command(profile: dict[str, Any], command: str) -> None:
     open_url(profile, f"shortcutcycle://{command}")
 
 
-def url_query(profile: dict[str, Any], command: str, *, timeout: float = 5.0) -> dict[str, Any]:
+def url_query(profile: dict[str, Any], command: str, *, timeout: float = 15.0) -> dict[str, Any]:
     result_path = result_file_path(profile)
     result_path.unlink(missing_ok=True)
     url_command(profile, command)
@@ -1179,25 +1179,45 @@ def run_shortcutcycle_ax(profile: dict[str, Any], command: str, *arguments: obje
     helper_path = compile_shortcutcycle_ax_helper()
     env = os.environ.copy()
     env["SHORTCUTCYCLE_AX_APP_PATH"] = str(app_bundle_path(profile))
-    run(
-        [str(helper_path), command, *[str(argument) for argument in arguments]],
-        env=env,
-        capture_output=True,
-        check=True,
-    )
+    retry_deadline = time.monotonic() + 3.0
+    last_error: PipelineError | None = None
+    while time.monotonic() < retry_deadline:
+        try:
+            run(
+                [str(helper_path), command, *[str(argument) for argument in arguments]],
+                env=env,
+                capture_output=True,
+                check=True,
+            )
+            return
+        except PipelineError as error:
+            last_error = error
+            time.sleep(0.2)
+    if last_error is not None:
+        raise last_error
 
 
 def shortcutcycle_ax_output(profile: dict[str, Any], command: str, *arguments: object) -> str:
     helper_path = compile_shortcutcycle_ax_helper()
     env = os.environ.copy()
     env["SHORTCUTCYCLE_AX_APP_PATH"] = str(app_bundle_path(profile))
-    result = run(
-        [str(helper_path), command, *[str(argument) for argument in arguments]],
-        env=env,
-        capture_output=True,
-        check=True,
-    )
-    return result.stdout
+    retry_deadline = time.monotonic() + 3.0
+    last_error: PipelineError | None = None
+    while time.monotonic() < retry_deadline:
+        try:
+            result = run(
+                [str(helper_path), command, *[str(argument) for argument in arguments]],
+                env=env,
+                capture_output=True,
+                check=True,
+            )
+            return result.stdout
+        except PipelineError as error:
+            last_error = error
+            time.sleep(0.2)
+    if last_error is not None:
+        raise last_error
+    raise PipelineError(f"Timed out waiting for AX helper command: {command}")
 
 
 def shortcutcycle_ax_frame(profile: dict[str, Any], command: str, *arguments: object) -> dict[str, float]:
@@ -2037,9 +2057,8 @@ def apply_shortcut_overlays(scene: dict[str, Any], capture_path: Path) -> None:
     profile = load_profile(str(scene["profile"]))
     output_width, output_height = output_size(profile)
     render_scale = max(output_width / capture_width, output_height / capture_height)
-    scaled_width = capture_width * render_scale
     scaled_height = capture_height * render_scale
-    crop_x = max((scaled_width - output_width) / 2, 0)
+    crop_x = 0
     crop_y = max((scaled_height - output_height) / 2 - VERTICAL_CROP_BIAS, 0)
     source_pixels_per_output_pixel = 1 / render_scale
     desired_right = 96
@@ -3129,7 +3148,7 @@ def cover_filter(width: int, height: int, fps: int) -> str:
     return (
         f"fps={fps},"
         f"scale={width}:{height}:force_original_aspect_ratio=increase,"
-        f"crop={width}:{height}:(iw-ow)/2:max((ih-oh)/2-{VERTICAL_CROP_BIAS}\\,0),"
+        f"crop={width}:{height}:0:max((ih-oh)/2-{VERTICAL_CROP_BIAS}\\,0),"
         "format=yuv420p"
     )
 
