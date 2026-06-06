@@ -30,6 +30,7 @@
             --bg: #ffffff;
             --text: #1d1d1f;
             --border: #d2d2d7;
+            --nav-height: 58px;
             --warning-bg: #fff8db;
             --warning-border: #e8c547;
         }
@@ -55,6 +56,44 @@
             color: var(--text);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Helvetica, Arial, sans-serif;
             line-height: 1.65;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        a:focus-visible {
+            outline: 2px solid currentColor;
+            outline-offset: 4px;
+        }
+
+        .top-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: var(--nav-height);
+            padding: 10px max(18px, calc((100vw - 760px) / 2));
+            border-bottom: 1px solid var(--border);
+            background: var(--bg);
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            font-weight: 750;
+        }
+
+        .brand img {
+            width: 30px;
+            height: auto;
+        }
+
+        .home-link {
+            font-size: 0.9rem;
+            font-weight: 650;
         }
 
         .tally-frame {
@@ -98,6 +137,14 @@
 </head>
 
 <body>
+    <header class="top-nav" role="banner">
+        <a href="../" class="brand" aria-label="ShortcutCycle 首页">
+            <img src="../assets/images/brand-mark.png" width="36" height="24" alt="">
+            <span>ShortcutCycle</span>
+        </a>
+        <a href="../" class="home-link">主页</a>
+    </header>
+
     <main id="main-content">
         <p class="setup-warning" id="setup-warning">开发提示：未配置 NEXT_PUBLIC_V2EX_TALLY_FORM_URL。发布 Tally 表单后，把表单 URL 配置到这个变量或页面 meta 标签里。</p>
         <iframe class="tally-frame" id="tally-frame" title="ShortcutCycle V2EX 试用申请表" loading="lazy"></iframe>
