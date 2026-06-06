@@ -99,7 +99,10 @@ final class GroupEditViewTests: XCTestCase {
         XCTAssertEqual(providerSpy.calls.count, initialCallCount)
 
         store.addApp(app3, to: groupId)
-        drainMainRunLoop()
+        XCTAssertTrue(
+            drainMainRunLoop(until: { providerSpy.calls.count >= initialCallCount + 1 }),
+            "Adding an app should refresh running-app candidates"
+        )
         XCTAssertEqual(providerSpy.calls.count, initialCallCount + 1)
         XCTAssertEqual(providerSpy.calls.last?.map(\.bundleIdentifier), [app2, app1, app3].map(\.bundleIdentifier))
     }
@@ -240,8 +243,21 @@ final class GroupEditViewTests: XCTestCase {
         return hostingView
     }
 
-    private func drainMainRunLoop() {
-        RunLoop.main.run(until: Date().addingTimeInterval(0.1))
+    @discardableResult
+    private func drainMainRunLoop(
+        timeout: TimeInterval = 0.1,
+        until condition: (() -> Bool)? = nil
+    ) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+
+        repeat {
+            if condition?() == true {
+                return true
+            }
+            RunLoop.main.run(until: Date().addingTimeInterval(0.01))
+        } while Date() < deadline
+
+        return condition?() ?? true
     }
 
     private func makeReorderDelegate(

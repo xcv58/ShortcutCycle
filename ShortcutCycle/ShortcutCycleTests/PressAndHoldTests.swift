@@ -30,24 +30,36 @@ final class PressAndHoldTests: XCTestCase {
             return timer
         }
 
-        func fireLastTimer() {
-            guard let last = scheduledTimers.last else { return }
-            guard last.2.isValid else { return }
-            last.3(last.2)
+        @discardableResult
+        func fireLastTimer() -> Bool {
+            fireLastTimer(where: { _ in true })
         }
 
         /// Fire the most recent non-repeating timer (delay timer)
-        func fireLastNonRepeatingTimer() {
-            guard let entry = scheduledTimers.last(where: { !$0.1 }) else { return }
-            guard entry.2.isValid else { return }
-            entry.3(entry.2)
+        @discardableResult
+        func fireLastNonRepeatingTimer() -> Bool {
+            fireLastTimer(where: { !$0 })
         }
 
         /// Fire the most recent repeating timer (loop timer)
-        func fireLastRepeatingTimer() {
-            guard let entry = scheduledTimers.last(where: { $0.1 }) else { return }
-            guard entry.2.isValid else { return }
+        @discardableResult
+        func fireLastRepeatingTimer() -> Bool {
+            fireLastTimer(where: { $0 })
+        }
+
+        private func fireLastTimer(where matches: (Bool) -> Bool) -> Bool {
+            guard let index = scheduledTimers.indices.last(where: {
+                matches(scheduledTimers[$0].1) && scheduledTimers[$0].2.isValid
+            }) else {
+                return false
+            }
+
+            let entry = scheduledTimers[index]
+            if !entry.1 {
+                scheduledTimers.remove(at: index)
+            }
             entry.3(entry.2)
+            return true
         }
     }
 
@@ -132,10 +144,17 @@ final class PressAndHoldTests: XCTestCase {
 
         // Reset state
         manager.hide() // Ensure clean state
+        await drainMainActorQueue()
+        manager.hide()
         manager.lastRequestTime = nil
         manager.isLoopKeyHeld = false
         manager.currentLoopKey = nil
         manager.isRepeatingLoopActive = false
+        activationCount = 0
+        localMonitorMasks.removeAll()
+        globalMonitorMasks.removeAll()
+        localMonitorHandlers.removeAll()
+        globalMonitorHandlers.removeAll()
         removedMonitorCount = 0
     }
 
@@ -143,6 +162,8 @@ final class PressAndHoldTests: XCTestCase {
         // Flush any DummyEventMonitorTokens out of eventMonitors using the
         // stub removeEventMonitor (safe no-op), before we restore the real
         // NSEvent.removeMonitor — which would crash on non-monitor objects.
+        manager.hide()
+        await drainMainActorQueue()
         manager.hide()
 
         manager.timeProvider = SystemTimeProvider()
@@ -195,6 +216,12 @@ final class PressAndHoldTests: XCTestCase {
         }
 
         return condition()
+    }
+
+    private func drainMainActorQueue(iterations: Int = 3) async {
+        for _ in 0..<iterations {
+            await Task.yield()
+        }
     }
 
     private func makeFlagsChangedEvent(
