@@ -184,6 +184,17 @@ final class PressAndHoldTests: XCTestCase {
         globalMonitorHandlers.last(where: { $0.0 == mask })?.1
     }
 
+    private func eventually(timeout: TimeInterval = 1.0, _ condition: () -> Bool) async -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+
+        while !condition(), Date() < deadline {
+            await Task.yield()
+            try? await Task.sleep(nanoseconds: 1_000_000)
+        }
+
+        return condition()
+    }
+
     private func makeFlagsChangedEvent(
         modifierFlags: NSEvent.ModifierFlags
     ) throws -> NSEvent {
@@ -272,9 +283,8 @@ final class PressAndHoldTests: XCTestCase {
 
         // 3. Fire Timer
         timerMock.fireLastTimer()
-        await Task.yield()
-        await Task.yield()
-        XCTAssertTrue(manager.isVisible, "Holding through the reveal delay should make the HUD visible")
+        let didReveal = await eventually { manager.isVisible }
+        XCTAssertTrue(didReveal, "Holding through the reveal delay should make the HUD visible")
         XCTAssertEqual(windowAlphaChanges.last, 1, "Reveal should animate the HUD to full opacity")
         XCTAssertEqual(mouseInteractionStates.last, false, "Revealed HUD should accept mouse interaction")
     }
@@ -298,10 +308,9 @@ final class PressAndHoldTests: XCTestCase {
         XCTAssertEqual(mouseInteractionStates.last, true, "Prepared HUD should ignore mouse interaction")
 
         timerMock.fireLastNonRepeatingTimer()
-        await Task.yield()
-        await Task.yield()
 
-        XCTAssertTrue(manager.isVisible, "Reveal timer should transition the HUD into the visible state")
+        let didReveal = await eventually { manager.isVisible }
+        XCTAssertTrue(didReveal, "Reveal timer should transition the HUD into the visible state")
         XCTAssertTrue(localMonitorMasks.contains(.flagsChanged), "Revealed HUD should keep local modifier monitoring")
         XCTAssertTrue(removedMonitorCount > 0, "Transitioning to the revealed HUD should remove prepared-phase monitors")
         XCTAssertEqual(windowAlphaChanges.last, 1, "Reveal should animate to full opacity")
@@ -336,10 +345,9 @@ final class PressAndHoldTests: XCTestCase {
         )
 
         timerMock.fireLastNonRepeatingTimer()
-        await Task.yield()
-        await Task.yield()
 
-        XCTAssertTrue(manager.isVisible, "Reveal timer should transition the HUD into the visible state")
+        let didReveal = await eventually { manager.isVisible }
+        XCTAssertTrue(didReveal, "Reveal timer should transition the HUD into the visible state")
         XCTAssertEqual(
             globalMonitorMasks.filter { $0 == .flagsChanged }.count,
             2,
