@@ -8,17 +8,46 @@
     <link rel="icon" type="image/png" sizes="16x16" href="assets/images/favicon-16.png">
     <link rel="apple-touch-icon" href="assets/images/app-icon.png">
 
-    <!-- Prevent FOUC by setting theme before CSS loads -->
+    <!-- Prevent FOUC by setting theme/language before CSS loads -->
     <script>
         (function () {
-            const theme = localStorage.getItem('theme') || 'system';
+            function readStorage(key) {
+                try {
+                    return localStorage.getItem(key);
+                } catch (error) {
+                    return null;
+                }
+            }
+
+            const theme = readStorage('theme') || 'system';
             document.documentElement.setAttribute('data-theme', theme);
+
+            const supportedLanguages = ['en', 'zh-Hans', 'zh-Hant'];
+            const storedLanguage = readStorage('shortcutcycle-language');
+            const browserLanguages = navigator.languages || [navigator.language || 'en'];
+
+            function normalizeLanguage(language) {
+                const value = (language || '').toLowerCase();
+                if (value === 'zh-hans' || value === 'zh-cn' || value === 'zh-sg') return 'zh-Hans';
+                if (value === 'zh-hant' || value === 'zh-tw' || value === 'zh-hk' || value === 'zh-mo') return 'zh-Hant';
+                if (value.startsWith('zh')) return value.includes('tw') || value.includes('hk') || value.includes('mo') ? 'zh-Hant' : 'zh-Hans';
+                if (value.startsWith('en')) return 'en';
+                return null;
+            }
+
+            const initialLanguage = supportedLanguages.includes(storedLanguage)
+                ? storedLanguage
+                : browserLanguages.map(normalizeLanguage).find(Boolean) || 'en';
+
+            document.documentElement.lang = initialLanguage;
+            document.documentElement.setAttribute('data-language', initialLanguage);
         })();
     </script>
 
     <title>ShortcutCycle - Cycle apps by group, instantly.</title>
     <meta name="description"
-        content="Stop endlessly tabbing. Group your apps by context—Web, Code, Social—and cycle through them with dedicated hotkeys.">
+        content="Stop endlessly tabbing. Group your apps by context—Web, Code, Social—and cycle through them with dedicated hotkeys."
+        data-i18n-content="meta.description">
     <meta name="keywords"
         content="macOS app switcher, keyboard shortcuts, productivity, window management, app launcher, command tab alternative, alfred alternative">
     <meta name="author" content="ShortcutCycle">
@@ -27,18 +56,20 @@
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://s.jenny.media/">
-    <meta property="og:title" content="ShortcutCycle - Cycle apps by group, instantly.">
+    <meta property="og:title" content="ShortcutCycle - Cycle apps by group, instantly." data-i18n-content="meta.title">
     <meta property="og:description"
-        content="Stop endlessly tabbing. Group your apps by context—Web, Code, Social—and cycle through them with dedicated hotkeys.">
+        content="Stop endlessly tabbing. Group your apps by context—Web, Code, Social—and cycle through them with dedicated hotkeys."
+        data-i18n-content="meta.description">
     <meta property="og:image" content="https://s.jenny.media/assets/images/hud-light.webp">
     <meta property="og:image:width" content="1800">
     <meta property="og:image:height" content="1124">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="ShortcutCycle - Cycle apps by group, instantly.">
+    <meta name="twitter:title" content="ShortcutCycle - Cycle apps by group, instantly." data-i18n-content="meta.title">
     <meta name="twitter:description"
-        content="Stop endlessly tabbing. Group your apps by context and cycle with dedicated hotkeys.">
+        content="Stop endlessly tabbing. Group your apps by context and cycle with dedicated hotkeys."
+        data-i18n-content="meta.twitterDescription">
     <meta name="twitter:image" content="https://s.jenny.media/assets/images/hud-light.webp">
 
     <!-- DNS Prefetch -->
@@ -313,6 +344,49 @@
 
         .nav-links a:hover {
             color: var(--accent);
+        }
+
+        .language-selector {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 34px;
+            padding: 0 10px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: var(--surface);
+            color: var(--text-primary);
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .language-selector:hover {
+            border-color: var(--accent);
+            background: var(--surface-hover);
+        }
+
+        .language-icon {
+            width: 16px;
+            height: 16px;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+
+        .language-select {
+            width: 112px;
+            border: 0;
+            background: transparent;
+            color: var(--text-primary);
+            font: inherit;
+            font-size: 0.9rem;
+            font-weight: 600;
+            line-height: 1;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .language-select option {
+            color: #1d1d1f;
+            background: #ffffff;
         }
 
         /* --- NEW THEME SWITCHER (Segmented Control) --- */
@@ -1258,6 +1332,33 @@
             }
         }
 
+        @media (max-width: 560px) {
+            header {
+                flex-wrap: wrap;
+                gap: 16px;
+            }
+
+            .nav-wrapper {
+                width: 100%;
+                justify-content: space-between;
+                gap: 12px;
+            }
+
+            .language-selector {
+                flex: 1 1 auto;
+                max-width: 168px;
+            }
+
+            .language-select {
+                width: 100%;
+                min-width: 0;
+            }
+
+            .theme-btn {
+                padding: 6px 8px;
+            }
+        }
+
         /* --- BACK TO TOP BUTTON --- */
         .back-to-top {
             position: fixed;
@@ -1463,29 +1564,46 @@
 <body class="preload">
 
     <!-- Skip Navigation for Accessibility -->
-    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <a href="#main-content" class="skip-link" data-i18n="a11y.skipToMain">Skip to main content</a>
 
     <div class="container">
         <header role="banner">
-            <a href="index.html" class="logo">
+            <a href="index.html" class="logo" aria-label="ShortcutCycle home" data-i18n-aria-label="nav.homeLabel">
                 <img src="assets/images/brand-mark.png" width="36" height="24" alt="">
                 <span class="logo-wordmark">ShortcutCycle</span>
             </a>
 
             <div class="nav-wrapper">
-                <nav class="nav-links" role="navigation" aria-label="Main navigation">
+                <nav class="nav-links" role="navigation" aria-label="Main navigation"
+                    data-i18n-aria-label="nav.mainLabel">
                     <a href="https://github.com/xcv58/ShortcutCycle/blob/master/PRIVACY_POLICY.md" target="_blank"
-                        rel="noopener noreferrer">Privacy</a>
+                        rel="noopener noreferrer" data-i18n="nav.privacy">Privacy</a>
                     <a href="https://github.com/xcv58/ShortcutCycle/issues" target="_blank"
-                        rel="noopener noreferrer">Support</a>
+                        rel="noopener noreferrer" data-i18n="nav.support">Support</a>
                     <a href="https://github.com/xcv58/ShortcutCycle" target="_blank"
                         rel="noopener noreferrer">GitHub</a>
                 </nav>
 
-                <div class="theme-switch" role="group" aria-label="Theme Toggle">
+                <label class="language-selector">
+                    <svg class="language-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M2 12h20"></path>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                    </svg>
+                    <span class="sr-only" data-i18n="language.label">Language</span>
+                    <select id="language-select" class="language-select" aria-label="Language"
+                        data-i18n-aria-label="language.label">
+                        <option value="en">English</option>
+                        <option value="zh-Hans">简体中文</option>
+                        <option value="zh-Hant">繁體中文</option>
+                    </select>
+                </label>
+
+                <div class="theme-switch" role="group" aria-label="Theme Toggle" data-i18n-aria-label="theme.groupLabel">
 
                     <button class="theme-btn" onclick="setTheme('system')" id="btn-system" aria-label="System Theme"
-                        title="Match System">
+                        title="Match System" data-i18n-aria-label="theme.systemAria" data-i18n-title="theme.systemTitle">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                             stroke-linecap="round" stroke-linejoin="round">
                             <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
@@ -1495,7 +1613,7 @@
                     </button>
 
                     <button class="theme-btn" onclick="setTheme('light')" id="btn-light" aria-label="Light Theme"
-                        title="Light Mode">
+                        title="Light Mode" data-i18n-aria-label="theme.lightAria" data-i18n-title="theme.lightTitle">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                             stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="5"></circle>
@@ -1511,7 +1629,7 @@
                     </button>
 
                     <button class="theme-btn" onclick="setTheme('dark')" id="btn-dark" aria-label="Dark Theme"
-                        title="Dark Mode">
+                        title="Dark Mode" data-i18n-aria-label="theme.darkAria" data-i18n-title="theme.darkTitle">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                             stroke-linecap="round" stroke-linejoin="round">
                             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
@@ -1523,31 +1641,34 @@
 
         <!-- Screen reader announcements -->
         <div role="status" aria-live="polite" aria-atomic="true" class="sr-only" id="theme-announcement"></div>
+        <div role="status" aria-live="polite" aria-atomic="true" class="sr-only" id="language-announcement"></div>
 
         <main id="main-content" role="main">
 
             <section class="hero">
-                <h1 class="text-gradient">Cycle apps by group, instantly.</h1>
+                <h1 class="text-gradient" data-i18n="hero.title">Cycle apps by group, instantly.</h1>
 
                 <div class="hero-split">
                     <div class="hero-text">
-                        <p class="hero-subtitle">Stop endlessly tabbing. Group apps by context—Web, Code, Social—and
-                            cycle with dedicated hotkeys.</p>
+                        <p class="hero-subtitle" data-i18n="hero.subtitle">Stop endlessly tabbing. Group apps by
+                            context—Web, Code, Social—and cycle with dedicated hotkeys.</p>
                         <p class="hero-benefit">
                             <span class="tooltip-trigger" tabindex="0" aria-describedby="hero-benefit-tooltip"
-                                data-tooltip="Based on saving 3 seconds per switch, 400 times a day = ~2 hours saved/week.">
+                                data-tooltip="Based on saving 3 seconds per switch, 400 times a day = ~2 hours saved/week."
+                                data-i18n="hero.benefitHighlight" data-i18n-data-tooltip="hero.benefitTooltipShort">
                                 Save hours every week
                             </span>
-                            <span id="hero-benefit-tooltip" class="sr-only">Based on saving 3 seconds per switch, 400
-                                times a day equals about 2 hours saved per week.</span>
-                            with app switching tailored to your own workflow.
+                            <span id="hero-benefit-tooltip" class="sr-only" data-i18n="hero.benefitTooltipLong">Based on
+                                saving 3 seconds per switch, 400 times a day equals about 2 hours saved per week.</span>
+                            <span data-i18n="hero.benefitSuffix">with app switching tailored to your own workflow.</span>
                         </p>
                         <div class="cta-group">
                             <a href="https://apps.apple.com/us/app/shortcutcycle/id6758281578?mt=12"
-                                class="cta-badge-link cta-store-link" aria-label="Download ShortcutCycle on the App Store">
+                                class="cta-badge-link cta-store-link" aria-label="Download ShortcutCycle on the App Store"
+                                data-i18n-aria-label="hero.appStoreAria">
                                 <img src="assets/images/app-store-badge-light.svg"
                                     class="cta-store-badge cta-store-badge-light" width="180" height="60"
-                                    alt="Download on the App Store" decoding="async">
+                                    alt="Download on the App Store" data-i18n-alt="hero.appStoreAlt" decoding="async">
                                 <img src="assets/images/app-store-badge-dark.svg"
                                     class="cta-store-badge cta-store-badge-dark" width="180" height="60" alt=""
                                     aria-hidden="true" decoding="async">
@@ -1557,18 +1678,21 @@
 
                     <div class="hero-video-container">
                         <video autoplay loop muted playsinline preload="metadata" poster="assets/images/poster-1.webp"
-                            aria-label="Demo: quick app switching with ShortcutCycle">
+                            aria-label="Demo: quick app switching with ShortcutCycle"
+                            data-i18n-aria-label="hero.videoAria">
                             <source src="assets/videos/1.mp4?v=20260525-shortcut-lead" type="video/mp4">
                         </video>
                     </div>
                 </div>
 
                 <div class="gallery-toolbar">
-                    <span class="gallery-toolbar-label">Screenshots</span>
+                    <span class="gallery-toolbar-label" data-i18n="gallery.label">Screenshots</span>
                     <span class="gallery-toolbar-separator" aria-hidden="true"></span>
-                    <div class="screenshot-theme-switch" role="group" aria-label="Screenshot Theme Toggle">
+                    <div class="screenshot-theme-switch" role="group" aria-label="Screenshot Theme Toggle"
+                        data-i18n-aria-label="gallery.themeGroupLabel">
                         <button id="screenshot-btn-light" class="screenshot-theme-btn" type="button"
-                            data-screenshot-theme="light" aria-pressed="false" title="Show light screenshots">
+                            data-screenshot-theme="light" aria-pressed="false" title="Show light screenshots"
+                            data-i18n-title="gallery.showLight">
                             <svg class="screenshot-theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <circle cx="12" cy="12" r="5"></circle>
@@ -1581,15 +1705,16 @@
                                 <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
                                 <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
                             </svg>
-                            <span>Light</span>
+                            <span data-i18n="gallery.light">Light</span>
                         </button>
                         <button id="screenshot-btn-dark" class="screenshot-theme-btn" type="button"
-                            data-screenshot-theme="dark" aria-pressed="false" title="Show dark screenshots">
+                            data-screenshot-theme="dark" aria-pressed="false" title="Show dark screenshots"
+                            data-i18n-title="gallery.showDark">
                             <svg class="screenshot-theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
                             </svg>
-                            <span>Dark</span>
+                            <span data-i18n="gallery.dark">Dark</span>
                         </button>
                     </div>
                     <div role="status" aria-live="polite" aria-atomic="true" class="sr-only"
@@ -1597,7 +1722,8 @@
                 </div>
 
                 <div class="gallery-wrapper">
-                    <button class="scroll-btn prev" id="gallery-prev" aria-label="Previous">
+                    <button class="scroll-btn prev" id="gallery-prev" aria-label="Previous"
+                        data-i18n-aria-label="gallery.previous">
                         <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"
                             viewBox="0 0 24 24">
                             <path d="M15 19l-7-7 7-7" />
@@ -1605,6 +1731,7 @@
                     </button>
                     <div class="gallery-scroller">
                         <a href="assets/images/hud-light.webp" class="screenshot-frame screenshot-variant glightbox"
+                            data-screenshot-key="hud"
                             data-gallery="screenshots" data-title="HUD Overlay Light"
                             data-light-href="assets/images/hud-light.webp"
                             data-light-src="assets/images/hud-light.webp"
@@ -1620,7 +1747,8 @@
                                 fetchpriority="high" decoding="async">
                         </a>
                         <a href="assets/images/hud-grid-light.webp"
-                            class="screenshot-frame screenshot-variant glightbox" data-gallery="screenshots"
+                            class="screenshot-frame screenshot-variant glightbox" data-screenshot-key="grid"
+                            data-gallery="screenshots"
                             data-title="Grid View Light" data-light-href="assets/images/hud-grid-light.webp"
                             data-light-src="assets/images/hud-grid-light.webp"
                             data-light-srcset="assets/images/hud-grid-light-small.webp 900w, assets/images/hud-grid-light.webp 1800w"
@@ -1635,7 +1763,7 @@
                                 alt="Grid View Light" decoding="async">
                         </a>
                         <a href="assets/images/general-light.webp" class="screenshot-frame screenshot-variant glightbox"
-                            data-gallery="screenshots" data-title="General Settings Light"
+                            data-screenshot-key="general" data-gallery="screenshots" data-title="General Settings Light"
                             data-light-href="assets/images/general-light.webp"
                             data-light-src="assets/images/general-light.webp"
                             data-light-srcset="assets/images/general-light-small.webp 900w, assets/images/general-light.webp 1800w"
@@ -1650,7 +1778,7 @@
                                 alt="General Settings Light" decoding="async">
                         </a>
                         <a href="assets/images/group-light.webp" class="screenshot-frame screenshot-variant glightbox"
-                            data-gallery="screenshots" data-title="Group Settings Light"
+                            data-screenshot-key="group" data-gallery="screenshots" data-title="Group Settings Light"
                             data-light-href="assets/images/group-light.webp"
                             data-light-src="assets/images/group-light.webp"
                             data-light-srcset="assets/images/group-light-small.webp 900w, assets/images/group-light.webp 1800w"
@@ -1665,7 +1793,8 @@
                                 alt="Group Settings Light" decoding="async">
                         </a>
                         <a href="assets/images/automatic-backups.webp"
-                            class="screenshot-frame screenshot-variant glightbox" data-gallery="screenshots"
+                            class="screenshot-frame screenshot-variant glightbox" data-screenshot-key="backups"
+                            data-gallery="screenshots"
                             data-title="Automatic Backups Light"
                             data-light-href="assets/images/automatic-backups.webp"
                             data-light-src="assets/images/automatic-backups.webp"
@@ -1681,6 +1810,7 @@
                                 alt="Automatic Backups Light" decoding="async">
                         </a>
                         <a href="assets/images/menu-bar.webp" class="screenshot-frame glightbox"
+                            data-screenshot-key="menuBar"
                             data-gallery="screenshots" data-title="Menu Bar">
                             <img src="assets/images/menu-bar.webp"
                                 srcset="assets/images/menu-bar-small.webp 900w, assets/images/menu-bar.webp 1800w"
@@ -1688,7 +1818,7 @@
                                 alt="Menu Bar" decoding="async">
                         </a>
                     </div>
-                    <button class="scroll-btn next" id="gallery-next" aria-label="Next">
+                    <button class="scroll-btn next" id="gallery-next" aria-label="Next" data-i18n-aria-label="gallery.next">
                         <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"
                             viewBox="0 0 24 24">
                             <path d="M9 5l7 7-7 7" />
@@ -1699,43 +1829,45 @@
 
             <!-- Comparison Section -->
             <section class="section section-divider" id="comparison">
-                <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 16px;">The Group Cycling Advantage</h2>
+                <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 16px;"
+                    data-i18n="comparison.title">The Group Cycling Advantage</h2>
                 <p class="section-subtitle"
                     style="max-width: 700px; margin: 0 auto 60px auto; color: var(--text-secondary); text-align: center; font-size: 1.1rem; line-height: 1.6;">
-                    Most switchers force you to search, type, or scan a history list. ShortcutCycle uses <strong>muscle
-                        memory</strong>.
-                    Group your apps by context (e.g., "Browsers", "Code") and cycle them with a single keystroke.
-                    It's faster, consistent, and demands less cognitive load.
+                    <span data-i18n-html="comparison.subtitle">Most switchers force you to search, type, or scan a
+                        history list. ShortcutCycle uses <strong>muscle memory</strong>. Group your apps by context
+                        (e.g., "Browsers", "Code") and cycle them with a single keystroke. It's faster, consistent, and
+                        demands less cognitive load.</span>
                 </p>
                 <div class="versus-grid">
                     <!-- The Old Way -->
                     <div class="versus-card old-way">
                         <div class="versus-header">
-                            <h3>The Old Way</h3>
-                            <p>Cmd+Tab / AltTab • Raycast / Alfred</p>
+                            <h3 data-i18n="comparison.old.title">The Old Way</h3>
+                            <p data-i18n="comparison.old.subtitle">Cmd+Tab / AltTab • Raycast / Alfred</p>
                         </div>
                         <ul class="versus-list">
                             <li class="versus-item">
                                 <span class="versus-icon">🔍</span>
                                 <div class="versus-content">
-                                    <strong>Search & Scan</strong>
-                                    <span>Requires reading lists, typing names, or scanning icons. Breaks your
-                                        flow.</span>
+                                    <strong data-i18n="comparison.old.searchTitle">Search & Scan</strong>
+                                    <span data-i18n="comparison.old.searchBody">Requires reading lists, typing names, or
+                                        scanning icons. Breaks your flow.</span>
                                 </div>
                             </li>
                             <li class="versus-item">
                                 <span class="versus-icon">🤯</span>
                                 <div class="versus-content">
-                                    <strong>High Cognitive Load</strong>
-                                    <span>"Is it window 3 or 4? What did I title it?" Constant micro-decisions add
-                                        up.</span>
+                                    <strong data-i18n="comparison.old.loadTitle">High Cognitive Load</strong>
+                                    <span data-i18n="comparison.old.loadBody">"Is it window 3 or 4? What did I title it?"
+                                        Constant micro-decisions add up.</span>
                                 </div>
                             </li>
                             <li class="versus-item">
                                 <span class="versus-icon">🐌</span>
                                 <div class="versus-content">
-                                    <strong>Slow Inputs</strong>
-                                    <span>Cmd+Space+T-y-p-e or Cmd+Tab+Tab+Tab. Every switch takes seconds.</span>
+                                    <strong data-i18n="comparison.old.slowTitle">Slow Inputs</strong>
+                                    <span data-i18n="comparison.old.slowBody">Cmd+Space+T-y-p-e or Cmd+Tab+Tab+Tab. Every
+                                        switch takes seconds.</span>
                                 </div>
                             </li>
                         </ul>
@@ -1743,31 +1875,33 @@
 
                     <!-- ShortcutCycle -->
                     <div class="versus-card new-way">
-                        <div class="card-badge">The Better Way</div>
+                        <div class="card-badge" data-i18n="comparison.new.badge">The Better Way</div>
                         <div class="versus-header">
                             <h3 style="color: var(--accent);">ShortcutCycle</h3>
-                            <p>Context-Aware Group Cycling</p>
+                            <p data-i18n="comparison.new.subtitle">Context-Aware Group Cycling</p>
                         </div>
                         <ul class="versus-list">
                             <li class="versus-item">
                                 <span class="versus-icon">⚡️</span>
                                 <div class="versus-content">
-                                    <strong>Muscle Memory</strong>
-                                    <span>Your fingers know exactly where "Code" is. Zero thought required.</span>
+                                    <strong data-i18n="comparison.new.memoryTitle">Muscle Memory</strong>
+                                    <span data-i18n="comparison.new.memoryBody">Your fingers know exactly where "Code" is.
+                                        Zero thought required.</span>
                                 </div>
                             </li>
                             <li class="versus-item">
                                 <span class="versus-icon">🎯</span>
                                 <div class="versus-content">
-                                    <strong>Instant Scope</strong>
-                                    <span>Only cycle relevant windows (e.g., just browsers). Ignore the noise.</span>
+                                    <strong data-i18n="comparison.new.scopeTitle">Instant Scope</strong>
+                                    <span data-i18n="comparison.new.scopeBody">Only cycle relevant windows (e.g., just
+                                        browsers). Ignore the noise.</span>
                                 </div>
                             </li>
                             <li class="versus-item">
                                 <span class="versus-icon">🎹</span>
                                 <div class="versus-content">
-                                    <strong>One Keystroke</strong>
-                                    <span>Option+1. Done. You're there instantly.</span>
+                                    <strong data-i18n="comparison.new.keyTitle">One Keystroke</strong>
+                                    <span data-i18n="comparison.new.keyBody">Option+1. Done. You're there instantly.</span>
                                 </div>
                             </li>
                         </ul>
@@ -1776,80 +1910,80 @@
             </section>
 
             <section class="section section-divider" aria-labelledby="features-heading">
-                <h2 id="features-heading" class="sr-only">Features</h2>
+                <h2 id="features-heading" class="sr-only" data-i18n="features.heading">Features</h2>
                 <div class="features-grid">
                     <div class="feature-card">
                         <span class="feature-icon">💎</span>
-                        <h3>No Subscriptions</h3>
-                        <p>Pay once, keep it forever. Enjoy a <strong>lifetime license</strong> for just
-                            <strong>$3.99</strong>. No recurring fees, ever.
+                        <h3 data-i18n="features.noSubscriptions.title">No Subscriptions</h3>
+                        <p data-i18n-html="features.noSubscriptions.body">Pay once, keep it forever. Enjoy a
+                            <strong>lifetime license</strong> for just <strong>$3.99</strong>. No recurring fees, ever.
                         </p>
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">🎯</span>
-                        <h3>Context Groups</h3>
-                        <p>Stop cycling through 20 irrelevant windows. Group apps by workflow—"coding", "writing",
+                        <h3 data-i18n="features.groups.title">Context Groups</h3>
+                        <p data-i18n="features.groups.body">Stop cycling through 20 irrelevant windows. Group apps by workflow—"coding", "writing",
                             "social"—and switch only between what you need.</p>
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">⚡️</span>
-                        <h3>Instant Switching</h3>
-                        <p>Press <code>Option+1</code> to activate your browser group. Press again to cycle through
+                        <h3 data-i18n="features.switching.title">Instant Switching</h3>
+                        <p data-i18n-html="features.switching.body">Press <code>Option+1</code> to activate your browser group. Press again to cycle through
                             windows. Build instant muscle memory.</p>
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">👥</span>
-                        <h3>Browser Profiles</h3>
-                        <p>Treat work and personal profiles (Chrome, Firefox, Edge) as separate apps. Cycle through your
+                        <h3 data-i18n="features.profiles.title">Browser Profiles</h3>
+                        <p data-i18n="features.profiles.body">Treat work and personal profiles (Chrome, Firefox, Edge) as separate apps. Cycle through your
                             work browser without seeing your personal tabs.</p>
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">✨</span>
-                        <h3>Beautiful HUD</h3>
-                        <p>A native, lightweight overlay shows your target before you switch. Know exactly where you're
+                        <h3 data-i18n="features.hud.title">Beautiful HUD</h3>
+                        <p data-i18n="features.hud.body">A native, lightweight overlay shows your target before you switch. Know exactly where you're
                             landing.</p>
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">💻</span>
-                        <h3>Native & Fast</h3>
-                        <p>Built with Swift for Apple Silicon. Instant startup, zero lag, and negligible battery impact.
+                        <h3 data-i18n="features.native.title">Native & Fast</h3>
+                        <p data-i18n="features.native.body">Built with Swift for Apple Silicon. Instant startup, zero lag, and negligible battery impact.
                         </p>
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">🚀</span>
-                        <h3>Auto-Launch</h3>
-                        <p>Targeted app not running? We launch it instantly. ShortcutCycle is a switcher and launcher in
+                        <h3 data-i18n="features.launch.title">Auto-Launch</h3>
+                        <p data-i18n="features.launch.body">Targeted app not running? We launch it instantly. ShortcutCycle is a switcher and launcher in
                             one.</p>
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">🔒</span>
-                        <h3>Private by Design</h3>
-                        <p>No analytics. No tracking. Your configuration stays on your Mac. Export to JSON to backup
+                        <h3 data-i18n="features.privacy.title">Private by Design</h3>
+                        <p data-i18n="features.privacy.body">No analytics. No tracking. Your configuration stays on your Mac. Export to JSON to backup
                             your settings.</p>
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">🛟</span>
-                        <h3>Automatic Backups</h3>
-                        <p>Mistakes happen. Configuration snapshots are saved automatically, letting you restore
+                        <h3 data-i18n="features.backups.title">Automatic Backups</h3>
+                        <p data-i18n="features.backups.body">Mistakes happen. Configuration snapshots are saved automatically, letting you restore
                             previous setups in seconds.</p>
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">🤖</span>
-                        <h3>Automation Ready</h3>
-                        <p>Control ShortcutCycle with the <code>shortcutcycle://</code> URL scheme from Apple
+                        <h3 data-i18n="features.automation.title">Automation Ready</h3>
+                        <p data-i18n-html="features.automation.body">Control ShortcutCycle with the <code>shortcutcycle://</code> URL scheme from Apple
                             Shortcuts, Alfred, Raycast, or Keyboard Maestro. <a
                                 href="https://github.com/xcv58/ShortcutCycle/blob/master/URL_SCHEME.md"
                                 target="_blank" rel="noopener noreferrer">See URL command docs</a>.</p>
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">🌍</span>
-                        <h3>Global Ready</h3>
-                        <p>Fully localized interface in 15 languages. Productivity that speaks your language.</p>
+                        <h3 data-i18n="features.global.title">Global Ready</h3>
+                        <p data-i18n="features.global.body">Fully localized interface in 15 languages. Productivity that speaks your language.</p>
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">♿️</span>
-                        <h3>Fully Accessible</h3>
-                        <p>Complete VoiceOver support, Voice Control compatibility, and keyboard navigation throughout.
+                        <h3 data-i18n="features.accessibility.title">Fully Accessible</h3>
+                        <p data-i18n="features.accessibility.body">Complete VoiceOver support, Voice Control compatibility, and keyboard navigation throughout.
                             Built with accessibility in mind from day one.</p>
                     </div>
                 </div>
@@ -1857,170 +1991,173 @@
 
             <!-- Video Demo Section -->
             <section class="section section-divider video-section" aria-labelledby="video-heading">
-                <h2 id="video-heading">See It In Action</h2>
-                <p class="section-subtitle">Watch how ShortcutCycle transforms your workflow</p>
+                <h2 id="video-heading" data-i18n="videos.title">See It In Action</h2>
+                <p class="section-subtitle" data-i18n="videos.subtitle">Watch how ShortcutCycle transforms your workflow</p>
 
                 <div class="video-grid">
                     <div class="video-card">
                         <video controls preload="none" poster="assets/images/poster-1.webp">
                             <source src="assets/videos/1.mp4?v=20260525-shortcut-lead" type="video/mp4">
-                            Your browser does not support the video tag.
+                            <span data-i18n="videos.unsupported">Your browser does not support the video tag.</span>
                         </video>
-                        <h3>Quick App Switching</h3>
-                        <p>Cycle through grouped apps with a single keystroke</p>
+                        <h3 data-i18n="videos.quick.title">Quick App Switching</h3>
+                        <p data-i18n="videos.quick.body">Cycle through grouped apps with a single keystroke</p>
                     </div>
                     <div class="video-card">
                         <video controls preload="none" poster="assets/images/poster-2.webp">
                             <source src="assets/videos/2.mp4?v=20260525-shortcut-lead" type="video/mp4">
-                            Your browser does not support the video tag.
+                            <span data-i18n="videos.unsupported">Your browser does not support the video tag.</span>
                         </video>
-                        <h3>Visual HUD Overlay</h3>
-                        <p>See exactly what you're switching to with the beautiful native overlay</p>
+                        <h3 data-i18n="videos.hud.title">Visual HUD Overlay</h3>
+                        <p data-i18n="videos.hud.body">See exactly what you're switching to with the beautiful native overlay</p>
                     </div>
                     <div class="video-card">
                         <video controls preload="none" poster="assets/images/poster-3.webp">
                             <source src="assets/videos/3.mp4?v=20260525-shortcut-lead" type="video/mp4">
-                            Your browser does not support the video tag.
+                            <span data-i18n="videos.unsupported">Your browser does not support the video tag.</span>
                         </video>
-                        <h3>Easy Configuration</h3>
-                        <p>Set up your groups and shortcuts in seconds</p>
+                        <h3 data-i18n="videos.config.title">Easy Configuration</h3>
+                        <p data-i18n="videos.config.body">Set up your groups and shortcuts in seconds</p>
                     </div>
                 </div>
             </section>
 
             <!-- FAQ Section -->
             <section class="section section-divider" id="faq">
-                <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 30px;">Frequently Asked Questions</h2>
+                <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 30px;" data-i18n="faq.title">
+                    Frequently Asked Questions</h2>
                 <div class="faq-toggle-container">
-                    <button id="faq-toggle-btn" class="faq-toggle-btn" onclick="toggleAllFAQ()">Expand All</button>
+                    <button id="faq-toggle-btn" class="faq-toggle-btn" onclick="toggleAllFAQ()" data-i18n="faq.expandAll">Expand All</button>
                 </div>
                 <div class="faq-container">
                     <div class="faq-group">
-                        <h3 class="faq-group-title">Getting Started</h3>
+                        <h3 class="faq-group-title" data-i18n="faq.gettingStarted.title">Getting Started</h3>
                         <details class="faq-item">
-                            <summary>How do I create a group?</summary>
-                            <p>It's simple. Open the settings, click the <strong>+</strong> button to create a new group
+                            <summary data-i18n="faq.gettingStarted.createQuestion">How do I create a group?</summary>
+                            <p data-i18n-html="faq.gettingStarted.createAnswer">It's simple. Open the settings, click the <strong>+</strong> button to create a new group
                                 (like "Social" or "Dev"), and assign a global hotkey (e.g., <code>Option+1</code>). Then,
                                 just drag and drop the apps you want into that group.</p>
                         </details>
 
                         <details class="faq-item">
-                            <summary>Can I customize the shortcuts?</summary>
-                            <p>Yes, you have full control. You can assign any global shortcut to activate a specific group.
+                            <summary data-i18n="faq.gettingStarted.shortcutsQuestion">Can I customize the shortcuts?</summary>
+                            <p data-i18n="faq.gettingStarted.shortcutsAnswer">Yes, you have full control. You can assign any global shortcut to activate a specific group.
                                 Inside the group, apps are cycled based on the order you arrange them in.</p>
                         </details>
 
                         <details class="faq-item">
-                            <summary>What happens if an app isn't open?</summary>
-                            <p>ShortcutCycle acts as a launcher too. If you cycle to an app that isn't running, we'll
+                            <summary data-i18n="faq.gettingStarted.closedAppQuestion">What happens if an app isn't open?</summary>
+                            <p data-i18n-html="faq.gettingStarted.closedAppAnswer">ShortcutCycle acts as a launcher too. If you cycle to an app that isn't running, we'll
                                 <strong>automatically launch it</strong> for you instantly.
                             </p>
                         </details>
                     </div>
 
                     <div class="faq-group">
-                        <h3 class="faq-group-title">Automation &amp; URL Commands</h3>
+                        <h3 class="faq-group-title" data-i18n="faq.automation.title">Automation &amp; URL Commands</h3>
                         <details class="faq-item">
-                            <summary>Can I automate ShortcutCycle with Shortcuts, Alfred, or Raycast?</summary>
-                            <p class="faq-answer-intro">Yes. ShortcutCycle supports the custom URL scheme
+                            <summary data-i18n="faq.automation.toolsQuestion">Can I automate ShortcutCycle with Shortcuts, Alfred, or Raycast?</summary>
+                            <p class="faq-answer-intro" data-i18n-html="faq.automation.toolsAnswerIntro">Yes. ShortcutCycle supports the custom URL scheme
                                 <code>shortcutcycle://</code>, so you can trigger actions from automation tools. Example
                                 command:</p>
                             <div class="faq-command-list">
                                 <div class="faq-command">
                                     <code>open "shortcutcycle://cycle?group=Browsers"</code>
                                     <button class="copy-command-btn" type="button"
-                                        data-copy-text='open "shortcutcycle://cycle?group=Browsers"'>Copy</button>
+                                        data-copy-text='open "shortcutcycle://cycle?group=Browsers"' data-i18n="actions.copy">Copy</button>
                                 </div>
                             </div>
                             <p class="faq-answer-tail"><a
                                     href="https://github.com/xcv58/ShortcutCycle/blob/master/URL_SCHEME.md"
-                                    target="_blank" rel="noopener noreferrer">See full URL command docs</a>.</p>
+                                    target="_blank" rel="noopener noreferrer"
+                                    data-i18n="faq.automation.docsLink">See full URL command docs</a>.</p>
                         </details>
 
                         <details class="faq-item">
-                            <summary>Can URL commands open a specific settings tab or the backup browser?</summary>
-                            <p class="faq-answer-intro">Yes. Use these <code>open</code> commands:</p>
+                            <summary data-i18n="faq.automation.openQuestion">Can URL commands open a specific settings tab or the backup browser?</summary>
+                            <p class="faq-answer-intro" data-i18n-html="faq.automation.openAnswerIntro">Yes. Use these <code>open</code> commands:</p>
                             <div class="faq-command-list">
                                 <div class="faq-command">
                                     <code>open "shortcutcycle://open-settings?tab=groups"</code>
                                     <button class="copy-command-btn" type="button"
-                                        data-copy-text='open "shortcutcycle://open-settings?tab=groups"'>Copy</button>
+                                        data-copy-text='open "shortcutcycle://open-settings?tab=groups"' data-i18n="actions.copy">Copy</button>
                                 </div>
                                 <div class="faq-command">
                                     <code>open "shortcutcycle://open-settings?tab=general"</code>
                                     <button class="copy-command-btn" type="button"
-                                        data-copy-text='open "shortcutcycle://open-settings?tab=general"'>Copy</button>
+                                        data-copy-text='open "shortcutcycle://open-settings?tab=general"' data-i18n="actions.copy">Copy</button>
                                 </div>
                                 <div class="faq-command">
                                     <code>open "shortcutcycle://open-backup-browser"</code>
                                     <button class="copy-command-btn" type="button"
-                                        data-copy-text='open "shortcutcycle://open-backup-browser"'>Copy</button>
+                                        data-copy-text='open "shortcutcycle://open-backup-browser"' data-i18n="actions.copy">Copy</button>
                                 </div>
                             </div>
                             <p class="faq-answer-tail"><a
                                     href="https://github.com/xcv58/ShortcutCycle/blob/master/URL_SCHEME.md"
-                                    target="_blank" rel="noopener noreferrer">See full URL command docs</a>.</p>
+                                    target="_blank" rel="noopener noreferrer"
+                                    data-i18n="faq.automation.docsLink">See full URL command docs</a>.</p>
                         </details>
 
                         <details class="faq-item">
-                            <summary>Can URL commands import/export settings or restore backups?</summary>
-                            <p class="faq-answer-intro">Yes. You can export/import settings by path and restore backups by
+                            <summary data-i18n="faq.automation.importQuestion">Can URL commands import/export settings or restore backups?</summary>
+                            <p class="faq-answer-intro" data-i18n="faq.automation.importAnswerIntro">Yes. You can export/import settings by path and restore backups by
                                 latest, index, name, or path. Example command:</p>
                             <div class="faq-command-list">
                                 <div class="faq-command">
                                     <code>open "shortcutcycle://restore-backup?index=2"</code>
                                     <button class="copy-command-btn" type="button"
-                                        data-copy-text='open "shortcutcycle://restore-backup?index=2"'>Copy</button>
+                                        data-copy-text='open "shortcutcycle://restore-backup?index=2"' data-i18n="actions.copy">Copy</button>
                                 </div>
                             </div>
-                            <p class="faq-answer-tail">Import/restore replaces your current groups and settings immediately.
+                            <p class="faq-answer-tail"><span data-i18n="faq.automation.importAnswerTail">Import/restore replaces your current groups and settings immediately.</span>
                                 <a href="https://github.com/xcv58/ShortcutCycle/blob/master/URL_SCHEME.md" target="_blank"
-                                    rel="noopener noreferrer">See full URL command docs</a>.
+                                    rel="noopener noreferrer" data-i18n="faq.automation.docsLink">See full URL command docs</a>.
                             </p>
                         </details>
                     </div>
 
                     <div class="faq-group">
-                        <h3 class="faq-group-title">Backups &amp; Privacy</h3>
+                        <h3 class="faq-group-title" data-i18n="faq.privacy.title">Backups &amp; Privacy</h3>
                         <details class="faq-item">
-                            <summary>Can I backup my configuration?</summary>
-                            <p>Yes! ShortcutCycle automatically creates backups using GFS (Grandfather-Father-Son)
+                            <summary data-i18n="faq.privacy.backupQuestion">Can I backup my configuration?</summary>
+                            <p data-i18n="faq.privacy.backupAnswer">Yes! ShortcutCycle automatically creates backups using GFS (Grandfather-Father-Son)
                                 retention. You can also manually export your entire configuration to a JSON file for
                                 safekeeping or to transfer to another Mac.</p>
                         </details>
 
                         <details class="faq-item">
-                            <summary>Is my data private?</summary>
-                            <p>Absolutely. ShortcutCycle runs entirely on your Mac with <strong>zero analytics or
+                            <summary data-i18n="faq.privacy.privateQuestion">Is my data private?</summary>
+                            <p data-i18n-html="faq.privacy.privateAnswer">Absolutely. ShortcutCycle runs entirely on your Mac with <strong>zero analytics or
                                     tracking</strong>. Your app groups and shortcuts are stored locally in your user
                                 defaults. We never see or collect any of your data.</p>
                         </details>
                     </div>
 
                     <div class="faq-group">
-                        <h3 class="faq-group-title">Compatibility &amp; Project</h3>
+                        <h3 class="faq-group-title" data-i18n="faq.compatibility.title">Compatibility &amp; Project</h3>
                         <details class="faq-item">
-                            <summary>What macOS versions are supported?</summary>
-                            <p>ShortcutCycle requires <strong>macOS 14.0 (Sonoma) or later</strong>. It's optimized for
+                            <summary data-i18n="faq.compatibility.macosQuestion">What macOS versions are supported?</summary>
+                            <p data-i18n-html="faq.compatibility.macosAnswer">ShortcutCycle requires <strong>macOS 14.0 (Sonoma) or later</strong>. It's optimized for
                                 Apple Silicon but also works great on Intel Macs.</p>
                         </details>
 
                         <details class="faq-item">
-                            <summary>Does it work with multiple monitors?</summary>
-                            <p>Yes, ShortcutCycle works seamlessly across multiple monitors. The HUD overlay appears on your
+                            <summary data-i18n="faq.compatibility.monitorsQuestion">Does it work with multiple monitors?</summary>
+                            <p data-i18n="faq.compatibility.monitorsAnswer">Yes, ShortcutCycle works seamlessly across multiple monitors. The HUD overlay appears on your
                                 active display, and app switching works regardless of which monitor the app is on.</p>
                         </details>
 
                         <details class="faq-item">
-                            <summary>Why doesn't ShortcutCycle switch to a specific window?</summary>
-                            <p>ShortcutCycle is designed to be privacy-first. Reliable per-window switching would require much
+                            <summary data-i18n="faq.compatibility.windowQuestion">Why doesn't ShortcutCycle switch to a specific window?</summary>
+                            <p data-i18n="faq.compatibility.windowAnswer">ShortcutCycle is designed to be privacy-first. Reliable per-window switching would require much
                                 broader accessibility access to control other apps in deeper ways. We intentionally keep
                                 permissions narrower and focus on fast, dependable app switching.</p>
                         </details>
 
                         <details class="faq-item">
-                            <summary>Is it open source?</summary>
-                            <p>Yes! ShortcutCycle is <strong>100% open source</strong> under the MIT license. You can view
+                            <summary data-i18n="faq.compatibility.openSourceQuestion">Is it open source?</summary>
+                            <p data-i18n-html="faq.compatibility.openSourceAnswer">Yes! ShortcutCycle is <strong>100% open source</strong> under the MIT license. You can view
                                 the code, contribute, or build it yourself on <a
                                     href="https://github.com/xcv58/ShortcutCycle" target="_blank"
                                     rel="noopener noreferrer">GitHub</a>.
@@ -2035,15 +2172,16 @@
             <div class="footer-links">
                 <a href="https://apps.apple.com/us/app/shortcutcycle/id6758281578?mt=12">App Store</a>
                 <a href="https://github.com/xcv58/ShortcutCycle">GitHub</a>
-                <a href="https://github.com/xcv58/ShortcutCycle/blob/master/PRIVACY_POLICY.md">Privacy Policy</a>
+                <a href="https://github.com/xcv58/ShortcutCycle/blob/master/PRIVACY_POLICY.md"
+                    data-i18n="footer.privacyPolicy">Privacy Policy</a>
             </div>
             <br>
-            <p>&copy; 2026 Jenny Media LLC. All rights reserved.</p>
+            <p data-i18n-html="footer.copyright">&copy; 2026 Jenny Media LLC. All rights reserved.</p>
         </footer>
     </div>
 
     <!-- Back to Top Button -->
-    <button id="backToTop" class="back-to-top" aria-label="Back to Top">
+    <button id="backToTop" class="back-to-top" aria-label="Back to Top" data-i18n-aria-label="actions.backToTop">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
             <path d="M12 4l-8 8h6v8h4v-8h6z" />
         </svg>
@@ -2075,10 +2213,795 @@
         const screenshotThemeAnnouncement = document.getElementById('screenshot-theme-announcement');
         const screenshotVariantFrames = Array.from(document.querySelectorAll('.screenshot-variant'));
         const desktopHoverMedia = window.matchMedia('(hover: hover) and (pointer: fine)');
+        const languageSelect = document.getElementById('language-select');
+        const languageAnnouncement = document.getElementById('language-announcement');
+        const supportedLanguages = ['en', 'zh-Hans', 'zh-Hant'];
+        const languageStorageKey = 'shortcutcycle-language';
         let isScreenshotThemeOverridden = false;
+        let currentLanguage = html.lang || 'en';
+
+        const translations = {
+            en: {
+                meta: {
+                    title: 'ShortcutCycle - Cycle apps by group, instantly.',
+                    description: 'Stop endlessly tabbing. Group your apps by context—Web, Code, Social—and cycle through them with dedicated hotkeys.',
+                    twitterDescription: 'Stop endlessly tabbing. Group your apps by context and cycle with dedicated hotkeys.'
+                },
+                a11y: {
+                    skipToMain: 'Skip to main content'
+                },
+                nav: {
+                    homeLabel: 'ShortcutCycle home',
+                    mainLabel: 'Main navigation',
+                    privacy: 'Privacy',
+                    support: 'Support'
+                },
+                language: {
+                    label: 'Language',
+                    changed: 'Language changed to English'
+                },
+                theme: {
+                    groupLabel: 'Theme Toggle',
+                    systemAria: 'System Theme',
+                    systemTitle: 'Match System',
+                    lightAria: 'Light Theme',
+                    lightTitle: 'Light Mode',
+                    darkAria: 'Dark Theme',
+                    darkTitle: 'Dark Mode',
+                    systemSelected: 'System theme selected',
+                    lightSelected: 'Light theme selected',
+                    darkSelected: 'Dark theme selected'
+                },
+                hero: {
+                    title: 'Cycle apps by group, instantly.',
+                    subtitle: 'Stop endlessly tabbing. Group apps by context—Web, Code, Social—and cycle with dedicated hotkeys.',
+                    benefitHighlight: 'Save hours every week',
+                    benefitTooltipShort: 'Based on saving 3 seconds per switch, 400 times a day = ~2 hours saved/week.',
+                    benefitTooltipLong: 'Based on saving 3 seconds per switch, 400 times a day equals about 2 hours saved per week.',
+                    benefitSuffix: 'with app switching tailored to your own workflow.',
+                    appStoreAria: 'Download ShortcutCycle on the App Store',
+                    appStoreAlt: 'Download on the App Store',
+                    videoAria: 'Demo: quick app switching with ShortcutCycle'
+                },
+                gallery: {
+                    label: 'Screenshots',
+                    themeGroupLabel: 'Screenshot Theme Toggle',
+                    showLight: 'Show light screenshots',
+                    showDark: 'Show dark screenshots',
+                    light: 'Light',
+                    dark: 'Dark',
+                    previous: 'Previous',
+                    next: 'Next',
+                    lightSelected: 'Light screenshots selected',
+                    darkSelected: 'Dark screenshots selected'
+                },
+                screenshots: {
+                    hud: { light: 'HUD Overlay Light', dark: 'HUD Overlay Dark' },
+                    grid: { light: 'Grid View Light', dark: 'Grid View Dark' },
+                    general: { light: 'General Settings Light', dark: 'General Settings Dark' },
+                    group: { light: 'Group Settings Light', dark: 'Group Settings Dark' },
+                    backups: { light: 'Automatic Backups Light', dark: 'Automatic Backups Dark' },
+                    menuBar: 'Menu Bar'
+                },
+                comparison: {
+                    title: 'The Group Cycling Advantage',
+                    subtitle: 'Most switchers force you to search, type, or scan a history list. ShortcutCycle uses <strong>muscle memory</strong>. Group your apps by context (e.g., "Browsers", "Code") and cycle them with a single keystroke. It\'s faster, consistent, and demands less cognitive load.',
+                    old: {
+                        title: 'The Old Way',
+                        subtitle: 'Cmd+Tab / AltTab • Raycast / Alfred',
+                        searchTitle: 'Search & Scan',
+                        searchBody: 'Requires reading lists, typing names, or scanning icons. Breaks your flow.',
+                        loadTitle: 'High Cognitive Load',
+                        loadBody: '"Is it window 3 or 4? What did I title it?" Constant micro-decisions add up.',
+                        slowTitle: 'Slow Inputs',
+                        slowBody: 'Cmd+Space+T-y-p-e or Cmd+Tab+Tab+Tab. Every switch takes seconds.'
+                    },
+                    new: {
+                        badge: 'The Better Way',
+                        subtitle: 'Context-Aware Group Cycling',
+                        memoryTitle: 'Muscle Memory',
+                        memoryBody: 'Your fingers know exactly where "Code" is. Zero thought required.',
+                        scopeTitle: 'Instant Scope',
+                        scopeBody: 'Only cycle relevant windows (e.g., just browsers). Ignore the noise.',
+                        keyTitle: 'One Keystroke',
+                        keyBody: 'Option+1. Done. You\'re there instantly.'
+                    }
+                },
+                features: {
+                    heading: 'Features',
+                    noSubscriptions: {
+                        title: 'No Subscriptions',
+                        body: 'Pay once, keep it forever. Enjoy a <strong>lifetime license</strong> for just <strong>$3.99</strong>. No recurring fees, ever.'
+                    },
+                    groups: {
+                        title: 'Context Groups',
+                        body: 'Stop cycling through 20 irrelevant windows. Group apps by workflow—"coding", "writing", "social"—and switch only between what you need.'
+                    },
+                    switching: {
+                        title: 'Instant Switching',
+                        body: 'Press <code>Option+1</code> to activate your browser group. Press again to cycle through windows. Build instant muscle memory.'
+                    },
+                    profiles: {
+                        title: 'Browser Profiles',
+                        body: 'Treat work and personal profiles (Chrome, Firefox, Edge) as separate apps. Cycle through your work browser without seeing your personal tabs.'
+                    },
+                    hud: {
+                        title: 'Beautiful HUD',
+                        body: 'A native, lightweight overlay shows your target before you switch. Know exactly where you\'re landing.'
+                    },
+                    native: {
+                        title: 'Native & Fast',
+                        body: 'Built with Swift for Apple Silicon. Instant startup, zero lag, and negligible battery impact.'
+                    },
+                    launch: {
+                        title: 'Auto-Launch',
+                        body: 'Targeted app not running? We launch it instantly. ShortcutCycle is a switcher and launcher in one.'
+                    },
+                    privacy: {
+                        title: 'Private by Design',
+                        body: 'No analytics. No tracking. Your configuration stays on your Mac. Export to JSON to backup your settings.'
+                    },
+                    backups: {
+                        title: 'Automatic Backups',
+                        body: 'Mistakes happen. Configuration snapshots are saved automatically, letting you restore previous setups in seconds.'
+                    },
+                    automation: {
+                        title: 'Automation Ready',
+                        body: 'Control ShortcutCycle with the <code>shortcutcycle://</code> URL scheme from Apple Shortcuts, Alfred, Raycast, or Keyboard Maestro. <a href="https://github.com/xcv58/ShortcutCycle/blob/master/URL_SCHEME.md" target="_blank" rel="noopener noreferrer">See URL command docs</a>.'
+                    },
+                    global: {
+                        title: 'Global Ready',
+                        body: 'Fully localized interface in 15 languages. Productivity that speaks your language.'
+                    },
+                    accessibility: {
+                        title: 'Fully Accessible',
+                        body: 'Complete VoiceOver support, Voice Control compatibility, and keyboard navigation throughout. Built with accessibility in mind from day one.'
+                    }
+                },
+                videos: {
+                    title: 'See It In Action',
+                    subtitle: 'Watch how ShortcutCycle transforms your workflow',
+                    unsupported: 'Your browser does not support the video tag.',
+                    quick: {
+                        title: 'Quick App Switching',
+                        body: 'Cycle through grouped apps with a single keystroke'
+                    },
+                    hud: {
+                        title: 'Visual HUD Overlay',
+                        body: 'See exactly what you\'re switching to with the beautiful native overlay'
+                    },
+                    config: {
+                        title: 'Easy Configuration',
+                        body: 'Set up your groups and shortcuts in seconds'
+                    }
+                },
+                faq: {
+                    title: 'Frequently Asked Questions',
+                    expandAll: 'Expand All',
+                    collapseAll: 'Collapse All',
+                    gettingStarted: {
+                        title: 'Getting Started',
+                        createQuestion: 'How do I create a group?',
+                        createAnswer: 'It\'s simple. Open the settings, click the <strong>+</strong> button to create a new group (like "Social" or "Dev"), and assign a global hotkey (e.g., <code>Option+1</code>). Then, just drag and drop the apps you want into that group.',
+                        shortcutsQuestion: 'Can I customize the shortcuts?',
+                        shortcutsAnswer: 'Yes, you have full control. You can assign any global shortcut to activate a specific group. Inside the group, apps are cycled based on the order you arrange them in.',
+                        closedAppQuestion: 'What happens if an app isn\'t open?',
+                        closedAppAnswer: 'ShortcutCycle acts as a launcher too. If you cycle to an app that isn\'t running, we\'ll <strong>automatically launch it</strong> for you instantly.'
+                    },
+                    automation: {
+                        title: 'Automation & URL Commands',
+                        toolsQuestion: 'Can I automate ShortcutCycle with Shortcuts, Alfred, or Raycast?',
+                        toolsAnswerIntro: 'Yes. ShortcutCycle supports the custom URL scheme <code>shortcutcycle://</code>, so you can trigger actions from automation tools. Example command:',
+                        docsLink: 'See full URL command docs',
+                        openQuestion: 'Can URL commands open a specific settings tab or the backup browser?',
+                        openAnswerIntro: 'Yes. Use these <code>open</code> commands:',
+                        importQuestion: 'Can URL commands import/export settings or restore backups?',
+                        importAnswerIntro: 'Yes. You can export/import settings by path and restore backups by latest, index, name, or path. Example command:',
+                        importAnswerTail: 'Import/restore replaces your current groups and settings immediately.'
+                    },
+                    privacy: {
+                        title: 'Backups & Privacy',
+                        backupQuestion: 'Can I backup my configuration?',
+                        backupAnswer: 'Yes! ShortcutCycle automatically creates backups using GFS (Grandfather-Father-Son) retention. You can also manually export your entire configuration to a JSON file for safekeeping or to transfer to another Mac.',
+                        privateQuestion: 'Is my data private?',
+                        privateAnswer: 'Absolutely. ShortcutCycle runs entirely on your Mac with <strong>zero analytics or tracking</strong>. Your app groups and shortcuts are stored locally in your user defaults. We never see or collect any of your data.'
+                    },
+                    compatibility: {
+                        title: 'Compatibility & Project',
+                        macosQuestion: 'What macOS versions are supported?',
+                        macosAnswer: 'ShortcutCycle requires <strong>macOS 14.0 (Sonoma) or later</strong>. It\'s optimized for Apple Silicon but also works great on Intel Macs.',
+                        monitorsQuestion: 'Does it work with multiple monitors?',
+                        monitorsAnswer: 'Yes, ShortcutCycle works seamlessly across multiple monitors. The HUD overlay appears on your active display, and app switching works regardless of which monitor the app is on.',
+                        windowQuestion: 'Why doesn\'t ShortcutCycle switch to a specific window?',
+                        windowAnswer: 'ShortcutCycle is designed to be privacy-first. Reliable per-window switching would require much broader accessibility access to control other apps in deeper ways. We intentionally keep permissions narrower and focus on fast, dependable app switching.',
+                        openSourceQuestion: 'Is it open source?',
+                        openSourceAnswer: 'Yes! ShortcutCycle is <strong>100% open source</strong> under the MIT license. You can view the code, contribute, or build it yourself on <a href="https://github.com/xcv58/ShortcutCycle" target="_blank" rel="noopener noreferrer">GitHub</a>.'
+                    }
+                },
+                actions: {
+                    copy: 'Copy',
+                    copied: 'Copied',
+                    copyFailed: 'Copy failed',
+                    backToTop: 'Back to Top'
+                },
+                footer: {
+                    privacyPolicy: 'Privacy Policy',
+                    copyright: '&copy; 2026 Jenny Media LLC. All rights reserved.'
+                }
+            },
+            'zh-Hans': {
+                meta: {
+                    title: 'ShortcutCycle - 按分组瞬间切换 App。',
+                    description: '别再反复按 Tab 查找窗口。把 App 按场景分组，例如网页、开发、社交，再用专属快捷键快速轮换。',
+                    twitterDescription: '别再反复按 Tab。把 App 按场景分组，再用专属快捷键快速轮换。'
+                },
+                a11y: {
+                    skipToMain: '跳到主要内容'
+                },
+                nav: {
+                    homeLabel: 'ShortcutCycle 首页',
+                    mainLabel: '主导航',
+                    privacy: '隐私',
+                    support: '支持'
+                },
+                language: {
+                    label: '语言',
+                    changed: '已切换为简体中文'
+                },
+                theme: {
+                    groupLabel: '主题切换',
+                    systemAria: '系统主题',
+                    systemTitle: '跟随系统',
+                    lightAria: '浅色主题',
+                    lightTitle: '浅色模式',
+                    darkAria: '深色主题',
+                    darkTitle: '深色模式',
+                    systemSelected: '已选择跟随系统主题',
+                    lightSelected: '已选择浅色主题',
+                    darkSelected: '已选择深色主题'
+                },
+                hero: {
+                    title: '按分组，瞬间切换 App。',
+                    subtitle: '不用再反复 Tab。把 App 按场景分组，比如网页、开发、社交，再用专属快捷键轮换。',
+                    benefitHighlight: '每周省下好几个小时',
+                    benefitTooltipShort: '按每次切换省 3 秒、每天切换 400 次估算，约等于每周省下 2 小时。',
+                    benefitTooltipLong: '按每次切换省 3 秒、每天切换 400 次估算，约等于每周省下 2 小时。',
+                    benefitSuffix: '让 App 切换贴合你自己的工作流。',
+                    appStoreAria: '在 App Store 下载 ShortcutCycle',
+                    appStoreAlt: '在 App Store 下载',
+                    videoAria: '演示：使用 ShortcutCycle 快速切换 App'
+                },
+                gallery: {
+                    label: '截图',
+                    themeGroupLabel: '截图主题切换',
+                    showLight: '显示浅色截图',
+                    showDark: '显示深色截图',
+                    light: '浅色',
+                    dark: '深色',
+                    previous: '上一张',
+                    next: '下一张',
+                    lightSelected: '已选择浅色截图',
+                    darkSelected: '已选择深色截图'
+                },
+                screenshots: {
+                    hud: { light: 'HUD 浮层（浅色）', dark: 'HUD 浮层（深色）' },
+                    grid: { light: '网格视图（浅色）', dark: '网格视图（深色）' },
+                    general: { light: '通用设置（浅色）', dark: '通用设置（深色）' },
+                    group: { light: '分组设置（浅色）', dark: '分组设置（深色）' },
+                    backups: { light: '自动备份（浅色）', dark: '自动备份（深色）' },
+                    menuBar: '菜单栏'
+                },
+                comparison: {
+                    title: '分组轮换的优势',
+                    subtitle: '大多数切换工具需要你搜索、输入或扫一遍历史列表。ShortcutCycle 利用<strong>肌肉记忆</strong>。按场景给 App 分组（例如“浏览器”“开发”），一个快捷键就能轮换。更快、更稳定，也更省心。',
+                    old: {
+                        title: '传统方式',
+                        subtitle: 'Cmd+Tab / AltTab • Raycast / Alfred',
+                        searchTitle: '搜索和扫视',
+                        searchBody: '需要读列表、输入名称、扫图标，很容易打断思路。',
+                        loadTitle: '认知负担高',
+                        loadBody: '“是第 3 个还是第 4 个窗口？我标题怎么写的？”这些小判断会不断累积。',
+                        slowTitle: '输入步骤多',
+                        slowBody: 'Cmd+Space+T-y-p-e 或 Cmd+Tab+Tab+Tab，每次切换都要多花几秒。'
+                    },
+                    new: {
+                        badge: '更好的方式',
+                        subtitle: '按场景分组轮换',
+                        memoryTitle: '肌肉记忆',
+                        memoryBody: '手指知道“开发”在哪里，几乎不用想。',
+                        scopeTitle: '范围明确',
+                        scopeBody: '只在相关窗口里轮换（比如只轮换浏览器），噪音自动隔开。',
+                        keyTitle: '一个快捷键',
+                        keyBody: 'Option+1，完成。马上到位。'
+                    }
+                },
+                features: {
+                    heading: '功能',
+                    noSubscriptions: {
+                        title: '无需订阅',
+                        body: '一次购买，永久使用。只需 <strong>$3.99</strong>，获得<strong>终身许可</strong>。没有任何周期费用。'
+                    },
+                    groups: {
+                        title: '场景分组',
+                        body: '不用在 20 个无关窗口里来回找。按工作流分组，比如“开发”“写作”“社交”，只在真正需要的 App 之间切换。'
+                    },
+                    switching: {
+                        title: '即时切换',
+                        body: '按 <code>Option+1</code> 激活浏览器分组。再按一次继续轮换窗口，很快就能形成肌肉记忆。'
+                    },
+                    profiles: {
+                        title: '浏览器配置文件',
+                        body: '把工作和个人配置文件（Chrome、Firefox、Edge）当作不同 App。切到工作浏览器时，不会看到个人标签页。'
+                    },
+                    hud: {
+                        title: '漂亮的 HUD',
+                        body: '原生、轻量的浮层会在切换前显示目标，让你清楚知道下一步会到哪里。'
+                    },
+                    native: {
+                        title: '原生又轻快',
+                        body: '使用 Swift 为 Apple Silicon 打造。启动快、无卡顿，对电池影响很小。'
+                    },
+                    launch: {
+                        title: '自动启动',
+                        body: '目标 App 没打开？ShortcutCycle 会立刻帮你启动。它既是切换器，也是启动器。'
+                    },
+                    privacy: {
+                        title: '隐私优先',
+                        body: '没有分析统计，没有跟踪。你的配置留在自己的 Mac 上，也可以导出为 JSON 备份。'
+                    },
+                    backups: {
+                        title: '自动备份',
+                        body: '设置难免会改错。ShortcutCycle 会自动保存配置快照，让你几秒内恢复到之前的设置。'
+                    },
+                    automation: {
+                        title: '支持自动化',
+                        body: '可以通过 <code>shortcutcycle://</code> URL Scheme，用 Apple Shortcuts、Alfred、Raycast 或 Keyboard Maestro 控制 ShortcutCycle。<a href="https://github.com/xcv58/ShortcutCycle/blob/master/URL_SCHEME.md" target="_blank" rel="noopener noreferrer">查看 URL 命令文档</a>。'
+                    },
+                    global: {
+                        title: '多语言界面',
+                        body: 'App 内界面已本地化为 15 种语言。让效率工具使用你的语言。'
+                    },
+                    accessibility: {
+                        title: '完整辅助功能',
+                        body: '支持 VoiceOver、语音控制和完整键盘导航。从第一天起就把无障碍体验纳入设计。'
+                    }
+                },
+                videos: {
+                    title: '看看它怎么工作',
+                    subtitle: '看看 ShortcutCycle 如何改变你的切换流程',
+                    unsupported: '你的浏览器不支持播放此视频。',
+                    quick: {
+                        title: '快速切换 App',
+                        body: '用一个快捷键在分组 App 之间轮换'
+                    },
+                    hud: {
+                        title: '可视化 HUD 浮层',
+                        body: '用漂亮的原生浮层看清接下来会切到哪里'
+                    },
+                    config: {
+                        title: '轻松配置',
+                        body: '几秒内设置好分组和快捷键'
+                    }
+                },
+                faq: {
+                    title: '常见问题',
+                    expandAll: '全部展开',
+                    collapseAll: '全部收起',
+                    gettingStarted: {
+                        title: '开始使用',
+                        createQuestion: '怎样创建分组？',
+                        createAnswer: '很简单。打开设置，点 <strong>+</strong> 创建一个新分组（比如“社交”或“开发”），再分配一个全局快捷键（例如 <code>Option+1</code>）。然后把想要的 App 拖进这个分组就可以。',
+                        shortcutsQuestion: '可以自定义快捷键吗？',
+                        shortcutsAnswer: '可以，你完全可以自己决定。每个分组都能设置一个全局快捷键；分组内的 App 会按照你排列的顺序轮换。',
+                        closedAppQuestion: '如果 App 没有打开会怎样？',
+                        closedAppAnswer: 'ShortcutCycle 也可以当启动器使用。如果轮换到一个还没打开的 App，它会立刻帮你<strong>自动启动</strong>。'
+                    },
+                    automation: {
+                        title: '自动化和 URL 命令',
+                        toolsQuestion: '可以用 Shortcuts、Alfred 或 Raycast 自动化 ShortcutCycle 吗？',
+                        toolsAnswerIntro: '可以。ShortcutCycle 支持自定义 URL Scheme <code>shortcutcycle://</code>，所以你可以从自动化工具触发操作。示例命令：',
+                        docsLink: '查看完整 URL 命令文档',
+                        openQuestion: 'URL 命令可以打开指定设置页或备份浏览器吗？',
+                        openAnswerIntro: '可以。使用这些 <code>open</code> 命令：',
+                        importQuestion: 'URL 命令可以导入/导出设置或恢复备份吗？',
+                        importAnswerIntro: '可以。你可以通过路径导入/导出设置，也可以按最新、序号、名称或路径恢复备份。示例命令：',
+                        importAnswerTail: '导入或恢复会立即替换当前分组和设置。'
+                    },
+                    privacy: {
+                        title: '备份和隐私',
+                        backupQuestion: '可以备份配置吗？',
+                        backupAnswer: '可以。ShortcutCycle 会使用 GFS（祖父-父亲-儿子）保留策略自动创建备份。你也可以手动把完整配置导出为 JSON 文件，方便保存或迁移到另一台 Mac。',
+                        privateQuestion: '我的数据是私密的吗？',
+                        privateAnswer: '当然。ShortcutCycle 完全在你的 Mac 上运行，<strong>没有任何分析统计或跟踪</strong>。你的 App 分组和快捷键保存在本机用户默认设置中。我们看不到，也不会收集这些数据。'
+                    },
+                    compatibility: {
+                        title: '兼容性和项目',
+                        macosQuestion: '支持哪些 macOS 版本？',
+                        macosAnswer: 'ShortcutCycle 需要 <strong>macOS 14.0（Sonoma）或更新版本</strong>。它针对 Apple Silicon 优化，在 Intel Mac 上也能很好运行。',
+                        monitorsQuestion: '支持多显示器吗？',
+                        monitorsAnswer: '支持。ShortcutCycle 可以顺畅处理多显示器。HUD 浮层会出现在当前活跃显示器上，无论 App 在哪个显示器都能切换。',
+                        windowQuestion: '为什么不能切换到某个具体窗口？',
+                        windowAnswer: 'ShortcutCycle 的设计重点是隐私优先。可靠地控制单个窗口需要更广泛的辅助功能权限，深入控制其他 App。我们有意保持权限更窄，把重点放在快速、稳定的 App 切换上。',
+                        openSourceQuestion: '它是开源的吗？',
+                        openSourceAnswer: '是的。ShortcutCycle 在 MIT 许可下 <strong>100% 开源</strong>。你可以在 <a href="https://github.com/xcv58/ShortcutCycle" target="_blank" rel="noopener noreferrer">GitHub</a> 查看代码、参与贡献，或自行构建。'
+                    }
+                },
+                actions: {
+                    copy: '复制',
+                    copied: '已复制',
+                    copyFailed: '复制失败',
+                    backToTop: '回到顶部'
+                },
+                footer: {
+                    privacyPolicy: '隐私政策',
+                    copyright: '&copy; 2026 Jenny Media LLC。保留所有权利。'
+                }
+            },
+            'zh-Hant': {
+                meta: {
+                    title: 'ShortcutCycle - 依分組瞬間切換 App。',
+                    description: '不用再反覆按 Tab 找視窗。把 App 依情境分組，例如網頁、開發、社群，再用專屬快捷鍵快速輪換。',
+                    twitterDescription: '不用再反覆按 Tab。把 App 依情境分組，再用專屬快捷鍵快速輪換。'
+                },
+                a11y: {
+                    skipToMain: '跳到主要內容'
+                },
+                nav: {
+                    homeLabel: 'ShortcutCycle 首頁',
+                    mainLabel: '主導覽',
+                    privacy: '隱私',
+                    support: '支援'
+                },
+                language: {
+                    label: '語言',
+                    changed: '已切換為繁體中文'
+                },
+                theme: {
+                    groupLabel: '主題切換',
+                    systemAria: '系統主題',
+                    systemTitle: '跟隨系統',
+                    lightAria: '淺色主題',
+                    lightTitle: '淺色模式',
+                    darkAria: '深色主題',
+                    darkTitle: '深色模式',
+                    systemSelected: '已選擇跟隨系統主題',
+                    lightSelected: '已選擇淺色主題',
+                    darkSelected: '已選擇深色主題'
+                },
+                hero: {
+                    title: '依分組，瞬間切換 App。',
+                    subtitle: '不用再反覆 Tab。把 App 依情境分組，例如網頁、開發、社群，再用專屬快捷鍵輪換。',
+                    benefitHighlight: '每週省下好幾個小時',
+                    benefitTooltipShort: '以每次切換省 3 秒、每天切換 400 次估算，約等於每週省下 2 小時。',
+                    benefitTooltipLong: '以每次切換省 3 秒、每天切換 400 次估算，約等於每週省下 2 小時。',
+                    benefitSuffix: '讓 App 切換更貼近你自己的工作流程。',
+                    appStoreAria: '在 App Store 下載 ShortcutCycle',
+                    appStoreAlt: '在 App Store 下載',
+                    videoAria: '示範：使用 ShortcutCycle 快速切換 App'
+                },
+                gallery: {
+                    label: '截圖',
+                    themeGroupLabel: '截圖主題切換',
+                    showLight: '顯示淺色截圖',
+                    showDark: '顯示深色截圖',
+                    light: '淺色',
+                    dark: '深色',
+                    previous: '上一張',
+                    next: '下一張',
+                    lightSelected: '已選擇淺色截圖',
+                    darkSelected: '已選擇深色截圖'
+                },
+                screenshots: {
+                    hud: { light: 'HUD 浮層（淺色）', dark: 'HUD 浮層（深色）' },
+                    grid: { light: '格狀檢視（淺色）', dark: '格狀檢視（深色）' },
+                    general: { light: '一般設定（淺色）', dark: '一般設定（深色）' },
+                    group: { light: '分組設定（淺色）', dark: '分組設定（深色）' },
+                    backups: { light: '自動備份（淺色）', dark: '自動備份（深色）' },
+                    menuBar: '選單列'
+                },
+                comparison: {
+                    title: '分組輪換的優勢',
+                    subtitle: '大多數切換工具都要你搜尋、輸入，或掃一遍歷史列表。ShortcutCycle 使用<strong>肌肉記憶</strong>。依情境替 App 分組（例如「瀏覽器」「開發」），一個快捷鍵就能輪換。更快、更穩定，也更省心。',
+                    old: {
+                        title: '傳統方式',
+                        subtitle: 'Cmd+Tab / AltTab • Raycast / Alfred',
+                        searchTitle: '搜尋與掃視',
+                        searchBody: '需要讀列表、輸入名稱或掃圖示，很容易打斷思路。',
+                        loadTitle: '認知負擔高',
+                        loadBody: '「是第 3 個還是第 4 個視窗？我標題怎麼寫的？」這些小判斷會不斷累積。',
+                        slowTitle: '輸入步驟多',
+                        slowBody: 'Cmd+Space+T-y-p-e 或 Cmd+Tab+Tab+Tab，每次切換都要多花幾秒。'
+                    },
+                    new: {
+                        badge: '更好的方式',
+                        subtitle: '依情境分組輪換',
+                        memoryTitle: '肌肉記憶',
+                        memoryBody: '手指知道「開發」在哪裡，幾乎不用想。',
+                        scopeTitle: '範圍明確',
+                        scopeBody: '只在相關視窗裡輪換（例如只輪換瀏覽器），雜訊自動隔開。',
+                        keyTitle: '一個快捷鍵',
+                        keyBody: 'Option+1，完成。馬上到位。'
+                    }
+                },
+                features: {
+                    heading: '功能',
+                    noSubscriptions: {
+                        title: '無須訂閱',
+                        body: '一次購買，永久使用。只要 <strong>$3.99</strong>，就能取得<strong>終身授權</strong>。沒有任何週期性費用。'
+                    },
+                    groups: {
+                        title: '情境分組',
+                        body: '不用在 20 個無關視窗裡來回找。依工作流程分組，例如「開發」「寫作」「社群」，只在真正需要的 App 之間切換。'
+                    },
+                    switching: {
+                        title: '即時切換',
+                        body: '按 <code>Option+1</code> 啟動瀏覽器分組。再按一次繼續輪換視窗，很快就能形成肌肉記憶。'
+                    },
+                    profiles: {
+                        title: '瀏覽器設定檔',
+                        body: '把工作和個人設定檔（Chrome、Firefox、Edge）當成不同 App。切到工作瀏覽器時，不會看到個人分頁。'
+                    },
+                    hud: {
+                        title: '漂亮的 HUD',
+                        body: '原生、輕量的浮層會在切換前顯示目標，讓你清楚知道下一步會到哪裡。'
+                    },
+                    native: {
+                        title: '原生又輕快',
+                        body: '使用 Swift 為 Apple Silicon 打造。啟動快、無卡頓，對電池影響很小。'
+                    },
+                    launch: {
+                        title: '自動啟動',
+                        body: '目標 App 還沒打開？ShortcutCycle 會立刻幫你啟動。它既是切換器，也是啟動器。'
+                    },
+                    privacy: {
+                        title: '隱私優先',
+                        body: '沒有分析統計，沒有追蹤。你的設定留在自己的 Mac 上，也可以匯出為 JSON 備份。'
+                    },
+                    backups: {
+                        title: '自動備份',
+                        body: '設定難免會改錯。ShortcutCycle 會自動保存設定快照，讓你幾秒內恢復到之前的設定。'
+                    },
+                    automation: {
+                        title: '支援自動化',
+                        body: '可以透過 <code>shortcutcycle://</code> URL Scheme，用 Apple Shortcuts、Alfred、Raycast 或 Keyboard Maestro 控制 ShortcutCycle。<a href="https://github.com/xcv58/ShortcutCycle/blob/master/URL_SCHEME.md" target="_blank" rel="noopener noreferrer">查看 URL 命令文件</a>。'
+                    },
+                    global: {
+                        title: '多語言介面',
+                        body: 'App 內介面已在地化為 15 種語言。讓效率工具使用你的語言。'
+                    },
+                    accessibility: {
+                        title: '完整輔助功能',
+                        body: '支援 VoiceOver、語音控制與完整鍵盤導覽。從第一天起就把無障礙體驗納入設計。'
+                    }
+                },
+                videos: {
+                    title: '看看它怎麼運作',
+                    subtitle: '看看 ShortcutCycle 如何改變你的切換流程',
+                    unsupported: '你的瀏覽器不支援播放此影片。',
+                    quick: {
+                        title: '快速切換 App',
+                        body: '用一個快捷鍵在分組 App 之間輪換'
+                    },
+                    hud: {
+                        title: '可視化 HUD 浮層',
+                        body: '用漂亮的原生浮層看清接下來會切到哪裡'
+                    },
+                    config: {
+                        title: '輕鬆設定',
+                        body: '幾秒內設定好分組和快捷鍵'
+                    }
+                },
+                faq: {
+                    title: '常見問題',
+                    expandAll: '全部展開',
+                    collapseAll: '全部收合',
+                    gettingStarted: {
+                        title: '開始使用',
+                        createQuestion: '怎樣建立分組？',
+                        createAnswer: '很簡單。打開設定，點 <strong>+</strong> 建立一個新分組（例如「社群」或「開發」），再分配一個全域快捷鍵（例如 <code>Option+1</code>）。然後把想要的 App 拖進這個分組就可以。',
+                        shortcutsQuestion: '可以自訂快捷鍵嗎？',
+                        shortcutsAnswer: '可以，你完全可以自己決定。每個分組都能設定一個全域快捷鍵；分組內的 App 會依照你排列的順序輪換。',
+                        closedAppQuestion: '如果 App 沒有打開會怎樣？',
+                        closedAppAnswer: 'ShortcutCycle 也可以當啟動器使用。如果輪換到一個還沒打開的 App，它會立刻幫你<strong>自動啟動</strong>。'
+                    },
+                    automation: {
+                        title: '自動化和 URL 命令',
+                        toolsQuestion: '可以用 Shortcuts、Alfred 或 Raycast 自動化 ShortcutCycle 嗎？',
+                        toolsAnswerIntro: '可以。ShortcutCycle 支援自訂 URL Scheme <code>shortcutcycle://</code>，所以你可以從自動化工具觸發操作。範例命令：',
+                        docsLink: '查看完整 URL 命令文件',
+                        openQuestion: 'URL 命令可以打開指定設定頁或備份瀏覽器嗎？',
+                        openAnswerIntro: '可以。使用這些 <code>open</code> 命令：',
+                        importQuestion: 'URL 命令可以匯入/匯出設定或恢復備份嗎？',
+                        importAnswerIntro: '可以。你可以透過路徑匯入/匯出設定，也可以按最新、序號、名稱或路徑恢復備份。範例命令：',
+                        importAnswerTail: '匯入或恢復會立即替換目前分組和設定。'
+                    },
+                    privacy: {
+                        title: '備份和隱私',
+                        backupQuestion: '可以備份設定嗎？',
+                        backupAnswer: '可以。ShortcutCycle 會使用 GFS（祖父-父親-兒子）保留策略自動建立備份。你也可以手動把完整設定匯出為 JSON 檔案，方便保存或移轉到另一台 Mac。',
+                        privateQuestion: '我的資料是私密的嗎？',
+                        privateAnswer: '當然。ShortcutCycle 完全在你的 Mac 上執行，<strong>沒有任何分析統計或追蹤</strong>。你的 App 分組和快捷鍵保存在本機使用者預設值中。我們看不到，也不會收集這些資料。'
+                    },
+                    compatibility: {
+                        title: '相容性和專案',
+                        macosQuestion: '支援哪些 macOS 版本？',
+                        macosAnswer: 'ShortcutCycle 需要 <strong>macOS 14.0（Sonoma）或更新版本</strong>。它針對 Apple Silicon 最佳化，在 Intel Mac 上也能很好執行。',
+                        monitorsQuestion: '支援多顯示器嗎？',
+                        monitorsAnswer: '支援。ShortcutCycle 可以順暢處理多顯示器。HUD 浮層會出現在目前活躍顯示器上，無論 App 在哪個顯示器都能切換。',
+                        windowQuestion: '為什麼不能切換到某個具體視窗？',
+                        windowAnswer: 'ShortcutCycle 的設計重點是隱私優先。可靠地控制單一視窗需要更廣泛的輔助功能權限，深入控制其他 App。我們有意保持權限更窄，把重點放在快速、穩定的 App 切換上。',
+                        openSourceQuestion: '它是開源的嗎？',
+                        openSourceAnswer: '是的。ShortcutCycle 在 MIT 授權下 <strong>100% 開源</strong>。你可以在 <a href="https://github.com/xcv58/ShortcutCycle" target="_blank" rel="noopener noreferrer">GitHub</a> 查看程式碼、參與貢獻，或自行建置。'
+                    }
+                },
+                actions: {
+                    copy: '複製',
+                    copied: '已複製',
+                    copyFailed: '複製失敗',
+                    backToTop: '回到頂端'
+                },
+                footer: {
+                    privacyPolicy: '隱私政策',
+                    copyright: '&copy; 2026 Jenny Media LLC。保留所有權利。'
+                }
+            }
+        };
+
+        function getSavedLanguage() {
+            try {
+                const savedLanguage = localStorage.getItem(languageStorageKey);
+                return supportedLanguages.includes(savedLanguage) ? savedLanguage : null;
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function saveLanguage(language) {
+            try {
+                localStorage.setItem(languageStorageKey, language);
+            } catch (error) {
+                // Preference persistence is best-effort when storage is unavailable.
+            }
+        }
+
+        function clearSavedLanguage() {
+            try {
+                localStorage.removeItem(languageStorageKey);
+            } catch (error) {
+                // Ignore storage failures.
+            }
+        }
+
+        function normalizeLanguage(language) {
+            const value = (language || '').toLowerCase();
+            if (value === 'zh-hans' || value === 'zh-cn' || value === 'zh-sg') return 'zh-Hans';
+            if (value === 'zh-hant' || value === 'zh-tw' || value === 'zh-hk' || value === 'zh-mo') return 'zh-Hant';
+            if (value.startsWith('zh')) return value.includes('tw') || value.includes('hk') || value.includes('mo') ? 'zh-Hant' : 'zh-Hans';
+            if (value.startsWith('en')) return 'en';
+            return null;
+        }
+
+        function detectLanguage() {
+            const browserLanguages = navigator.languages || [navigator.language || 'en'];
+            return browserLanguages.map(normalizeLanguage).find(Boolean) || 'en';
+        }
+
+        function getInitialLanguage() {
+            return getSavedLanguage() || normalizeLanguage(html.getAttribute('data-language')) || detectLanguage();
+        }
+
+        function getTranslationValue(key, language = currentLanguage) {
+            const parts = key.split('.');
+            const value = parts.reduce((result, part) => result && result[part], translations[language]);
+            if (value !== undefined) return value;
+            return parts.reduce((result, part) => result && result[part], translations.en);
+        }
+
+        function translateText(key) {
+            const value = getTranslationValue(key);
+            return typeof value === 'string' ? value : '';
+        }
+
+        function updateFaqToggleLabel() {
+            const btn = document.getElementById('faq-toggle-btn');
+            if (!btn) return;
+            const isExpanded = btn.dataset.expanded === 'true';
+            btn.textContent = translateText(isExpanded ? 'faq.collapseAll' : 'faq.expandAll');
+        }
+
+        function updateScreenshotLabels() {
+            document.querySelectorAll('[data-screenshot-key]').forEach((frame) => {
+                const key = frame.dataset.screenshotKey;
+                const labels = getTranslationValue(`screenshots.${key}`);
+                const image = frame.querySelector('img');
+
+                if (!labels) return;
+
+                if (typeof labels === 'string') {
+                    frame.dataset.title = labels;
+                    frame.setAttribute('data-title', labels);
+                    if (image) image.setAttribute('alt', labels);
+                    return;
+                }
+
+                frame.dataset.lightTitle = labels.light;
+                frame.dataset.lightAlt = labels.light;
+                frame.dataset.darkTitle = labels.dark;
+                frame.dataset.darkAlt = labels.dark;
+            });
+        }
+
+        function getActiveScreenshotTheme() {
+            const activeButton = document.querySelector('.screenshot-theme-btn.active');
+            return activeButton?.dataset.screenshotTheme || getResolvedTheme();
+        }
+
+        function applyTranslations() {
+            document.title = translateText('meta.title');
+
+            document.querySelectorAll('[data-i18n]').forEach((element) => {
+                element.textContent = translateText(element.dataset.i18n);
+            });
+
+            document.querySelectorAll('[data-i18n-html]').forEach((element) => {
+                element.innerHTML = translateText(element.dataset.i18nHtml);
+            });
+
+            document.querySelectorAll('[data-i18n-content]').forEach((element) => {
+                element.setAttribute('content', translateText(element.dataset.i18nContent));
+            });
+
+            document.querySelectorAll('[data-i18n-aria-label]').forEach((element) => {
+                element.setAttribute('aria-label', translateText(element.dataset.i18nAriaLabel));
+            });
+
+            document.querySelectorAll('[data-i18n-title]').forEach((element) => {
+                element.setAttribute('title', translateText(element.dataset.i18nTitle));
+            });
+
+            document.querySelectorAll('[data-i18n-alt]').forEach((element) => {
+                element.setAttribute('alt', translateText(element.dataset.i18nAlt));
+            });
+
+            document.querySelectorAll('[data-i18n-data-tooltip]').forEach((element) => {
+                element.setAttribute('data-tooltip', translateText(element.dataset.i18nDataTooltip));
+            });
+
+            updateFaqToggleLabel();
+            updateScreenshotLabels();
+            if (isScreenshotThemeOverridden) {
+                applyScreenshotTheme(getActiveScreenshotTheme());
+            } else {
+                syncScreenshotThemeWithPage();
+            }
+        }
+
+        function setLanguage(language, options = {}) {
+            const normalizedLanguage = normalizeLanguage(language) || 'en';
+            const { persist = false, announce = false } = options;
+
+            currentLanguage = normalizedLanguage;
+            html.lang = normalizedLanguage;
+            html.setAttribute('data-language', normalizedLanguage);
+
+            if (languageSelect) {
+                languageSelect.value = normalizedLanguage;
+            }
+
+            if (persist) saveLanguage(normalizedLanguage);
+            applyTranslations();
+
+            if (announce && languageAnnouncement) {
+                languageAnnouncement.textContent = translateText('language.changed');
+            }
+        }
 
         function getStoredTheme() {
-            return localStorage.getItem('theme') || 'system';
+            try {
+                return localStorage.getItem('theme') || 'system';
+            } catch (error) {
+                return 'system';
+            }
         }
 
         function getResolvedTheme(theme = html.getAttribute('data-theme') || 'system') {
@@ -2088,15 +3011,12 @@
 
         function announceTheme(theme) {
             if (!themeAnnouncement) return;
-            const label = theme === 'system'
-                ? 'System theme selected'
-                : `${theme.charAt(0).toUpperCase()}${theme.slice(1)} theme selected`;
-            themeAnnouncement.textContent = label;
+            themeAnnouncement.textContent = translateText(`theme.${theme}Selected`);
         }
 
         function announceScreenshotTheme(theme) {
             if (!screenshotThemeAnnouncement) return;
-            screenshotThemeAnnouncement.textContent = `${theme.charAt(0).toUpperCase()}${theme.slice(1)} screenshots selected`;
+            screenshotThemeAnnouncement.textContent = translateText(`gallery.${theme}Selected`);
         }
 
         function updateScreenshotControls(activeTheme) {
@@ -2144,7 +3064,11 @@
 
         function setTheme(theme, shouldAnnounce = true) {
             html.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
+            try {
+                localStorage.setItem('theme', theme);
+            } catch (error) {
+                // Theme persistence is best-effort when storage is unavailable.
+            }
             updateControls(theme);
             syncScreenshotThemeWithPage();
             if (shouldAnnounce) announceTheme(theme);
@@ -2161,8 +3085,7 @@
             const btn = document.getElementById('faq-toggle-btn');
             const details = document.querySelectorAll('details.faq-item');
 
-            // Determine state based on button text (simple logic)
-            const isExpanding = btn.innerText === 'Expand All';
+            const isExpanding = btn.dataset.expanded !== 'true';
 
             details.forEach(detail => {
                 if (isExpanding) {
@@ -2172,7 +3095,8 @@
                 }
             });
 
-            btn.innerText = isExpanding ? 'Collapse All' : 'Expand All';
+            btn.dataset.expanded = isExpanding ? 'true' : 'false';
+            updateFaqToggleLabel();
         }
 
         async function copyTextToClipboard(text) {
@@ -2213,21 +3137,37 @@
                 const command = button.dataset.copyText;
                 if (!command) return;
 
-                const defaultLabel = button.dataset.defaultLabel || button.textContent.trim() || 'Copy';
+                const defaultLabel = translateText('actions.copy');
                 button.dataset.defaultLabel = defaultLabel;
 
                 const copied = await copyTextToClipboard(command);
-                button.textContent = copied ? 'Copied' : 'Copy failed';
+                button.textContent = copied ? translateText('actions.copied') : translateText('actions.copyFailed');
 
                 if (button._copyResetTimer) {
                     window.clearTimeout(button._copyResetTimer);
                 }
 
                 button._copyResetTimer = window.setTimeout(() => {
-                    button.textContent = defaultLabel;
+                    button.textContent = translateText('actions.copy');
                 }, 1400);
             });
         });
+
+        // Initialize Language
+        setLanguage(getInitialLanguage(), { persist: false, announce: false });
+
+        if (languageSelect) {
+            languageSelect.addEventListener('change', () => {
+                setLanguage(languageSelect.value, { persist: true, announce: true });
+            });
+        }
+
+        window.ShortcutCycleI18n = {
+            setLanguage: (language) => setLanguage(language, { persist: true, announce: false }),
+            getLanguage: () => currentLanguage,
+            clearSavedLanguage,
+            normalizeLanguage
+        };
 
         // Initialize Theme
         const initialTheme = getStoredTheme();
