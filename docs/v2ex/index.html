@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-Hans" data-theme="system">
+<html lang="zh-Hans">
 
 <head>
     <meta charset="UTF-8">
@@ -9,126 +9,75 @@
     <link rel="apple-touch-icon" href="../assets/images/app-icon.png">
     <meta name="NEXT_PUBLIC_V2EX_FORM_ACTION" content="">
 
-    <script>
-        (function () {
-            const theme = localStorage.getItem('theme') || 'system';
-            document.documentElement.setAttribute('data-theme', theme);
-        })();
-    </script>
-
-    <title>ShortcutCycle V2EX 试用计划</title>
-    <meta name="description" content="按场景分组循环切换 Mac App。为 V2EX 用户准备了 20 个 App Store 兑换码，想换真实试用反馈。">
+    <title>ShortcutCycle V2EX 试用申请</title>
+    <meta name="description" content="ShortcutCycle V2EX 试用兑换码申请表。邮箱只用于发放兑换码和后续一次反馈沟通。">
     <meta name="author" content="ShortcutCycle">
     <link rel="canonical" href="https://s.jenny.media/v2ex">
 
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://s.jenny.media/v2ex">
-    <meta property="og:title" content="ShortcutCycle V2EX 试用计划">
-    <meta property="og:description" content="按场景分组循环切换 Mac App。为 V2EX 用户准备了 20 个 App Store 兑换码，想换真实试用反馈。">
-    <meta property="og:image" content="https://s.jenny.media/assets/images/hud-light.webp">
-    <meta property="og:image:width" content="1800">
-    <meta property="og:image:height" content="1124">
+    <meta property="og:title" content="ShortcutCycle V2EX 试用申请">
+    <meta property="og:description" content="ShortcutCycle V2EX 试用兑换码申请表。邮箱只用于发放兑换码和后续一次反馈沟通。">
+    <meta property="og:image" content="https://s.jenny.media/assets/images/app-icon.png">
 
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="ShortcutCycle V2EX 试用计划">
-    <meta name="twitter:description" content="按场景分组循环切换 Mac App。为 V2EX 用户准备了 20 个 App Store 兑换码，想换真实试用反馈。">
-    <meta name="twitter:image" content="https://s.jenny.media/assets/images/hud-light.webp">
-
-    <link rel="dns-prefetch" href="https://apps.apple.com">
-    <link rel="dns-prefetch" href="https://github.com">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="ShortcutCycle V2EX 试用申请">
+    <meta name="twitter:description" content="ShortcutCycle V2EX 试用兑换码申请表。邮箱只用于发放兑换码和后续一次反馈沟通。">
+    <meta name="twitter:image" content="https://s.jenny.media/assets/images/app-icon.png">
 
     <style>
         :root {
-            --bg-color: #ffffff;
+            --bg: #ffffff;
             --surface: #f5f5f7;
-            --surface-hover: #e5e5e7;
-            --text-primary: #1d1d1f;
-            --text-secondary: #6e6e73;
+            --text: #1d1d1f;
+            --muted: #6e6e73;
             --border: #d2d2d7;
             --accent: #0056b3;
             --accent-hover: #004494;
-            --shadow: rgba(0, 0, 0, 0.1);
-            --toggle-bg: #e5e5ea;
-            --toggle-active: #ffffff;
             --success: #167a3a;
             --danger: #b42318;
             --warning-bg: #fff8db;
             --warning-border: #e8c547;
-        }
-
-        [data-theme="dark"] {
-            --bg-color: #0f0f12;
-            --surface: #1c1c1e;
-            --surface-hover: #2c2c2e;
-            --text-primary: #f5f5f7;
-            --text-secondary: #a1a1aa;
-            --border: #2c2c2e;
-            --accent: #4da6ff;
-            --accent-hover: #73bcff;
-            --shadow: rgba(0, 0, 0, 0.5);
-            --toggle-bg: #1c1c1e;
-            --toggle-active: #636366;
-            --success: #7ee29a;
-            --danger: #ff8a80;
-            --warning-bg: #2d2815;
-            --warning-border: #8a6d1d;
+            --shadow: rgba(0, 0, 0, 0.08);
         }
 
         @media (prefers-color-scheme: dark) {
-            [data-theme="system"] {
-                --bg-color: #0f0f12;
+            :root {
+                --bg: #0f0f12;
                 --surface: #1c1c1e;
-                --surface-hover: #2c2c2e;
-                --text-primary: #f5f5f7;
-                --text-secondary: #a1a1aa;
+                --text: #f5f5f7;
+                --muted: #a1a1aa;
                 --border: #2c2c2e;
                 --accent: #4da6ff;
                 --accent-hover: #73bcff;
-                --shadow: rgba(0, 0, 0, 0.5);
-                --toggle-bg: #1c1c1e;
-                --toggle-active: #636366;
                 --success: #7ee29a;
                 --danger: #ff8a80;
                 --warning-bg: #2d2815;
                 --warning-border: #8a6d1d;
+                --shadow: rgba(0, 0, 0, 0.42);
             }
         }
 
         * {
-            margin: 0;
-            padding: 0;
             box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        body.preload,
-        body.preload * {
-            transition: none !important;
-            animation: none !important;
         }
 
         body {
+            margin: 0;
+            min-height: 100vh;
+            background: var(--bg);
+            color: var(--text);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Helvetica, Arial, sans-serif;
-            background: var(--bg-color);
-            color: var(--text-primary);
-            line-height: 1.7;
-            transition: background-color 0.3s, color 0.3s;
-            overflow-x: hidden;
+            line-height: 1.65;
         }
 
         a {
             color: inherit;
             text-decoration: none;
-            transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
         }
 
-        img {
-            display: block;
-            max-width: 100%;
+        a:hover {
+            color: var(--accent);
         }
 
         button,
@@ -142,429 +91,95 @@
             outline-offset: 2px;
         }
 
-        @media (prefers-reduced-motion: reduce) {
-            html {
-                scroll-behavior: auto;
-            }
-
-            *,
-            *::before,
-            *::after {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-                scroll-behavior: auto !important;
-            }
-        }
-
         .skip-link {
             position: absolute;
             top: 0;
             left: 0;
-            background: var(--accent);
-            color: white;
-            padding: 8px 16px;
             z-index: 100;
-            border-radius: 0 0 4px 0;
+            padding: 8px 16px;
+            border-radius: 0 0 6px 0;
+            background: var(--accent);
+            color: #fff;
             transform: translateY(-100%);
-            transition: transform 0.3s ease;
         }
 
         .skip-link:focus {
             transform: translateY(0);
         }
 
-        .sr-only,
-        .honeypot {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap;
-            border-width: 0;
-        }
-
         .container {
-            max-width: 1180px;
+            width: min(calc(100% - 36px), 760px);
             margin: 0 auto;
-            padding: 0 clamp(20px, 4vw, 48px);
         }
 
         header {
-            padding: 24px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 18px;
+            padding: 28px 0 12px;
         }
 
         .logo {
-            font-weight: 700;
-            font-size: 1.3rem;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 9px;
-            min-width: 0;
+            font-size: 1.12rem;
+            font-weight: 750;
+            letter-spacing: -0.02em;
         }
 
         .logo img {
-            width: 36px;
+            width: 34px;
             height: auto;
-            flex-shrink: 0;
-        }
-
-        .logo-wordmark {
-            letter-spacing: -0.03em;
-            line-height: 1;
-        }
-
-        .nav-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 24px;
-        }
-
-        .nav-links {
-            display: flex;
-            align-items: center;
-            gap: 28px;
-        }
-
-        .nav-links a {
-            color: var(--text-primary);
-            font-size: 0.95rem;
-            font-weight: 500;
-        }
-
-        .nav-links a:hover {
-            color: var(--accent);
-        }
-
-        .theme-switch {
-            background-color: var(--toggle-bg);
-            border-radius: 99px;
-            padding: 2px;
-            display: flex;
-            align-items: center;
-            border: 1px solid var(--border);
-        }
-
-        .theme-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 6px 10px;
-            border-radius: 99px;
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-        }
-
-        .theme-btn svg {
-            width: 16px;
-            height: 16px;
-        }
-
-        .theme-btn.active {
-            background-color: var(--toggle-active);
-            color: var(--text-primary);
-            box-shadow: 0 2px 4px var(--shadow);
-        }
-
-        .theme-btn:hover:not(.active) {
-            color: var(--text-primary);
         }
 
         main {
-            padding-bottom: 32px;
+            padding: 36px 0 72px;
         }
 
-        .section {
-            padding: 72px 0;
-        }
-
-        .section-divider {
-            border-top: 1px solid var(--border);
-        }
-
-        .hero {
-            padding: 70px 0 56px;
-            display: grid;
-            grid-template-columns: minmax(0, 1.02fr) minmax(320px, 0.8fr);
-            gap: clamp(32px, 6vw, 72px);
-            align-items: center;
-            min-width: 0;
-        }
-
-        .hero h1 {
-            font-size: clamp(2.45rem, 7vw, 5rem);
-            line-height: 1.05;
-            letter-spacing: -0.03em;
-            font-weight: 800;
+        .intro {
             margin-bottom: 24px;
-            overflow-wrap: anywhere;
         }
 
-        .hero-subtitle {
-            font-size: clamp(1.2rem, 2vw, 1.55rem);
-            color: var(--text-primary);
-            line-height: 1.45;
-            margin-bottom: 18px;
-            max-width: 760px;
-        }
-
-        .hero-body,
-        .muted {
-            color: var(--text-secondary);
-        }
-
-        .hero-body {
-            font-size: 1.05rem;
-            max-width: 720px;
-            margin-bottom: 30px;
-        }
-
-        .cta-group {
-            display: flex;
-            gap: 14px;
-            align-items: center;
-            flex-wrap: wrap;
-            margin-bottom: 16px;
-        }
-
-        .cta-button {
-            padding: 13px 28px;
-            border-radius: 99px;
-            font-weight: 650;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            min-height: 50px;
-            border: 1px solid transparent;
-            cursor: pointer;
-        }
-
-        .cta-primary {
-            background: var(--accent);
-            color: #fff;
-            box-shadow: 0 10px 24px color-mix(in srgb, var(--accent) 24%, transparent);
-        }
-
-        .cta-primary:hover {
-            background: var(--accent-hover);
-            transform: translateY(-2px);
-        }
-
-        .cta-secondary {
-            background: transparent;
-            color: var(--text-primary);
-            border-color: var(--border);
-        }
-
-        .cta-secondary:hover {
-            border-color: var(--accent);
+        .eyebrow {
+            margin: 0 0 10px;
             color: var(--accent);
-            transform: translateY(-2px);
+            font-size: 0.92rem;
+            font-weight: 700;
         }
 
-        .hero-note,
+        h1 {
+            margin: 0 0 14px;
+            font-size: clamp(2.05rem, 8vw, 3.5rem);
+            line-height: 1.08;
+            letter-spacing: -0.03em;
+        }
+
+        .lede,
         .privacy-note,
-        .form-help {
-            color: var(--text-secondary);
+        .form-help,
+        footer {
+            color: var(--muted);
+        }
+
+        .lede {
+            margin: 0;
+            font-size: 1.05rem;
+        }
+
+        .notice {
+            margin-top: 18px;
+            padding: 14px 16px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: var(--surface);
+            color: var(--muted);
             font-size: 0.95rem;
         }
 
-        .hero-visual {
-            position: relative;
-            min-width: 0;
-        }
-
-        .product-frame {
+        .form-shell {
+            padding: clamp(22px, 5vw, 34px);
             border: 1px solid var(--border);
             border-radius: 18px;
             background: var(--surface);
-            box-shadow: 0 24px 60px var(--shadow);
-            overflow: hidden;
-        }
-
-        .product-frame img {
-            width: 100%;
-            height: auto;
-        }
-
-        .scenario-strip {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 8px;
-            margin-top: 14px;
-        }
-
-        .scenario-key {
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            background: var(--surface);
-            padding: 10px;
-            text-align: center;
-            box-shadow: 0 4px 12px var(--shadow);
-        }
-
-        .scenario-key strong {
-            display: block;
-            font-size: 0.85rem;
-            color: var(--text-primary);
-        }
-
-        .scenario-key span {
-            display: block;
-            color: var(--text-secondary);
-            font-size: 0.78rem;
-            margin-top: 2px;
-        }
-
-        .section-header {
-            max-width: 720px;
-            margin-bottom: 34px;
-        }
-
-        .section-header.center {
-            margin-left: auto;
-            margin-right: auto;
-            text-align: center;
-        }
-
-        .section h2 {
-            font-size: clamp(1.9rem, 4vw, 2.65rem);
-            line-height: 1.15;
-            letter-spacing: -0.02em;
-            margin-bottom: 12px;
-        }
-
-        .section-lede {
-            color: var(--text-secondary);
-            font-size: 1.06rem;
-        }
-
-        .card-grid {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 18px;
-        }
-
-        .info-card,
-        .list-card,
-        .form-shell,
-        .step-card,
-        .faq-item {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-        }
-
-        .info-card,
-        .list-card,
-        .step-card {
-            padding: 24px;
-        }
-
-        .info-card h3,
-        .list-card h3,
-        .step-card h3 {
-            font-size: 1.14rem;
-            margin-bottom: 10px;
-            letter-spacing: -0.01em;
-        }
-
-        .info-card p,
-        .step-card p {
-            color: var(--text-secondary);
-        }
-
-        .plain-list,
-        .feature-list {
-            display: grid;
-            gap: 11px;
-            list-style: none;
-        }
-
-        .plain-list li,
-        .feature-list li {
-            position: relative;
-            padding-left: 20px;
-            color: var(--text-secondary);
-        }
-
-        .plain-list li::before,
-        .feature-list li::before {
-            content: "";
-            position: absolute;
-            left: 0;
-            top: 0.72em;
-            width: 7px;
-            height: 7px;
-            border-radius: 999px;
-            background: var(--accent);
-        }
-
-        .honesty {
-            background: var(--surface);
-            border-top: 1px solid var(--border);
-            border-bottom: 1px solid var(--border);
-        }
-
-        .honesty .container {
-            display: grid;
-            grid-template-columns: minmax(0, 0.7fr) minmax(0, 1fr);
-            gap: 42px;
-            align-items: start;
-        }
-
-        .two-column {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 18px;
-        }
-
-        .steps-grid {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 18px;
-            counter-reset: steps;
-        }
-
-        .step-card {
-            counter-increment: steps;
-        }
-
-        .step-card h3::before {
-            content: counter(steps) ". ";
-            color: var(--accent);
-        }
-
-        .warning {
-            margin-top: 18px;
-            padding: 14px 16px;
-            border: 1px solid var(--warning-border);
-            background: var(--warning-bg);
-            color: var(--text-primary);
-            border-radius: 12px;
-            font-size: 0.96rem;
-        }
-
-        .form-layout {
-            display: grid;
-            grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.1fr);
-            gap: 42px;
-            align-items: start;
-        }
-
-        .form-shell {
-            padding: clamp(22px, 4vw, 34px);
+            box-shadow: 0 18px 50px var(--shadow);
         }
 
         .form-grid {
@@ -578,8 +193,8 @@
         }
 
         label {
-            font-weight: 650;
-            color: var(--text-primary);
+            color: var(--text);
+            font-weight: 700;
         }
 
         .required {
@@ -591,23 +206,23 @@
         input[type="email"],
         textarea {
             width: 100%;
+            min-height: 48px;
+            padding: 12px 14px;
             border: 1px solid var(--border);
             border-radius: 12px;
-            background: var(--bg-color);
-            color: var(--text-primary);
-            padding: 13px 14px;
-            min-height: 48px;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+            background: var(--bg);
+            color: var(--text);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
         textarea {
-            min-height: 118px;
+            min-height: 116px;
             resize: vertical;
         }
 
         input::placeholder,
         textarea::placeholder {
-            color: color-mix(in srgb, var(--text-secondary) 72%, transparent);
+            color: color-mix(in srgb, var(--muted) 68%, transparent);
         }
 
         input:focus,
@@ -617,44 +232,86 @@
             box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent);
         }
 
+        .form-help,
+        .privacy-note {
+            margin: 0;
+            font-size: 0.92rem;
+        }
+
         .checkbox-field {
             display: flex;
             align-items: flex-start;
             gap: 12px;
-            padding: 14px;
+            padding: 13px 14px;
             border: 1px solid var(--border);
             border-radius: 12px;
-            background: var(--bg-color);
+            background: var(--bg);
         }
 
         .checkbox-field input {
-            margin-top: 5px;
             width: 18px;
             height: 18px;
+            margin-top: 5px;
             accent-color: var(--accent);
         }
 
-        .form-actions {
-            display: grid;
-            gap: 12px;
-            margin-top: 4px;
+        .honeypot {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            margin: -1px;
+            padding: 0;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .dev-warning {
+            display: none;
+            padding: 12px 14px;
+            border: 1px solid var(--warning-border);
+            border-radius: 12px;
+            background: var(--warning-bg);
+            color: var(--text);
+            font-size: 0.92rem;
+        }
+
+        .dev-warning.visible {
+            display: block;
         }
 
         .submit-button {
             width: fit-content;
-            border: none;
+            min-height: 50px;
+            padding: 13px 28px;
+            border: 0;
+            border-radius: 999px;
+            background: var(--accent);
+            color: #fff;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .submit-button:hover {
+            background: var(--accent-hover);
         }
 
         .submit-button:disabled {
             cursor: progress;
             opacity: 0.72;
-            transform: none;
+        }
+
+        .form-actions {
+            display: grid;
+            gap: 12px;
         }
 
         .form-status {
             min-height: 24px;
-            font-size: 0.96rem;
-            font-weight: 600;
+            margin: 0;
+            font-size: 0.95rem;
+            font-weight: 650;
         }
 
         .form-status.success {
@@ -665,597 +322,116 @@
             color: var(--danger);
         }
 
-        .dev-warning {
-            display: none;
-            margin-bottom: 18px;
-            padding: 12px 14px;
-            border-radius: 12px;
-            border: 1px solid var(--warning-border);
-            background: var(--warning-bg);
-            color: var(--text-primary);
-            font-size: 0.92rem;
-        }
-
-        .dev-warning.visible {
-            display: block;
-        }
-
-        .features-panel {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 18px;
-            padding: clamp(24px, 4vw, 36px);
-        }
-
-        .feature-list {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        .faq-container {
-            max-width: 860px;
-            margin: 0 auto;
-            display: grid;
-            gap: 14px;
-        }
-
-        .faq-item {
-            overflow: hidden;
-        }
-
-        .faq-item summary {
-            padding: 22px 24px;
-            font-size: 1.05rem;
-            font-weight: 650;
-            cursor: pointer;
-            list-style: none;
-            display: flex;
-            justify-content: space-between;
-            gap: 20px;
-        }
-
-        .faq-item summary::-webkit-details-marker {
-            display: none;
-        }
-
-        .faq-item summary::after {
-            content: "+";
-            color: var(--text-secondary);
-            font-size: 1.4rem;
-            line-height: 1;
-        }
-
-        .faq-item[open] summary::after {
-            content: "-";
-        }
-
-        .faq-item p {
-            padding: 0 24px 24px;
-            color: var(--text-secondary);
-        }
-
-        .final-cta {
-            text-align: center;
-            max-width: 820px;
-            margin: 0 auto;
-        }
-
-        .final-cta p {
-            color: var(--text-secondary);
-            margin: 0 auto 24px;
-            max-width: 720px;
-        }
-
         footer {
-            border-top: 1px solid var(--border);
-            padding: 40px 0;
-            margin-top: 40px;
-            text-align: center;
-            color: var(--text-secondary);
+            padding: 0 0 36px;
             font-size: 0.9rem;
+            text-align: center;
         }
 
         .footer-links {
             display: flex;
             justify-content: center;
-            gap: 18px;
+            gap: 16px;
             flex-wrap: wrap;
         }
 
-        .footer-links a:hover {
-            color: var(--accent);
-        }
-
-        .back-to-top {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 50px;
-            height: 50px;
-            background-color: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 4px 12px var(--shadow);
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(20px);
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 999;
-            color: var(--text-primary);
-        }
-
-        .back-to-top.visible {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-
-        .back-to-top svg {
-            width: 24px;
-            height: 24px;
-            fill: currentColor;
-        }
-
-        @media (max-width: 940px) {
-            .hero,
-            .honesty .container,
-            .form-layout {
-                grid-template-columns: 1fr;
-            }
-
-            .hero {
-                padding-top: 42px;
-            }
-
-            .hero-visual {
-                max-width: 680px;
-            }
-
-            .card-grid,
-            .steps-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 700px) {
+        @media (max-width: 520px) {
             .container {
-                padding: 0 18px;
+                width: min(calc(100% - 28px), 760px);
             }
 
-            header {
-                align-items: center;
-                gap: 12px;
+            main {
+                padding-top: 24px;
             }
 
-            .logo {
-                font-size: 1.16rem;
-            }
-
-            .logo img {
-                width: 33px;
-            }
-
-            .nav-wrapper {
-                gap: 12px;
-                flex-shrink: 0;
-            }
-
-            .nav-links {
-                display: none;
-            }
-
-            .theme-btn {
-                padding: 6px 8px;
-            }
-
-            .section {
-                padding: 54px 0;
-            }
-
-            .hero {
-                padding-top: 34px;
-            }
-
-            .hero h1 {
-                font-size: clamp(2rem, 11vw, 2.45rem);
-                letter-spacing: -0.02em;
-            }
-
-            .hero-subtitle {
-                font-size: 1.08rem;
-            }
-
-            .cta-group {
-                width: 100%;
-                align-items: stretch;
-            }
-
-            .cta-button {
-                width: 100%;
-            }
-
-            .scenario-strip,
-            .two-column,
-            .feature-list {
-                grid-template-columns: 1fr;
-            }
-
-            .form-shell,
-            .info-card,
-            .list-card,
-            .step-card {
-                border-radius: 14px;
+            .form-shell {
+                border-radius: 16px;
             }
 
             .submit-button {
                 width: 100%;
             }
-
-            .back-to-top {
-                right: 18px;
-                bottom: 18px;
-            }
-        }
-
-        @media (max-width: 360px) {
-            .logo-wordmark {
-                display: none;
-            }
         }
     </style>
 </head>
 
-<body class="preload">
-    <a href="#main-content" class="skip-link">跳到主要内容</a>
+<body>
+    <a href="#main-content" class="skip-link">跳到表单</a>
 
-    <div class="container">
-        <header role="banner">
-            <a href="../" class="logo" aria-label="ShortcutCycle 首页">
-                <img src="../assets/images/brand-mark.png" width="36" height="24" alt="">
-                <span class="logo-wordmark">ShortcutCycle</span>
-            </a>
+    <header class="container" role="banner">
+        <a href="../" class="logo" aria-label="ShortcutCycle 首页">
+            <img src="../assets/images/brand-mark.png" width="36" height="24" alt="">
+            <span>ShortcutCycle</span>
+        </a>
+    </header>
 
-            <div class="nav-wrapper">
-                <nav class="nav-links" role="navigation" aria-label="主导航">
-                    <a href="../">主页</a>
-                    <a href="https://github.com/xcv58/ShortcutCycle" target="_blank" rel="noopener noreferrer">GitHub</a>
-                    <a href="https://github.com/xcv58/ShortcutCycle/issues" target="_blank" rel="noopener noreferrer">反馈</a>
-                </nav>
-
-                <div class="theme-switch" role="group" aria-label="主题切换">
-                    <button class="theme-btn" onclick="setTheme('system')" id="btn-system" aria-label="跟随系统主题" title="跟随系统">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                            <line x1="8" y1="21" x2="16" y2="21"></line>
-                            <line x1="12" y1="17" x2="12" y2="21"></line>
-                        </svg>
-                    </button>
-                    <button class="theme-btn" onclick="setTheme('light')" id="btn-light" aria-label="浅色主题" title="浅色">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="5"></circle>
-                            <line x1="12" y1="1" x2="12" y2="3"></line>
-                            <line x1="12" y1="21" x2="12" y2="23"></line>
-                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                            <line x1="1" y1="12" x2="3" y2="12"></line>
-                            <line x1="21" y1="12" x2="23" y2="12"></line>
-                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                        </svg>
-                    </button>
-                    <button class="theme-btn" onclick="setTheme('dark')" id="btn-dark" aria-label="深色主题" title="深色">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </header>
-
-        <div role="status" aria-live="polite" aria-atomic="true" class="sr-only" id="theme-announcement"></div>
-    </div>
-
-    <main id="main-content" role="main">
-        <div class="container">
-            <section class="hero">
-                <div>
-                    <h1>ShortcutCycle V2EX 试用计划</h1>
-                    <p class="hero-subtitle">按「场景」分组循环切换 Mac App：Web、Code、Chat、Writing，各用一个快捷键。</p>
-                    <p class="hero-body">我准备了 20 个 App Store 兑换码，想找一些 V2EX 用户试用 ShortcutCycle，并反馈这个「按场景切换 App」的模型是否真的有用。</p>
-                    <div class="cta-group">
-                        <a class="cta-button cta-primary" href="#apply">申请试用兑换码</a>
-                        <a class="cta-button cta-secondary" href="https://github.com/xcv58/ShortcutCycle" target="_blank" rel="noopener noreferrer">查看 GitHub</a>
-                    </div>
-                    <p class="hero-note">兑换码数量有限，会优先发给有具体使用场景、愿意反馈的 V 友。不是求 App Store review，主要是想听真实使用体验。</p>
-                </div>
-
-                <div class="hero-visual" aria-label="ShortcutCycle 截图预览">
-                    <div class="product-frame">
-                        <img src="../assets/images/hud-light.webp" width="900" height="562" alt="ShortcutCycle HUD 按组切换预览" fetchpriority="high" decoding="async">
-                    </div>
-                    <div class="scenario-strip" aria-hidden="true">
-                        <div class="scenario-key"><strong>Option+1</strong><span>Web</span></div>
-                        <div class="scenario-key"><strong>Option+2</strong><span>Code</span></div>
-                        <div class="scenario-key"><strong>Option+3</strong><span>Chat</span></div>
-                        <div class="scenario-key"><strong>Option+4</strong><span>Writing</span></div>
-                    </div>
-                </div>
-            </section>
-
-            <section class="section section-divider" aria-labelledby="problem-heading">
-                <div class="section-header">
-                    <h2 id="problem-heading">它解决什么问题</h2>
-                    <p class="section-lede">不是再做一个全能启动器，而是把几组高频 App 的切换路径固定下来。</p>
-                </div>
-                <div class="card-grid">
-                    <article class="info-card">
-                        <h3>Command+Tab 太线性</h3>
-                        <p>当同时开很多 App 时，Command+Tab 会变成一条很长的历史列表。每次都要扫图标、数位置、或者多按几次。</p>
-                    </article>
-                    <article class="info-card">
-                        <h3>按场景切换</h3>
-                        <p>把常用 App 分成 Web / Code / Chat / Writing 等组。比如 Option+1 只在浏览器组里循环，Option+2 只在开发工具里循环。</p>
-                    </article>
-                    <article class="info-card">
-                        <h3>靠肌肉记忆</h3>
-                        <p>不搜索、不输入、不看全局窗口列表。你的手指知道「Code 组」在哪里，按一下就切过去，再按就在组内循环。</p>
-                    </article>
-                </div>
-            </section>
-
-        </div>
-
-        <section class="section honesty" aria-labelledby="honesty-heading">
-        <div class="container">
-            <div>
-                <h2 id="honesty-heading">先说清楚：它不是什么</h2>
-                <p class="section-lede">如果你的工作流已经被别的工具完整解决了，ShortcutCycle 可能不需要加入。</p>
-            </div>
-            <ul class="plain-list">
-                <li>它不是窗口级切换器。如果你需要所有窗口缩略图和精确选窗口，AltTab / Contexts 可能更适合。</li>
-                <li>它不是 Raycast / Alfred 替代品。ShortcutCycle 不解决搜索和命令启动的问题。</li>
-                <li>它更像是一个很小的补充：给几组高频 App 固定快捷键，用肌肉记忆快速循环。</li>
-            </ul>
-        </div>
+    <main class="container" id="main-content">
+        <section class="intro" aria-labelledby="page-title">
+            <p class="eyebrow">V2EX 试用申请</p>
+            <h1 id="page-title">申请 ShortcutCycle 试用兑换码</h1>
+            <p class="lede">请填写 V2EX 用户名、回复楼层链接和邮箱。我会手动筛选并通过邮件发送兑换码，数量有限，可能无法每个人都发到。</p>
+            <p class="notice">这个静态页面本身不保存信息。提交后，信息会发送到我配置的表单端点；邮箱只用于这次发码和后续一次反馈沟通，不会公开展示，也不会用于广告追踪。</p>
         </section>
 
-        <div class="container">
-        <section class="section section-divider" aria-labelledby="fit-heading">
-            <div class="section-header center">
-                <h2 id="fit-heading">适合谁试用</h2>
-                <p class="section-lede">我更想把兑换码发给真的会试一试这个模型的人。</p>
-            </div>
-            <div class="two-column">
-                <article class="list-card">
-                    <h3>适合</h3>
-                    <ul class="plain-list">
-                        <li>经常在浏览器、编辑器、终端、聊天工具之间来回切</li>
-                        <li>同时打开很多 App，Command+Tab 列表太长</li>
-                        <li>喜欢固定快捷键和肌肉记忆</li>
-                        <li>愿意花几分钟配置自己的 App 分组</li>
-                    </ul>
-                </article>
-                <article class="list-card">
-                    <h3>可能不适合</h3>
-                    <ul class="plain-list">
-                        <li>主要需求是窗口级切换</li>
-                        <li>已经用平铺窗口管理器解决了所有切换问题</li>
-                        <li>不想配置任何分组</li>
-                        <li>只偶尔打开两三个 App</li>
-                    </ul>
-                </article>
-            </div>
-        </section>
+        <form class="form-shell" id="v2ex-form" method="post" novalidate>
+            <div class="form-grid">
+                <div class="dev-warning" id="dev-warning">开发提示：未配置 NEXT_PUBLIC_V2EX_FORM_ACTION。提交会被阻止，生产环境请配置真实表单端点。</div>
 
-        <section class="section section-divider" aria-labelledby="claim-heading">
-            <div class="section-header">
-                <h2 id="claim-heading">怎么领取兑换码</h2>
-            </div>
-            <div class="steps-grid">
-                <article class="step-card">
-                    <h3>先在 V2EX 帖子里回复你的 macOS 切换习惯</h3>
-                    <p>比如：Command+Tab / AltTab / Raycast / AeroSpace / 触控板，或者你自己的 workflow。</p>
-                </article>
-                <article class="step-card">
-                    <h3>在下面表单填写 V2EX 用户名、回复楼层链接和邮箱</h3>
-                    <p>邮箱只用于发送兑换码，不会公开。</p>
-                </article>
-                <article class="step-card">
-                    <h3>我会手动筛选并通过邮件发送兑换码</h3>
-                    <p>会优先发给有具体使用场景、愿意反馈的 V 友，不一定完全按“要一个”的顺序。</p>
-                </article>
-            </div>
-            <p class="warning">请不要在 V2EX 评论区公开邮箱，也不要在评论区公开兑换码。</p>
-        </section>
-
-        <section class="section section-divider" id="apply" aria-labelledby="apply-heading">
-            <div class="form-layout">
-                <div>
-                    <h2 id="apply-heading">申请试用兑换码</h2>
-                    <p class="section-lede">表单只收集发码和后续一次反馈沟通所需的信息。没有自动发码，也不会把邮箱公开。</p>
+                <div class="field">
+                    <label for="v2exUsername">V2EX 用户名 <span class="required" aria-hidden="true">*</span></label>
+                    <input id="v2exUsername" name="v2exUsername" type="text" autocomplete="nickname" placeholder="例如：jenny" required>
                 </div>
 
-                <form class="form-shell" id="v2ex-form" method="post" novalidate>
-                    <div class="dev-warning" id="dev-warning">开发提示：未配置 NEXT_PUBLIC_V2EX_FORM_ACTION。提交会被阻止，生产环境请配置真实表单端点。</div>
-                    <div class="form-grid">
-                        <div class="field">
-                            <label for="v2exUsername">V2EX 用户名 <span class="required" aria-hidden="true">*</span></label>
-                            <input id="v2exUsername" name="v2exUsername" type="text" autocomplete="nickname" placeholder="例如：jenny" required>
-                        </div>
-
-                        <div class="field">
-                            <label for="v2exReplyUrl">V2EX 回复楼层链接 <span class="required" aria-hidden="true">*</span></label>
-                            <input id="v2exReplyUrl" name="v2exReplyUrl" type="url" inputmode="url" placeholder="例如：https://www.v2ex.com/t/xxxxxx#reply12" required>
-                            <p class="form-help" id="v2exReplyUrl-help">请尽量填具体楼层链接，方便我对应到 V2EX 回复。</p>
-                        </div>
-
-                        <div class="field">
-                            <label for="email">接收兑换码的邮箱 <span class="required" aria-hidden="true">*</span></label>
-                            <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
-                        </div>
-
-                        <div class="field">
-                            <label for="currentSwitcher">你现在主要怎么切换 App / 窗口？ <span class="required" aria-hidden="true">*</span></label>
-                            <textarea id="currentSwitcher" name="currentSwitcher" placeholder="例如：Command+Tab + AltTab；开发时主要在 Cursor / Terminal / Safari / Slack 之间切换。" required></textarea>
-                        </div>
-
-                        <div class="field">
-                            <label for="desiredGroups">你最想用 ShortcutCycle 管理哪几组 App？</label>
-                            <textarea id="desiredGroups" name="desiredGroups" placeholder="例如：Web: Safari/Chrome/Arc；Code: Cursor/Terminal/GitHub Desktop；Chat: Slack/Messages/Discord"></textarea>
-                        </div>
-
-                        <label class="checkbox-field" for="willingToFeedback">
-                            <input id="willingToFeedback" name="willingToFeedback" type="checkbox" value="yes">
-                            <span>愿意在试用后简单反馈一下是否有用、哪里不好用</span>
-                        </label>
-
-                        <div class="honeypot" aria-hidden="true">
-                            <label for="website">Website</label>
-                            <input id="website" name="website" type="text" tabindex="-1" autocomplete="off">
-                        </div>
-
-                        <p class="privacy-note">提交的信息只用于这次 V2EX 试用兑换码发放和后续一次反馈沟通，不会公开展示，也不会用于广告追踪。</p>
-
-                        <div class="form-actions">
-                            <button class="cta-button cta-primary submit-button" id="submit-button" type="submit">提交申请</button>
-                            <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </section>
-
-        <section class="section section-divider" aria-labelledby="features-heading">
-            <div class="features-panel">
-                <div class="section-header">
-                    <h2 id="features-heading">ShortcutCycle 目前支持</h2>
+                <div class="field">
+                    <label for="v2exReplyUrl">V2EX 回复楼层链接 <span class="required" aria-hidden="true">*</span></label>
+                    <input id="v2exReplyUrl" name="v2exReplyUrl" type="url" inputmode="url" aria-describedby="v2exReplyUrl-help" placeholder="例如：https://www.v2ex.com/t/xxxxxx#reply12" required>
+                    <p class="form-help" id="v2exReplyUrl-help">请尽量填具体楼层链接，方便我对应到 V2EX 回复。</p>
                 </div>
-                <ul class="feature-list">
-                    <li>自定义 App 分组和全局快捷键</li>
-                    <li>按组循环切换，例如 Option+1 切 Web，Option+2 切 Code</li>
-                    <li>App 未启动时可自动启动</li>
-                    <li>支持浏览器 Profile 分开管理</li>
-                    <li>HUD 提示，可显示当前切换目标</li>
-                    <li>本地运行，无 analytics / tracking</li>
-                    <li>Swift 原生 macOS App</li>
-                    <li>开源 MIT</li>
-                    <li>App Store 买断制，无订阅</li>
-                </ul>
-            </div>
-        </section>
 
-        <section class="section section-divider" aria-labelledby="faq-heading">
-            <div class="section-header center">
-                <h2 id="faq-heading">FAQ</h2>
-            </div>
-            <div class="faq-container">
-                <details class="faq-item">
-                    <summary>和 AltTab 有什么区别？</summary>
-                    <p>AltTab 更适合窗口级切换：看所有窗口，再选一个。ShortcutCycle 解决的是另一个小场景：你已经知道要去 Web / Code / Chat 这一组，只想用固定快捷键在这组 App 里循环。</p>
-                </details>
-                <details class="faq-item">
-                    <summary>为什么不做窗口级切换？</summary>
-                    <p>ShortcutCycle 目前专注 App 级切换。窗口级切换通常需要更深入的辅助功能权限和更复杂的窗口控制。这个项目更偏向轻量、稳定、少权限。</p>
-                </details>
-                <details class="faq-item">
-                    <summary>兑换码用户可以给 App Store 评价吗？</summary>
-                    <p>不可以。所以这次不是求 review，主要是想换真实试用反馈。</p>
-                </details>
-                <details class="faq-item">
-                    <summary>我可以自己编译吗？</summary>
-                    <p>可以。ShortcutCycle 是开源项目。如果你习惯自己编译，也可以直接从 GitHub 构建。App Store 版本主要适合想要即装即用和自动更新的人。</p>
-                </details>
-                <details class="faq-item">
-                    <summary>兑换码一定会发吗？</summary>
-                    <p>不一定。数量有限，我会优先发给有具体使用场景、愿意反馈的 V 友。</p>
-                </details>
-            </div>
-        </section>
+                <div class="field">
+                    <label for="email">接收兑换码的邮箱 <span class="required" aria-hidden="true">*</span></label>
+                    <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+                </div>
 
-        <section class="section section-divider" aria-labelledby="final-heading">
-            <div class="final-cta">
-                <h2 id="final-heading">愿意帮我验证这个想法吗？</h2>
-                <p>如果你每天都在几个固定 App 之间来回切，欢迎申请试用。最有价值的反馈不是“好用”，而是：这个模型在哪些场景不成立、哪里不直觉、默认分组应该怎么改。</p>
-                <a class="cta-button cta-primary" href="#apply">申请试用兑换码</a>
+                <div class="field">
+                    <label for="currentSwitcher">你现在主要怎么切换 App / 窗口？ <span class="required" aria-hidden="true">*</span></label>
+                    <textarea id="currentSwitcher" name="currentSwitcher" placeholder="例如：Command+Tab + AltTab；开发时主要在 Cursor / Terminal / Safari / Slack 之间切换。" required></textarea>
+                </div>
+
+                <div class="field">
+                    <label for="desiredGroups">你最想用 ShortcutCycle 管理哪几组 App？</label>
+                    <textarea id="desiredGroups" name="desiredGroups" placeholder="例如：Web: Safari/Chrome/Arc；Code: Cursor/Terminal；Chat: Slack/Messages/Discord"></textarea>
+                </div>
+
+                <label class="checkbox-field" for="willingToFeedback">
+                    <input id="willingToFeedback" name="willingToFeedback" type="checkbox" value="yes">
+                    <span>愿意在试用后简单反馈一下是否有用、哪里不好用</span>
+                </label>
+
+                <div class="honeypot" aria-hidden="true">
+                    <label for="website">Website</label>
+                    <input id="website" name="website" type="text" tabindex="-1" autocomplete="off">
+                </div>
+
+                <p class="privacy-note">提交内容包括上面的表单字段、当前页面 URL 和提交时间；不会收集浏览器 referrer，不会在浏览器本地保存提交内容，也没有 analytics / tracking。</p>
+
+                <div class="form-actions">
+                    <button class="submit-button" id="submit-button" type="submit">提交申请</button>
+                    <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
+                </div>
             </div>
-        </section>
-        </div>
+        </form>
     </main>
 
-    <div class="container">
-        <footer role="contentinfo">
-            <div class="footer-links">
-                <a href="https://apps.apple.com/us/app/shortcutcycle/id6758281578">App Store</a>
-                <a href="https://github.com/xcv58/ShortcutCycle">GitHub</a>
-                <a href="../">主页</a>
-                <a href="https://github.com/xcv58/ShortcutCycle/blob/master/PRIVACY_POLICY.md">隐私政策</a>
-            </div>
-            <br>
-            <p>&copy; 2026 Jenny Media LLC. All rights reserved.</p>
-        </footer>
-    </div>
-
-    <button id="backToTop" class="back-to-top" aria-label="回到顶部">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-            <path d="M12 4l-8 8h6v8h4v-8h6z"></path>
-        </svg>
-    </button>
+    <footer class="container" role="contentinfo">
+        <div class="footer-links">
+            <a href="../">主页</a>
+            <a href="https://github.com/xcv58/ShortcutCycle">GitHub</a>
+            <a href="https://github.com/xcv58/ShortcutCycle/blob/master/PRIVACY_POLICY.md">隐私政策</a>
+        </div>
+    </footer>
 
     <script>
-        document.addEventListener('touchstart', () => { }, { passive: true });
-
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                document.body.classList.remove('preload');
-            });
-        });
-
-        const html = document.documentElement;
-        const btns = {
-            system: document.getElementById('btn-system'),
-            light: document.getElementById('btn-light'),
-            dark: document.getElementById('btn-dark')
-        };
-        const themeAnnouncement = document.getElementById('theme-announcement');
-
-        function announceTheme(theme) {
-            if (!themeAnnouncement) return;
-            const label = theme === 'system' ? '已选择跟随系统主题' : `已选择${theme === 'dark' ? '深色' : '浅色'}主题`;
-            themeAnnouncement.textContent = label;
-        }
-
-        function updateControls(activeTheme) {
-            Object.values(btns).forEach((btn) => {
-                if (btn) btn.classList.remove('active');
-            });
-            if (btns[activeTheme]) btns[activeTheme].classList.add('active');
-        }
-
-        function setTheme(theme, shouldAnnounce = true) {
-            html.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
-            updateControls(theme);
-            if (shouldAnnounce) announceTheme(theme);
-        }
-
-        setTheme(localStorage.getItem('theme') || 'system', false);
-
-        const backToTopBtn = document.getElementById('backToTop');
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 300) {
-                backToTopBtn.classList.add('visible');
-            } else {
-                backToTopBtn.classList.remove('visible');
-            }
-        });
-
-        backToTopBtn.addEventListener('click', () => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-
         const FORM_ACTION_ENV_NAME = 'NEXT_PUBLIC_V2EX_FORM_ACTION';
         const form = document.getElementById('v2ex-form');
         const submitButton = document.getElementById('submit-button');
@@ -1336,7 +512,6 @@
 
             const formData = new FormData(form);
             formData.append('pageUrl', window.location.href);
-            formData.append('referrer', document.referrer || '');
             formData.append('submittedAt', new Date().toISOString());
 
             submitButton.disabled = true;
