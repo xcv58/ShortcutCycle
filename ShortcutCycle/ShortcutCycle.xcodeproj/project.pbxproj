@@ -84,10 +84,10 @@
 		E1F4B0052F40000100C0DE01 /* URLRouterLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F4B0062F40000100C0DE01 /* URLRouterLogic.swift */; };
 		E2B200022F50000100C0DE01 /* SettingsWindowLifecycleCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2B200012F50000100C0DE01 /* SettingsWindowLifecycleCoordinator.swift */; };
 		E2B200032F50000100C0DE01 /* SettingsWindowLifecycleCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2B200012F50000100C0DE01 /* SettingsWindowLifecycleCoordinator.swift */; };
-		F1A200022FB1000100C0DE01 /* ScreenshotAccentSwitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A200012FB1000100C0DE01 /* ScreenshotAccentSwitch.swift */; };
-		F1A200032FB1000100C0DE01 /* ScreenshotAccentSwitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A200012FB1000100C0DE01 /* ScreenshotAccentSwitch.swift */; };
 		F0A100022F60000100C0DE01 /* WelcomeExperiencePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0A100012F60000100C0DE01 /* WelcomeExperiencePolicy.swift */; };
 		F0A100032F60000100C0DE01 /* WelcomeExperiencePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0A100012F60000100C0DE01 /* WelcomeExperiencePolicy.swift */; };
+		F1A200022FB1000100C0DE01 /* ScreenshotAccentSwitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A200012FB1000100C0DE01 /* ScreenshotAccentSwitch.swift */; };
+		F1A200032FB1000100C0DE01 /* ScreenshotAccentSwitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A200012FB1000100C0DE01 /* ScreenshotAccentSwitch.swift */; };
 		F2B000082FC1000100C0DE01 /* ScreenshotArguments.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B000022FC1000100C0DE01 /* ScreenshotArguments.swift */; };
 		F2B000092FC1000100C0DE01 /* ScreenshotRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B000032FC1000100C0DE01 /* ScreenshotRuntime.swift */; };
 		F2B0000A2FC1000100C0DE01 /* ScreenshotFixtureLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B000042FC1000100C0DE01 /* ScreenshotFixtureLibrary.swift */; };
@@ -168,8 +168,8 @@
 		E1F4B0032F40000100C0DE01 /* URLCommandFileValidation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLCommandFileValidation.swift; sourceTree = "<group>"; };
 		E1F4B0062F40000100C0DE01 /* URLRouterLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLRouterLogic.swift; sourceTree = "<group>"; };
 		E2B200012F50000100C0DE01 /* SettingsWindowLifecycleCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowLifecycleCoordinator.swift; sourceTree = "<group>"; };
-		F1A200012FB1000100C0DE01 /* ScreenshotAccentSwitch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotAccentSwitch.swift; sourceTree = "<group>"; };
 		F0A100012F60000100C0DE01 /* WelcomeExperiencePolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeExperiencePolicy.swift; sourceTree = "<group>"; };
+		F1A200012FB1000100C0DE01 /* ScreenshotAccentSwitch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotAccentSwitch.swift; sourceTree = "<group>"; };
 		F2B000022FC1000100C0DE01 /* ScreenshotArguments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotArguments.swift; sourceTree = "<group>"; };
 		F2B000032FC1000100C0DE01 /* ScreenshotRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotRuntime.swift; sourceTree = "<group>"; };
 		F2B000042FC1000100C0DE01 /* ScreenshotFixtureLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotFixtureLibrary.swift; sourceTree = "<group>"; };
@@ -217,6 +217,14 @@
 				DF8B47D72F2F090100C473F8 /* ShortcutCycleTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		C0A1D0032FB0000100C0DE01 /* Diagnostics */ = {
+			isa = PBXGroup;
+			children = (
+				C0A1D0002FB0000100C0DE01 /* GroupSwitchPerformanceTracker.swift */,
+			);
+			path = Diagnostics;
 			sourceTree = "<group>";
 		};
 		DF88A3382F300B110042E749 /* Extensions */ = {
@@ -286,14 +294,6 @@
 				DF88A3582F300B110042E749 /* LaunchOverlayManager.swift */,
 			);
 			path = Overlay;
-			sourceTree = "<group>";
-		};
-		C0A1D0032FB0000100C0DE01 /* Diagnostics */ = {
-			isa = PBXGroup;
-			children = (
-				C0A1D0002FB0000100C0DE01 /* GroupSwitchPerformanceTracker.swift */,
-			);
-			path = Diagnostics;
 			sourceTree = "<group>";
 		};
 		DF88A35D2F300B110042E749 /* Services */ = {
@@ -419,19 +419,6 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
-		F2B000012FC1000100C0DE01 /* Screenshot */ = {
-			isa = PBXGroup;
-			children = (
-				F2B000022FC1000100C0DE01 /* ScreenshotArguments.swift */,
-				F2B000032FC1000100C0DE01 /* ScreenshotRuntime.swift */,
-				F2B000042FC1000100C0DE01 /* ScreenshotFixtureLibrary.swift */,
-				F2B000052FC1000100C0DE01 /* ScreenshotWindowLifecycle.swift */,
-				F2B000062FC1000100C0DE01 /* ScreenshotSceneViews.swift */,
-				F2B000072FC1000100C0DE01 /* ScreenshotSettingsChrome.swift */,
-			);
-			path = Screenshot;
-			sourceTree = "<group>";
-		};
 		DF88A3752F300B110042E749 /* ShortcutCycle */ = {
 			isa = PBXGroup;
 			children = (
@@ -447,6 +434,19 @@
 				DF88A3742F300B110042E749 /* ShortcutCycleApp.swift */,
 			);
 			path = ShortcutCycle;
+			sourceTree = "<group>";
+		};
+		F2B000012FC1000100C0DE01 /* Screenshot */ = {
+			isa = PBXGroup;
+			children = (
+				F2B000022FC1000100C0DE01 /* ScreenshotArguments.swift */,
+				F2B000032FC1000100C0DE01 /* ScreenshotRuntime.swift */,
+				F2B000042FC1000100C0DE01 /* ScreenshotFixtureLibrary.swift */,
+				F2B000052FC1000100C0DE01 /* ScreenshotWindowLifecycle.swift */,
+				F2B000062FC1000100C0DE01 /* ScreenshotSceneViews.swift */,
+				F2B000072FC1000100C0DE01 /* ScreenshotSettingsChrome.swift */,
+			);
+			path = Screenshot;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -836,12 +836,13 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 93;
+				CURRENT_PROJECT_VERSION = 99;
 				DEVELOPMENT_TEAM = 5736QK4NZX;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ShortcutCycle/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ShortcutCycle;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -867,12 +868,13 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 93;
+				CURRENT_PROJECT_VERSION = 99;
 				DEVELOPMENT_TEAM = 5736QK4NZX;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ShortcutCycle/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = ShortcutCycle;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -893,7 +895,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 93;
+				CURRENT_PROJECT_VERSION = 99;
 				DEVELOPMENT_TEAM = 5736QK4NZX;
 				GENERATE_INFOPLIST_FILE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
@@ -915,7 +917,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 93;
+				CURRENT_PROJECT_VERSION = 99;
 				DEVELOPMENT_TEAM = 5736QK4NZX;
 				GENERATE_INFOPLIST_FILE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
