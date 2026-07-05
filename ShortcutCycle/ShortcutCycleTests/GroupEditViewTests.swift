@@ -100,7 +100,7 @@ final class GroupEditViewTests: XCTestCase {
 
         store.addApp(app3, to: groupId)
         XCTAssertTrue(
-            drainMainRunLoop(until: { providerSpy.calls.count >= initialCallCount + 1 }),
+            drainMainRunLoop(timeout: 2.0, until: { providerSpy.calls.count >= initialCallCount + 1 }),
             "Adding an app should refresh running-app candidates"
         )
         XCTAssertEqual(providerSpy.calls.count, initialCallCount + 1)
