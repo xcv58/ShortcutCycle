@@ -174,7 +174,7 @@ class HUDManager: @preconcurrency ObservableObject {
     private var onSelectCallback: ((String) -> Void)?
     private var onFinalizeCallback: ((String) -> Void)?
     private let hudPresentationDelay: TimeInterval = 0.2
-    private let tapToCycleAutoFinalizeDelay: TimeInterval = 2.0
+    private let tapToCycleAutoFinalizeDelay: TimeInterval = 0.7
 
     private func clearEventMonitors() {
         for monitor in eventMonitors {

@@ -552,7 +552,7 @@ final class PressAndHoldTests: XCTestCase {
         XCTAssertFalse(globalMonitorMasks.contains(.flagsChanged), "Tap-to-cycle should not install global modifier release monitoring")
         XCTAssertFalse(localMonitorMasks.contains(.keyUp), "Tap-to-cycle should not start the press-and-hold loop key monitor")
         XCTAssertTrue(localMonitorMasks.contains(.keyDown), "Tap-to-cycle should still allow keyboard navigation while the HUD is visible")
-        XCTAssertEqual(timerMock.scheduledTimers.last?.0 ?? -1, 2.0, accuracy: 0.001, "Tap-to-cycle should wait briefly before auto-finalizing")
+        XCTAssertEqual(timerMock.scheduledTimers.last?.0 ?? -1, 0.7, accuracy: 0.001, "Tap-to-cycle should pause briefly before auto-finalizing")
 
         timerMock.fireLastNonRepeatingTimer()
         await Task.yield()
