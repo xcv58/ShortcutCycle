@@ -174,6 +174,23 @@ final class BackupDiffTests: XCTestCase {
         XCTAssertTrue(diff.groupDiffs[0].groupChanges.contains { $0.key == "Cycling Mode" })
     }
 
+    func testShortcutBehaviorChangeDetected() {
+        let groupId = UUID()
+        let before = makeExport(groups: [AppGroup(id: groupId, name: "Group", apps: [])])
+        let after = makeExport(groups: [AppGroup(id: groupId, name: "Group", apps: [], shortcutTriggerMode: .tapToCycle)])
+
+        let diff = BackupDiff.compute(before: before, after: after)
+
+        XCTAssertTrue(diff.hasChanges)
+        XCTAssertEqual(diff.groupDiffs.count, 1)
+        XCTAssertEqual(diff.groupDiffs[0].status, .modified)
+        XCTAssertTrue(
+            diff.groupDiffs[0].groupChanges.contains {
+                $0.key == "Shortcut Behavior" && $0.oldValue == "press and hold" && $0.newValue == "tap to cycle"
+            }
+        )
+    }
+
     func testGroupShortcutChangeDetected() {
         let groupId = UUID()
         let group = makeGroup(id: groupId, name: "Group")

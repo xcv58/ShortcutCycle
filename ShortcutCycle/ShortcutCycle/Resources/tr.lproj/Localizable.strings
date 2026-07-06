@@ -120,6 +120,11 @@
 "Cycling Mode" = "Geçiş modu";
 "Running apps only" = "Yalnızca çalışan uygulamalar";
 "All apps (open if needed)" = "Tüm uygulamalar (gerekirse aç)";
+"Shortcut Behavior" = "Kısayol davranışı";
+"Press and hold" = "Basılı tut";
+"Tap to cycle" = "Geçmek için dokun";
+"Hold modifier keys to keep the HUD open, then release to switch." = "HUD'u açık tutmak için değiştirici tuşları basılı tutun, geçiş yapmak için bırakın.";
+"Tap once to show the HUD. Tap again to advance; it switches after a short pause." = "HUD'u göstermek için bir kez dokunun. İlerlemek için tekrar dokunun; kısa bir duraklamadan sonra geçiş yapar.";
 "Displays the keyboard shortcut used to trigger the switch." = "Geçişi tetiklemek için kullanılan klavye kısayolunu gösterir.";
 "Try a simple pattern like ⌥1, ⌥2, and ⌥3." = "⌥1, ⌥2 ve ⌥3 gibi basit bir düzen deneyin.";
 "Opening…" = "Açılıyor…";

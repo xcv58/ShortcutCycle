@@ -29,6 +29,7 @@ final class AppGroupTests: XCTestCase {
             apps: [app],
             isEnabled: false,
             openAppIfNeeded: true,
+            shortcutTriggerMode: .tapToCycle,
             lastModified: date
         )
 
@@ -37,6 +38,8 @@ final class AppGroupTests: XCTestCase {
         XCTAssertEqual(group.apps.count, 1)
         XCTAssertFalse(group.isEnabled)
         XCTAssertEqual(group.openAppIfNeeded, true)
+        XCTAssertEqual(group.shortcutTriggerMode, .tapToCycle)
+        XCTAssertEqual(group.resolvedShortcutTriggerMode, .tapToCycle)
         XCTAssertEqual(group.lastModified, date)
     }
 
@@ -48,6 +51,12 @@ final class AppGroupTests: XCTestCase {
     func testDefaultOpenAppIfNeededNil() {
         let group = AppGroup(name: "G")
         XCTAssertNil(group.openAppIfNeeded)
+    }
+
+    func testDefaultShortcutTriggerModeNil() {
+        let group = AppGroup(name: "G")
+        XCTAssertNil(group.shortcutTriggerMode)
+        XCTAssertEqual(group.resolvedShortcutTriggerMode, .pressAndHold)
     }
 
     // MARK: - shouldOpenAppIfNeeded
@@ -65,6 +74,18 @@ final class AppGroupTests: XCTestCase {
     func testShouldOpenAppIfNeededWhenExplicitlyFalse() {
         let group = AppGroup(name: "G", openAppIfNeeded: false)
         XCTAssertFalse(group.shouldOpenAppIfNeeded)
+    }
+
+    // MARK: - Shortcut Trigger Mode
+
+    func testResolvedShortcutTriggerModeDefaultsToPressAndHold() {
+        let group = AppGroup(name: "G")
+        XCTAssertEqual(group.resolvedShortcutTriggerMode, .pressAndHold)
+    }
+
+    func testResolvedShortcutTriggerModeUsesStoredMode() {
+        let group = AppGroup(name: "G", shortcutTriggerMode: .tapToCycle)
+        XCTAssertEqual(group.resolvedShortcutTriggerMode, .tapToCycle)
     }
 
     // MARK: - Add App
@@ -245,7 +266,8 @@ final class AppGroupTests: XCTestCase {
             name: "Encoded",
             apps: [app],
             isEnabled: false,
-            openAppIfNeeded: true
+            openAppIfNeeded: true,
+            shortcutTriggerMode: .tapToCycle
         )
 
         let data = try JSONEncoder().encode(group)
@@ -258,6 +280,8 @@ final class AppGroupTests: XCTestCase {
         XCTAssertFalse(decoded.isEnabled)
         XCTAssertEqual(decoded.openAppIfNeeded, true)
         XCTAssertTrue(decoded.shouldOpenAppIfNeeded)
+        XCTAssertEqual(decoded.shortcutTriggerMode, .tapToCycle)
+        XCTAssertEqual(decoded.resolvedShortcutTriggerMode, .tapToCycle)
     }
 
     func testCodableRoundTripWithLastActiveApp() throws {
@@ -282,6 +306,7 @@ final class AppGroupTests: XCTestCase {
             ],
             isEnabled: true,
             openAppIfNeeded: false,
+            shortcutTriggerMode: .tapToCycle,
             lastModified: date
         )
         group.lastActiveAppBundleId = "com.a"
@@ -299,6 +324,8 @@ final class AppGroupTests: XCTestCase {
         XCTAssertEqual(decoded.apps.count, 2)
         XCTAssertTrue(decoded.isEnabled)
         XCTAssertEqual(decoded.openAppIfNeeded, false)
+        XCTAssertEqual(decoded.shortcutTriggerMode, .tapToCycle)
+        XCTAssertEqual(decoded.resolvedShortcutTriggerMode, .tapToCycle)
         XCTAssertEqual(decoded.lastActiveAppBundleId, "com.a")
     }
 
@@ -319,6 +346,8 @@ final class AppGroupTests: XCTestCase {
         XCTAssertEqual(decoded.name, "Legacy")
         XCTAssertNil(decoded.openAppIfNeeded)
         XCTAssertFalse(decoded.shouldOpenAppIfNeeded)
+        XCTAssertNil(decoded.shortcutTriggerMode)
+        XCTAssertEqual(decoded.resolvedShortcutTriggerMode, .pressAndHold)
         XCTAssertNil(decoded.lastActiveAppBundleId)
         XCTAssertNil(decoded.mruOrder)
     }

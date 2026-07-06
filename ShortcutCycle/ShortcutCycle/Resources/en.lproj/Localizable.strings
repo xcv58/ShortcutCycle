@@ -122,6 +122,11 @@
 "Cycling Mode" = "Cycling Mode";
 "Running apps only" = "Running apps only";
 "All apps (open if needed)" = "All apps (open if needed)";
+"Shortcut Behavior" = "Shortcut Behavior";
+"Press and hold" = "Press and hold";
+"Tap to cycle" = "Tap to cycle";
+"Hold modifier keys to keep the HUD open, then release to switch." = "Hold modifier keys to keep the HUD open, then release to switch.";
+"Tap once to show the HUD. Tap again to advance; it switches after a short pause." = "Tap once to show the HUD. Tap again to advance; it switches after a short pause.";
 "Displays the keyboard shortcut used to trigger the switch." = "Displays the keyboard shortcut used to trigger the switch.";
 "Try a simple pattern like ⌥1, ⌥2, and ⌥3." = "Try a simple pattern like ⌥1, ⌥2, and ⌥3.";
 "Opening…" = "Opening…";

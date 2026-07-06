@@ -8,9 +8,9 @@ app. This matches the current interaction model: ShortcutCycle is designed
 around keyboard shortcuts where one or more modifier keys remain physically held
 while the user cycles.
 
-This planning note tracks whether and how ShortcutCycle should support
-one-shot shortcut sources before we decide whether to document mouse gestures as
-unsupported.
+This planning note tracks the first lightweight implementation of one-shot
+shortcut support before we decide whether to document mouse gestures as a
+supported workflow.
 
 ## Current Behavior
 
@@ -46,9 +46,9 @@ The feature should be framed as a shortcut interaction mode, not as mouse
 support. The input source is less important than whether the trigger can keep
 modifiers held.
 
-## Proposed Mode
+## Implemented Mode
 
-Add a new optional group shortcut interaction mode:
+Add a new optional per-group shortcut trigger mode:
 
 - `pressAndHold`: current behavior and default for existing users.
 - `tapToCycle`: each shortcut activation advances the HUD selection and keeps
@@ -61,62 +61,59 @@ In `tapToCycle` mode:
 - Clicking a HUD item selects and activates it.
 - Return confirms the current selection.
 - Escape cancels without activating a new app.
-- A short inactivity timeout finalizes the current selection.
+- A 2-second inactivity timeout finalizes the current selection.
 - The existing press-and-hold loop remains unchanged for groups using the
   default mode.
 
-## Implementation Sketch
+This is deliberately small: no new timing preference, no dedicated mouse
+integration, and no URL automation surface yet.
 
-1. Add a core enum, likely `ShortcutInteractionMode`, with a backward-compatible
-   default of `.pressAndHold`.
-2. Add an optional stored property to `AppGroup`, such as
-   `shortcutInteractionMode`, defaulting through a computed property.
-3. Thread the resolved mode through `AppSwitcher.handleShortcut`,
-   `cycleAllApps`, `cycleRunningAppsOnly`, and `showHUD`.
-4. Extend `HUDManager.scheduleShow` with an interaction-mode parameter.
-5. For `pressAndHold`, keep the existing monitor/finalize path untouched.
-6. For `tapToCycle`, reveal immediately or after a very short delay, skip
-   modifier-release finalization, install keyboard/click-away controls, and
-   start/reset an inactivity finalize timer.
-7. Add a cancellation path so Escape can dismiss the HUD without activating the
-   pending target app.
-8. Add settings UI for the group mode only after the behavior is proven.
-9. Update export/import tests if the mode is stored in `AppGroup`.
+## Implementation
 
-## Design Questions
+1. Add `ShortcutTriggerMode` in Core with `.pressAndHold` and `.tapToCycle`.
+2. Store an optional `shortcutTriggerMode` on `AppGroup`; legacy groups resolve
+   to `.pressAndHold`.
+3. Thread the resolved mode through `AppSwitcher` into `HUDManager`.
+4. Keep the existing modifier-monitor and loop behavior for `.pressAndHold`.
+5. For `.tapToCycle`, reveal the HUD immediately, skip modifier-release
+   finalization, allow repeated shortcut taps to advance selection, and reset a
+   short auto-finalize timer.
+6. Add Escape cancellation and Return confirmation through the existing HUD key
+   handling path.
+7. Add a small "Shortcut Behavior" picker next to the existing group cycling
+   mode setting.
+8. Include the mode in backup diffs and localization coverage.
 
-- Should the mode be per group or global? Per group is more flexible, but it
-  touches the app group model and settings UI. A global advanced setting is
-  simpler but may surprise users who only want one group to work with a gesture.
-- Should tap mode reveal immediately, or keep the existing 200 ms hold delay?
-  Immediate reveal seems better for one-shot triggers.
-- Should timeout finalize or cancel? Finalize is closer to Command-Tab, while
-  cancel is safer when the user accidentally triggers the shortcut.
+## Remaining Questions
+
+- Is a 2-second timeout the right default once tested with real mouse gesture
+  tools?
 - Should clicking outside finalize, cancel, or leave the HUD up until timeout?
-- Should a repeated tap while the HUD is still invisible reveal and advance, or
-  reveal only? Existing repeated invocation currently reveals immediately.
+- Should tap mode eventually get an explicit "confirm on click/Return only"
+  variant, or is auto-finalize the better lightweight behavior?
 - Do we need a URL command or automation entry point for tap-mode selection?
 
 ## Validation Plan
 
-Before shipping:
+Implemented coverage:
 
-- Add unit coverage for `tapToCycle` HUD lifecycle:
-  - one-shot shortcut reveals and stays visible after modifiers are released
-  - repeated shortcut advances selection
-  - timeout finalizes once
-  - Escape cancels without activation
-  - click/Return finalizes with activation
-- Add regression coverage proving `pressAndHold` still finalizes on modifier
-  release and still supports the repeating loop.
-- Run `cd ShortcutCycle && swift test`.
+- `tapToCycle` reveals immediately and does not install modifier-release
+  monitors.
+- Repeated shortcut invocations advance the selection.
+- The idle timeout finalizes once.
+- Escape cancels without activation.
+- `AppGroup` decoding remains backward-compatible.
+- Backup diffs detect shortcut behavior changes.
+- Localization key coverage remains complete.
+
+Still worth doing before release:
+
 - Manually test with a keyboard shortcut.
 - Manually test with at least one macro or mouse gesture tool that emits a
   one-shot shortcut.
 
 ## Rollout
 
-This exploration should land before website or app copy changes. If the mode is
-feasible, product copy can explain how to use one-shot triggers. If we decide
-not to support it, then the website and app can document the limitation with a
-clearer rationale.
+If this behavior feels good in manual testing, website and app copy can explain
+tap-to-cycle as the recommended mode for mouse gestures, Stream Deck buttons,
+and other one-shot shortcut sources.

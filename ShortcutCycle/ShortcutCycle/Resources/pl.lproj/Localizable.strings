@@ -120,6 +120,11 @@
 "Cycling Mode" = "Tryb przełączania";
 "Running apps only" = "Tylko uruchomione aplikacje";
 "All apps (open if needed)" = "Wszystkie aplikacje (otwórz jeśli potrzeba)";
+"Shortcut Behavior" = "Zachowanie skrótu";
+"Press and hold" = "Naciśnij i przytrzymaj";
+"Tap to cycle" = "Stuknij, aby przełączać";
+"Hold modifier keys to keep the HUD open, then release to switch." = "Przytrzymaj klawisze modyfikujące, aby HUD pozostał otwarty, a następnie puść, aby przełączyć.";
+"Tap once to show the HUD. Tap again to advance; it switches after a short pause." = "Stuknij raz, aby pokazać HUD. Stuknij ponownie, aby przejść dalej; przełączenie nastąpi po krótkiej pauzie.";
 "Displays the keyboard shortcut used to trigger the switch." = "Wyświetla skrót klawiszowy używany do przełączania.";
 "Try a simple pattern like ⌥1, ⌥2, and ⌥3." = "Wypróbuj prosty schemat, taki jak ⌥1, ⌥2 i ⌥3.";
 "Opening…" = "Otwieranie…";

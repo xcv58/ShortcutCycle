@@ -121,6 +121,11 @@
 "Cycling Mode" = "وضع التنقل";
 "Running apps only" = "التطبيقات المشغلة فقط";
 "All apps (open if needed)" = "جميع التطبيقات (فتح إذا لزم الأمر)";
+"Shortcut Behavior" = "سلوك الاختصار";
+"Press and hold" = "اضغط مع الاستمرار";
+"Tap to cycle" = "اضغط للتنقل";
+"Hold modifier keys to keep the HUD open, then release to switch." = "اضغط باستمرار على مفاتيح التعديل لإبقاء HUD مفتوحاً، ثم اتركها للتبديل.";
+"Tap once to show the HUD. Tap again to advance; it switches after a short pause." = "اضغط مرة واحدة لإظهار HUD. اضغط مرة أخرى للتقدم؛ سيتم التبديل بعد توقف قصير.";
 "Displays the keyboard shortcut used to trigger the switch." = "يعرض اختصار لوحة المفاتيح المستخدم لتشغيل التبديل.";
 "Try a simple pattern like ⌥1, ⌥2, and ⌥3." = "جرّب نمطًا بسيطًا مثل ⌥1 و⌥2 و⌥3.";
 "Opening…" = "جارٍ الفتح…";

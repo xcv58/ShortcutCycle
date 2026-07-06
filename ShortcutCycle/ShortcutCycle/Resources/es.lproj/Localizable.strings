@@ -120,6 +120,11 @@
 "Cycling Mode" = "Modo de ciclo";
 "Running apps only" = "Solo apps en ejecución";
 "All apps (open if needed)" = "Todas las apps (abrir si es necesario)";
+"Shortcut Behavior" = "Comportamiento del atajo";
+"Press and hold" = "Mantener pulsado";
+"Tap to cycle" = "Tocar para alternar";
+"Hold modifier keys to keep the HUD open, then release to switch." = "Mantén pulsadas las teclas modificadoras para mantener el HUD abierto y suéltalas para cambiar.";
+"Tap once to show the HUD. Tap again to advance; it switches after a short pause." = "Toca una vez para mostrar el HUD. Toca de nuevo para avanzar; cambiará tras una breve pausa.";
 "Displays the keyboard shortcut used to trigger the switch." = "Muestra el atajo de teclado usado para activar el cambio.";
 "Try a simple pattern like ⌥1, ⌥2, and ⌥3." = "Prueba un patrón simple como ⌥1, ⌥2 y ⌥3.";
 "Opening…" = "Abriendo…";

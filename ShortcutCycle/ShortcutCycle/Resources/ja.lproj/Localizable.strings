@@ -120,6 +120,11 @@
 "Cycling Mode" = "サイクルモード";
 "Running apps only" = "実行中のアプリのみ";
 "All apps (open if needed)" = "すべてのアプリ（必要に応じて開く）";
+"Shortcut Behavior" = "ショートカットの動作";
+"Press and hold" = "押したまま";
+"Tap to cycle" = "タップして切り替え";
+"Hold modifier keys to keep the HUD open, then release to switch." = "修飾キーを押したままにすると HUD が開いたままになり、離すと切り替わります。";
+"Tap once to show the HUD. Tap again to advance; it switches after a short pause." = "一度タップすると HUD を表示します。もう一度タップすると進み、少し待つと切り替わります。";
 "Displays the keyboard shortcut used to trigger the switch." = "切り替えに使用するキーボードショートカットを表示します。";
 "Try a simple pattern like ⌥1, ⌥2, and ⌥3." = "⌥1、⌥2、⌥3 のようなシンプルなパターンを試してください。";
 "Opening…" = "起動中…";

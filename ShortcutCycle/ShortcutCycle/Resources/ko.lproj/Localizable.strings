@@ -120,6 +120,11 @@
 "Cycling Mode" = "순환 모드";
 "Running apps only" = "실행 중인 앱만";
 "All apps (open if needed)" = "모든 앱 (필요시 열기)";
+"Shortcut Behavior" = "단축키 동작";
+"Press and hold" = "길게 누르기";
+"Tap to cycle" = "탭하여 순환";
+"Hold modifier keys to keep the HUD open, then release to switch." = "HUD를 계속 열어 두려면 보조 키를 누른 상태로 유지하고, 전환하려면 놓으세요.";
+"Tap once to show the HUD. Tap again to advance; it switches after a short pause." = "한 번 탭하면 HUD가 표시됩니다. 다시 탭하면 다음으로 이동하고, 잠시 후 전환됩니다.";
 "Displays the keyboard shortcut used to trigger the switch." = "전환을 트리거하는 데 사용되는 키보드 단축키를 표시합니다.";
 "Try a simple pattern like ⌥1, ⌥2, and ⌥3." = "⌥1, ⌥2, ⌥3 같은 간단한 패턴을 사용해 보세요.";
 "Opening…" = "여는 중…";

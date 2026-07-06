@@ -166,6 +166,16 @@ public struct BackupDiff {
             )
         }
 
+        if before.resolvedShortcutTriggerMode != after.resolvedShortcutTriggerMode {
+            changes.append(
+                SettingChange(
+                    key: "Shortcut Behavior",
+                    oldValue: shortcutTriggerModeLabel(before.resolvedShortcutTriggerMode),
+                    newValue: shortcutTriggerModeLabel(after.resolvedShortcutTriggerMode)
+                )
+            )
+        }
+
         if beforeShortcut != afterShortcut {
             changes.append(
                 SettingChange(
@@ -177,6 +187,15 @@ public struct BackupDiff {
         }
 
         return changes
+    }
+
+    private static func shortcutTriggerModeLabel(_ mode: ShortcutTriggerMode) -> String {
+        switch mode {
+        case .pressAndHold:
+            return "press and hold"
+        case .tapToCycle:
+            return "tap to cycle"
+        }
     }
 
     private static func normalizedShortcutMap(_ shortcuts: [String: ShortcutData]?) -> [UUID: ShortcutData] {
