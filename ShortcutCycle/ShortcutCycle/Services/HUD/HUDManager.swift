@@ -115,17 +115,44 @@ class HUDManager: @preconcurrency ObservableObject {
     var setWindowIgnoresMouseEvents: (NSWindow, Bool) -> Void = { window, ignores in
         window.ignoresMouseEvents = ignores
     }
+    var runningApplicationsProvider: (String) -> [NSRunningApplication] = { bundleId in
+        NSRunningApplication.runningApplications(withBundleIdentifier: bundleId)
+    }
+    var unhideRunningApplication: (NSRunningApplication) -> Void = { app in
+        app.unhide()
+    }
+    var yieldActivationToRunningApplication: (NSRunningApplication) -> Void = { app in
+        NSApp?.yieldActivation(to: app)
+    }
+    var activateRunningApplication: (NSRunningApplication, Bool) -> Bool = { app, fromCurrentApp in
+        if fromCurrentApp {
+            return app.activate(from: .current, options: .activateAllWindows)
+        }
+
+        return app.activate(options: .activateAllWindows)
+    }
+    var scheduleActivationRetry: (@escaping @MainActor @Sendable () -> Void) -> Void = { action in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            Task { @MainActor in
+                action()
+            }
+        }
+    }
     // `lazy` because the default captures `self` to call the private `activateOrLaunch` method.
     lazy var activatePendingTargetApp: (String) -> Void = { [weak self] bundleId in
         self?.activateOrLaunch(bundleId: bundleId)
     }
     // `lazy` because the default captures `self` to call the private `hasVisibleWindows` method.
+    lazy var hasVisibleWindowsForPID: (pid_t) -> Bool = { [weak self] pid in
+        self?.hasVisibleWindows(pid: pid) ?? true
+    }
+    // `lazy` because the default captures `self` to call the visibility provider.
     lazy var targetLeavesCurrentSpace: (HUDAppItem) -> Bool = { [weak self] item in
         guard let self, let pid = item.pid else {
             return false
         }
 
-        return !self.hasVisibleWindows(pid: pid)
+        return !self.hasVisibleWindowsForPID(pid)
     }
     
     private var window: HUDWindow?
@@ -756,10 +783,10 @@ class HUDManager: @preconcurrency ObservableObject {
     private func activateRunningTargetApp(_ app: NSRunningApplication) {
         let didActivate: Bool
         if isAppActive() {
-            NSApp?.yieldActivation(to: app)
-            didActivate = app.activate(from: .current, options: .activateAllWindows)
+            yieldActivationToRunningApplication(app)
+            didActivate = activateRunningApplication(app, true)
         } else {
-            didActivate = app.activate(options: .activateAllWindows)
+            didActivate = activateRunningApplication(app, false)
         }
 
         guard !didActivate else { return }
@@ -768,11 +795,11 @@ class HUDManager: @preconcurrency ObservableObject {
             "Target app activation was declined; retrying bundle=\(app.bundleIdentifier ?? "unknown", privacy: .public) pid=\(app.processIdentifier, privacy: .public)"
         )
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self, weak app] in
+        scheduleActivationRetry { [weak self, weak app] in
             guard let self, let app else { return }
 
-            app.unhide()
-            let didRetry = app.activate(options: .activateAllWindows)
+            self.unhideRunningApplication(app)
+            let didRetry = self.activateRunningApplication(app, false)
             guard !didRetry else { return }
 
             self.logger.error(
@@ -787,9 +814,9 @@ class HUDManager: @preconcurrency ObservableObject {
         let realBundleId = item?.bundleId ?? bundleId
 
         if let pid = item?.pid,
-           let app = NSRunningApplication.runningApplications(withBundleIdentifier: realBundleId)
+           let app = runningApplicationsProvider(realBundleId)
                .first(where: { $0.processIdentifier == pid }) {
-            app.unhide()
+            unhideRunningApplication(app)
             // Quick-tap blind switching can happen while ShortcutCycle is still the
             // active app (for example with Settings or menu UI involved). Yield our
             // activation first so the target app can take frontmost focus reliably.
@@ -801,7 +828,7 @@ class HUDManager: @preconcurrency ObservableObject {
             // applicationShouldHandleReopen and restores its minimized windows.
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
                 guard let self else { return }
-                guard !self.hasVisibleWindows(pid: pid) else { return }
+                guard !self.hasVisibleWindowsForPID(pid) else { return }
                 self.activateRunningTargetApp(app)
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
                     self?.launchApp(bundleIdentifier: realBundleId)

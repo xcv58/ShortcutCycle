@@ -80,6 +80,12 @@ final class PressAndHoldTests: XCTestCase {
     private var savedTargetLeavesCurrentSpace: ((HUDAppItem) -> Bool)!
     private var savedIsKeyCurrentlyDown: ((Int) -> Bool)!
     private var savedPresentHUDWindow: ((NSWindow) -> Void)!
+    private var savedRunningApplicationsProvider: ((String) -> [NSRunningApplication])!
+    private var savedUnhideRunningApplication: ((NSRunningApplication) -> Void)!
+    private var savedYieldActivationToRunningApplication: ((NSRunningApplication) -> Void)!
+    private var savedActivateRunningApplication: ((NSRunningApplication, Bool) -> Bool)!
+    private var savedScheduleActivationRetry: ((@escaping @MainActor @Sendable () -> Void) -> Void)!
+    private var savedHasVisibleWindowsForPID: ((pid_t) -> Bool)!
 
     override func setUp() async throws {
         _ = NSApplication.shared
@@ -102,6 +108,12 @@ final class PressAndHoldTests: XCTestCase {
         savedTargetLeavesCurrentSpace = manager.targetLeavesCurrentSpace
         savedIsKeyCurrentlyDown = manager.isKeyCurrentlyDown
         savedPresentHUDWindow = manager.presentHUDWindow
+        savedRunningApplicationsProvider = manager.runningApplicationsProvider
+        savedUnhideRunningApplication = manager.unhideRunningApplication
+        savedYieldActivationToRunningApplication = manager.yieldActivationToRunningApplication
+        savedActivateRunningApplication = manager.activateRunningApplication
+        savedScheduleActivationRetry = manager.scheduleActivationRetry
+        savedHasVisibleWindowsForPID = manager.hasVisibleWindowsForPID
 
         // Inject mocks
         manager.timeProvider = timeMock
@@ -138,6 +150,30 @@ final class PressAndHoldTests: XCTestCase {
         manager.setWindowIgnoresMouseEvents = { [weak self] _, ignores in
             self?.mouseInteractionStates.append(ignores)
         }
+        manager.runningApplicationsProvider = { bundleId in
+            NSRunningApplication.runningApplications(withBundleIdentifier: bundleId)
+        }
+        manager.unhideRunningApplication = { app in
+            app.unhide()
+        }
+        manager.yieldActivationToRunningApplication = { app in
+            NSApp?.yieldActivation(to: app)
+        }
+        manager.activateRunningApplication = { app, fromCurrentApp in
+            if fromCurrentApp {
+                return app.activate(from: .current, options: .activateAllWindows)
+            }
+
+            return app.activate(options: .activateAllWindows)
+        }
+        manager.scheduleActivationRetry = { action in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                Task { @MainActor in
+                    action()
+                }
+            }
+        }
+        manager.hasVisibleWindowsForPID = savedHasVisibleWindowsForPID
         manager.targetLeavesCurrentSpace = { _ in false }
 
         // Reset state
@@ -186,6 +222,12 @@ final class PressAndHoldTests: XCTestCase {
             }
         }
         manager.setWindowIgnoresMouseEvents = { $0.ignoresMouseEvents = $1 }
+        manager.runningApplicationsProvider = savedRunningApplicationsProvider
+        manager.unhideRunningApplication = savedUnhideRunningApplication
+        manager.yieldActivationToRunningApplication = savedYieldActivationToRunningApplication
+        manager.activateRunningApplication = savedActivateRunningApplication
+        manager.scheduleActivationRetry = savedScheduleActivationRetry
+        manager.hasVisibleWindowsForPID = savedHasVisibleWindowsForPID
         manager.activatePendingTargetApp = savedActivatePendingTargetApp
         manager.targetLeavesCurrentSpace = savedTargetLeavesCurrentSpace
         manager.presentHUDWindow = savedPresentHUDWindow
@@ -1031,6 +1073,65 @@ final class PressAndHoldTests: XCTestCase {
 
         XCTAssertEqual(closeCount, 0)
         XCTAssertEqual(activateCount, 1)
+    }
+
+    @MainActor
+    func testDeclinedRunningAppActivationRetriesOnce() async throws {
+        let runningApp = NSRunningApplication.current
+        let bundleId = "com.test.retry"
+        let item = HUDAppItem(
+            bundleId: bundleId,
+            pid: runningApp.processIdentifier,
+            name: "Retry Target"
+        )
+        var requestedBundleIds: [String] = []
+        var unhideCount = 0
+        var yieldedActivationCount = 0
+        var activationFromCurrentAppFlags: [Bool] = []
+        var activationResults = [false, true]
+        var retryActions: [@MainActor @Sendable () -> Void] = []
+
+        manager.runningApplicationsProvider = { requestedBundleId in
+            requestedBundleIds.append(requestedBundleId)
+            return [runningApp]
+        }
+        manager.unhideRunningApplication = { _ in
+            unhideCount += 1
+        }
+        manager.yieldActivationToRunningApplication = { _ in
+            yieldedActivationCount += 1
+        }
+        manager.activateRunningApplication = { _, fromCurrentApp in
+            activationFromCurrentAppFlags.append(fromCurrentApp)
+            return activationResults.removeFirst()
+        }
+        manager.scheduleActivationRetry = { action in
+            retryActions.append(action)
+        }
+        manager.hasVisibleWindowsForPID = { _ in true }
+        manager.isAppActive = { false }
+
+        manager.scheduleShow(
+            items: [item],
+            activeAppId: item.id,
+            modifierFlags: [.option],
+            shortcut: "Opt+1"
+        )
+        manager.hide()
+
+        XCTAssertEqual(requestedBundleIds, [bundleId])
+        XCTAssertEqual(unhideCount, 1, "The running app should be unhidden before the initial activation attempt")
+        XCTAssertEqual(yieldedActivationCount, 0, "Inactive ShortcutCycle sessions should not yield activation before activating the target")
+        XCTAssertEqual(activationFromCurrentAppFlags, [false])
+        XCTAssertEqual(retryActions.count, 1, "A declined activation should schedule one retry")
+
+        retryActions[0]()
+
+        XCTAssertEqual(unhideCount, 2, "The retry should unhide the target again before re-activating it")
+        XCTAssertEqual(activationFromCurrentAppFlags, [false, false])
+        XCTAssertTrue(activationResults.isEmpty)
+
+        try await Task.sleep(nanoseconds: 150_000_000)
     }
 
     @MainActor
