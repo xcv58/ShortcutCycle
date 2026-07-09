@@ -64,9 +64,19 @@ ShortcutCycle/
 │       ├── BackupBrowserTests.swift
 │       ├── BackupDiffTests.swift
 │       ├── BackupRetentionTests.swift
+│       ├── GroupEditViewTests.swift
+│       ├── GroupSettingsViewTests.swift
 │       ├── GroupStoreTests.swift
+│       ├── HUDItemFilterTests.swift
 │       ├── LocalizationTests.swift
+│       ├── PressAndHoldTests.swift
 │       ├── SettingsExportTests.swift
+│       ├── SettingsWindowLifecycleCoordinatorTests.swift
+│       ├── SettingsWindowObserverTests.swift
+│       ├── ShortcutSuggestionTests.swift
+│       ├── URLCommandFileValidationTests.swift
+│       ├── URLRouterLogicTests.swift
+│       ├── WelcomeExperiencePolicyTests.swift
 │       └── ShortcutCycleTests.swift
 ├── URL_SCHEME.md                       # Full `shortcutcycle://` command reference
 ├── .github/workflows/
@@ -112,7 +122,7 @@ Xcode Cloud uses `ci_scripts/ci_post_clone.sh` to set build numbers (`CI_BUILD_N
 |--------|------|---------|
 | `ShortcutCycleCore` | Library | Pure models and business logic (testable without UI) |
 | `ShortcutCycle` | Executable | Main app (depends on Core) |
-| `ShortcutCycleTests` | Test | Tests against ShortcutCycleCore |
+| `ShortcutCycleTests` | Test | Tests against ShortcutCycleCore and app-target behavior |
 
 The Core module is imported via `#if canImport(ShortcutCycleCore)` for compatibility between SPM and Xcode builds.
 
@@ -166,7 +176,7 @@ When adding new user-facing strings, add the key to all 15 `Localizable.strings`
 
 - Always run `swift test` from the `ShortcutCycle/` directory after making changes to verify nothing breaks.
 - Model files in `Models/` are shared between the `ShortcutCycleCore` and `ShortcutCycle` targets — they are listed explicitly in `Package.swift` sources/excludes. If you add a new model file, update both the `sources` array in the Core target and the `exclude` array in the executable target.
-- The test target depends only on `ShortcutCycleCore`, not the full app. New testable logic should go in Core.
+- The test target depends on both `ShortcutCycleCore` and the `ShortcutCycle` executable target. Put pure, reusable logic in Core when possible, and add app-target tests for UI/service behavior that lives in the executable target, such as HUD, settings-window lifecycle, and AppSwitcher integration paths.
 - HUD and AppSwitcher code uses `@MainActor` — maintain this when adding or modifying service classes.
 - URL automation behavior is implemented in `ShortcutCycleApp.swift` (`ShortcutCycleURLParser`, `ShortcutCycleURLRouter`, and navigation state). Keep `README.md` and `URL_SCHEME.md` in sync when adding/changing commands or aliases.
 - The default branch is `master`, not `main`.
