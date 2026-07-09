@@ -24,12 +24,6 @@ enum SettingsWindowLifecycleCoordinator {
         }
     }
 
-    static func visibleOffSpaceSettingsWindow(in windows: [NSWindow]) -> NSWindow? {
-        windows.first { window in
-            isSettingsWindow(window) && window.isVisible && !window.isOnActiveSpace
-        }
-    }
-
     static func activationPolicy(for window: NSWindow?) -> NSApplication.ActivationPolicy {
         guard let window, isActiveSettingsWindow(window) else {
             return .accessory
