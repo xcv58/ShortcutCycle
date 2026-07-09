@@ -606,19 +606,6 @@ private struct GroupShortcutEditor: View {
         )
     }
 
-    private var shortcutTriggerModeSelection: Binding<ShortcutTriggerMode> {
-        Binding(
-            get: { group.resolvedShortcutTriggerMode },
-            set: { newValue in
-                DispatchQueue.main.async {
-                    var updatedGroup = group
-                    updatedGroup.shortcutTriggerMode = newValue == .pressAndHold ? nil : newValue
-                    store.updateGroup(updatedGroup)
-                }
-            }
-        )
-    }
-
     private var suggestionShortcuts: [KeyboardShortcuts.Shortcut] {
         ShortcutSuggestions.available(for: store.groups, excluding: groupId)
     }
@@ -652,27 +639,6 @@ private struct GroupShortcutEditor: View {
                 }
             }
 
-            HStack {
-                Text("Shortcut Behavior".localized(language: selectedLanguage))
-                    .font(.caption.weight(.medium))
-                    .foregroundColor(.secondary)
-
-                ViewThatFits(in: .horizontal) {
-                    shortcutTriggerModePicker
-                        .pickerStyle(.segmented)
-                        .fixedSize(horizontal: true, vertical: false)
-
-                    shortcutTriggerModePicker
-                        .pickerStyle(.menu)
-                }
-            }
-            .padding(.top, 6)
-
-            Text(shortcutTriggerModeDescription)
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .padding(.top, 2)
-
             SettingsSectionDivider()
 
             HStack {
@@ -704,9 +670,9 @@ private struct GroupShortcutEditor: View {
                 ? "Cycle through all apps in the group. Non-running apps will be launched when selected.".localized(language: selectedLanguage)
                 : "Cycle through running apps only. If no app is running, the first app in the group will be launched.".localized(language: selectedLanguage)
             )
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .padding(.top, 2)
+            .font(.caption)
+            .foregroundColor(.secondary)
+            .padding(.top, 2)
         }
         .task(id: groupId) {
             GroupSwitchPerformanceTracker.shared.markShortcutSectionVisible(for: groupId)
@@ -717,24 +683,6 @@ private struct GroupShortcutEditor: View {
                 message: Text(conflict.message { $0.localized(language: selectedLanguage) }),
                 dismissButton: .default(Text("OK".localized(language: selectedLanguage)))
             )
-        }
-    }
-
-    private var shortcutTriggerModePicker: some View {
-        Picker("Shortcut Behavior".localized(language: selectedLanguage), selection: shortcutTriggerModeSelection) {
-            Text("Press and hold".localized(language: selectedLanguage)).tag(ShortcutTriggerMode.pressAndHold)
-            Text("Tap to cycle".localized(language: selectedLanguage)).tag(ShortcutTriggerMode.tapToCycle)
-        }
-        .font(.caption)
-        .labelsHidden()
-    }
-
-    private var shortcutTriggerModeDescription: String {
-        switch group.resolvedShortcutTriggerMode {
-        case .pressAndHold:
-            return "Hold modifier keys to keep the HUD open, then release to switch.".localized(language: selectedLanguage)
-        case .tapToCycle:
-            return "Tap once to show the HUD. Tap again to advance; it switches after a short pause.".localized(language: selectedLanguage)
         }
     }
 

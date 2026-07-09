@@ -120,11 +120,6 @@
 "Cycling Mode" = "Wechselmodus";
 "Running apps only" = "Nur laufende Apps";
 "All apps (open if needed)" = "Alle Apps (bei Bedarf öffnen)";
-"Shortcut Behavior" = "Tastenkürzel-Verhalten";
-"Press and hold" = "Gedrückt halten";
-"Tap to cycle" = "Tippen zum Wechseln";
-"Hold modifier keys to keep the HUD open, then release to switch." = "Halten Sie die Modifikatortasten gedrückt, um das HUD offen zu halten, und lassen Sie los, um zu wechseln.";
-"Tap once to show the HUD. Tap again to advance; it switches after a short pause." = "Tippen Sie einmal, um das HUD zu zeigen. Tippen Sie erneut zum Weitergehen; nach einer kurzen Pause wird gewechselt.";
 "Displays the keyboard shortcut used to trigger the switch." = "Zeigt das Tastenkürzel an, das zum Auslösen des Wechsels verwendet wird.";
 "Try a simple pattern like ⌥1, ⌥2, and ⌥3." = "Versuche ein einfaches Schema wie ⌥1, ⌥2 und ⌥3.";
 "Opening…" = "Wird geöffnet…";

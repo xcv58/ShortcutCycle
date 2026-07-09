@@ -12,28 +12,22 @@ public struct AppGroup: Identifiable, Codable, Equatable {
     public var isEnabled: Bool = true
     public var lastModified: Date = Date()
     public var openAppIfNeeded: Bool?
-    public var shortcutTriggerMode: ShortcutTriggerMode?
     public var mruOrder: [String]?
 
     public var shouldOpenAppIfNeeded: Bool {
         openAppIfNeeded ?? false
-    }
-
-    public var resolvedShortcutTriggerMode: ShortcutTriggerMode {
-        shortcutTriggerMode ?? .pressAndHold
     }
     
     // Legacy property for migration - will be ignored after first load
     // This allows old data to be decoded without crashing
     private var shortcut: LegacyKeyboardShortcutData?
     
-    public init(id: UUID = UUID(), name: String, apps: [AppItem] = [], isEnabled: Bool = true, openAppIfNeeded: Bool? = nil, shortcutTriggerMode: ShortcutTriggerMode? = nil, mruOrder: [String]? = nil, lastModified: Date = Date()) {
+    public init(id: UUID = UUID(), name: String, apps: [AppItem] = [], isEnabled: Bool = true, openAppIfNeeded: Bool? = nil, mruOrder: [String]? = nil, lastModified: Date = Date()) {
         self.id = id
         self.name = name
         self.apps = apps
         self.isEnabled = isEnabled
         self.openAppIfNeeded = openAppIfNeeded
-        self.shortcutTriggerMode = shortcutTriggerMode
         self.mruOrder = mruOrder
         self.lastModified = lastModified
     }
@@ -66,17 +60,6 @@ public struct AppGroup: Identifiable, Codable, Equatable {
 private struct LegacyKeyboardShortcutData: Codable, Equatable {
     let keyCode: UInt32
     let modifiers: UInt32
-}
-
-public enum ShortcutTriggerMode: String, Codable, Equatable, CaseIterable, Identifiable {
-    case pressAndHold
-    case tapToCycle
-
-    public static let allCases: [ShortcutTriggerMode] = [.pressAndHold, .tapToCycle]
-
-    public var id: String {
-        rawValue
-    }
 }
 
 // MARK: - MainActor helper for shortcut access

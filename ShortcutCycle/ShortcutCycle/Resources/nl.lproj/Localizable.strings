@@ -120,11 +120,6 @@
 "Cycling Mode" = "Wisselmodus";
 "Running apps only" = "Alleen actieve apps";
 "All apps (open if needed)" = "Alle apps (openen indien nodig)";
-"Shortcut Behavior" = "Sneltoetsgedrag";
-"Press and hold" = "Ingedrukt houden";
-"Tap to cycle" = "Tik om te wisselen";
-"Hold modifier keys to keep the HUD open, then release to switch." = "Houd modificatietoetsen ingedrukt om de HUD open te houden en laat los om te wisselen.";
-"Tap once to show the HUD. Tap again to advance; it switches after a short pause." = "Tik eenmaal om de HUD te tonen. Tik opnieuw om verder te gaan; na een korte pauze wordt er gewisseld.";
 "Displays the keyboard shortcut used to trigger the switch." = "Toont de sneltoets die wordt gebruikt om te schakelen.";
 "Try a simple pattern like ⌥1, ⌥2, and ⌥3." = "Probeer een eenvoudig patroon zoals ⌥1, ⌥2 en ⌥3.";
 "Opening…" = "Openen…";

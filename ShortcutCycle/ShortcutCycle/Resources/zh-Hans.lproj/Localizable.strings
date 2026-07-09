@@ -121,11 +121,6 @@
 "Cycling Mode" = "循环模式";
 "Running apps only" = "仅运行中的应用";
 "All apps (open if needed)" = "所有应用（必要时打开）";
-"Shortcut Behavior" = "快捷键行为";
-"Press and hold" = "按住";
-"Tap to cycle" = "点按循环";
-"Hold modifier keys to keep the HUD open, then release to switch." = "按住修饰键以保持 HUD 打开，松开后切换。";
-"Tap once to show the HUD. Tap again to advance; it switches after a short pause." = "点按一次显示 HUD。再次点按前进；短暂停留后切换。";
 "Displays the keyboard shortcut used to trigger the switch." = "显示用于触发切换的键盘快捷键。";
 "Try a simple pattern like ⌥1, ⌥2, and ⌥3." = "试试像 ⌥1、⌥2 和 ⌥3 这样简单的模式。";
 "Opening…" = "正在打开…";

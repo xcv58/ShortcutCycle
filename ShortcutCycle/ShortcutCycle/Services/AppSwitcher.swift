@@ -38,10 +38,9 @@ class AppSwitcher: @preconcurrency ObservableObject {
     
     /// Handle a shortcut activation for a given group
     func handleShortcut(for group: AppGroup, store: GroupStore) {
-        let shortcutTriggerMode = group.resolvedShortcutTriggerMode
-        let modifierFlags = shortcutTriggerMode == .pressAndHold ? getModifierFlags(for: group) : nil
+        let modifierFlags = getModifierFlags(for: group)
         let shortcutString = group.shortcutDisplayString
-        let activeKey = shortcutTriggerMode == .pressAndHold ? getShortcutKey(for: group) : nil
+        let activeKey = getShortcutKey(for: group)
         let prioritizeFrontmost = lastInvokedGroupId == group.id
         
         let hudItems = getHUDItems(for: group)
@@ -57,7 +56,6 @@ class AppSwitcher: @preconcurrency ObservableObject {
                 modifierFlags: modifierFlags,
                 shortcut: shortcutString,
                 activeKey: activeKey,
-                shortcutTriggerMode: shortcutTriggerMode,
                 prioritizeFrontmost: prioritizeFrontmost
              )
         } else {
@@ -69,7 +67,6 @@ class AppSwitcher: @preconcurrency ObservableObject {
                 modifierFlags: modifierFlags,
                 shortcut: shortcutString,
                 activeKey: activeKey,
-                shortcutTriggerMode: shortcutTriggerMode,
                 prioritizeFrontmost: prioritizeFrontmost
              )
         }
@@ -81,7 +78,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
     
     // MARK: - Logic for "Open App If Needed" (New Feature)
     
-    private func cycleAllApps(hudItems: [HUDAppItem], group: AppGroup, store: GroupStore, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key?, shortcutTriggerMode: ShortcutTriggerMode, prioritizeFrontmost: Bool) -> Bool {
+    private func cycleAllApps(hudItems: [HUDAppItem], group: AppGroup, store: GroupStore, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key?, prioritizeFrontmost: Bool) -> Bool {
         // If the HUD is currently self-driving (looping via timer), ignore external shortcut requests (Key Repeats)
         // This prevents double-incrementing when holding the key.
         if HUDManager.shared.isLooping {
@@ -153,7 +150,6 @@ class AppSwitcher: @preconcurrency ObservableObject {
             modifierFlags: modifierFlags,
             shortcut: shortcut,
             activeKey: activeKey,
-            shortcutTriggerMode: shortcutTriggerMode,
             shouldActivate: true,
             onSelect: { [weak store] selectedId in
                 Task { @MainActor in
@@ -177,7 +173,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
     
     // MARK: - Legacy Logic (Only Running Apps)
     
-    private func cycleRunningAppsOnly(hudItems: [HUDAppItem], group: AppGroup, store: GroupStore, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key?, shortcutTriggerMode: ShortcutTriggerMode, prioritizeFrontmost: Bool) -> Bool {
+    private func cycleRunningAppsOnly(hudItems: [HUDAppItem], group: AppGroup, store: GroupStore, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key?, prioritizeFrontmost: Bool) -> Bool {
         // If the HUD is currently self-driving (looping via timer), ignore external shortcut requests (Key Repeats)
         if HUDManager.shared.isLooping {
             return false
@@ -220,7 +216,6 @@ class AppSwitcher: @preconcurrency ObservableObject {
                     modifierFlags: modifierFlags,
                     shortcut: shortcut,
                     activeKey: activeKey,
-                    shortcutTriggerMode: shortcutTriggerMode,
                     shouldActivate: false,
                     onSelect: { [weak store] selectedId in
                         Task { @MainActor in
@@ -250,7 +245,6 @@ class AppSwitcher: @preconcurrency ObservableObject {
                     modifierFlags: modifierFlags,
                     shortcut: shortcut,
                     activeKey: activeKey,
-                    shortcutTriggerMode: shortcutTriggerMode,
                     onSelect: { [weak store] selectedId in
                         Task { @MainActor in
                              store?.updateLastActiveApp(bundleId: selectedId, for: group.id)
@@ -318,7 +312,6 @@ class AppSwitcher: @preconcurrency ObservableObject {
             modifierFlags: modifierFlags,
             shortcut: shortcut,
             activeKey: activeKey,
-            shortcutTriggerMode: shortcutTriggerMode,
             onSelect: { [weak store] selectedId in
                 Task { @MainActor in
                     store?.updateLastActiveApp(bundleId: selectedId, for: group.id)
@@ -466,7 +459,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
     }
     
     @discardableResult
-    private func showHUD(items: [HUDAppItem], activeAppId: String, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key? = nil, shortcutTriggerMode: ShortcutTriggerMode = .pressAndHold, shouldActivate: Bool = true, immediate: Bool = false, onSelect: ((String) -> Void)? = nil, onFinalize: ((String) -> Void)? = nil) -> Bool {
+    private func showHUD(items: [HUDAppItem], activeAppId: String, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key? = nil, shouldActivate: Bool = true, immediate: Bool = false, onSelect: ((String) -> Void)? = nil, onFinalize: ((String) -> Void)? = nil) -> Bool {
         if UserDefaults.standard.bool(forKey: "showHUD") {
             HUDManager.shared.scheduleShow(
                 items: items,
@@ -475,8 +468,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
                 shortcut: shortcut,
                 activeKey: activeKey,
                 shouldActivate: shouldActivate,
-                immediate: immediate || shortcutTriggerMode == .tapToCycle,
-                shortcutTriggerMode: shortcutTriggerMode,
+                immediate: immediate,
                 onSelect: onSelect,
                 onFinalize: onFinalize
             )

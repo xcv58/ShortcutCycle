@@ -174,7 +174,6 @@ class HUDManager: @preconcurrency ObservableObject {
     private var onSelectCallback: ((String) -> Void)?
     private var onFinalizeCallback: ((String) -> Void)?
     private let hudPresentationDelay: TimeInterval = 0.2
-    private let tapToCycleAutoFinalizeDelay: TimeInterval = 0.7
 
     private func clearEventMonitors() {
         for monitor in eventMonitors {
@@ -210,9 +209,7 @@ class HUDManager: @preconcurrency ObservableObject {
     }
 
     /// Schedule showing the HUD with macOS Command+Tab logic
-    func scheduleShow(items: [HUDAppItem], activeAppId: String, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key? = nil, shouldActivate: Bool = true, immediate: Bool = false, shortcutTriggerMode: ShortcutTriggerMode = .pressAndHold, onSelect: ((String) -> Void)? = nil, onFinalize: ((String) -> Void)? = nil) {
-        let shouldRevealImmediately = immediate || shortcutTriggerMode == .tapToCycle
-
+    func scheduleShow(items: [HUDAppItem], activeAppId: String, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key? = nil, shouldActivate: Bool = true, immediate: Bool = false, onSelect: ((String) -> Void)? = nil, onFinalize: ((String) -> Void)? = nil) {
         // Cancel existing hide timer
         hideTimer?.invalidate()
         hideTimer = nil // Ensure we don't auto-hide while interacting
@@ -236,12 +233,12 @@ class HUDManager: @preconcurrency ObservableObject {
             prepareAppForHUDPresentation()
             prepareHUD(items: items, activeAppId: activeAppId, shortcut: shortcut, reveal: false)
             sessionPhase = .preparedInvisible
-            startMonitoring(requiredModifiers: modifierFlags, activeKey: activeKey, shortcutTriggerMode: shortcutTriggerMode)
+            startMonitoring(requiredModifiers: modifierFlags, activeKey: activeKey)
 
-            if shouldRevealImmediately {
-                revealHUD(requiredModifiers: modifierFlags, activeKey: activeKey, shortcutTriggerMode: shortcutTriggerMode)
+            if immediate {
+                revealHUD(requiredModifiers: modifierFlags, activeKey: activeKey)
             } else {
-                scheduleReveal(requiredModifiers: modifierFlags, activeKey: activeKey, shortcutTriggerMode: shortcutTriggerMode)
+                scheduleReveal(requiredModifiers: modifierFlags, activeKey: activeKey)
             }
             return
         }
@@ -249,12 +246,12 @@ class HUDManager: @preconcurrency ObservableObject {
         prepareHUD(items: items, activeAppId: activeAppId, shortcut: shortcut, reveal: isHUDRevealedThisSession())
 
         if isHUDRevealedThisSession() {
-            startMonitoring(requiredModifiers: modifierFlags, activeKey: activeKey, shortcutTriggerMode: shortcutTriggerMode)
-            if shortcutTriggerMode == .pressAndHold, activeKey != nil {
+            startMonitoring(requiredModifiers: modifierFlags, activeKey: activeKey)
+            if activeKey != nil {
                 scheduleLoopStart()
             }
         } else {
-            revealHUD(requiredModifiers: modifierFlags, activeKey: activeKey, shortcutTriggerMode: shortcutTriggerMode)
+            revealHUD(requiredModifiers: modifierFlags, activeKey: activeKey)
         }
     }
 
@@ -358,16 +355,16 @@ class HUDManager: @preconcurrency ObservableObject {
         window.orderFront(nil)
     }
 
-    private func scheduleReveal(requiredModifiers: NSEvent.ModifierFlags?, activeKey: KeyboardShortcuts.Key?, shortcutTriggerMode: ShortcutTriggerMode) {
+    private func scheduleReveal(requiredModifiers: NSEvent.ModifierFlags?, activeKey: KeyboardShortcuts.Key?) {
         revealTimer?.invalidate()
         revealTimer = timerScheduler.schedule(timeInterval: hudPresentationDelay, repeats: false) { [weak self] _ in
             Task { @MainActor in
-                self?.revealHUD(requiredModifiers: requiredModifiers, activeKey: activeKey, shortcutTriggerMode: shortcutTriggerMode)
+                self?.revealHUD(requiredModifiers: requiredModifiers, activeKey: activeKey)
             }
         }
     }
 
-    private func revealHUD(requiredModifiers: NSEvent.ModifierFlags?, activeKey: KeyboardShortcuts.Key?, shouldStartLoop: Bool? = nil, shortcutTriggerMode: ShortcutTriggerMode = .pressAndHold) {
+    private func revealHUD(requiredModifiers: NSEvent.ModifierFlags?, activeKey: KeyboardShortcuts.Key?, shouldStartLoop: Bool? = nil) {
         revealTimer?.invalidate()
         revealTimer = nil
 
@@ -385,9 +382,9 @@ class HUDManager: @preconcurrency ObservableObject {
         sessionPhase = .revealed
         setWindowIgnoresMouseEvents(window, false)
         animateWindowAlpha(window, 1.0, 0.12)
-        startMonitoring(requiredModifiers: requiredModifiers, activeKey: activeKey, shortcutTriggerMode: shortcutTriggerMode)
+        startMonitoring(requiredModifiers: requiredModifiers, activeKey: activeKey)
 
-        let startLoop = shouldStartLoop ?? (shortcutTriggerMode == .pressAndHold && activeKey != nil && isLoopKeyHeld)
+        let startLoop = shouldStartLoop ?? (activeKey != nil && isLoopKeyHeld)
         if startLoop {
             scheduleLoopStart()
         }
@@ -412,10 +409,9 @@ class HUDManager: @preconcurrency ObservableObject {
 
     internal var isLoopKeyHeld: Bool = false
 
-    private func startMonitoring(requiredModifiers: NSEvent.ModifierFlags?, activeKey: KeyboardShortcuts.Key? = nil, shortcutTriggerMode: ShortcutTriggerMode = .pressAndHold) {
+    private func startMonitoring(requiredModifiers: NSEvent.ModifierFlags?, activeKey: KeyboardShortcuts.Key? = nil) {
         // Check if we are already looping for this key. If so, DO NOT reset monitors.
-        if shortcutTriggerMode == .pressAndHold,
-           sessionPhase == .revealed,
+        if sessionPhase == .revealed,
            let active = activeKey,
            let current = currentLoopKey,
            active.rawValue == current,
@@ -437,100 +433,96 @@ class HUDManager: @preconcurrency ObservableObject {
             appResignObserver = nil
         }
         
-        if shortcutTriggerMode == .tapToCycle {
-            scheduleAutoHide(after: tapToCycleAutoFinalizeDelay)
-        } else {
-            // 1. Modifiers Logic
-            guard let required = requiredModifiers, !required.isEmpty else {
-                // No modifiers required? Just schedule hide after delay since we can't detect "release"
-                scheduleAutoHide()
-                return
-            }
-
-            let addFlagsMonitor: (Bool) -> Void = { [weak self] isGlobal in
-                guard let self else { return }
-                if isGlobal {
-                    let flagsMonitor = self.addGlobalEventMonitor(.flagsChanged) { [weak self] event in
-                        Task { @MainActor in
-                            self?.handleFlagsChanged(event: event, required: required)
-                        }
-                    }
-                    if let flagsMonitor {
-                        self.eventMonitors.append(flagsMonitor)
-                    }
-                    return
-                }
-
-                let flagsMonitor = self.addLocalEventMonitor(.flagsChanged) { [weak self] event in
+        // 1. Modifiers Logic
+        guard let required = requiredModifiers, !required.isEmpty else {
+            // No modifiers required? Just schedule hide after delay since we can't detect "release"
+             scheduleAutoHide()
+             return
+        }
+        
+        let addFlagsMonitor: (Bool) -> Void = { [weak self] isGlobal in
+            guard let self else { return }
+            if isGlobal {
+                let flagsMonitor = self.addGlobalEventMonitor(.flagsChanged) { [weak self] event in
                     Task { @MainActor in
                         self?.handleFlagsChanged(event: event, required: required)
                     }
-                    return event
                 }
                 if let flagsMonitor {
                     self.eventMonitors.append(flagsMonitor)
                 }
+                return
             }
 
-            addFlagsMonitor(false)
-            // ShortcutCycle runs as an accessory app and presents the HUD in a
-            // non-activating panel. Keep a global fallback even after reveal because
-            // local key delivery is not reliable once focus shifts away from the app.
-            addFlagsMonitor(true)
+            let flagsMonitor = self.addLocalEventMonitor(.flagsChanged) { [weak self] event in
+                Task { @MainActor in
+                    self?.handleFlagsChanged(event: event, required: required)
+                }
+                return event
+            }
+            if let flagsMonitor {
+                self.eventMonitors.append(flagsMonitor)
+            }
+        }
 
-            if sessionPhase == .revealed {
-                // Give a tiny grace period for state to settle or for fast release.
-                let currentFlags = currentModifierFlags()
-                if !checkModifiersHeld(currentFlags: currentFlags, required: required) {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
-                        guard let self else { return }
-                        let flags = self.currentModifierFlags()
-                        if self.sessionPhase == .revealed,
-                           !self.checkModifiersHeld(currentFlags: flags, required: required) {
-                            self.finalizeSwitchAndHide()
-                        }
+        addFlagsMonitor(false)
+        // ShortcutCycle runs as an accessory app and presents the HUD in a
+        // non-activating panel. Keep a global fallback even after reveal because
+        // local key delivery is not reliable once focus shifts away from the app.
+        addFlagsMonitor(true)
+
+        if sessionPhase == .revealed {
+            // Give a tiny grace period for state to settle or for fast release.
+            let currentFlags = currentModifierFlags()
+            if !checkModifiersHeld(currentFlags: currentFlags, required: required) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
+                    guard let self else { return }
+                    let flags = self.currentModifierFlags()
+                    if self.sessionPhase == .revealed,
+                       !self.checkModifiersHeld(currentFlags: flags, required: required) {
+                        self.finalizeSwitchAndHide()
                     }
                 }
             }
+        }
+        
+        // 2. Loop Logic (Hyper Key / Hold Key)
+        if let activeKey = activeKey {
+            currentLoopKey = activeKey.rawValue
+            isLoopKeyHeld = true
 
-            // 2. Loop Logic (Hyper Key / Hold Key)
-            if let activeKey = activeKey {
-                currentLoopKey = activeKey.rawValue
-                isLoopKeyHeld = true
+            let handleKeyUp: (NSEvent) -> Void = { [weak self] event in
+                guard Int(event.keyCode) == activeKey.rawValue else { return }
 
-                let handleKeyUp: (NSEvent) -> Void = { [weak self] event in
-                    guard Int(event.keyCode) == activeKey.rawValue else { return }
+                Task { @MainActor in
+                    guard let self else { return }
+                    self.isLoopKeyHeld = false
 
-                    Task { @MainActor in
-                        guard let self else { return }
-                        self.isLoopKeyHeld = false
-
-                        if let timer = self.revealTimer, timer.isValid {
-                            let currentFlags = self.currentModifierFlags()
-                            if self.checkModifiersHeld(currentFlags: currentFlags, required: required) {
-                                // "Peek" behavior: reveal the HUD immediately, but do not
-                                // start auto-cycling because the loop key was released.
-                                self.revealHUD(requiredModifiers: requiredModifiers, activeKey: activeKey, shouldStartLoop: false)
-                            } else {
-                                self.revealTimer?.invalidate()
-                                self.revealTimer = nil
-                            }
+                    if let timer = self.revealTimer, timer.isValid {
+                        let currentFlags = self.currentModifierFlags()
+                        if self.checkModifiersHeld(currentFlags: currentFlags, required: required) {
+                            // "Peek" behavior: reveal the HUD immediately, but do not
+                            // start auto-cycling because the loop key was released.
+                            self.revealHUD(requiredModifiers: requiredModifiers, activeKey: activeKey, shouldStartLoop: false)
+                        } else {
+                            self.revealTimer?.invalidate()
+                            self.revealTimer = nil
                         }
-
-                        self.stopLooping()
                     }
-                }
 
-                if let keyMonitor = addGlobalEventMonitor(.keyUp, handleKeyUp) {
-                    keyUpMonitors.append(keyMonitor)
+                    self.stopLooping()
                 }
+            }
 
-                if let keyMonitor = addLocalEventMonitor(.keyUp, { event in
-                    handleKeyUp(event)
-                    return event
-                }) {
-                    keyUpMonitors.append(keyMonitor)
-                }
+            if let keyMonitor = addGlobalEventMonitor(.keyUp, handleKeyUp) {
+                keyUpMonitors.append(keyMonitor)
+            }
+
+            if let keyMonitor = addLocalEventMonitor(.keyUp, { event in
+                handleKeyUp(event)
+                return event
+            }) {
+                keyUpMonitors.append(keyMonitor)
             }
         }
 
@@ -649,17 +641,6 @@ class HUDManager: @preconcurrency ObservableObject {
     }
     
     private func handleKeyDown(event: NSEvent) -> NSEvent? {
-        switch event.keyCode {
-        case 36, 76: // Return, keypad Enter
-            finalizeSwitchAndHide()
-            return nil
-        case 53: // Escape
-            cancelSwitchAndHide()
-            return nil
-        default:
-            break
-        }
-
         guard let currentId = currentSelectedAppId,
               let currentIndex = currentItems.firstIndex(where: { $0.id == currentId }) else {
             return event
@@ -799,16 +780,6 @@ class HUDManager: @preconcurrency ObservableObject {
             appResignObserver = nil
         }
     }
-
-    private func cancelSwitchAndHide() {
-        guard sessionPhase != .idle else {
-            return
-        }
-
-        pendingActiveAppId = nil
-        onFinalizeCallback = nil
-        hide()
-    }
     
     private func hasVisibleWindows(pid: pid_t) -> Bool {
         guard let list = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] else {
@@ -874,9 +845,9 @@ class HUDManager: @preconcurrency ObservableObject {
         }
     }
     
-    private func scheduleAutoHide(after delay: TimeInterval = 1.0) {
+    private func scheduleAutoHide() {
         hideTimer?.invalidate()
-        hideTimer = timerScheduler.schedule(timeInterval: delay, repeats: false) { [weak self] _ in
+        hideTimer = timerScheduler.schedule(timeInterval: 1.0, repeats: false) { [weak self] _ in
             Task { @MainActor in
                 self?.hide()
             }

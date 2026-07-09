@@ -120,11 +120,6 @@
 "Cycling Mode" = "Режим переключения";
 "Running apps only" = "Только запущенные приложения";
 "All apps (open if needed)" = "Все приложения (открыть при необходимости)";
-"Shortcut Behavior" = "Поведение сочетания";
-"Press and hold" = "Нажать и удерживать";
-"Tap to cycle" = "Нажать для переключения";
-"Hold modifier keys to keep the HUD open, then release to switch." = "Удерживайте клавиши-модификаторы, чтобы HUD оставался открытым, затем отпустите для переключения.";
-"Tap once to show the HUD. Tap again to advance; it switches after a short pause." = "Нажмите один раз, чтобы показать HUD. Нажмите снова для перехода дальше; переключение произойдёт после короткой паузы.";
 "Displays the keyboard shortcut used to trigger the switch." = "Отображает сочетание клавиш для переключения.";
 "Try a simple pattern like ⌥1, ⌥2, and ⌥3." = "Попробуйте простую схему, например ⌥1, ⌥2 и ⌥3.";
 "Opening…" = "Открытие…";
