@@ -50,6 +50,10 @@ class HUDWindow: NSPanel {
         self.hasShadow = false
         self.ignoresMouseEvents = true
     }
+
+    override var canBecomeKey: Bool {
+        true
+    }
 }
 
 // MARK: - HUD Manager
@@ -69,8 +73,9 @@ class HUDManager: @preconcurrency ObservableObject {
     // Dependencies
     var timeProvider: TimeProvider = SystemTimeProvider()
     var timerScheduler: TimerScheduler = SystemTimerScheduler()
-    var activateHUDApp: () -> Void = {
-        NSApp?.activate(ignoringOtherApps: true)
+    var presentHUDWindow: (NSWindow) -> Void = { window in
+        window.orderFrontRegardless()
+        window.makeKey()
     }
     var addLocalEventMonitor: LocalEventMonitorRegistrar = { mask, handler in
         NSEvent.addLocalMonitorForEvents(matching: mask, handler: handler)
@@ -230,7 +235,7 @@ class HUDManager: @preconcurrency ObservableObject {
         
         if !isSessionActive {
             closeOffSpaceSettingsWindowIfNeeded()
-            prepareAppForHUDPresentation()
+            prepareAppWindowsForHUDPresentation()
             prepareHUD(items: items, activeAppId: activeAppId, shortcut: shortcut, reveal: false)
             sessionPhase = .preparedInvisible
             startMonitoring(requiredModifiers: modifierFlags, activeKey: activeKey)
@@ -290,13 +295,11 @@ class HUDManager: @preconcurrency ObservableObject {
         }
     }
 
-    private func prepareAppForHUDPresentation() {
+    private func prepareAppWindowsForHUDPresentation() {
         guard let app = NSApp else { return }
 
-        activateHUDApp()
-
-        // Fix for "Splash" issue: push any remaining same-Space windows behind
-        // the HUD after activation.
+        // Keep visible ShortcutCycle windows behind the non-activating HUD
+        // without activating the menu bar app.
         DispatchQueue.main.async { [weak self] in
             app.windows.forEach { win in
                 if win !== self?.window && win.isVisible {
@@ -352,7 +355,7 @@ class HUDManager: @preconcurrency ObservableObject {
             setWindowIgnoresMouseEvents(window, true)
             setWindowAlpha(window, 0.0)
         }
-        window.orderFront(nil)
+        presentHUDWindow(window)
     }
 
     private func scheduleReveal(requiredModifiers: NSEvent.ModifierFlags?, activeKey: KeyboardShortcuts.Key?) {
