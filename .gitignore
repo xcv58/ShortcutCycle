@@ -8,6 +8,7 @@
 ## Build results
 build/
 DerivedData/
+.derivedData/
 
 ## Architecture-specific build folders
 *.moved-aside
