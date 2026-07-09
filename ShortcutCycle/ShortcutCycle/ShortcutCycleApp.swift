@@ -21,6 +21,7 @@ extension Notification.Name {
     static let deleteGroupRequested = Notification.Name("deleteGroupRequested")
     static let settingsTabRequested = Notification.Name("settingsTabRequested")
     static let backupBrowserRequested = Notification.Name("backupBrowserRequested")
+    static let settingsShortcutHUDTipRequested = Notification.Name("settingsShortcutHUDTipRequested")
 }
 
 @MainActor

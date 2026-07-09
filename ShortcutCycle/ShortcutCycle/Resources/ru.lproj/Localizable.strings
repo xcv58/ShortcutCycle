@@ -166,3 +166,9 @@
 "Show welcome again" = "Показать приветствие снова";
 "ShortcutCycle is running in your menu bar" = "ShortcutCycle работает в строке меню";
 "Look for the ShortcutCycle icon in the top-right menu bar whenever you want to open the app again." = "Ищите значок ShortcutCycle в строке меню в правом верхнем углу, когда захотите снова открыть приложение.";
+
+/* Settings shortcut HUD tip */
+"Switching may feel slower while Settings is open" = "Переключение может казаться медленнее, пока открыты настройки";
+"To avoid asking for extra macOS permissions, ShortcutCycle may briefly activate Settings while switching with the HUD enabled. Close Settings for normal switching speed." = "Чтобы не запрашивать дополнительные разрешения macOS, ShortcutCycle может ненадолго активировать настройки при переключении с включенным HUD. Закройте настройки для обычной скорости переключения.";
+"Close Settings Window" = "Закрыть окно настроек";
+"Hide Tip" = "Скрыть подсказку";

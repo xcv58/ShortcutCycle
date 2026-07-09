@@ -40,8 +40,62 @@ struct WelcomeBannerView: View {
     }
 }
 
+struct SettingsShortcutHUDTipView: View {
+    let selectedLanguage: String
+    let onCloseSettings: () -> Void
+    let onDismiss: () -> Void
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: "lightbulb.max.fill")
+                .font(.system(size: 22))
+                .foregroundStyle(.yellow)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Switching may feel slower while Settings is open".localized(language: selectedLanguage))
+                    .font(.headline)
+
+                Text("To avoid asking for extra macOS permissions, ShortcutCycle may briefly activate Settings while switching with the HUD enabled. Close Settings for normal switching speed.".localized(language: selectedLanguage))
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer(minLength: 0)
+
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 8) {
+                    hideTipButton
+                    closeSettingsButton
+                }
+
+                VStack(alignment: .trailing, spacing: 8) {
+                    hideTipButton
+                    closeSettingsButton
+                }
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    private var closeSettingsButton: some View {
+        Button("Close Settings Window".localized(language: selectedLanguage), action: onCloseSettings)
+            .controlSize(.small)
+            .buttonStyle(.borderedProminent)
+    }
+
+    private var hideTipButton: some View {
+        Button("Hide Tip".localized(language: selectedLanguage), action: onDismiss)
+            .controlSize(.small)
+    }
+}
+
 #Preview {
-    WelcomeBannerView(selectedLanguage: "en", onDismiss: {})
-        .padding()
-        .frame(width: 500)
+    VStack(spacing: 8) {
+        WelcomeBannerView(selectedLanguage: "en", onDismiss: {})
+        SettingsShortcutHUDTipView(selectedLanguage: "en", onCloseSettings: {}, onDismiss: {})
+    }
+    .padding()
+    .frame(width: 620)
 }

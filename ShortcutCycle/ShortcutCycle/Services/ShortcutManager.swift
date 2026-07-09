@@ -118,7 +118,24 @@ class ShortcutManager: @preconcurrency ObservableObject {
             return
         }
 
+        requestSettingsShortcutHUDTipIfNeeded()
         AppSwitcher.shared.handleShortcut(for: group, store: store)
+    }
+
+    private func requestSettingsShortcutHUDTipIfNeeded() {
+        let isHUDEnabled = UserDefaults.standard.object(forKey: "showHUD") as? Bool ?? true
+        guard isHUDEnabled else {
+            return
+        }
+
+        let hasVisibleSettingsWindow = NSApp.windows.contains { window in
+            SettingsWindowLifecycleCoordinator.isSettingsWindow(window) && window.isVisible
+        }
+        guard hasVisibleSettingsWindow else {
+            return
+        }
+
+        NotificationCenter.default.post(name: .settingsShortcutHUDTipRequested, object: nil)
     }
     
     /// Handle the settings toggle shortcut
