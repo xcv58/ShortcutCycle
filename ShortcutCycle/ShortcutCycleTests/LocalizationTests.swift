@@ -212,14 +212,22 @@ final class LocalizationTests: XCTestCase {
         }
     }
 
-    func testSpaceJumpWarningStringIsRemovedFromEnglishLocalization() throws {
+    func testObsoleteHUDWarningStringsAreRemovedFromEnglishLocalization() throws {
         let resourcesDir = try XCTUnwrap(findResourcesDirectory(), "Could not find Resources directory containing localization files")
 
         let enURL = resourcesDir.appendingPathComponent("en.lproj/Localizable.strings")
         let englishKeys = parseLocalizationKeys(from: enURL)
 
-        XCTAssertFalse(
-            englishKeys.contains("If Settings is open on another Space, macOS may briefly switch Spaces while showing the HUD.")
-        )
+        let removedKeys = [
+            "If Settings is open on another Space, macOS may briefly switch Spaces while showing the HUD.",
+            "Switching may feel slower while Settings is open",
+            "To avoid asking for extra macOS permissions, ShortcutCycle may briefly activate Settings while switching with the HUD enabled. Close Settings for normal switching speed.",
+            "Close Settings Window",
+            "Hide Tip"
+        ]
+
+        for key in removedKeys {
+            XCTAssertFalse(englishKeys.contains(key), "\"\(key)\" should stay removed")
+        }
     }
 }
