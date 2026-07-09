@@ -4,6 +4,7 @@ import SwiftUI
 import CoreGraphics
 import KeyboardShortcuts
 import Combine
+import OSLog
 #if canImport(ShortcutCycleCore)
 import ShortcutCycleCore
 #endif
@@ -69,6 +70,7 @@ class HUDManager: @preconcurrency ObservableObject {
     static let shared = HUDManager()
     
     let objectWillChange = ObservableObjectPublisher()
+    private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "ShortcutCycle", category: "HUD")
     
     // Dependencies
     var timeProvider: TimeProvider = SystemTimeProvider()
@@ -98,14 +100,8 @@ class HUDManager: @preconcurrency ObservableObject {
     var settingsWindowsProvider: () -> [NSWindow] = {
         NSApp?.windows ?? []
     }
-    var appWindowsProvider: () -> [NSWindow] = {
-        NSApp?.windows ?? []
-    }
     var closeWindow: (NSWindow) -> Void = { window in
         window.close()
-    }
-    var orderWindowBack: (NSWindow) -> Void = { window in
-        window.orderBack(nil)
     }
     var setWindowAlpha: (NSWindow, CGFloat) -> Void = { window, alpha in
         window.alphaValue = alpha
@@ -234,8 +230,6 @@ class HUDManager: @preconcurrency ObservableObject {
         self.currentItems = items
         
         if !isSessionActive {
-            closeOffSpaceSettingsWindowIfNeeded()
-            prepareAppWindowsForHUDPresentation()
             prepareHUD(items: items, activeAppId: activeAppId, shortcut: shortcut, reveal: false)
             sessionPhase = .preparedInvisible
             startMonitoring(requiredModifiers: modifierFlags, activeKey: activeKey)
@@ -260,16 +254,6 @@ class HUDManager: @preconcurrency ObservableObject {
         }
     }
 
-    private func closeOffSpaceSettingsWindowIfNeeded() {
-        guard let settingsWindow = SettingsWindowLifecycleCoordinator.visibleOffSpaceSettingsWindow(
-            in: settingsWindowsProvider()
-        ) else {
-            return
-        }
-
-        closeWindow(settingsWindow)
-    }
-
     private func closeVisibleSettingsWindowIfNeeded(beforeActivating appId: String) {
         guard let target = currentItems.first(where: { $0.id == appId || $0.bundleId == appId }) else {
             return
@@ -284,29 +268,6 @@ class HUDManager: @preconcurrency ObservableObject {
         }
 
         closeWindow(settingsWindow)
-    }
-
-    private func orderCurrentSpaceWindowsBackIfNeeded() {
-        for visibleWindow in appWindowsProvider() where visibleWindow !== window {
-            guard visibleWindow.isVisible, visibleWindow.isOnActiveSpace else {
-                continue
-            }
-            orderWindowBack(visibleWindow)
-        }
-    }
-
-    private func prepareAppWindowsForHUDPresentation() {
-        guard let app = NSApp else { return }
-
-        // Keep visible ShortcutCycle windows behind the non-activating HUD
-        // without activating the menu bar app.
-        DispatchQueue.main.async { [weak self] in
-            app.windows.forEach { win in
-                if win !== self?.window && win.isVisible {
-                    win.orderBack(nil)
-                }
-            }
-        }
     }
     
     private func prepareHUD(items: [HUDAppItem], activeAppId: String, shortcut: String?, reveal: Bool) {
@@ -561,7 +522,10 @@ class HUDManager: @preconcurrency ObservableObject {
              eventMonitors.append(keyMonitor)
         }
         
-        // Monitor Click Away (Focus Loss)
+        // Non-activating HUD sessions do not make ShortcutCycle active, so
+        // clicking elsewhere usually will not emit didResignActive. Keep this
+        // fallback for sessions started while the app is already active, such as
+        // from Settings or menu UI.
         appResignObserver = NotificationCenter.default.addObserver(forName: NSApplication.didResignActiveNotification, object: nil, queue: .main) { [weak self] _ in
             Task { @MainActor in
                  self?.hide()
@@ -762,8 +726,6 @@ class HUDManager: @preconcurrency ObservableObject {
         if let pendingId = pendingActiveAppId {
             if isHUDRevealedThisSession() {
                 closeVisibleSettingsWindowIfNeeded(beforeActivating: pendingId)
-            } else {
-                orderCurrentSpaceWindowsBackIfNeeded()
             }
             activatePendingTargetApp(pendingId)
             pendingActiveAppId = nil
@@ -792,13 +754,31 @@ class HUDManager: @preconcurrency ObservableObject {
     }
 
     private func activateRunningTargetApp(_ app: NSRunningApplication) {
+        let didActivate: Bool
         if isAppActive() {
             NSApp?.yieldActivation(to: app)
-            _ = app.activate(from: .current, options: .activateAllWindows)
-            return
+            didActivate = app.activate(from: .current, options: .activateAllWindows)
+        } else {
+            didActivate = app.activate(options: .activateAllWindows)
         }
 
-        _ = app.activate(options: .activateAllWindows)
+        guard !didActivate else { return }
+
+        logger.warning(
+            "Target app activation was declined; retrying bundle=\(app.bundleIdentifier ?? "unknown", privacy: .public) pid=\(app.processIdentifier, privacy: .public)"
+        )
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self, weak app] in
+            guard let self, let app else { return }
+
+            app.unhide()
+            let didRetry = app.activate(options: .activateAllWindows)
+            guard !didRetry else { return }
+
+            self.logger.error(
+                "Target app activation retry failed bundle=\(app.bundleIdentifier ?? "unknown", privacy: .public) pid=\(app.processIdentifier, privacy: .public)"
+            )
+        }
     }
 
     private func activateOrLaunch(bundleId: String) {
@@ -927,8 +907,6 @@ class HUDManager: @preconcurrency ObservableObject {
         if let pendingId = pendingActiveAppId {
             if hadRevealedHUD {
                 closeVisibleSettingsWindowIfNeeded(beforeActivating: pendingId)
-            } else {
-                orderCurrentSpaceWindowsBackIfNeeded()
             }
             activatePendingTargetApp(pendingId)
             pendingActiveAppId = nil

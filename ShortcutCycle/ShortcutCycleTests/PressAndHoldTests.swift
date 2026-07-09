@@ -126,12 +126,8 @@ final class PressAndHoldTests: XCTestCase {
         manager.isKeyCurrentlyDown = { _ in false }
         manager.isAppActive = { true }
         manager.settingsWindowsProvider = { [] }
-        manager.appWindowsProvider = { [] }
         manager.closeWindow = { window in
             window.close()
-        }
-        manager.orderWindowBack = { window in
-            window.orderBack(nil)
         }
         manager.setWindowAlpha = { [weak self] _, alpha in
             self?.windowAlphaChanges.append(alpha)
@@ -181,9 +177,7 @@ final class PressAndHoldTests: XCTestCase {
         manager.isKeyCurrentlyDown = savedIsKeyCurrentlyDown
         manager.isAppActive = { NSApp?.isActive == true }
         manager.settingsWindowsProvider = { NSApp?.windows ?? [] }
-        manager.appWindowsProvider = { NSApp?.windows ?? [] }
         manager.closeWindow = { $0.close() }
-        manager.orderWindowBack = { $0.orderBack(nil) }
         manager.setWindowAlpha = { $0.alphaValue = $1 }
         manager.animateWindowAlpha = { window, alpha, duration in
             NSAnimationContext.runAnimationGroup { context in
@@ -414,20 +408,17 @@ final class PressAndHoldTests: XCTestCase {
     }
 
     @MainActor
-    func testDelayedShowClosesOffSpaceSettingsWindowBeforeHUDPresentation() async {
+    func testDelayedShowKeepsOffSpaceSettingsWindowBeforeHUDPresentation() async {
         let settingsWindow = MockWindow(
             identifier: NSUserInterfaceItemIdentifier("settings"),
             isVisible: true,
             isOnActiveSpace: false
         )
-        var events: [String] = []
+        var closeCount = 0
 
         manager.settingsWindowsProvider = { [settingsWindow] }
         manager.closeWindow = { _ in
-            events.append("close")
-        }
-        manager.presentHUDWindow = { _ in
-            events.append("present")
+            closeCount += 1
         }
 
         manager.scheduleShow(
@@ -442,7 +433,8 @@ final class PressAndHoldTests: XCTestCase {
         await Task.yield()
         await Task.yield()
 
-        XCTAssertEqual(Array(events.prefix(2)), ["close", "present"])
+        XCTAssertEqual(closeCount, 0, "Non-activating HUD presentation should not close Settings on another Space")
+        XCTAssertEqual(presentationCount, 1, "Prepared HUD path should still present the non-activating panel")
     }
 
     @MainActor
@@ -569,12 +561,8 @@ final class PressAndHoldTests: XCTestCase {
 
         manager.currentModifierFlags = { [.option] }
         manager.settingsWindowsProvider = { [settingsWindow] }
-        manager.appWindowsProvider = { [settingsWindow] }
         manager.closeWindow = { _ in
             events.append("close")
-        }
-        manager.orderWindowBack = { _ in
-            events.append("back")
         }
         manager.targetLeavesCurrentSpace = { _ in true }
         manager.activatePendingTargetApp = { _ in
@@ -879,7 +867,7 @@ final class PressAndHoldTests: XCTestCase {
     }
 
     @MainActor
-    func testBlindSwitchBeforeHUDPresentationOrdersCurrentSpaceWindowsBackBeforeActivation() async throws {
+    func testBlindSwitchBeforeHUDPresentationDoesNotOrderCurrentSpaceWindowsBackBeforeActivation() async throws {
         let settingsWindow = MockWindow(
             identifier: NSUserInterfaceItemIdentifier("settings"),
             isVisible: true,
@@ -888,10 +876,6 @@ final class PressAndHoldTests: XCTestCase {
         var events: [String] = []
 
         manager.settingsWindowsProvider = { [settingsWindow] }
-        manager.appWindowsProvider = { [settingsWindow] }
-        manager.orderWindowBack = { _ in
-            events.append("back")
-        }
         manager.activatePendingTargetApp = { _ in
             events.append("activate")
         }
@@ -908,7 +892,7 @@ final class PressAndHoldTests: XCTestCase {
         await Task.yield()
         await Task.yield()
 
-        XCTAssertEqual(Array(events.prefix(2)), ["back", "activate"])
+        XCTAssertEqual(events, ["activate"], "Blind switches should rely on target activation rather than reordering ShortcutCycle windows")
     }
 
     @MainActor
