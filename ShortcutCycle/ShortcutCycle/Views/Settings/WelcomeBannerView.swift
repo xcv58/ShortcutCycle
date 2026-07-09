@@ -55,7 +55,7 @@ struct SettingsShortcutHUDTipView: View {
                 Text("Switching may feel slower while Settings is open".localized(language: selectedLanguage))
                     .font(.headline)
 
-                Text("ShortcutCycle may briefly activate Settings while preparing the HUD. Close Settings for normal switching speed.".localized(language: selectedLanguage))
+                Text("To avoid asking for extra macOS permissions, ShortcutCycle may briefly activate Settings while switching with the HUD enabled. Close Settings for normal switching speed.".localized(language: selectedLanguage))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }

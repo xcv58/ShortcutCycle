@@ -170,6 +170,6 @@
 
 /* Settings shortcut HUD tip */
 "Switching may feel slower while Settings is open" = "设置窗口打开时，切换可能会感觉稍慢";
-"ShortcutCycle may briefly activate Settings while preparing the HUD. Close Settings for normal switching speed." = "ShortcutCycle 准备 HUD 时可能会短暂激活设置窗口。关闭设置窗口后，切换速度会恢复正常。";
+"To avoid asking for extra macOS permissions, ShortcutCycle may briefly activate Settings while switching with the HUD enabled. Close Settings for normal switching speed." = "为了避免请求额外的 macOS 权限，启用 HUD 时，ShortcutCycle 在切换过程中可能会短暂激活设置窗口。关闭设置窗口后，切换速度会恢复正常。";
 "Close Settings Window" = "关闭设置窗口";
 "Hide Tip" = "隐藏提示";

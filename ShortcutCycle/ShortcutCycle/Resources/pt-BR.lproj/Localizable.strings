@@ -169,6 +169,6 @@
 
 /* Settings shortcut HUD tip */
 "Switching may feel slower while Settings is open" = "A troca pode parecer mais lenta enquanto Ajustes está aberto";
-"ShortcutCycle may briefly activate Settings while preparing the HUD. Close Settings for normal switching speed." = "ShortcutCycle pode ativar brevemente os Ajustes ao preparar o HUD. Feche os Ajustes para voltar à velocidade normal de troca.";
+"To avoid asking for extra macOS permissions, ShortcutCycle may briefly activate Settings while switching with the HUD enabled. Close Settings for normal switching speed." = "Para evitar pedir permissões adicionais do macOS, o ShortcutCycle pode ativar brevemente os Ajustes ao trocar com o HUD ativado. Feche os Ajustes para voltar à velocidade normal de troca.";
 "Close Settings Window" = "Fechar janela de Ajustes";
 "Hide Tip" = "Ocultar dica";
