@@ -61,12 +61,14 @@ ShortcutCycle/
 │       ├── AppCyclingLogicTests.swift
 │       ├── AppGroupTests.swift
 │       ├── AppItemTests.swift
+│       ├── AppSwitcherTests.swift
 │       ├── BackupBrowserTests.swift
 │       ├── BackupDiffTests.swift
 │       ├── BackupRetentionTests.swift
 │       ├── GroupEditViewTests.swift
 │       ├── GroupSettingsViewTests.swift
 │       ├── GroupStoreTests.swift
+│       ├── HUDAppItemTests.swift
 │       ├── HUDItemFilterTests.swift
 │       ├── LocalizationTests.swift
 │       ├── PressAndHoldTests.swift
@@ -74,6 +76,7 @@ ShortcutCycle/
 │       ├── SettingsWindowLifecycleCoordinatorTests.swift
 │       ├── SettingsWindowObserverTests.swift
 │       ├── ShortcutSuggestionTests.swift
+│       ├── TestHelpers.swift
 │       ├── URLCommandFileValidationTests.swift
 │       ├── URLRouterLogicTests.swift
 │       ├── WelcomeExperiencePolicyTests.swift

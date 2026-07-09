@@ -138,6 +138,13 @@ class HUDManager: @preconcurrency ObservableObject {
             }
         }
     }
+    var scheduleVisibleWindowRecheck: (@escaping @MainActor @Sendable () -> Void) -> Void = { action in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            Task { @MainActor in
+                action()
+            }
+        }
+    }
     // `lazy` because the default captures `self` to call the private `activateOrLaunch` method.
     lazy var activatePendingTargetApp: (String) -> Void = { [weak self] bundleId in
         self?.activateOrLaunch(bundleId: bundleId)
@@ -162,6 +169,7 @@ class HUDManager: @preconcurrency ObservableObject {
     private var keyUpMonitors: [Any] = []
     private var eventMonitors: [Any] = []
     private var appResignObserver: NSObjectProtocol?
+    private var activationAttemptGeneration = 0
     
     // Internal state for testing
     internal var lastRequestTime: Date?
@@ -781,6 +789,8 @@ class HUDManager: @preconcurrency ObservableObject {
     }
 
     private func activateRunningTargetApp(_ app: NSRunningApplication) {
+        activationAttemptGeneration += 1
+        let activationGeneration = activationAttemptGeneration
         let didActivate: Bool
         if isAppActive() {
             yieldActivationToRunningApplication(app)
@@ -796,7 +806,11 @@ class HUDManager: @preconcurrency ObservableObject {
         )
 
         scheduleActivationRetry { [weak self, weak app] in
-            guard let self, let app else { return }
+            guard let self,
+                  let app,
+                  self.activationAttemptGeneration == activationGeneration else {
+                return
+            }
 
             self.unhideRunningApplication(app)
             let didRetry = self.activateRunningApplication(app, false)
@@ -826,7 +840,7 @@ class HUDManager: @preconcurrency ObservableObject {
             // if no visible windows exist, re-activate the specific instance to ensure it is
             // frontmost, then call openApplication so that instance receives
             // applicationShouldHandleReopen and restores its minimized windows.
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            scheduleVisibleWindowRecheck { [weak self] in
                 guard let self else { return }
                 guard !self.hasVisibleWindowsForPID(pid) else { return }
                 self.activateRunningTargetApp(app)
