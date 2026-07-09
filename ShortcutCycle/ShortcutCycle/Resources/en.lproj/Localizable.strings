@@ -173,3 +173,9 @@
 "Show welcome again" = "Show welcome again";
 "ShortcutCycle is running in your menu bar" = "ShortcutCycle is running in your menu bar";
 "Look for the ShortcutCycle icon in the top-right menu bar whenever you want to open the app again." = "Look for the ShortcutCycle icon in the top-right menu bar whenever you want to open the app again.";
+
+/* Settings shortcut HUD tip */
+"Switching may feel slower while Settings is open" = "Switching may feel slower while Settings is open";
+"ShortcutCycle may briefly activate Settings while preparing the HUD. Close Settings for normal switching speed." = "ShortcutCycle may briefly activate Settings while preparing the HUD. Close Settings for normal switching speed.";
+"Close Settings Window" = "Close Settings Window";
+"Hide Tip" = "Hide Tip";
