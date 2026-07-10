@@ -5,11 +5,24 @@ All notable changes to this project will be documented in this file.
 ## [1.7] - Unreleased
 
 ### Added
+- **Optional Settings window shortcut**: Users can assign their own global shortcut in General settings to show, focus, or hide the Settings window. No shortcut is assigned by default.
+- **Accessible app management**: VoiceOver and Voice Control users can browse for apps and use named actions to move or remove apps, delete groups, and select apps in the HUD without relying on drag, hover, or pointer-only gestures.
+- **Accessible running status**: The menu bar's running-app indicator now provides a localized screen-reader description without changing its visual design.
+
+### Changed
+- **Non-activating HUD**: Showing the HUD no longer activates ShortcutCycle, keeping focus on the current app and making switching feel more responsive.
+- **Reduced Motion support**: The HUD now follows the macOS Reduce Motion setting by disabling spring scrolling and icon scaling while preserving clear selection feedback.
+
+### Fixed
+- **Shortcut conflicts**: Duplicate group and Settings window shortcut assignments now show a warning and clear the newly recorded shortcut instead of allowing both actions to share the same hotkey.
+- **Shortcut recorder localization**: Shortcut recorder placeholder text and app-command conflict warnings now follow ShortcutCycle's in-app language setting.
+
+## [1.6] - 2026-05-26
+
+### Added
 - **Running app quick add**: The group editor now lets you add currently running apps with a single click, reducing the need to browse Finder when capturing an active workflow.
 - **Shortcut suggestions**: Groups without an assigned shortcut now surface suggested hotkeys to streamline initial setup.
 - **Expanded Settings shortcuts**: ShortcutCycle now adds more macOS-style commands while Settings is open, including Settings, appearance toggle, group navigation, and group reordering shortcuts.
-- **Optional Settings window shortcut**: Users can assign their own global shortcut in General settings to show, focus, or hide the Settings window. No shortcut is assigned by default.
-- **Settings-open HUD heads-up**: ShortcutCycle now surfaces a localized tip when using a group shortcut while Settings is open, explaining the macOS permission tradeoff and offering to close Settings for normal switching speed.
 
 ### Changed
 - **First-launch onboarding**: On first manual launch, ShortcutCycle now opens Settings with a welcome banner to make the menu bar-based app model clearer.
@@ -17,8 +30,6 @@ All notable changes to this project will be documented in this file.
 - **Backup comparison guidance**: The Automatic Backup Browser now explains that comparisons default to the next older backup and points to the "Changes from" picker for choosing a different baseline.
 
 ### Fixed
-- **Shortcut conflicts**: Duplicate group and Settings window shortcut assignments now show a warning and clear the newly recorded shortcut instead of allowing both actions to share the same hotkey.
-- **Shortcut recorder localization**: Shortcut recorder placeholder text and app-command conflict warnings now follow ShortcutCycle's in-app language setting.
 - **Narrow group editor layout**: Cycling Mode controls now remain readable and properly aligned in narrow group editor layouts.
 - **Desktop Space jumps**: App switching no longer sends users to another Space merely because the Settings window is open elsewhere.
 - **Minimized multi-profile windows**: Minimized multi-profile app instances (for example, multiple Firefox profiles) are now excluded from the HUD when macOS cannot reliably restore a specific minimized instance without Accessibility permission. Instances hidden with Cmd+H remain visible because `unhide()+activate()` restores them reliably. When all instances of a multi-profile app are minimized, ShortcutCycle preserves one HUD entry so the app remains accessible.

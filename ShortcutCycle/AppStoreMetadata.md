@@ -13,10 +13,11 @@ Cycle apps by group, instantly.
 Stop endlessly tabbing. Group your apps by context—Web, Code, Social—and cycle through them with dedicated hotkeys. Build muscle memory and flow.
 
 ## What's New (1.7)
-- Add currently running apps to a group with one click from the group editor.
-- Get suggested shortcut ideas for groups that do not have a hotkey yet.
-- Use new Settings keyboard shortcuts to jump between groups, reorder them, and toggle appearance faster.
-- Enjoy clearer first-run setup, helpful guidance when Settings is open, and more reliable switching when quick-tapping, holding to reveal the HUD, using multi-profile apps, or working with Settings on another Space.
+- Assign an optional global shortcut to show, focus, or hide the Settings window.
+- Get clear warnings when a group shortcut conflicts with the Settings shortcut; conflicting assignments are cleared automatically.
+- See shortcut recorder hints and conflict messages in your selected app language.
+- Keep focus on the current app when the HUD appears for faster, less disruptive switching.
+- Manage groups with improved VoiceOver and Voice Control actions, while the HUD now respects the macOS Reduce Motion setting.
 
 ## App Icon
 `ShortcutCycle/ShortcutCycle/Assets.xcassets/AppIcon.appiconset/1024.png`
@@ -55,7 +56,7 @@ ShortcutCycle acts as both a switcher and a launcher. If you try to cycle to an 
 
 **🌍 Native & Global**
 * **Localized:** Native support for 15 languages including English, Japanese, Chinese, German, Spanish, and French.
-* **Accessible:** Full support for VoiceOver, Voice Control, High Contrast, and Reduced Motion.
+* **Accessible:** Named VoiceOver and Voice Control actions for group management, plus High Contrast and Reduced Motion support.
 * **Portable:** Export your configuration to JSON to sync across machines or share with teams.
 
 **Stop digging through your Dock. Download ShortcutCycle and move at the speed of thought.**
