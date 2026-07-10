@@ -146,6 +146,7 @@ struct AppSwitcherHUDView: View {
                 )
             }
             .buttonStyle(.plain)
+            .focusEffectDisabled()
             .id(app.id)
             .accessibilityLabel(app.name)
             .accessibilityAddTraits(app.id == activeAppId ? .isSelected : [])
