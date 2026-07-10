@@ -19,9 +19,19 @@ public struct HUDAppItem: Identifiable, Equatable, @unchecked Sendable {
         self.bundleId = bundleId
         self.pid = runningApp.processIdentifier
         self.id = "\(bundleId)::\(runningApp.processIdentifier)"
-        self.name = name ?? runningApp.localizedName ?? "App"
+        self.name = Self.resolvedName(explicitName: name, localizedName: runningApp.localizedName)
         self.icon = icon ?? runningApp.icon
         self.isRunning = true
+    }
+
+    static func resolvedName(explicitName: String?, localizedName: String?) -> String {
+        if let explicitName {
+            return explicitName
+        }
+        if let localizedName {
+            return localizedName
+        }
+        return "App"
     }
 
     /// Initialize for a non-running app

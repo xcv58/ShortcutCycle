@@ -76,6 +76,21 @@ final class HUDAppItemTests: XCTestCase {
         XCTAssertTrue(item.isRunning)
     }
 
+    func testResolvedRunningAppNamePrecedence() {
+        XCTAssertEqual(
+            HUDAppItem.resolvedName(explicitName: "Explicit", localizedName: "Localized"),
+            "Explicit"
+        )
+        XCTAssertEqual(
+            HUDAppItem.resolvedName(explicitName: nil, localizedName: "Localized"),
+            "Localized"
+        )
+        XCTAssertEqual(
+            HUDAppItem.resolvedName(explicitName: nil, localizedName: nil),
+            "App"
+        )
+    }
+
     // MARK: - Equatable
 
     func testEqualWhenSameId() {

@@ -25,7 +25,8 @@ public enum HUDItemFilter {
     ) -> [HUDAppItem] {
         let itemsByBundleId = Dictionary(grouping: items, by: { $0.bundleId })
         var result = items.filter { item in
-            guard let pid = item.pid, itemsByBundleId[item.bundleId, default: []].count > 1 else {
+            let bundleItems = itemsByBundleId[item.bundleId]!
+            guard let pid = item.pid, bundleItems.count > 1 else {
                 return true
             }
             if isHidden(pid) { return true }

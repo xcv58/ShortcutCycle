@@ -33,19 +33,27 @@ enum AppleLanguagePreferenceSync {
     }
 
     static func sync(_ selectedLanguage: String, userDefaults: UserDefaults = .standard) {
-        let effectiveCode: String
-        if selectedLanguage == "system" {
-            let preferred = Bundle.preferredLocalizations(
-                from: supportedLanguageCodes,
-                forPreferences: globalPreferredLanguages
-            )
-            effectiveCode = preferred.first ?? "en"
-        } else {
-            effectiveCode = selectedLanguage
-        }
-
-        let appleCode = effectiveCode == "zh-Hant" ? "zh-TW" : effectiveCode
+        let preferredLocalization = Bundle.preferredLocalizations(
+            from: supportedLanguageCodes,
+            forPreferences: globalPreferredLanguages
+        ).first
+        let effectiveCode = effectiveLanguageCode(
+            selectedLanguage: selectedLanguage,
+            preferredLocalization: preferredLocalization
+        )
+        let appleCode = appleLanguageCode(for: effectiveCode)
         userDefaults.set([appleCode], forKey: "AppleLanguages")
+    }
+
+    static func effectiveLanguageCode(selectedLanguage: String, preferredLocalization: String?) -> String {
+        if selectedLanguage == "system" {
+            return preferredLocalization ?? "en"
+        }
+        return selectedLanguage
+    }
+
+    static func appleLanguageCode(for effectiveCode: String) -> String {
+        effectiveCode == "zh-Hant" ? "zh-TW" : effectiveCode
     }
 }
 
@@ -75,12 +83,12 @@ public struct AppSettings: Codable, Equatable {
     }
 
     /// Load current settings from UserDefaults
-    public static func current() -> AppSettings {
+    public static func current(userDefaults: UserDefaults = .standard) -> AppSettings {
         AppSettings(
-            showHUD: UserDefaults.standard.object(forKey: "showHUD") as? Bool ?? true,
-            showShortcutInHUD: UserDefaults.standard.object(forKey: "showShortcutInHUD") as? Bool ?? true,
-            selectedLanguage: UserDefaults.standard.string(forKey: "selectedLanguage") ?? "system",
-            appTheme: UserDefaults.standard.string(forKey: "appTheme") ?? "system"
+            showHUD: userDefaults.object(forKey: "showHUD") as? Bool ?? true,
+            showShortcutInHUD: userDefaults.object(forKey: "showShortcutInHUD") as? Bool ?? true,
+            selectedLanguage: userDefaults.string(forKey: "selectedLanguage") ?? "system",
+            appTheme: userDefaults.string(forKey: "appTheme") ?? "system"
         )
     }
 

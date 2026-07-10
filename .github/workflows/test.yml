@@ -72,7 +72,8 @@ jobs:
             'KeyboardShortcutsNames.swift', 'SettingsExport.swift',
             'HUDAppItem.swift', 'URLScheme.swift',
             'URLCommandFileValidation.swift',
-            'URLRouterLogic.swift'
+            'URLRouterLogic.swift', 'HUDItemFilter.swift',
+            'ShortcutSuggestion.swift'
         ]
         
         # Filter LCOV content

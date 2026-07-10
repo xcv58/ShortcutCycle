@@ -425,25 +425,14 @@ final class SettingsExportTests: XCTestCase {
     }
 
     func testAppSettingsCurrentDefaultValues() {
-        // When keys are not set, defaults should apply
-        let defaults = UserDefaults.standard
-        let originalShowHUD = defaults.object(forKey: "showHUD")
-        let originalShowShortcut = defaults.object(forKey: "showShortcutInHUD")
-        let originalLanguage = defaults.string(forKey: "selectedLanguage")
-        let originalTheme = defaults.string(forKey: "appTheme")
-        defer {
-            if let v = originalShowHUD { defaults.set(v, forKey: "showHUD") } else { defaults.removeObject(forKey: "showHUD") }
-            if let v = originalShowShortcut { defaults.set(v, forKey: "showShortcutInHUD") } else { defaults.removeObject(forKey: "showShortcutInHUD") }
-            if let v = originalLanguage { defaults.set(v, forKey: "selectedLanguage") } else { defaults.removeObject(forKey: "selectedLanguage") }
-            if let v = originalTheme { defaults.set(v, forKey: "appTheme") } else { defaults.removeObject(forKey: "appTheme") }
-        }
+        let suiteName = "SettingsExportTests.Defaults.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        defaults.set("invalid", forKey: "showHUD")
+        defaults.set("invalid", forKey: "showShortcutInHUD")
 
-        defaults.removeObject(forKey: "showHUD")
-        defaults.removeObject(forKey: "showShortcutInHUD")
-        defaults.removeObject(forKey: "selectedLanguage")
-        defaults.removeObject(forKey: "appTheme")
-
-        let current = AppSettings.current()
+        let current = AppSettings.current(userDefaults: defaults)
         XCTAssertEqual(current.showHUD, true)
         XCTAssertEqual(current.showShortcutInHUD, true)
         XCTAssertEqual(current.selectedLanguage, "system")
@@ -483,6 +472,32 @@ final class SettingsExportTests: XCTestCase {
             ),
             ["ja"]
         )
+    }
+
+    func testAppleLanguagePreferenceSyncResolvesSystemAndExplicitLanguages() {
+        XCTAssertEqual(
+            AppleLanguagePreferenceSync.effectiveLanguageCode(
+                selectedLanguage: "system",
+                preferredLocalization: "ja"
+            ),
+            "ja"
+        )
+        XCTAssertEqual(
+            AppleLanguagePreferenceSync.effectiveLanguageCode(
+                selectedLanguage: "system",
+                preferredLocalization: nil
+            ),
+            "en"
+        )
+        XCTAssertEqual(
+            AppleLanguagePreferenceSync.effectiveLanguageCode(
+                selectedLanguage: "de",
+                preferredLocalization: "ja"
+            ),
+            "de"
+        )
+        XCTAssertEqual(AppleLanguagePreferenceSync.appleLanguageCode(for: "zh-Hant"), "zh-TW")
+        XCTAssertEqual(AppleLanguagePreferenceSync.appleLanguageCode(for: "fr"), "fr")
     }
 
     func testAppSettingsApplyWithNilThemeDoesNotWrite() {

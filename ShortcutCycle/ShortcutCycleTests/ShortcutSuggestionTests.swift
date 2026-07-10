@@ -9,6 +9,13 @@ import KeyboardShortcuts
 final class ShortcutSuggestionTests: XCTestCase {
 
     @MainActor
+    func testAvailableReturnsEmptyForNonpositiveLimit() {
+        XCTAssertTrue(
+            ShortcutSuggestions.available(for: [], excluding: UUID(), limit: 0).isEmpty
+        )
+    }
+
+    @MainActor
     func testAvailableReturnsDeterministicFirstThreeUnusedOptionNumberShortcuts() {
         let previousSettingsShortcut = KeyboardShortcuts.getShortcut(for: .toggleSettings)
         let excludedGroup = AppGroup(id: UUID(), name: "Excluded")
@@ -210,5 +217,89 @@ final class ShortcutSuggestionTests: XCTestCase {
         )
 
         XCTAssertNil(conflict)
+    }
+
+    @MainActor
+    func testConflictReturnsNilForMissingShortcut() {
+        XCTAssertNil(
+            ShortcutAssignmentConflicts.conflict(
+                for: nil,
+                assigning: .settingsWindow,
+                groups: []
+            )
+        )
+    }
+
+    func testOwnerDisplayNamesAndConflictIdentifiers() {
+        let groupID = UUID()
+        let shortcut = KeyboardShortcuts.Shortcut(.one, modifiers: [.option])
+        let localize: (String) -> String = { "localized:\($0)" }
+
+        XCTAssertEqual(
+            ShortcutAssignmentOwner.settingsWindow.displayName(localize: localize),
+            "localized:Settings Window"
+        )
+        XCTAssertEqual(
+            ShortcutAssignmentOwner.group(id: groupID, name: "  Work  ").displayName(localize: localize),
+            "Work"
+        )
+        XCTAssertEqual(
+            ShortcutAssignmentOwner.group(id: groupID, name: " \n ").displayName(localize: localize),
+            "localized:Group Name"
+        )
+
+        XCTAssertTrue(
+            ShortcutAssignmentConflict(shortcut: shortcut, owner: .settingsWindow)
+                .id.hasSuffix("-settingsWindow")
+        )
+        XCTAssertTrue(
+            ShortcutAssignmentConflict(shortcut: shortcut, owner: .group(id: groupID, name: "Work"))
+                .id.hasSuffix("-group-\(groupID.uuidString)")
+        )
+        XCTAssertTrue(
+            ShortcutAssignmentConflict(shortcut: shortcut, owner: .appCommand(titleKey: "Groups"))
+                .id.hasSuffix("-appCommand-Groups")
+        )
+    }
+
+    @MainActor
+    func testConflictMessageUsesLocalizedOwnerAndGuidance() {
+        let shortcut = KeyboardShortcuts.Shortcut(.one, modifiers: [.option])
+        let conflict = ShortcutAssignmentConflict(shortcut: shortcut, owner: .settingsWindow)
+        let translations = [
+            "The shortcut %@ is already used by %@.": "Conflict: %@ / %@.",
+            "Settings Window": "Preferences",
+            "Choose a different shortcut to avoid triggering both actions.": "Choose another."
+        ]
+
+        XCTAssertEqual(
+            conflict.message { translations[$0] ?? $0 },
+            "Conflict: \(shortcut.description) / Preferences.\n\nChoose another."
+        )
+    }
+
+    @MainActor
+    func testConflictSkipsUnassignedGroupBeforeFindingAssignedGroup() {
+        let previousSettingsShortcut = KeyboardShortcuts.getShortcut(for: .toggleSettings)
+        let unassignedGroup = AppGroup(id: UUID(), name: "Unassigned")
+        let assignedGroup = AppGroup(id: UUID(), name: "Assigned")
+        let shortcut = KeyboardShortcuts.Shortcut(.one, modifiers: [.option])
+        KeyboardShortcuts.setShortcut(nil, for: .toggleSettings)
+        KeyboardShortcuts.setShortcut(nil, for: unassignedGroup.shortcutName)
+        KeyboardShortcuts.setShortcut(shortcut, for: assignedGroup.shortcutName)
+
+        defer {
+            KeyboardShortcuts.setShortcut(previousSettingsShortcut, for: .toggleSettings)
+            KeyboardShortcuts.setShortcut(nil, for: unassignedGroup.shortcutName)
+            KeyboardShortcuts.setShortcut(nil, for: assignedGroup.shortcutName)
+        }
+
+        let conflict = ShortcutAssignmentConflicts.conflict(
+            for: shortcut,
+            assigning: .settingsWindow,
+            groups: [unassignedGroup, assignedGroup]
+        )
+
+        XCTAssertEqual(conflict?.owner, .group(id: assignedGroup.id, name: assignedGroup.name))
     }
 }
