@@ -2,8 +2,9 @@ import Foundation
 import KeyboardShortcuts
 
 enum AppleLanguagePreferenceSync {
-    // Keep in sync with LanguageManager.supportedLanguages.
-    private static let supportedLanguageCodes = [
+    // Keep in sync with LanguageManager.supportedLanguages. LocalizationTests
+    // verifies this list and the app's other localization sources stay aligned.
+    static let supportedLanguageCodes = [
         "en", "de", "fr", "es", "ja", "pt-BR", "zh-Hans", "zh-Hant",
         "it", "ko", "ar", "nl", "pl", "tr", "ru"
     ]
