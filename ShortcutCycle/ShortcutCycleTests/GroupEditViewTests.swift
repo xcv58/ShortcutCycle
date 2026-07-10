@@ -91,8 +91,11 @@ final class GroupEditViewTests: XCTestCase {
         store.addApp(app2, to: groupId)
 
         _ = hostGroupEditView(width: 720, runningAppCandidatesProvider: providerSpy.provider)
+        XCTAssertTrue(
+            drainMainRunLoop(timeout: 2.0, until: { !providerSpy.calls.isEmpty }),
+            "Hosting the editor should load initial running-app candidates"
+        )
         let initialCallCount = providerSpy.calls.count
-        XCTAssertGreaterThanOrEqual(initialCallCount, 1)
 
         store.replaceApps(in: groupId, with: [app2, app1])
         drainMainRunLoop()

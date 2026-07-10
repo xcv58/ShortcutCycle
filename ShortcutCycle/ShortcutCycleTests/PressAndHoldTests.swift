@@ -66,7 +66,7 @@ final class PressAndHoldTests: XCTestCase {
     var manager: HUDManager!
     var timeMock: MockTimeProvider!
     var timerMock: MockTimerScheduler!
-    var activationCount: Int!
+    var presentationCount: Int!
     var localMonitorMasks: [NSEvent.EventTypeMask]!
     var globalMonitorMasks: [NSEvent.EventTypeMask]!
     var localMonitorHandlers: [(NSEvent.EventTypeMask, (NSEvent) -> NSEvent?)]!
@@ -79,6 +79,14 @@ final class PressAndHoldTests: XCTestCase {
     private var savedActivatePendingTargetApp: ((String) -> Void)!
     private var savedTargetLeavesCurrentSpace: ((HUDAppItem) -> Bool)!
     private var savedIsKeyCurrentlyDown: ((Int) -> Bool)!
+    private var savedPresentHUDWindow: ((NSWindow) -> Void)!
+    private var savedRunningApplicationsProvider: ((String) -> [NSRunningApplication])!
+    private var savedUnhideRunningApplication: ((NSRunningApplication) -> Void)!
+    private var savedYieldActivationToRunningApplication: ((NSRunningApplication) -> Void)!
+    private var savedActivateRunningApplication: ((NSRunningApplication, Bool) -> Bool)!
+    private var savedScheduleActivationRetry: ((@escaping @MainActor @Sendable () -> Void) -> Void)!
+    private var savedScheduleVisibleWindowRecheck: ((@escaping @MainActor @Sendable () -> Void) -> Void)!
+    private var savedHasVisibleWindowsForPID: ((pid_t) -> Bool)!
 
     override func setUp() async throws {
         _ = NSApplication.shared
@@ -87,7 +95,7 @@ final class PressAndHoldTests: XCTestCase {
         manager = HUDManager.shared
         timeMock = MockTimeProvider()
         timerMock = MockTimerScheduler()
-        activationCount = 0
+        presentationCount = 0
         localMonitorMasks = []
         globalMonitorMasks = []
         localMonitorHandlers = []
@@ -100,12 +108,20 @@ final class PressAndHoldTests: XCTestCase {
         savedActivatePendingTargetApp = manager.activatePendingTargetApp
         savedTargetLeavesCurrentSpace = manager.targetLeavesCurrentSpace
         savedIsKeyCurrentlyDown = manager.isKeyCurrentlyDown
+        savedPresentHUDWindow = manager.presentHUDWindow
+        savedRunningApplicationsProvider = manager.runningApplicationsProvider
+        savedUnhideRunningApplication = manager.unhideRunningApplication
+        savedYieldActivationToRunningApplication = manager.yieldActivationToRunningApplication
+        savedActivateRunningApplication = manager.activateRunningApplication
+        savedScheduleActivationRetry = manager.scheduleActivationRetry
+        savedScheduleVisibleWindowRecheck = manager.scheduleVisibleWindowRecheck
+        savedHasVisibleWindowsForPID = manager.hasVisibleWindowsForPID
 
         // Inject mocks
         manager.timeProvider = timeMock
         manager.timerScheduler = timerMock
-        manager.activateHUDApp = { [weak self] in
-            self?.activationCount += 1
+        manager.presentHUDWindow = { [weak self] _ in
+            self?.presentationCount += 1
         }
         manager.addLocalEventMonitor = { [weak self] mask, handler in
             self?.localMonitorMasks.append(mask)
@@ -124,12 +140,8 @@ final class PressAndHoldTests: XCTestCase {
         manager.isKeyCurrentlyDown = { _ in false }
         manager.isAppActive = { true }
         manager.settingsWindowsProvider = { [] }
-        manager.appWindowsProvider = { [] }
         manager.closeWindow = { window in
             window.close()
-        }
-        manager.orderWindowBack = { window in
-            window.orderBack(nil)
         }
         manager.setWindowAlpha = { [weak self] _, alpha in
             self?.windowAlphaChanges.append(alpha)
@@ -150,7 +162,7 @@ final class PressAndHoldTests: XCTestCase {
         manager.isLoopKeyHeld = false
         manager.currentLoopKey = nil
         manager.isRepeatingLoopActive = false
-        activationCount = 0
+        presentationCount = 0
         localMonitorMasks.removeAll()
         globalMonitorMasks.removeAll()
         localMonitorHandlers.removeAll()
@@ -168,7 +180,6 @@ final class PressAndHoldTests: XCTestCase {
 
         manager.timeProvider = SystemTimeProvider()
         manager.timerScheduler = SystemTimerScheduler()
-        manager.activateHUDApp = { NSApp?.activate(ignoringOtherApps: true) }
         manager.addLocalEventMonitor = { mask, handler in
             NSEvent.addLocalMonitorForEvents(matching: mask, handler: handler)
         }
@@ -180,9 +191,7 @@ final class PressAndHoldTests: XCTestCase {
         manager.isKeyCurrentlyDown = savedIsKeyCurrentlyDown
         manager.isAppActive = { NSApp?.isActive == true }
         manager.settingsWindowsProvider = { NSApp?.windows ?? [] }
-        manager.appWindowsProvider = { NSApp?.windows ?? [] }
         manager.closeWindow = { $0.close() }
-        manager.orderWindowBack = { $0.orderBack(nil) }
         manager.setWindowAlpha = { $0.alphaValue = $1 }
         manager.animateWindowAlpha = { window, alpha, duration in
             NSAnimationContext.runAnimationGroup { context in
@@ -191,8 +200,16 @@ final class PressAndHoldTests: XCTestCase {
             }
         }
         manager.setWindowIgnoresMouseEvents = { $0.ignoresMouseEvents = $1 }
+        manager.runningApplicationsProvider = savedRunningApplicationsProvider
+        manager.unhideRunningApplication = savedUnhideRunningApplication
+        manager.yieldActivationToRunningApplication = savedYieldActivationToRunningApplication
+        manager.activateRunningApplication = savedActivateRunningApplication
+        manager.scheduleActivationRetry = savedScheduleActivationRetry
+        manager.scheduleVisibleWindowRecheck = savedScheduleVisibleWindowRecheck
+        manager.hasVisibleWindowsForPID = savedHasVisibleWindowsForPID
         manager.activatePendingTargetApp = savedActivatePendingTargetApp
         manager.targetLeavesCurrentSpace = savedTargetLeavesCurrentSpace
+        manager.presentHUDWindow = savedPresentHUDWindow
     }
 
     private func latestLocalMonitorHandler(
@@ -284,7 +301,7 @@ final class PressAndHoldTests: XCTestCase {
         // Expect timer scheduled for reveal while the prepared HUD remains invisible.
         XCTAssertEqual(timerMock.scheduledTimers.count, 1, "Should schedule a timer for HUD reveal")
         XCTAssertEqual(timerMock.scheduledTimers.last?.0 ?? -1, 0.2, accuracy: 0.001, "HUD reveal delay should stay short")
-        XCTAssertEqual(activationCount, 1, "Preparing the HUD should activate ShortcutCycle immediately")
+        XCTAssertEqual(presentationCount, 1, "Preparing the HUD should present the non-activating panel immediately")
         XCTAssertTrue(manager.isSessionActive, "A prepared HUD session should be active immediately")
         XCTAssertFalse(manager.isVisible, "HUD should remain invisible during the initial preparation window")
         XCTAssertEqual(windowAlphaChanges.last, 0, "Prepared HUD should start fully transparent")
@@ -335,7 +352,7 @@ final class PressAndHoldTests: XCTestCase {
             activeKey: .a
         )
 
-        XCTAssertEqual(activationCount, 1, "Prepared HUD path should activate the app before the HUD is revealed")
+        XCTAssertEqual(presentationCount, 1, "Prepared HUD path should present the non-activating panel before the HUD is revealed")
         XCTAssertTrue(manager.isSessionActive, "Prepared HUD session should be active immediately")
         XCTAssertFalse(manager.isVisible, "HUD should stay invisible until the reveal timer fires")
         XCTAssertTrue(globalMonitorMasks.contains(.flagsChanged), "Prepared HUD path should monitor global modifier releases")
@@ -412,20 +429,17 @@ final class PressAndHoldTests: XCTestCase {
     }
 
     @MainActor
-    func testDelayedShowClosesOffSpaceSettingsWindowBeforeHUDActivation() async {
+    func testDelayedShowKeepsOffSpaceSettingsWindowBeforeHUDPresentation() async {
         let settingsWindow = MockWindow(
             identifier: NSUserInterfaceItemIdentifier("settings"),
             isVisible: true,
             isOnActiveSpace: false
         )
-        var events: [String] = []
+        var closeCount = 0
 
         manager.settingsWindowsProvider = { [settingsWindow] }
         manager.closeWindow = { _ in
-            events.append("close")
-        }
-        manager.activateHUDApp = {
-            events.append("activate")
+            closeCount += 1
         }
 
         manager.scheduleShow(
@@ -440,7 +454,8 @@ final class PressAndHoldTests: XCTestCase {
         await Task.yield()
         await Task.yield()
 
-        XCTAssertEqual(Array(events.prefix(2)), ["close", "activate"])
+        XCTAssertEqual(closeCount, 0, "Non-activating HUD presentation should not close Settings on another Space")
+        XCTAssertEqual(presentationCount, 1, "Prepared HUD path should still present the non-activating panel")
     }
 
     @MainActor
@@ -490,7 +505,7 @@ final class PressAndHoldTests: XCTestCase {
 
         XCTAssertEqual(timerMock.scheduledTimers.count, 1, "Background Settings should still use the standard reveal delay")
         XCTAssertEqual(timerMock.scheduledTimers.last?.0 ?? -1, 0.2, accuracy: 0.001, "Reveal delay should stay unchanged with Settings visible")
-        XCTAssertEqual(activationCount, 1, "Prepared HUD path should still activate ShortcutCycle immediately")
+        XCTAssertEqual(presentationCount, 1, "Prepared HUD path should still present the non-activating panel immediately")
         XCTAssertFalse(manager.isVisible, "Background Settings should not force immediate visible HUD presentation")
         XCTAssertTrue(globalMonitorMasks.contains(.flagsChanged), "Prepared HUD path should still use global release monitoring before reveal")
     }
@@ -567,12 +582,8 @@ final class PressAndHoldTests: XCTestCase {
 
         manager.currentModifierFlags = { [.option] }
         manager.settingsWindowsProvider = { [settingsWindow] }
-        manager.appWindowsProvider = { [settingsWindow] }
         manager.closeWindow = { _ in
             events.append("close")
-        }
-        manager.orderWindowBack = { _ in
-            events.append("back")
         }
         manager.targetLeavesCurrentSpace = { _ in true }
         manager.activatePendingTargetApp = { _ in
@@ -877,7 +888,7 @@ final class PressAndHoldTests: XCTestCase {
     }
 
     @MainActor
-    func testBlindSwitchBeforeHUDPresentationOrdersCurrentSpaceWindowsBackBeforeActivation() async throws {
+    func testBlindSwitchBeforeHUDPresentationDoesNotOrderCurrentSpaceWindowsBackBeforeActivation() async throws {
         let settingsWindow = MockWindow(
             identifier: NSUserInterfaceItemIdentifier("settings"),
             isVisible: true,
@@ -886,10 +897,6 @@ final class PressAndHoldTests: XCTestCase {
         var events: [String] = []
 
         manager.settingsWindowsProvider = { [settingsWindow] }
-        manager.appWindowsProvider = { [settingsWindow] }
-        manager.orderWindowBack = { _ in
-            events.append("back")
-        }
         manager.activatePendingTargetApp = { _ in
             events.append("activate")
         }
@@ -906,7 +913,7 @@ final class PressAndHoldTests: XCTestCase {
         await Task.yield()
         await Task.yield()
 
-        XCTAssertEqual(Array(events.prefix(2)), ["back", "activate"])
+        XCTAssertEqual(events, ["activate"], "Blind switches should rely on target activation rather than reordering ShortcutCycle windows")
     }
 
     @MainActor
@@ -1045,6 +1052,197 @@ final class PressAndHoldTests: XCTestCase {
 
         XCTAssertEqual(closeCount, 0)
         XCTAssertEqual(activateCount, 1)
+    }
+
+    @MainActor
+    func testDeclinedRunningAppActivationRetriesOnce() {
+        let runningApp = NSRunningApplication.current
+        let bundleId = "com.test.retry"
+        let item = HUDAppItem(
+            bundleId: bundleId,
+            pid: runningApp.processIdentifier,
+            name: "Retry Target"
+        )
+        var requestedBundleIds: [String] = []
+        var unhideCount = 0
+        var yieldedActivationCount = 0
+        var activationFromCurrentAppFlags: [Bool] = []
+        var activationResults = [false, true]
+        var retryActions: [@MainActor @Sendable () -> Void] = []
+
+        manager.runningApplicationsProvider = { requestedBundleId in
+            requestedBundleIds.append(requestedBundleId)
+            return [runningApp]
+        }
+        manager.unhideRunningApplication = { _ in
+            unhideCount += 1
+        }
+        manager.yieldActivationToRunningApplication = { _ in
+            yieldedActivationCount += 1
+        }
+        manager.activateRunningApplication = { _, fromCurrentApp in
+            activationFromCurrentAppFlags.append(fromCurrentApp)
+            guard !activationResults.isEmpty else {
+                XCTFail("Activation should not run more times than expected")
+                return true
+            }
+            return activationResults.removeFirst()
+        }
+        manager.scheduleActivationRetry = { action in
+            retryActions.append(action)
+        }
+        manager.scheduleVisibleWindowRecheck = { _ in }
+        manager.hasVisibleWindowsForPID = { _ in true }
+        manager.isAppActive = { false }
+
+        manager.scheduleShow(
+            items: [item],
+            activeAppId: item.id,
+            modifierFlags: [.option],
+            shortcut: "Opt+1"
+        )
+        manager.hide()
+
+        XCTAssertEqual(requestedBundleIds, [bundleId])
+        XCTAssertEqual(unhideCount, 1, "The running app should be unhidden before the initial activation attempt")
+        XCTAssertEqual(yieldedActivationCount, 0, "Inactive ShortcutCycle sessions should not yield activation before activating the target")
+        XCTAssertEqual(activationFromCurrentAppFlags, [false])
+        XCTAssertEqual(retryActions.count, 1, "A declined activation should schedule one retry")
+
+        retryActions[0]()
+
+        XCTAssertEqual(unhideCount, 2, "The retry should unhide the target again before re-activating it")
+        XCTAssertEqual(activationFromCurrentAppFlags, [false, false])
+        XCTAssertTrue(activationResults.isEmpty)
+    }
+
+    @MainActor
+    func testDeclinedRunningAppActivationRetryIsSkippedAfterNewActivationAttempt() {
+        let runningApp = NSRunningApplication.current
+        let firstItem = HUDAppItem(
+            bundleId: "com.test.retry.first",
+            pid: runningApp.processIdentifier,
+            name: "First Retry Target"
+        )
+        let secondItem = HUDAppItem(
+            bundleId: "com.test.retry.second",
+            pid: runningApp.processIdentifier,
+            name: "Second Retry Target"
+        )
+        var unhideCount = 0
+        var activationFromCurrentAppFlags: [Bool] = []
+        var activationResults = [false, true]
+        var retryActions: [@MainActor @Sendable () -> Void] = []
+
+        manager.runningApplicationsProvider = { _ in [runningApp] }
+        manager.unhideRunningApplication = { _ in
+            unhideCount += 1
+        }
+        manager.activateRunningApplication = { _, fromCurrentApp in
+            activationFromCurrentAppFlags.append(fromCurrentApp)
+            guard !activationResults.isEmpty else {
+                XCTFail("Stale retry should not perform another activation")
+                return true
+            }
+            return activationResults.removeFirst()
+        }
+        manager.scheduleActivationRetry = { action in
+            retryActions.append(action)
+        }
+        manager.scheduleVisibleWindowRecheck = { _ in }
+        manager.hasVisibleWindowsForPID = { _ in true }
+        manager.isAppActive = { false }
+
+        manager.scheduleShow(
+            items: [firstItem],
+            activeAppId: firstItem.id,
+            modifierFlags: [.option],
+            shortcut: "Opt+1"
+        )
+        manager.hide()
+
+        XCTAssertEqual(retryActions.count, 1)
+
+        manager.scheduleShow(
+            items: [secondItem],
+            activeAppId: secondItem.id,
+            modifierFlags: [.option],
+            shortcut: "Opt+2"
+        )
+        manager.hide()
+
+        XCTAssertEqual(unhideCount, 2, "Each fresh activation attempt should unhide its target once")
+        XCTAssertEqual(activationFromCurrentAppFlags, [false, false])
+
+        retryActions[0]()
+
+        XCTAssertEqual(unhideCount, 2, "A stale retry must not unhide or re-activate an old target")
+        XCTAssertEqual(activationFromCurrentAppFlags, [false, false])
+        XCTAssertTrue(activationResults.isEmpty)
+    }
+
+    @MainActor
+    func testDeclinedRunningAppActivationRetryIsSkippedAfterLaunchAttempt() {
+        let runningApp = NSRunningApplication.current
+        let runningItem = HUDAppItem(
+            bundleId: "com.test.retry.running",
+            pid: runningApp.processIdentifier,
+            name: "Running Retry Target"
+        )
+        let launchItem = HUDAppItem(
+            bundleId: "com.test.retry.launch",
+            name: "Launch Retry Target",
+            icon: nil
+        )
+        var unhideCount = 0
+        var activationFromCurrentAppFlags: [Bool] = []
+        var activationResults = [false]
+        var retryActions: [@MainActor @Sendable () -> Void] = []
+
+        manager.runningApplicationsProvider = { bundleId in
+            bundleId == runningItem.bundleId ? [runningApp] : []
+        }
+        manager.unhideRunningApplication = { _ in
+            unhideCount += 1
+        }
+        manager.activateRunningApplication = { _, fromCurrentApp in
+            activationFromCurrentAppFlags.append(fromCurrentApp)
+            guard !activationResults.isEmpty else {
+                XCTFail("Stale retry should not perform another activation")
+                return true
+            }
+            return activationResults.removeFirst()
+        }
+        manager.scheduleActivationRetry = { action in
+            retryActions.append(action)
+        }
+        manager.scheduleVisibleWindowRecheck = { _ in }
+        manager.hasVisibleWindowsForPID = { _ in true }
+        manager.isAppActive = { false }
+
+        manager.scheduleShow(
+            items: [runningItem],
+            activeAppId: runningItem.id,
+            modifierFlags: [.option],
+            shortcut: "Opt+1"
+        )
+        manager.hide()
+
+        XCTAssertEqual(retryActions.count, 1)
+
+        manager.scheduleShow(
+            items: [launchItem],
+            activeAppId: launchItem.id,
+            modifierFlags: [.option],
+            shortcut: "Opt+2"
+        )
+        manager.hide()
+
+        retryActions[0]()
+
+        XCTAssertEqual(unhideCount, 1, "A stale retry must not unhide after a newer launch attempt")
+        XCTAssertEqual(activationFromCurrentAppFlags, [false])
+        XCTAssertTrue(activationResults.isEmpty)
     }
 
     @MainActor

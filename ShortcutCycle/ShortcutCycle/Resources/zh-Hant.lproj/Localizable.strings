@@ -168,9 +168,3 @@
 "Show welcome again" = "再次顯示歡迎訊息";
 "ShortcutCycle is running in your menu bar" = "ShortcutCycle 正在選單列中執行";
 "Look for the ShortcutCycle icon in the top-right menu bar whenever you want to open the app again." = "每當您想再次開啟應用程式時，請在右上角的選單列中找到 ShortcutCycle 圖示。";
-
-/* Settings shortcut HUD tip */
-"Switching may feel slower while Settings is open" = "設定視窗開啟時，切換可能會感覺稍慢";
-"To avoid asking for extra macOS permissions, ShortcutCycle may briefly activate Settings while switching with the HUD enabled. Close Settings for normal switching speed." = "為了避免請求額外的 macOS 權限，啟用 HUD 時，ShortcutCycle 在切換過程中可能會短暫啟用設定視窗。關閉設定視窗後，切換速度會恢復正常。";
-"Close Settings Window" = "關閉設定視窗";
-"Hide Tip" = "隱藏提示";

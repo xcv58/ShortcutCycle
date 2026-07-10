@@ -5,42 +5,6 @@ import XCTest
 
 @MainActor
 final class SettingsWindowLifecycleCoordinatorTests: XCTestCase {
-    func testVisibleOffSpaceSettingsWindowReturnsMatchingWindow() {
-        let window = MockWindow(
-            identifier: NSUserInterfaceItemIdentifier("settings"),
-            isVisible: true,
-            isOnActiveSpace: false
-        )
-
-        XCTAssertTrue(
-            SettingsWindowLifecycleCoordinator.visibleOffSpaceSettingsWindow(in: [window]) === window
-        )
-    }
-
-    func testVisibleOffSpaceSettingsWindowIgnoresCurrentSpaceHiddenAndNonSettingsWindows() {
-        XCTAssertNil(
-            SettingsWindowLifecycleCoordinator.visibleOffSpaceSettingsWindow(
-                in: [
-                    MockWindow(
-                        identifier: NSUserInterfaceItemIdentifier("settings"),
-                        isVisible: true,
-                        isOnActiveSpace: true
-                    ),
-                    MockWindow(
-                        identifier: NSUserInterfaceItemIdentifier("settings"),
-                        isVisible: false,
-                        isOnActiveSpace: false
-                    ),
-                    MockWindow(
-                        identifier: NSUserInterfaceItemIdentifier("other"),
-                        isVisible: true,
-                        isOnActiveSpace: false
-                    )
-                ]
-            )
-        )
-    }
-
     func testAnyVisibleSettingsWindowReturnsWindowOnAnySpace() {
         let window = MockWindow(
             identifier: NSUserInterfaceItemIdentifier("settings"),

@@ -166,9 +166,3 @@
 "Show welcome again" = "Pokaż ponownie powitanie";
 "ShortcutCycle is running in your menu bar" = "ShortcutCycle działa na pasku menu";
 "Look for the ShortcutCycle icon in the top-right menu bar whenever you want to open the app again." = "Szukaj ikony ShortcutCycle na pasku menu w prawym górnym rogu, gdy chcesz ponownie otworzyć aplikację.";
-
-/* Settings shortcut HUD tip */
-"Switching may feel slower while Settings is open" = "Przełączanie może wydawać się wolniejsze, gdy Ustawienia są otwarte";
-"To avoid asking for extra macOS permissions, ShortcutCycle may briefly activate Settings while switching with the HUD enabled. Close Settings for normal switching speed." = "Aby uniknąć proszenia o dodatkowe uprawnienia macOS, ShortcutCycle może na chwilę aktywować Ustawienia podczas przełączania z włączonym HUD. Zamknij Ustawienia, aby wrócić do normalnej szybkości przełączania.";
-"Close Settings Window" = "Zamknij okno Ustawień";
-"Hide Tip" = "Ukryj wskazówkę";
