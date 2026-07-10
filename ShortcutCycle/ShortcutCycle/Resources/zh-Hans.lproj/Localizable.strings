@@ -37,6 +37,10 @@
 "No shortcut" = "无快捷键";
 "Delete group" = "删除群组";
 "This action cannot be undone." = "此操作无法撤销。";
+"Contains a running app" = "包含正在运行的应用";
+"Move %@ earlier" = "将 %@ 前移";
+"Move %@ later" = "将 %@ 后移";
+"Remove %@ from group" = "从群组中移除 %@";
 
 /* HUD Section */
 "HUD Behavior" = "HUD 行为";

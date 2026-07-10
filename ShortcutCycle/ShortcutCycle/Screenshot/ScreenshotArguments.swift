@@ -17,6 +17,10 @@ enum ScreenshotMode {
     }
 }
 
+enum AccessibilityAuditMode {
+    static let isActive = ProcessInfo.processInfo.arguments.contains("--accessibility-audit")
+}
+
 enum ScreenshotRenderStyle {
     case liveWindow
     case synthetic

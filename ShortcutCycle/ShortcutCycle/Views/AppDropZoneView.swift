@@ -109,20 +109,33 @@ struct AppRowView: View {
 struct AppGridItemView: View {
     let app: AppItem
     let isPlaceholder: Bool
+    let canMoveEarlier: Bool
+    let canMoveLater: Bool
     let onDelete: () -> Void
+    let onMoveEarlier: () -> Void
+    let onMoveLater: () -> Void
     let onIconResolved: (() -> Void)?
     @Environment(\.colorScheme) private var colorScheme
+    @AppStorage("selectedLanguage") private var selectedLanguage = "system"
     @State private var isHovered = false
 
     init(
         app: AppItem,
         isPlaceholder: Bool = false,
+        canMoveEarlier: Bool = false,
+        canMoveLater: Bool = false,
         onDelete: @escaping () -> Void,
+        onMoveEarlier: @escaping () -> Void = {},
+        onMoveLater: @escaping () -> Void = {},
         onIconResolved: (() -> Void)? = nil
     ) {
         self.app = app
         self.isPlaceholder = isPlaceholder
+        self.canMoveEarlier = canMoveEarlier
+        self.canMoveLater = canMoveLater
         self.onDelete = onDelete
+        self.onMoveEarlier = onMoveEarlier
+        self.onMoveLater = onMoveLater
         self.onIconResolved = onIconResolved
     }
     
@@ -140,6 +153,7 @@ struct AppGridItemView: View {
                     }
                     .buttonStyle(.plain)
                     .offset(x: 6, y: -6)
+                    .accessibilityLabel(removeActionLabel)
                 }
             }
 
@@ -181,7 +195,49 @@ struct AppGridItemView: View {
         .onHover { hovering in
             isHovered = isPlaceholder ? false : hovering
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(app.name)
+        .accessibilityActions {
+            if canMoveEarlier {
+                Button(moveEarlierActionLabel, action: onMoveEarlier)
+            }
+            if canMoveLater {
+                Button(moveLaterActionLabel, action: onMoveLater)
+            }
+            Button(removeActionLabel, action: onDelete)
+        }
+        .contextMenu {
+            if canMoveEarlier {
+                Button(moveEarlierActionLabel, systemImage: "arrow.left", action: onMoveEarlier)
+            }
+            if canMoveLater {
+                Button(moveLaterActionLabel, systemImage: "arrow.right", action: onMoveLater)
+            }
+            Divider()
+            Button(removeActionLabel, systemImage: "trash", role: .destructive, action: onDelete)
+        }
         .help(app.bundleIdentifier)
+    }
+
+    private var moveEarlierActionLabel: String {
+        String(
+            format: "Move %@ earlier".localized(language: selectedLanguage),
+            app.name
+        )
+    }
+
+    private var moveLaterActionLabel: String {
+        String(
+            format: "Move %@ later".localized(language: selectedLanguage),
+            app.name
+        )
+    }
+
+    private var removeActionLabel: String {
+        String(
+            format: "Remove %@ from group".localized(language: selectedLanguage),
+            app.name
+        )
     }
 }
 
@@ -194,32 +250,33 @@ struct AppDropZoneView: View {
     @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
-        VStack(spacing: 10) {
-            Image(systemName: "plus.app")
-                .font(.system(size: 28))
-                .foregroundColor(isTargeted ? .accentColor : .secondary)
+        Button(action: openFilePicker) {
+            VStack(spacing: 10) {
+                Image(systemName: "plus.app")
+                    .font(.system(size: 28))
+                    .foregroundColor(isTargeted ? .accentColor : .secondary)
 
-            Text("Drop or click to add apps".localized(language: selectedLanguage))
-                .font(.caption)
-                .foregroundColor(isTargeted ? .accentColor : .secondary)
+                Text("Drop or click to add apps".localized(language: selectedLanguage))
+                    .font(.caption)
+                    .foregroundColor(isTargeted ? .accentColor : .secondary)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 112)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(SettingsChromePalette.dropZoneFill(for: colorScheme, targeted: isTargeted))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .strokeBorder(
+                        SettingsChromePalette.dropZoneBorder(for: colorScheme, targeted: isTargeted),
+                        style: StrokeStyle(lineWidth: colorScheme == .dark ? 2 : 2, dash: [8])
+                    )
+            )
+            .contentShape(Rectangle())
         }
-        .frame(maxWidth: .infinity)
-        .frame(height: 112)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(SettingsChromePalette.dropZoneFill(for: colorScheme, targeted: isTargeted))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .strokeBorder(
-                    SettingsChromePalette.dropZoneBorder(for: colorScheme, targeted: isTargeted),
-                    style: StrokeStyle(lineWidth: colorScheme == .dark ? 2 : 2, dash: [8])
-                )
-        )
-        .contentShape(Rectangle())
-        .onTapGesture {
-            openFilePicker()
-        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Drop or click to add apps".localized(language: selectedLanguage))
         .onDrop(of: [.fileURL], isTargeted: $isTargeted) { providers in
             handleDrop(providers: providers)
         }

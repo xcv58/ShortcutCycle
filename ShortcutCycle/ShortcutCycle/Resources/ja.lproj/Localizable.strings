@@ -37,6 +37,10 @@
 "No shortcut" = "ショートカットなし";
 "Delete group" = "グループを削除";
 "This action cannot be undone." = "この操作は取り消せません。";
+"Contains a running app" = "実行中のアプリを含む";
+"Move %@ earlier" = "%@を前へ移動";
+"Move %@ later" = "%@を後ろへ移動";
+"Remove %@ from group" = "%@をグループから削除";
 
 /* HUD Section */
 "HUD Behavior" = "HUDの動作";

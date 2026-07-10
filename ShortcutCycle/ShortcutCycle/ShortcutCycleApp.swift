@@ -380,7 +380,7 @@ struct SettingsWindowObserver: NSViewRepresentable {
 
         private static func defaultSetActivationPolicy(_ policy: NSApplication.ActivationPolicy) {
             #if DEBUG
-            guard ScreenshotArguments.current == nil else { return }
+            guard ScreenshotArguments.current == nil, !AccessibilityAuditMode.isActive else { return }
             #endif
             NSApp.setActivationPolicy(policy)
         }
@@ -854,9 +854,13 @@ struct ShortcutCycleApp: App {
             RunningAppQuickAddCatalog.shared.setOverrideApps(nil)
             _store = StateObject(wrappedValue: GroupStore.shared)
 
-            // Setup shortcut manager
-            Task { @MainActor in
-                ShortcutManager.shared.registerAllShortcuts()
+            // Accessibility-audit mode keeps a regular Settings window active so
+            // Accessibility Inspector can attach to it. Do not let that temporary
+            // harness intercept the user's real global shortcuts.
+            if !AccessibilityAuditMode.isActive {
+                Task { @MainActor in
+                    ShortcutManager.shared.registerAllShortcuts()
+                }
             }
         }
         #else
@@ -916,7 +920,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillFinishLaunching(_ notification: Notification) {
         #if DEBUG
-        if ScreenshotArguments.current != nil {
+        if ScreenshotArguments.current != nil || AccessibilityAuditMode.isActive {
             NSApp.setActivationPolicy(.regular)
         } else {
             // Run as a menu bar app (no dock icon)
@@ -939,7 +943,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidBecomeActive(_ notification: Notification) {
         #if DEBUG
-        guard ScreenshotArguments.current == nil else { return }
+        guard ScreenshotArguments.current == nil, !AccessibilityAuditMode.isActive else { return }
         #endif
         guard !hasEvaluatedInitialManualActivation else { return }
         hasEvaluatedInitialManualActivation = true
@@ -953,6 +957,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         #if DEBUG
+        if AccessibilityAuditMode.isActive {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                ShortcutCycleURLRouter.openSettingsFromOutsideView(tab: .groups)
+            }
+            return
+        }
+
         guard let screenshotArguments = ScreenshotArguments.current else { return }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {

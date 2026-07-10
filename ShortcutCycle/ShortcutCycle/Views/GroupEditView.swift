@@ -6,10 +6,33 @@ import AppKit
 import UniformTypeIdentifiers
 import KeyboardShortcuts
 
+enum AppAccessibilityMoveDirection {
+    case earlier
+    case later
+}
+
+enum AppAccessibilityReorder {
+    static func destination(
+        for sourceIndex: Int,
+        direction: AppAccessibilityMoveDirection,
+        count: Int
+    ) -> Int? {
+        guard sourceIndex >= 0, sourceIndex < count else { return nil }
+
+        switch direction {
+        case .earlier:
+            return sourceIndex > 0 ? sourceIndex - 1 : nil
+        case .later:
+            return sourceIndex < count - 1 ? sourceIndex + 2 : nil
+        }
+    }
+}
+
 /// View for editing a single app group
 struct GroupEditView: View {
     @EnvironmentObject var store: GroupStore
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let groupId: UUID
     private let runningAppCandidatesProvider: ([AppItem]) -> [AppItem]
 
@@ -233,12 +256,20 @@ struct GroupEditView: View {
                     .padding(.vertical, 8)
             } else {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 80, maximum: 100))], spacing: 16) {
-                    ForEach(displayedApps) { app in
+                    ForEach(Array(displayedApps.enumerated()), id: \.element.id) { index, app in
                         AppGridItemView(
                             app: app,
                             isPlaceholder: draggingApp?.id == app.id,
+                            canMoveEarlier: index > 0,
+                            canMoveLater: index < displayedApps.count - 1,
                             onDelete: {
                                 store.removeApp(app, from: groupId)
+                            },
+                            onMoveEarlier: {
+                                moveApp(app, direction: .earlier)
+                            },
+                            onMoveLater: {
+                                moveApp(app, direction: .later)
                             },
                             onIconResolved: {
                                 GroupSwitchPerformanceTracker.shared.markGroupIconResolved(itemId: app.id, for: groupId)
@@ -259,7 +290,7 @@ struct GroupEditView: View {
                 }
                 .padding(.vertical, 8)
                 // Only animate the temporary drag preview; switching groups should update immediately.
-                .animation(.default, value: dragPreviewApps?.map(\.id) ?? [])
+                .animation(reduceMotion ? nil : .default, value: dragPreviewApps?.map(\.id) ?? [])
             }
 
             addAppsPanel(
@@ -271,6 +302,23 @@ struct GroupEditView: View {
         .task(id: groupId) {
             GroupSwitchPerformanceTracker.shared.markAppsSectionVisible(for: groupId)
         }
+    }
+
+    private func moveApp(_ app: AppItem, direction: AppAccessibilityMoveDirection) {
+        guard let group = store.groups.first(where: { $0.id == groupId }),
+              let sourceIndex = group.apps.firstIndex(of: app),
+              let destination = AppAccessibilityReorder.destination(
+                for: sourceIndex,
+                direction: direction,
+                count: group.apps.count
+              )
+        else { return }
+
+        store.moveApp(
+            in: groupId,
+            from: IndexSet(integer: sourceIndex),
+            to: destination
+        )
     }
 
     private var secondarySectionsPlaceholder: some View {

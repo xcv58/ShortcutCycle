@@ -37,6 +37,10 @@
 "No shortcut" = "無快速鍵";
 "Delete group" = "刪除群組";
 "This action cannot be undone." = "此動作無法復原。";
+"Contains a running app" = "包含正在執行的應用程式";
+"Move %@ earlier" = "將 %@ 向前移動";
+"Move %@ later" = "將 %@ 向後移動";
+"Remove %@ from group" = "從群組中移除 %@";
 
 /* HUD Section */
 "HUD Behavior" = "HUD 行為";

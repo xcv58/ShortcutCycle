@@ -37,6 +37,10 @@
 "No shortcut" = "Kısayol yok";
 "Delete group" = "Grubu sil";
 "This action cannot be undone." = "Bu işlem geri alınamaz.";
+"Contains a running app" = "Çalışan bir uygulama içeriyor";
+"Move %@ earlier" = "%@ öğesini öne taşı";
+"Move %@ later" = "%@ öğesini arkaya taşı";
+"Remove %@ from group" = "%@ öğesini gruptan kaldır";
 
 /* HUD Section */
 "HUD Behavior" = "HUD Davranışı";

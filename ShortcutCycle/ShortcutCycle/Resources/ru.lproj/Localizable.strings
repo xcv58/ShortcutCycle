@@ -37,6 +37,10 @@
 "No shortcut" = "Нет сочетания клавиш";
 "Delete group" = "Удалить группу";
 "This action cannot be undone." = "Это действие нельзя отменить.";
+"Contains a running app" = "Содержит запущенное приложение";
+"Move %@ earlier" = "Переместить %@ вперёд";
+"Move %@ later" = "Переместить %@ назад";
+"Remove %@ from group" = "Удалить %@ из группы";
 
 /* HUD Section */
 "HUD Behavior" = "Поведение HUD";

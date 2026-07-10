@@ -80,6 +80,50 @@ final class GroupEditViewTests: XCTestCase {
         XCTAssertFalse(GroupEditView.shouldShowRunningAppQuickAddSection([]))
     }
 
+    func testAccessibilityReorderDestinationsRespectBoundaries() {
+        XCTAssertNil(
+            AppAccessibilityReorder.destination(for: 0, direction: .earlier, count: 3)
+        )
+        XCTAssertEqual(
+            AppAccessibilityReorder.destination(for: 1, direction: .earlier, count: 3),
+            0
+        )
+        XCTAssertEqual(
+            AppAccessibilityReorder.destination(for: 1, direction: .later, count: 3),
+            3
+        )
+        XCTAssertNil(
+            AppAccessibilityReorder.destination(for: 2, direction: .later, count: 3)
+        )
+        XCTAssertNil(
+            AppAccessibilityReorder.destination(for: -1, direction: .earlier, count: 3)
+        )
+        XCTAssertNil(
+            AppAccessibilityReorder.destination(for: 3, direction: .later, count: 3)
+        )
+    }
+
+    func testHUDMotionPolicyDisablesSelectionMotionWhenRequested() {
+        XCTAssertFalse(HUDMotionPolicy.shouldAnimateSelection(reduceMotion: true))
+        XCTAssertTrue(HUDMotionPolicy.shouldAnimateSelection(reduceMotion: false))
+        XCTAssertEqual(
+            HUDMotionPolicy.iconScale(isActive: true, isHovering: true, reduceMotion: true),
+            1.0
+        )
+        XCTAssertEqual(
+            HUDMotionPolicy.iconScale(isActive: true, isHovering: false, reduceMotion: false),
+            1.15
+        )
+        XCTAssertEqual(
+            HUDMotionPolicy.iconScale(isActive: false, isHovering: true, reduceMotion: false),
+            1.08
+        )
+        XCTAssertEqual(
+            HUDMotionPolicy.iconScale(isActive: false, isHovering: false, reduceMotion: false),
+            1.0
+        )
+    }
+
     func testRunningAppCandidatesDoNotRefreshForPureReorder() throws {
         let groupId = try XCTUnwrap(store.groups.first?.id)
         let app1 = AppItem(bundleIdentifier: "com.test.alpha", name: "Alpha")

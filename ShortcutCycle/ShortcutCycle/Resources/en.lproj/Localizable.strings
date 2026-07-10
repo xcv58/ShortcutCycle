@@ -37,6 +37,10 @@
 "No shortcut" = "No shortcut";
 "Delete group" = "Delete group";
 "This action cannot be undone." = "This action cannot be undone.";
+"Contains a running app" = "Contains a running app";
+"Move %@ earlier" = "Move %@ earlier";
+"Move %@ later" = "Move %@ later";
+"Remove %@ from group" = "Remove %@ from group";
 
 /* HUD Section */
 "HUD Behavior" = "HUD Behavior";

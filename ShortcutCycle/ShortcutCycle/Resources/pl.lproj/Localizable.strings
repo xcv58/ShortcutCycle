@@ -37,6 +37,10 @@
 "No shortcut" = "Brak skrótu";
 "Delete group" = "Usuń grupę";
 "This action cannot be undone." = "Tej operacji nie można cofnąć.";
+"Contains a running app" = "Zawiera uruchomioną aplikację";
+"Move %@ earlier" = "Przenieś %@ wcześniej";
+"Move %@ later" = "Przenieś %@ później";
+"Remove %@ from group" = "Usuń %@ z grupy";
 
 /* HUD Section */
 "HUD Behavior" = "Zachowanie HUD";

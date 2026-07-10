@@ -37,6 +37,10 @@
 "No shortcut" = "Sem atalho";
 "Delete group" = "Excluir grupo";
 "This action cannot be undone." = "Esta ação não pode ser desfeita.";
+"Contains a running app" = "Contém um app em execução";
+"Move %@ earlier" = "Mover %@ para antes";
+"Move %@ later" = "Mover %@ para depois";
+"Remove %@ from group" = "Remover %@ do grupo";
 
 /* HUD Section */
 "HUD Behavior" = "Comportamento do HUD";

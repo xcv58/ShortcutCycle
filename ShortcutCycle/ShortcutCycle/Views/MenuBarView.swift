@@ -275,6 +275,7 @@ struct MenuBarGroupRow: View {
     var screenshotHighlighted: Bool = false
     #endif
     @EnvironmentObject var store: GroupStore
+    @AppStorage("selectedLanguage") private var selectedLanguage = "system"
     @State private var isHovering = false
     
     var body: some View {
@@ -298,6 +299,12 @@ struct MenuBarGroupRow: View {
                 .tint(.accentColor)
                 .labelsHidden()
                 .controlSize(.mini)
+                .accessibilityLabel(group.name)
+                .accessibilityHint(
+                    group.isEnabled
+                        ? "Disable group".localized(language: selectedLanguage)
+                        : "Enable group".localized(language: selectedLanguage)
+                )
             }
             #else
             Toggle("", isOn: Binding(
@@ -308,6 +315,12 @@ struct MenuBarGroupRow: View {
             .tint(.accentColor)
             .labelsHidden()
             .controlSize(.mini)
+            .accessibilityLabel(group.name)
+            .accessibilityHint(
+                group.isEnabled
+                    ? "Disable group".localized(language: selectedLanguage)
+                    : "Enable group".localized(language: selectedLanguage)
+            )
             #endif
             
             Image(systemName: "folder.fill")
@@ -334,6 +347,7 @@ struct MenuBarGroupRow: View {
                 Circle()
                     .fill(group.isEnabled ? (highlighted ? .white : Color.green) : Color.gray)
                     .frame(width: 6, height: 6)
+                    .accessibilityLabel("Contains a running app".localized(language: selectedLanguage))
             }
         }
         .padding(.horizontal, 14)

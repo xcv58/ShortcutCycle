@@ -119,5 +119,6 @@ struct HUDPreviewView: View {
                     .stroke(previewShellBorder.opacity(colorScheme == .dark ? 0.85 : 0.65), lineWidth: 1)
             )
         }
+        .accessibilityHidden(true)
     }
 }

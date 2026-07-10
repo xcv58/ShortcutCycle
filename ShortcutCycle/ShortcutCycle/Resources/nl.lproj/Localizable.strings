@@ -37,6 +37,10 @@
 "No shortcut" = "Geen sneltoets";
 "Delete group" = "Groep verwijderen";
 "This action cannot be undone." = "Deze actie kan niet ongedaan worden gemaakt.";
+"Contains a running app" = "Bevat een actieve app";
+"Move %@ earlier" = "%@ naar voren verplaatsen";
+"Move %@ later" = "%@ naar achteren verplaatsen";
+"Remove %@ from group" = "%@ uit de groep verwijderen";
 
 /* HUD Section */
 "HUD Behavior" = "HUD-gedrag";

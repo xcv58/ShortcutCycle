@@ -37,6 +37,10 @@
 "No shortcut" = "Aucun raccourci";
 "Delete group" = "Supprimer le groupe";
 "This action cannot be undone." = "Cette action est irréversible.";
+"Contains a running app" = "Contient une app en cours d’exécution";
+"Move %@ earlier" = "Déplacer %@ plus tôt";
+"Move %@ later" = "Déplacer %@ plus tard";
+"Remove %@ from group" = "Retirer %@ du groupe";
 
 /* HUD Section */
 "HUD Behavior" = "Comportement du HUD";

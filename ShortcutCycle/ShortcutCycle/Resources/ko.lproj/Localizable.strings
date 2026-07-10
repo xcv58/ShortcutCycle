@@ -37,6 +37,10 @@
 "No shortcut" = "단축키 없음";
 "Delete group" = "그룹 삭제";
 "This action cannot be undone." = "이 작업은 취소할 수 없습니다.";
+"Contains a running app" = "실행 중인 앱 포함";
+"Move %@ earlier" = "%@을(를) 앞으로 이동";
+"Move %@ later" = "%@을(를) 뒤로 이동";
+"Remove %@ from group" = "%@을(를) 그룹에서 제거";
 
 /* HUD Section */
 "HUD Behavior" = "HUD 동작";

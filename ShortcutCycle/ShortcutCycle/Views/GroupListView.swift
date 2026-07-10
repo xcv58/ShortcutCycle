@@ -136,6 +136,12 @@ struct GroupRowView: View {
             .toggleStyle(.switch)
             .controlSize(.mini)
             .labelsHidden()
+            .accessibilityLabel(group.name)
+            .accessibilityHint(
+                group.isEnabled
+                    ? "Disable group".localized(language: selectedLanguage)
+                    : "Enable group".localized(language: selectedLanguage)
+            )
             .help(group.isEnabled ? "Disable group".localized(language: selectedLanguage) : "Enable group".localized(language: selectedLanguage))
             
             // Group icon
@@ -197,6 +203,16 @@ struct GroupRowView: View {
                 isHovering = hovering
             }
         }
+        .accessibilityActions {
+            Button(deleteActionLabel) {
+                showDeleteConfirmation = true
+            }
+        }
+        .contextMenu {
+            Button(deleteActionLabel, systemImage: "trash", role: .destructive) {
+                showDeleteConfirmation = true
+            }
+        }
         .confirmationDialog("Delete '\(group.name)'?", isPresented: $showDeleteConfirmation) {
             Button("Delete".localized(language: selectedLanguage), role: .destructive) {
                 store.deleteGroup(group)
@@ -205,6 +221,10 @@ struct GroupRowView: View {
         } message: {
             Text("This action cannot be undone.".localized(language: selectedLanguage))
         }
+    }
+
+    private var deleteActionLabel: String {
+        "\("Delete group".localized(language: selectedLanguage)): \(group.name)"
     }
 }
 

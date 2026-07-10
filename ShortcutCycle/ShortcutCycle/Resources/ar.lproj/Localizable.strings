@@ -37,6 +37,10 @@
 "No shortcut" = "لا يوجد اختصار";
 "Delete group" = "حذف المجموعة";
 "This action cannot be undone." = "لا يمكن التراجع عن هذا الإجراء.";
+"Contains a running app" = "تحتوي على تطبيق قيد التشغيل";
+"Move %@ earlier" = "نقل %@ إلى الأمام";
+"Move %@ later" = "نقل %@ إلى الخلف";
+"Remove %@ from group" = "إزالة %@ من المجموعة";
 
 /* HUD Section */
 "HUD Behavior" = "سلوك HUD";

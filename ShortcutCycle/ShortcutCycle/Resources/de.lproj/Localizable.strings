@@ -37,6 +37,10 @@
 "No shortcut" = "Kein Tastenkürzel";
 "Delete group" = "Gruppe löschen";
 "This action cannot be undone." = "Diese Aktion kann nicht rückgängig gemacht werden.";
+"Contains a running app" = "Enthält eine laufende App";
+"Move %@ earlier" = "%@ nach vorne verschieben";
+"Move %@ later" = "%@ nach hinten verschieben";
+"Remove %@ from group" = "%@ aus der Gruppe entfernen";
 
 /* HUD Section */
 "HUD Behavior" = "HUD-Verhalten";

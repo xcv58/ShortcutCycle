@@ -3,6 +3,19 @@ import SwiftUI
 import ShortcutCycleCore
 #endif
 
+enum HUDMotionPolicy {
+    static func shouldAnimateSelection(reduceMotion: Bool) -> Bool {
+        !reduceMotion
+    }
+
+    static func iconScale(isActive: Bool, isHovering: Bool, reduceMotion: Bool) -> CGFloat {
+        guard !reduceMotion else { return 1.0 }
+        if isActive { return 1.15 }
+        if isHovering { return 1.08 }
+        return 1.0
+    }
+}
+
 /// App switcher HUD overlay view
 struct AppSwitcherHUDView: View {
     let apps: [HUDAppItem]
@@ -13,6 +26,7 @@ struct AppSwitcherHUDView: View {
     @AppStorage("showShortcutInHUD") private var showShortcutInHUD = true
     @AppStorage("appTheme") private var appTheme: AppTheme = .system
     @Environment(\.colorScheme) var colorScheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     
     var body: some View {
         VStack(spacing: 20) {
@@ -51,13 +65,7 @@ struct AppSwitcherHUDView: View {
             ScrollView(.vertical, showsIndicators: false) {
                 LazyVGrid(columns: Array(repeating: GridItem(.fixed(80), spacing: 30), count: 5), spacing: 30) {
                     ForEach(apps) { app in
-                        if let icon = app.icon {
-                            HUDItemView(icon: icon, isActive: app.id == activeAppId, isRunning: app.isRunning, size: 72)
-                                .id(app.id)
-                                .onTapGesture {
-                                    onSelect?(app.id)
-                                }
-                        }
+                        hudButton(for: app)
                     }
                 }
                 .padding(.vertical, 40)
@@ -65,7 +73,13 @@ struct AppSwitcherHUDView: View {
             }
             .frame(maxHeight: 700) // Increased height to prevent clipping for larger grids
             .onAppear { scrollToActive(proxy: proxy, animated: false, anchor: .center) }
-            .onChange(of: activeAppId) { _, _ in scrollToActive(proxy: proxy, animated: true, anchor: .center) }
+            .onChange(of: activeAppId) { _, _ in
+                scrollToActive(
+                    proxy: proxy,
+                    animated: HUDMotionPolicy.shouldAnimateSelection(reduceMotion: reduceMotion),
+                    anchor: .center
+                )
+            }
         }
     }
     
@@ -74,13 +88,7 @@ struct AppSwitcherHUDView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 20) {
                     ForEach(apps) { app in
-                        if let icon = app.icon {
-                            HUDItemView(icon: icon, isActive: app.id == activeAppId, isRunning: app.isRunning, size: 72)
-                                .id(app.id)
-                                .onTapGesture {
-                                    onSelect?(app.id)
-                                }
-                        }
+                        hudButton(for: app)
                     }
                 }
                 .padding(.horizontal, 32)
@@ -88,7 +96,13 @@ struct AppSwitcherHUDView: View {
             }
             .frame(maxWidth: 700)
             .onAppear { scrollToActive(proxy: proxy, animated: false, anchor: nil) }
-            .onChange(of: activeAppId) { _, _ in scrollToActive(proxy: proxy, animated: true, anchor: nil) }
+            .onChange(of: activeAppId) { _, _ in
+                scrollToActive(
+                    proxy: proxy,
+                    animated: HUDMotionPolicy.shouldAnimateSelection(reduceMotion: reduceMotion),
+                    anchor: nil
+                )
+            }
         }
     }
     
@@ -117,6 +131,26 @@ struct AppSwitcherHUDView: View {
             .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
         )
     }
+
+    @ViewBuilder
+    private func hudButton(for app: HUDAppItem) -> some View {
+        if let icon = app.icon {
+            Button {
+                onSelect?(app.id)
+            } label: {
+                HUDItemView(
+                    icon: icon,
+                    isActive: app.id == activeAppId,
+                    isRunning: app.isRunning,
+                    size: 72
+                )
+            }
+            .buttonStyle(.plain)
+            .id(app.id)
+            .accessibilityLabel(app.name)
+            .accessibilityAddTraits(app.id == activeAppId ? .isSelected : [])
+        }
+    }
     
     private func scrollToActive(proxy: ScrollViewProxy, animated: Bool, anchor: UnitPoint?) {
         if animated {
@@ -136,13 +170,20 @@ struct HUDItemView: View {
     var size: CGFloat = 72 // Default size
     
     @State private var isHovering = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     
     var body: some View {
         Image(nsImage: icon)
             .resizable()
             .aspectRatio(contentMode: .fit)
             .frame(width: size, height: size)
-            .scaleEffect(isActive ? 1.15 : (isHovering ? 1.08 : 1.0))
+            .scaleEffect(
+                HUDMotionPolicy.iconScale(
+                    isActive: isActive,
+                    isHovering: isHovering,
+                    reduceMotion: reduceMotion
+                )
+            )
             .saturation(isActive ? 1.1 : (isRunning ? (isHovering ? 1.0 : 0.8) : 0.2)) // Grayscale if not running, slight color on hover
             .opacity(isActive ? 1.0 : (isRunning ? (isHovering ? 0.9 : 0.7) : 0.5)) // Dimmer if not running
             .blur(radius: 0)
@@ -172,8 +213,11 @@ struct HUDItemView: View {
                     }
                 }
             )
-            .animation(.spring(response: 0.35, dampingFraction: 0.7), value: isActive)
-            .animation(.easeInOut(duration: 0.15), value: isHovering)
+            .animation(
+                reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.7),
+                value: isActive
+            )
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.15), value: isHovering)
             .onHover { hovering in
                 isHovering = hovering
             }
