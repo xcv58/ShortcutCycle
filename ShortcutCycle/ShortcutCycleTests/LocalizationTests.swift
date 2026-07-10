@@ -1,14 +1,16 @@
 import XCTest
+#if canImport(ShortcutCycleCore)
+@testable import ShortcutCycleCore
+#endif
+@testable import ShortcutCycle
 
 /// Tests to ensure all localization keys are present in all supported languages
 final class LocalizationTests: XCTestCase {
     
-    /// All supported language codes in the project
-    private let supportedLanguages = [
-        "en", "de", "es", "fr", "it", "ja", "ko",
-        "nl", "pl", "pt-BR", "ru", "tr", "ar",
-        "zh-Hans", "zh-Hant"
-    ]
+    /// LanguageManager is the application source of truth for supported languages.
+    private var supportedLanguages: [String] {
+        LanguageManager.shared.supportedLanguages.map(\.code)
+    }
     
     /// Parse a Localizable.strings file and return all keys
     private func parseLocalizationKeys(from url: URL) -> Set<String> {
@@ -88,6 +90,63 @@ final class LocalizationTests: XCTestCase {
         }
 
         return nil
+    }
+
+    /// Test that localization resources match the application's supported languages.
+    func testLocalizationResourcesMatchSupportedLanguages() throws {
+        let resourcesDir = try XCTUnwrap(findResourcesDirectory(), "Could not find Resources directory containing localization files")
+        let expectedLanguages = Set(supportedLanguages)
+        let localizationDirectories = try FileManager.default.contentsOfDirectory(
+            at: resourcesDir,
+            includingPropertiesForKeys: [.isDirectoryKey],
+            options: [.skipsHiddenFiles]
+        )
+        let actualLanguages = Set(
+            localizationDirectories
+                .filter { $0.pathExtension == "lproj" }
+                .map { $0.deletingPathExtension().lastPathComponent }
+        )
+
+        XCTAssertEqual(
+            actualLanguages,
+            expectedLanguages,
+            "Localization directories should match LanguageManager.supportedLanguages"
+        )
+
+        for language in supportedLanguages {
+            let langURL = resourcesDir.appendingPathComponent("\(language).lproj/Localizable.strings")
+            XCTAssertTrue(
+                FileManager.default.fileExists(atPath: langURL.path),
+                "Missing localization file for \(language)"
+            )
+        }
+    }
+
+    func testLanguageSourcesMatchLanguageManager() throws {
+        let expectedLanguages = Set(supportedLanguages)
+        XCTAssertEqual(
+            Set(AppleLanguagePreferenceSync.supportedLanguageCodes),
+            expectedLanguages,
+            "AppleLanguagePreferenceSync should match LanguageManager.supportedLanguages"
+        )
+
+        let resourcesDir = try XCTUnwrap(findResourcesDirectory(), "Could not find Resources directory containing localization files")
+        let infoURL = resourcesDir.deletingLastPathComponent().appendingPathComponent("Info.plist")
+        let infoData = try Data(contentsOf: infoURL)
+        let info = try XCTUnwrap(
+            try PropertyListSerialization.propertyList(from: infoData, options: [], format: nil) as? [String: Any],
+            "Could not parse Info.plist"
+        )
+        let bundleLanguages = try XCTUnwrap(
+            info["CFBundleLocalizations"] as? [String],
+            "Info.plist is missing CFBundleLocalizations"
+        )
+
+        XCTAssertEqual(
+            Set(bundleLanguages),
+            expectedLanguages,
+            "Info.plist CFBundleLocalizations should match LanguageManager.supportedLanguages"
+        )
     }
     
     /// Test that all localization keys in English exist in all other languages
@@ -225,6 +284,10 @@ final class LocalizationTests: XCTestCase {
 
         for language in supportedLanguages {
             let langURL = resourcesDir.appendingPathComponent("\(language).lproj/Localizable.strings")
+            XCTAssertTrue(
+                FileManager.default.fileExists(atPath: langURL.path),
+                "Missing localization file for \(language)"
+            )
             let langKeys = parseLocalizationKeys(from: langURL)
 
             for key in removedKeys {
