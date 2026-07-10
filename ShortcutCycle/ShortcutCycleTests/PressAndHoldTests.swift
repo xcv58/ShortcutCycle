@@ -152,13 +152,6 @@ final class PressAndHoldTests: XCTestCase {
         manager.setWindowIgnoresMouseEvents = { [weak self] _, ignores in
             self?.mouseInteractionStates.append(ignores)
         }
-        manager.runningApplicationsProvider = savedRunningApplicationsProvider
-        manager.unhideRunningApplication = savedUnhideRunningApplication
-        manager.yieldActivationToRunningApplication = savedYieldActivationToRunningApplication
-        manager.activateRunningApplication = savedActivateRunningApplication
-        manager.scheduleActivationRetry = savedScheduleActivationRetry
-        manager.scheduleVisibleWindowRecheck = savedScheduleVisibleWindowRecheck
-        manager.hasVisibleWindowsForPID = savedHasVisibleWindowsForPID
         manager.targetLeavesCurrentSpace = { _ in false }
 
         // Reset state
@@ -1185,6 +1178,70 @@ final class PressAndHoldTests: XCTestCase {
 
         XCTAssertEqual(unhideCount, 2, "A stale retry must not unhide or re-activate an old target")
         XCTAssertEqual(activationFromCurrentAppFlags, [false, false])
+        XCTAssertTrue(activationResults.isEmpty)
+    }
+
+    @MainActor
+    func testDeclinedRunningAppActivationRetryIsSkippedAfterLaunchAttempt() {
+        let runningApp = NSRunningApplication.current
+        let runningItem = HUDAppItem(
+            bundleId: "com.test.retry.running",
+            pid: runningApp.processIdentifier,
+            name: "Running Retry Target"
+        )
+        let launchItem = HUDAppItem(
+            bundleId: "com.test.retry.launch",
+            name: "Launch Retry Target",
+            icon: nil
+        )
+        var unhideCount = 0
+        var activationFromCurrentAppFlags: [Bool] = []
+        var activationResults = [false]
+        var retryActions: [@MainActor @Sendable () -> Void] = []
+
+        manager.runningApplicationsProvider = { bundleId in
+            bundleId == runningItem.bundleId ? [runningApp] : []
+        }
+        manager.unhideRunningApplication = { _ in
+            unhideCount += 1
+        }
+        manager.activateRunningApplication = { _, fromCurrentApp in
+            activationFromCurrentAppFlags.append(fromCurrentApp)
+            guard !activationResults.isEmpty else {
+                XCTFail("Stale retry should not perform another activation")
+                return true
+            }
+            return activationResults.removeFirst()
+        }
+        manager.scheduleActivationRetry = { action in
+            retryActions.append(action)
+        }
+        manager.scheduleVisibleWindowRecheck = { _ in }
+        manager.hasVisibleWindowsForPID = { _ in true }
+        manager.isAppActive = { false }
+
+        manager.scheduleShow(
+            items: [runningItem],
+            activeAppId: runningItem.id,
+            modifierFlags: [.option],
+            shortcut: "Opt+1"
+        )
+        manager.hide()
+
+        XCTAssertEqual(retryActions.count, 1)
+
+        manager.scheduleShow(
+            items: [launchItem],
+            activeAppId: launchItem.id,
+            modifierFlags: [.option],
+            shortcut: "Opt+2"
+        )
+        manager.hide()
+
+        retryActions[0]()
+
+        XCTAssertEqual(unhideCount, 1, "A stale retry must not unhide after a newer launch attempt")
+        XCTAssertEqual(activationFromCurrentAppFlags, [false])
         XCTAssertTrue(activationResults.isEmpty)
     }
 

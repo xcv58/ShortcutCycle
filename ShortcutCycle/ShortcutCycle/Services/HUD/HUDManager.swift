@@ -788,9 +788,14 @@ class HUDManager: @preconcurrency ObservableObject {
         return list.contains { ($0[kCGWindowOwnerPID as String] as? Int32) == pid }
     }
 
-    private func activateRunningTargetApp(_ app: NSRunningApplication) {
+    @discardableResult
+    private func advanceActivationAttemptGeneration() -> Int {
         activationAttemptGeneration += 1
-        let activationGeneration = activationAttemptGeneration
+        return activationAttemptGeneration
+    }
+
+    private func activateRunningTargetApp(_ app: NSRunningApplication) {
+        let activationGeneration = advanceActivationAttemptGeneration()
         let didActivate: Bool
         if isAppActive() {
             yieldActivationToRunningApplication(app)
@@ -805,9 +810,8 @@ class HUDManager: @preconcurrency ObservableObject {
             "Target app activation was declined; retrying bundle=\(app.bundleIdentifier ?? "unknown", privacy: .public) pid=\(app.processIdentifier, privacy: .public)"
         )
 
-        scheduleActivationRetry { [weak self, weak app] in
+        scheduleActivationRetry { [weak self] in
             guard let self,
-                  let app,
                   self.activationAttemptGeneration == activationGeneration else {
                 return
             }
@@ -850,6 +854,7 @@ class HUDManager: @preconcurrency ObservableObject {
             }
             return
         }
+        advanceActivationAttemptGeneration()
         launchApp(bundleIdentifier: realBundleId)
     }
     
