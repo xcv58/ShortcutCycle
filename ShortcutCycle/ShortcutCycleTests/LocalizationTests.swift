@@ -1,5 +1,7 @@
 import XCTest
+#if canImport(ShortcutCycleCore)
 @testable import ShortcutCycleCore
+#endif
 @testable import ShortcutCycle
 
 /// Tests to ensure all localization keys are present in all supported languages
