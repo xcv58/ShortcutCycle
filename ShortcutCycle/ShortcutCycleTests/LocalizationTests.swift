@@ -89,6 +89,19 @@ final class LocalizationTests: XCTestCase {
 
         return nil
     }
+
+    /// Test that every supported language has a localization resource.
+    func testAllSupportedLocalizationFilesExist() throws {
+        let resourcesDir = try XCTUnwrap(findResourcesDirectory(), "Could not find Resources directory containing localization files")
+
+        for language in supportedLanguages {
+            let langURL = resourcesDir.appendingPathComponent("\(language).lproj/Localizable.strings")
+            XCTAssertTrue(
+                FileManager.default.fileExists(atPath: langURL.path),
+                "Missing localization file for \(language)"
+            )
+        }
+    }
     
     /// Test that all localization keys in English exist in all other languages
     func testAllLocalizationKeysExistInAllLanguages() throws {
@@ -225,6 +238,10 @@ final class LocalizationTests: XCTestCase {
 
         for language in supportedLanguages {
             let langURL = resourcesDir.appendingPathComponent("\(language).lproj/Localizable.strings")
+            XCTAssertTrue(
+                FileManager.default.fileExists(atPath: langURL.path),
+                "Missing localization file for \(language)"
+            )
             let langKeys = parseLocalizationKeys(from: langURL)
 
             for key in removedKeys {
