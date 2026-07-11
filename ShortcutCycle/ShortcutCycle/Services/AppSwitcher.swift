@@ -28,6 +28,12 @@ class AppSwitcher: @preconcurrency ObservableObject {
         }
         return app.activate(options: .activateAllWindows)
     }
+    var isRunningAppActive: (NSRunningApplication) -> Bool = { app in
+        app.isActive
+    }
+    var hideRunningApp: (NSRunningApplication) -> Void = { app in
+        app.hide()
+    }
     private var lastInvokedGroupId: UUID?
     private var cycleSessionState: CycleSessionState?
     private let cycleSessionTimeout: TimeInterval = 1.2
@@ -209,14 +215,14 @@ class AppSwitcher: @preconcurrency ObservableObject {
                 return NSRunningApplication.runningApplications(withBundleIdentifier: item.bundleId).first
             }()
             
-            if app?.isActive == true {
+            if let app, isRunningAppActive(app) {
                 let hudShown = showHUD(
                     items: runningItems,
                     activeAppId: item.id,
                     modifierFlags: modifierFlags,
                     shortcut: shortcut,
                     activeKey: activeKey,
-                    shouldActivate: false,
+                    shouldActivate: true,
                     onSelect: { [weak store] selectedId in
                         Task { @MainActor in
                              store?.updateLastActiveApp(bundleId: selectedId, for: group.id)
@@ -227,14 +233,19 @@ class AppSwitcher: @preconcurrency ObservableObject {
                             let bundleId = runningItems.first(where: { $0.id == selectedId })?.bundleId ?? selectedId
                             store?.updateMRUOrder(activatedId: selectedId, activatedBundleId: bundleId, for: group.id, liveItemIds: liveItemIds)
                         }
+                    },
+                    onQuickRelease: { [weak self, weak app] in
+                        guard let self, let app else { return }
+                        self.hideRunningApp(app)
                     }
                 )
-                if hudShown {
-                    // Preserve existing toggle behavior when HUD is visible.
-                    app?.hide()
-                } else {
-                    // With HUD disabled, keep behavior as an explicit activation.
-                    activateOrLaunch(bundleId: item.bundleId, pid: item.pid)
+                // When the HUD is enabled, defer the toggle until release so
+                // holding can become a normal one-item HUD session without
+                // hiding the app first.
+                if !hudShown {
+                    // Without a HUD there is no tap-versus-hold gesture, so keep
+                    // the selling-point quick toggle behavior immediately.
+                    hideRunningApp(app)
                     store.updateMRUOrder(activatedId: item.id, activatedBundleId: item.bundleId, for: group.id, liveItemIds: liveItemIds)
                 }
             } else {
@@ -459,7 +470,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
     }
     
     @discardableResult
-    private func showHUD(items: [HUDAppItem], activeAppId: String, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key? = nil, shouldActivate: Bool = true, immediate: Bool = false, onSelect: ((String) -> Void)? = nil, onFinalize: ((String) -> Void)? = nil) -> Bool {
+    private func showHUD(items: [HUDAppItem], activeAppId: String, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key? = nil, shouldActivate: Bool = true, immediate: Bool = false, onSelect: ((String) -> Void)? = nil, onFinalize: ((String) -> Void)? = nil, onQuickRelease: (() -> Void)? = nil) -> Bool {
         if UserDefaults.standard.bool(forKey: "showHUD") {
             HUDManager.shared.scheduleShow(
                 items: items,
@@ -470,7 +481,8 @@ class AppSwitcher: @preconcurrency ObservableObject {
                 shouldActivate: shouldActivate,
                 immediate: immediate,
                 onSelect: onSelect,
-                onFinalize: onFinalize
+                onFinalize: onFinalize,
+                onQuickRelease: onQuickRelease
             )
             return true
         }

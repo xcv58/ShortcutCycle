@@ -210,6 +210,7 @@ class HUDManager: @preconcurrency ObservableObject {
     
     private var onSelectCallback: ((String) -> Void)?
     private var onFinalizeCallback: ((String) -> Void)?
+    private var onQuickReleaseCallback: (() -> Void)?
     private let hudPresentationDelay: TimeInterval = 0.2
 
     private func clearEventMonitors() {
@@ -235,6 +236,7 @@ class HUDManager: @preconcurrency ObservableObject {
         currentSelectedAppId = nil
         currentShortcut = nil
         pendingActiveAppId = nil
+        onQuickReleaseCallback = nil
         stopLooping()
         clearEventMonitors()
         clearKeyUpMonitors()
@@ -246,7 +248,7 @@ class HUDManager: @preconcurrency ObservableObject {
     }
 
     /// Schedule showing the HUD with macOS Command+Tab logic
-    func scheduleShow(items: [HUDAppItem], activeAppId: String, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key? = nil, shouldActivate: Bool = true, immediate: Bool = false, onSelect: ((String) -> Void)? = nil, onFinalize: ((String) -> Void)? = nil) {
+    func scheduleShow(items: [HUDAppItem], activeAppId: String, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key? = nil, shouldActivate: Bool = true, immediate: Bool = false, onSelect: ((String) -> Void)? = nil, onFinalize: ((String) -> Void)? = nil, onQuickRelease: (() -> Void)? = nil) {
         // Cancel existing hide timer
         hideTimer?.invalidate()
         hideTimer = nil // Ensure we don't auto-hide while interacting
@@ -256,6 +258,7 @@ class HUDManager: @preconcurrency ObservableObject {
         // eventual select/finalize callbacks.
         self.onSelectCallback = onSelect
         self.onFinalizeCallback = onFinalize
+        self.onQuickReleaseCallback = onQuickRelease
         
         lastRequestTime = timeProvider.now
         
@@ -768,6 +771,18 @@ class HUDManager: @preconcurrency ObservableObject {
 
         stopLooping() // Ensure loop timer and monitor are cleaned up
 
+        // A one-item toggle must wait until release to know whether the gesture
+        // was a quick tap or a HUD hold. A quick release performs the toggle and
+        // suppresses the pending activation; once revealed, normal HUD selection
+        // and activation semantics take over.
+        if !isHUDRevealedThisSession(), let onQuickReleaseCallback {
+            self.onQuickReleaseCallback = nil
+            pendingActiveAppId = nil
+            onQuickReleaseCallback()
+        } else {
+            onQuickReleaseCallback = nil
+        }
+
         fireOnFinalizeIfNeeded()
 
         // Fast switch: user released keys before HUD appeared or while it was visible
@@ -793,6 +808,12 @@ class HUDManager: @preconcurrency ObservableObject {
             appResignObserver = nil
         }
     }
+
+    #if DEBUG
+    func finalizeSwitchForTesting() {
+        finalizeSwitchAndHide()
+    }
+    #endif
     
     private func hasVisibleWindows(pid: pid_t) -> Bool {
         guard let list = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] else {
@@ -933,6 +954,7 @@ class HUDManager: @preconcurrency ObservableObject {
         pendingActiveAppId = nil
         onSelectCallback = nil
         onFinalizeCallback = nil
+        onQuickReleaseCallback = nil
     }
     #endif
     
@@ -967,6 +989,7 @@ class HUDManager: @preconcurrency ObservableObject {
         currentSelectedAppId = nil
         currentShortcut = nil
         sessionPhase = .idle
+        onQuickReleaseCallback = nil
 
         // Ensure we activate the pending app if it exists (fallback)
         if let pendingId = pendingActiveAppId {

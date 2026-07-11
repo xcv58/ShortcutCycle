@@ -16,6 +16,9 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - **Shortcut conflicts**: Duplicate group and Settings window shortcut assignments now show a warning and clear the newly recorded shortcut instead of allowing both actions to share the same hotkey.
 - **Shortcut recorder localization**: Shortcut recorder placeholder text and app-command conflict warnings now follow ShortcutCycle's in-app language setting.
+- **HUD interaction stability**: Fixed an intermittent hover-related crash while preserving pointer hover feedback, keyboard navigation, clicks, and accessibility actions.
+- **HUD layout and focus styling**: Fixed occasional off-center app rows and removed an unintended focus border around HUD icons.
+- **Single-app tap and hold**: A quick shortcut tap still hides the frontmost app, while holding now reveals the one-item HUD and reliably keeps or returns that app to the front when released.
 
 ## [1.6] - 2026-05-26
 

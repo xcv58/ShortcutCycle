@@ -993,6 +993,96 @@ final class PressAndHoldTests: XCTestCase {
     }
 
     @MainActor
+    func testQuickReleaseRunsDeferredToggleWithoutReactivatingTarget() async throws {
+        var events: [String] = []
+
+        manager.activatePendingTargetApp = { _ in
+            events.append("activate")
+        }
+
+        manager.scheduleShow(
+            items: [HUDAppItem(bundleId: "com.test.toggle", pid: 81, name: "Toggle Target")],
+            activeAppId: "com.test.toggle::81",
+            modifierFlags: [.option],
+            shortcut: "Opt+1",
+            onFinalize: { _ in
+                events.append("finalize")
+            },
+            onQuickRelease: {
+                events.append("toggle")
+            }
+        )
+
+        let flagsHandler = try XCTUnwrap(latestLocalMonitorHandler(for: .flagsChanged))
+        _ = flagsHandler(try makeFlagsChangedEvent(modifierFlags: []))
+        await drainMainActorQueue()
+
+        XCTAssertEqual(events, ["toggle", "finalize"], "A quick release should toggle and finalize without reactivating the app it just hid")
+        XCTAssertFalse(manager.isSessionActive, "A quick toggle should fully tear down its prepared HUD session")
+    }
+
+    @MainActor
+    func testRevealedSingleItemHUDSkipsToggleAndActivatesSelection() async throws {
+        var events: [String] = []
+
+        manager.activatePendingTargetApp = { _ in
+            events.append("activate")
+        }
+
+        manager.scheduleShow(
+            items: [HUDAppItem(bundleId: "com.test.hold", pid: 82, name: "Hold Target")],
+            activeAppId: "com.test.hold::82",
+            modifierFlags: [.option],
+            shortcut: "Opt+1",
+            immediate: true,
+            onFinalize: { _ in
+                events.append("finalize")
+            },
+            onQuickRelease: {
+                events.append("toggle")
+            }
+        )
+
+        let flagsHandler = try XCTUnwrap(latestLocalMonitorHandler(for: .flagsChanged))
+        _ = flagsHandler(try makeFlagsChangedEvent(modifierFlags: []))
+        await drainMainActorQueue()
+
+        XCTAssertEqual(events, ["finalize", "activate"], "Once the HUD is revealed, release should keep normal selection activation semantics")
+        XCTAssertFalse(manager.isSessionActive, "Releasing a held shortcut should dismiss the HUD after activation")
+    }
+
+    @MainActor
+    func testExplicitHideCancelsDeferredToggleCallback() async throws {
+        var toggleCount = 0
+        manager.activatePendingTargetApp = { _ in }
+
+        manager.scheduleShow(
+            items: [HUDAppItem(bundleId: "com.test.cancel", pid: 83, name: "Cancel Target")],
+            activeAppId: "com.test.cancel::83",
+            modifierFlags: [.option],
+            shortcut: "Opt+1",
+            onQuickRelease: {
+                toggleCount += 1
+            }
+        )
+
+        manager.hide()
+
+        manager.scheduleShow(
+            items: [HUDAppItem(bundleId: "com.test.next", pid: 84, name: "Next Target")],
+            activeAppId: "com.test.next::84",
+            modifierFlags: [.option],
+            shortcut: "Opt+2"
+        )
+
+        let flagsHandler = try XCTUnwrap(latestLocalMonitorHandler(for: .flagsChanged))
+        _ = flagsHandler(try makeFlagsChangedEvent(modifierFlags: []))
+        await drainMainActorQueue()
+
+        XCTAssertEqual(toggleCount, 0, "A cancelled session must not leak its deferred toggle into a later shortcut")
+    }
+
+    @MainActor
     func testHideClosesCurrentSpaceSettingsWhenSelectedTargetLeavesCurrentSpace() {
         let settingsWindow = MockWindow(
             identifier: NSUserInterfaceItemIdentifier("settings"),
