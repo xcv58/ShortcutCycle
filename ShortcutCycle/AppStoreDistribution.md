@@ -46,7 +46,7 @@ Both local archives and Xcode Cloud builds use the same version-sync script:
 ```sh
 SC_BUILD_NUMBER=123 /bin/sh scripts/sync_project_version.sh
 SC_CI_BUILD_OFFSET=2000 /bin/sh scripts/sync_project_version.sh
-SC_MARKETING_VERSION=1.7 /bin/sh scripts/sync_project_version.sh
+SC_MARKETING_VERSION=1.8 /bin/sh scripts/sync_project_version.sh
 ```
 
 ## 4. Launch Checklist
@@ -70,7 +70,7 @@ For a browser-side comparison, capture the App Store Connect macOS version page 
 
 ```sh
 python3 scripts/app_store_release_audit.py \
-  --asc-snapshot .artifacts/app-store-connect/macos-version-1.7.txt
+  --asc-snapshot .artifacts/app-store-connect/macos-version-1.8.txt
 ```
 
 The auditor is intentionally read-only. It reports `ready`, `blocked`, or `needs_confirmation` and treats App Store Connect actions such as saving metadata, uploading assets, selecting a build, changing release policy, or clicking **Add for Review** as explicit-confirmation steps.

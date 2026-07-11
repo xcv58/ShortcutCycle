@@ -12,12 +12,9 @@ Cycle apps by group, instantly.
 ## Promotional Text
 Stop endlessly tabbing. Group your apps by context—Web, Code, Social—and cycle through them with dedicated hotkeys. Build muscle memory and flow.
 
-## What's New (1.7)
-- Assign an optional global shortcut to show, focus, or hide the Settings window.
-- Get clear warnings when a group shortcut conflicts with the Settings shortcut; conflicting assignments are cleared automatically.
-- See shortcut recorder hints and conflict messages in your selected app language.
-- Keep focus on the current app when the HUD appears for faster, less disruptive switching.
-- Manage groups with improved VoiceOver and Voice Control actions, while the HUD now respects the macOS Reduce Motion setting.
+## What's New (1.8)
+- In Running Apps Only mode, a shortcut now hides its sole available app immediately when that app is already frontmost, without showing the HUD.
+- When the sole available app is in the background, the familiar delayed HUD behavior remains unchanged.
 
 ## App Icon
 `ShortcutCycle/ShortcutCycle/Assets.xcassets/AppIcon.appiconset/1024.png`

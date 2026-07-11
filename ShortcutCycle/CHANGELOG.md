@@ -2,7 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.7] - Unreleased
+## [1.8] - Unreleased
+
+### Changed
+- **Single-app toggling**: In Running Apps Only mode, pressing a group's shortcut now hides its sole eligible app immediately when it is already frontmost and skips the HUD; a background app retains the normal delayed HUD behavior.
+
+## [1.7] - 2026-07-11
 
 ### Added
 - **Optional Settings window shortcut**: Users can assign their own global shortcut in General settings to show, focus, or hide the Settings window. No shortcut is assigned by default.
@@ -18,7 +23,6 @@ All notable changes to this project will be documented in this file.
 - **Shortcut recorder localization**: Shortcut recorder placeholder text and app-command conflict warnings now follow ShortcutCycle's in-app language setting.
 - **HUD interaction stability**: Fixed an intermittent hover-related crash while preserving pointer hover feedback, keyboard navigation, clicks, and accessibility actions.
 - **HUD layout and focus styling**: Fixed occasional off-center app rows and removed an unintended focus border around HUD icons.
-- **Single-app toggle behavior**: In Running Apps Only mode, a sole eligible app now hides immediately when frontmost without opening the HUD, while a background app keeps the normal delayed HUD and activation behavior.
 
 ## [1.6] - 2026-05-26
 
