@@ -516,9 +516,20 @@ class HUDManager: @preconcurrency ObservableObject {
                     if let timer = self.revealTimer, timer.isValid {
                         let currentFlags = self.currentModifierFlags()
                         if self.checkModifiersHeld(currentFlags: currentFlags, required: required) {
-                            // "Peek" behavior: reveal the HUD immediately, but do not
-                            // start auto-cycling because the loop key was released.
-                            self.revealHUD(requiredModifiers: requiredModifiers, activeKey: activeKey, shouldStartLoop: false)
+                            if self.onQuickReleaseCallback != nil {
+                                // A one-item toggle remains a quick tap when the
+                                // shortcut key is released before the HUD delay.
+                                // Keep the prepared session alive until modifier
+                                // release, but cancel the delayed reveal because
+                                // the complete shortcut is no longer being held.
+                                timer.invalidate()
+                                self.revealTimer = nil
+                            } else {
+                                // Multi-item "peek" behavior: reveal the HUD
+                                // immediately, but do not start auto-cycling because
+                                // the loop key was released.
+                                self.revealHUD(requiredModifiers: requiredModifiers, activeKey: activeKey, shouldStartLoop: false)
+                            }
                         } else {
                             self.revealTimer?.invalidate()
                             self.revealTimer = nil

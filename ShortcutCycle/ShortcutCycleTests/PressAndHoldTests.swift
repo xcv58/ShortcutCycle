@@ -1022,9 +1022,48 @@ final class PressAndHoldTests: XCTestCase {
     }
 
     @MainActor
-    func testRevealedSingleItemHUDSkipsToggleAndActivatesSelection() async throws {
+    func testShortcutKeyUpBeforeDelayKeepsSingleItemTogglePreparedUntilModifierRelease() async throws {
         var events: [String] = []
 
+        manager.currentModifierFlags = { [.option] }
+        manager.activatePendingTargetApp = { _ in
+            events.append("activate")
+        }
+
+        manager.scheduleShow(
+            items: [HUDAppItem(bundleId: "com.test.realistic-tap", pid: 85, name: "Realistic Tap")],
+            activeAppId: "com.test.realistic-tap::85",
+            modifierFlags: [.option],
+            shortcut: "Opt+A",
+            activeKey: .a,
+            onFinalize: { _ in
+                events.append("finalize")
+            },
+            onQuickRelease: {
+                events.append("toggle")
+            }
+        )
+
+        let keyUpHandler = try XCTUnwrap(latestLocalMonitorHandler(for: .keyUp))
+        _ = keyUpHandler(try makeKeyEvent(type: .keyUp, keyCode: KeyboardShortcuts.Key.a.rawValue, modifierFlags: [.option]))
+        await drainMainActorQueue()
+
+        XCTAssertFalse(manager.isVisible, "Releasing the shortcut key before 200 ms must not turn a one-item tap into a revealed HUD hold")
+        XCTAssertFalse(timerMock.fireLastNonRepeatingTimer(), "Shortcut key-up should cancel the pending one-item HUD reveal")
+
+        let flagsHandler = try XCTUnwrap(latestLocalMonitorHandler(for: .flagsChanged))
+        _ = flagsHandler(try makeFlagsChangedEvent(modifierFlags: []))
+        await drainMainActorQueue()
+
+        XCTAssertEqual(events, ["toggle", "finalize"], "The common key-up then modifier-release sequence should hide the frontmost app without reactivating it")
+        XCTAssertFalse(manager.isSessionActive)
+    }
+
+    @MainActor
+    func testHeldSingleItemHUDSkipsToggleAndActivatesSelectionAfterDelay() async throws {
+        var events: [String] = []
+
+        manager.currentModifierFlags = { [.option] }
         manager.activatePendingTargetApp = { _ in
             events.append("activate")
         }
@@ -1034,7 +1073,7 @@ final class PressAndHoldTests: XCTestCase {
             activeAppId: "com.test.hold::82",
             modifierFlags: [.option],
             shortcut: "Opt+1",
-            immediate: true,
+            activeKey: .a,
             onFinalize: { _ in
                 events.append("finalize")
             },
@@ -1042,6 +1081,10 @@ final class PressAndHoldTests: XCTestCase {
                 events.append("toggle")
             }
         )
+
+        XCTAssertTrue(timerMock.fireLastNonRepeatingTimer(), "Holding through the HUD delay should fire the reveal timer")
+        await drainMainActorQueue()
+        XCTAssertTrue(manager.isVisible, "The one-item HUD should reveal when the complete shortcut remains held past 200 ms")
 
         let flagsHandler = try XCTUnwrap(latestLocalMonitorHandler(for: .flagsChanged))
         _ = flagsHandler(try makeFlagsChangedEvent(modifierFlags: []))
