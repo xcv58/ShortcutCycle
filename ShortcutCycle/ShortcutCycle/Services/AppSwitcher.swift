@@ -216,38 +216,11 @@ class AppSwitcher: @preconcurrency ObservableObject {
             }()
             
             if let app, isRunningAppActive(app) {
-                let hudShown = showHUD(
-                    items: runningItems,
-                    activeAppId: item.id,
-                    modifierFlags: modifierFlags,
-                    shortcut: shortcut,
-                    activeKey: activeKey,
-                    shouldActivate: true,
-                    onSelect: { [weak store] selectedId in
-                        Task { @MainActor in
-                             store?.updateLastActiveApp(bundleId: selectedId, for: group.id)
-                        }
-                    },
-                    onFinalize: { [weak store] selectedId in
-                        Task { @MainActor in
-                            let bundleId = runningItems.first(where: { $0.id == selectedId })?.bundleId ?? selectedId
-                            store?.updateMRUOrder(activatedId: selectedId, activatedBundleId: bundleId, for: group.id, liveItemIds: liveItemIds)
-                        }
-                    },
-                    onQuickRelease: { [weak self, weak app] in
-                        guard let self, let app else { return }
-                        self.hideRunningApp(app)
-                    }
-                )
-                // When the HUD is enabled, defer the toggle until release so
-                // holding can become a normal one-item HUD session without
-                // hiding the app first.
-                if !hudShown {
-                    // Without a HUD there is no tap-versus-hold gesture, so keep
-                    // the selling-point quick toggle behavior immediately.
-                    hideRunningApp(app)
-                    store.updateMRUOrder(activatedId: item.id, activatedBundleId: item.bundleId, for: group.id, liveItemIds: liveItemIds)
-                }
+                // With only one eligible running app there is nothing to choose.
+                // Treat the shortcut as an immediate toggle and never create a
+                // HUD session, even when the HUD setting is enabled.
+                hideRunningApp(app)
+                store.updateMRUOrder(activatedId: item.id, activatedBundleId: item.bundleId, for: group.id, liveItemIds: liveItemIds)
             } else {
                 store.updateLastActiveApp(bundleId: item.id, for: group.id)
                 let hudShown = showHUD(
@@ -470,7 +443,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
     }
     
     @discardableResult
-    private func showHUD(items: [HUDAppItem], activeAppId: String, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key? = nil, shouldActivate: Bool = true, immediate: Bool = false, onSelect: ((String) -> Void)? = nil, onFinalize: ((String) -> Void)? = nil, onQuickRelease: (() -> Void)? = nil) -> Bool {
+    private func showHUD(items: [HUDAppItem], activeAppId: String, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key? = nil, shouldActivate: Bool = true, immediate: Bool = false, onSelect: ((String) -> Void)? = nil, onFinalize: ((String) -> Void)? = nil) -> Bool {
         if UserDefaults.standard.bool(forKey: "showHUD") {
             HUDManager.shared.scheduleShow(
                 items: items,
@@ -481,8 +454,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
                 shouldActivate: shouldActivate,
                 immediate: immediate,
                 onSelect: onSelect,
-                onFinalize: onFinalize,
-                onQuickRelease: onQuickRelease
+                onFinalize: onFinalize
             )
             return true
         }

@@ -114,13 +114,37 @@ final class AppSwitcherTests: XCTestCase {
         XCTAssertEqual(app.isHidden, false, "Switching apps should not hide the menu bar app itself")
     }
 
-    func testFrontmostSingleRunningAppQuickReleaseDefersThenHides() throws {
+    func testFrontmostSingleRunningAppWithHUDEnabledHidesImmediatelyWithoutHUDSession() async throws {
+        let app = try singleRegularRunningApp()
+        let (store, group) = try makeStoreAndGroup(for: app)
+
+        var hideCount = 0
+        switcher.isRunningAppActive = { _ in true }
+        switcher.hideRunningApp = { _ in hideCount += 1 }
+        switcher.activateRunningAppInstance = { _ in
+            XCTFail("A frontmost single app should hide instead of being reactivated")
+            return true
+        }
+        UserDefaults.standard.set(true, forKey: "showHUD")
+
+        switcher.handleShortcut(for: group, store: store)
+
+        XCTAssertEqual(hideCount, 1, "A sole frontmost app should hide on key-down even when HUD is enabled")
+        XCTAssertFalse(HUDManager.shared.isSessionActive, "The frontmost single-app toggle must not create a HUD session")
+
+        try await Task.sleep(nanoseconds: 250_000_000)
+
+        XCTAssertFalse(HUDManager.shared.isVisible, "Holding cannot reveal a HUD that was never scheduled")
+    }
+
+    func testBackgroundSingleRunningAppWithHUDEnabledKeepsDelayedHUDBehavior() async throws {
         let app = try singleRegularRunningApp()
         let (store, group) = try makeStoreAndGroup(for: app)
         let manager = HUDManager.shared
         let savedPresentHUDWindow = manager.presentHUDWindow
         let savedActivatePendingTargetApp = manager.activatePendingTargetApp
         defer {
+            manager.activatePendingTargetApp = { _ in }
             manager.hide()
             manager.presentHUDWindow = savedPresentHUDWindow
             manager.activatePendingTargetApp = savedActivatePendingTargetApp
@@ -128,7 +152,7 @@ final class AppSwitcherTests: XCTestCase {
 
         var hideCount = 0
         var activationCount = 0
-        switcher.isRunningAppActive = { _ in true }
+        switcher.isRunningAppActive = { _ in false }
         switcher.hideRunningApp = { _ in hideCount += 1 }
         manager.presentHUDWindow = { _ in }
         manager.activatePendingTargetApp = { _ in activationCount += 1 }
@@ -136,14 +160,14 @@ final class AppSwitcherTests: XCTestCase {
 
         switcher.handleShortcut(for: group, store: store)
 
-        XCTAssertEqual(hideCount, 0, "Key-down should not hide the frontmost app before tap-versus-hold intent is known")
-        XCTAssertTrue(manager.isSessionActive, "The shortcut should begin a pending HUD session")
+        XCTAssertEqual(hideCount, 0, "A background single app must not be hidden")
+        XCTAssertEqual(activationCount, 0, "Activation should remain deferred until shortcut release")
+        XCTAssertTrue(manager.isSessionActive, "The background single-app path should prepare the normal HUD session")
+        XCTAssertFalse(manager.isVisible, "The HUD should retain its presentation delay")
 
-        manager.finalizeSwitchForTesting()
+        try await Task.sleep(nanoseconds: 300_000_000)
 
-        XCTAssertEqual(hideCount, 1, "A quick release should preserve the single-app toggle behavior")
-        XCTAssertEqual(activationCount, 0, "Quick release must not immediately reactivate the app it toggled away")
-        XCTAssertFalse(manager.isSessionActive)
+        XCTAssertTrue(manager.isVisible, "Holding a background single-app shortcut should reveal the HUD after the normal delay")
     }
 
     func testFrontmostSingleRunningAppWithoutHUDHidesImmediately() throws {
