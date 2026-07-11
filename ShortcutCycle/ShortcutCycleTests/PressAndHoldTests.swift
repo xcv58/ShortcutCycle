@@ -1364,6 +1364,56 @@ final class PressAndHoldTests: XCTestCase {
         }
     }
 
+    @MainActor
+    func testHUDReusesHostingViewAcrossRapidUpdatesAndNewSessions() throws {
+        let icon = NSImage(size: NSSize(width: 32, height: 32))
+        let items = [
+            HUDAppItem(id: "com.test.1", name: "Test 1", icon: icon, isRunning: true),
+            HUDAppItem(id: "com.test.2", name: "Test 2", icon: icon, isRunning: true)
+        ]
+
+        let firstWindow = try XCTUnwrap(
+            manager.presentScreenshotHUD(
+                items: items,
+                activeAppId: items[0].id,
+                shortcut: "Opt+1"
+            )
+        )
+        let firstHostingView = try XCTUnwrap(firstWindow.contentView)
+        let firstIdentity = try XCTUnwrap(manager.hostingViewIdentityForTesting)
+
+        for updateIndex in 0..<100 {
+            let hoverView = try XCTUnwrap(
+                findSubview(ofType: HUDAppKitHoverView.self, in: firstHostingView)
+            )
+            hoverView.updateHovering(updateIndex.isMultiple(of: 2))
+
+            let window = try XCTUnwrap(
+                manager.presentScreenshotHUD(
+                    items: items,
+                    activeAppId: items[updateIndex % items.count].id,
+                    shortcut: "Opt+1"
+                )
+            )
+
+            XCTAssertTrue(window.contentView === firstHostingView)
+            XCTAssertEqual(manager.hostingViewIdentityForTesting, firstIdentity)
+        }
+
+        manager.hide()
+
+        let nextSessionWindow = try XCTUnwrap(
+            manager.presentScreenshotHUD(
+                items: items,
+                activeAppId: items[1].id,
+                shortcut: "Opt+1"
+            )
+        )
+
+        XCTAssertTrue(nextSessionWindow.contentView === firstHostingView)
+        XCTAssertEqual(manager.hostingViewIdentityForTesting, firstIdentity)
+    }
+
     // MARK: - Phantom Loop Prevention Tests
 
     @MainActor
@@ -1485,5 +1535,19 @@ final class PressAndHoldTests: XCTestCase {
         // isLooping should still be false (only delay timer, not repeating loop)
         XCTAssertFalse(manager.isLooping,
             "isLooping must be false during the delay phase")
+    }
+
+    private func findSubview<ViewType: NSView>(ofType type: ViewType.Type, in root: NSView) -> ViewType? {
+        if let match = root as? ViewType {
+            return match
+        }
+
+        for subview in root.subviews {
+            if let match = findSubview(ofType: type, in: subview) {
+                return match
+            }
+        }
+
+        return nil
     }
 }

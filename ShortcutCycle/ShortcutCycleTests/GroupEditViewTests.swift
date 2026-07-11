@@ -124,6 +124,83 @@ final class GroupEditViewTests: XCTestCase {
         )
     }
 
+    func testHUDAppKitHoverViewEmitsOnlyHoverTransitions() {
+        let hoverView = HUDAppKitHoverView()
+        var transitions: [Bool] = []
+        hoverView.onHoverChange = { transitions.append($0) }
+
+        hoverView.updateHovering(true)
+        hoverView.updateHovering(true)
+        hoverView.updateHovering(false)
+        hoverView.updateHovering(false)
+
+        XCTAssertEqual(transitions, [true, false])
+        XCTAssertFalse(hoverView.isHovering)
+    }
+
+    func testHUDAppKitHoverViewReplacesItsTrackingAreaWithoutAccumulating() throws {
+        let hoverView = HUDAppKitHoverView(frame: NSRect(x: 0, y: 0, width: 96, height: 96))
+
+        hoverView.updateTrackingAreas()
+        let firstTrackingArea = try XCTUnwrap(hoverView.managedTrackingArea)
+        XCTAssertTrue(hoverView.trackingAreas.contains { $0 === firstTrackingArea })
+
+        hoverView.updateTrackingAreas()
+        let secondTrackingArea = try XCTUnwrap(hoverView.managedTrackingArea)
+
+        XCTAssertFalse(firstTrackingArea === secondTrackingArea)
+        XCTAssertFalse(hoverView.trackingAreas.contains { $0 === firstTrackingArea })
+        XCTAssertTrue(hoverView.trackingAreas.contains { $0 === secondTrackingArea })
+        XCTAssertEqual(
+            hoverView.trackingAreas.filter { $0.owner as? HUDAppKitHoverView === hoverView }.count,
+            1
+        )
+    }
+
+    func testHUDAppKitHoverViewCleanupResetsStateAndDetachesCallback() {
+        let hoverView = HUDAppKitHoverView(frame: NSRect(x: 0, y: 0, width: 96, height: 96))
+        var transitions: [Bool] = []
+        hoverView.onHoverChange = { transitions.append($0) }
+        hoverView.updateTrackingAreas()
+        hoverView.updateHovering(true)
+
+        hoverView.stopTracking()
+
+        XCTAssertEqual(transitions, [true])
+        XCTAssertFalse(hoverView.isHovering)
+        XCTAssertNil(hoverView.managedTrackingArea)
+        XCTAssertNil(hoverView.onHoverChange)
+    }
+
+    func testHUDAppKitHoverBridgeUpdatesRenderedHoverAppearance() throws {
+        let icon = NSImage(size: NSSize(width: 64, height: 64))
+        icon.lockFocus()
+        NSColor.systemBlue.setFill()
+        NSBezierPath(rect: NSRect(x: 0, y: 0, width: 64, height: 64)).fill()
+        icon.unlockFocus()
+
+        let app = HUDAppItem(id: "com.test.hover", name: "Hover", icon: icon, isRunning: true)
+        let hostingView = hostView(
+            AnyView(
+                HUDAppButton(app: app, icon: icon, isActive: false, onSelect: nil)
+                    .frame(width: 96, height: 96)
+            ),
+            width: 96,
+            height: 96
+        )
+        let hoverView = try XCTUnwrap(findSubview(ofType: HUDAppKitHoverView.self, in: hostingView))
+        let restingSnapshot = try XCTUnwrap(snapshotData(of: hostingView))
+
+        hoverView.updateHovering(true)
+        drainMainRunLoop(timeout: 0.3)
+        hostingView.layoutSubtreeIfNeeded()
+        hostingView.displayIfNeeded()
+
+        let hoveredSnapshot = try XCTUnwrap(snapshotData(of: hostingView))
+        XCTAssertNotEqual(restingSnapshot, hoveredSnapshot)
+        XCTAssertTrue(hoverView.isHovering)
+    }
+
     func testRunningAppCandidatesDoNotRefreshForPureReorder() throws {
         let groupId = try XCTUnwrap(store.groups.first?.id)
         let app1 = AppItem(bundleIdentifier: "com.test.alpha", name: "Alpha")
@@ -339,5 +416,13 @@ final class GroupEditViewTests: XCTestCase {
         }
 
         return nil
+    }
+
+    private func snapshotData(of view: NSView) -> Data? {
+        guard let representation = view.bitmapImageRepForCachingDisplay(in: view.bounds) else {
+            return nil
+        }
+        view.cacheDisplay(in: view.bounds, to: representation)
+        return representation.representation(using: .png, properties: [:])
     }
 }

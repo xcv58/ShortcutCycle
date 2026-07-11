@@ -163,6 +163,7 @@ class HUDManager: @preconcurrency ObservableObject {
     }
     
     private var window: HUDWindow?
+    private var hostingView: NSHostingView<AppSwitcherHUDView>?
     private var hideTimer: Timer?
     private var revealTimer: Timer?
     private var loopTimer: Timer?
@@ -332,7 +333,19 @@ class HUDManager: @preconcurrency ObservableObject {
             }
         }
 
-        window.contentView = NSHostingView(rootView: hudView)
+        let hostingView: NSHostingView<AppSwitcherHUDView>
+        if let existingHostingView = self.hostingView {
+            existingHostingView.rootView = hudView
+            hostingView = existingHostingView
+        } else {
+            let newHostingView = NSHostingView(rootView: hudView)
+            self.hostingView = newHostingView
+            hostingView = newHostingView
+        }
+
+        if window.contentView !== hostingView {
+            window.contentView = hostingView
+        }
 
         // Resize and center
         if let screen = NSScreen.main {
@@ -884,6 +897,10 @@ class HUDManager: @preconcurrency ObservableObject {
     }
 
     #if DEBUG
+    var hostingViewIdentityForTesting: ObjectIdentifier? {
+        hostingView.map(ObjectIdentifier.init)
+    }
+
     func presentScreenshotHUD(items: [HUDAppItem], activeAppId: String, shortcut: String?) -> NSWindow? {
         resetForScreenshotPresentation()
         prepareHUD(items: items, activeAppId: activeAppId, shortcut: shortcut, reveal: true)
@@ -944,6 +961,7 @@ class HUDManager: @preconcurrency ObservableObject {
         fireOnFinalizeIfNeeded()
         let hadRevealedHUD = isHUDRevealedThisSession()
         window?.orderOut(nil)
+        window?.contentView = nil
         window = nil
         currentSelectedAppId = nil
         currentShortcut = nil

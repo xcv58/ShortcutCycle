@@ -135,21 +135,13 @@ struct AppSwitcherHUDView: View {
     @ViewBuilder
     private func hudButton(for app: HUDAppItem) -> some View {
         if let icon = app.icon {
-            Button {
-                onSelect?(app.id)
-            } label: {
-                HUDItemView(
-                    icon: icon,
-                    isActive: app.id == activeAppId,
-                    isRunning: app.isRunning,
-                    size: 72
-                )
-            }
-            .buttonStyle(.plain)
-            .focusEffectDisabled()
+            HUDAppButton(
+                app: app,
+                icon: icon,
+                isActive: app.id == activeAppId,
+                onSelect: onSelect
+            )
             .id(app.id)
-            .accessibilityLabel(app.name)
-            .accessibilityAddTraits(app.id == activeAppId ? .isSelected : [])
         }
     }
     
@@ -164,13 +156,128 @@ struct AppSwitcherHUDView: View {
     }
 }
 
+struct HUDAppButton: View {
+    let app: HUDAppItem
+    let icon: NSImage
+    let isActive: Bool
+    var onSelect: ((String) -> Void)?
+
+    @State private var isHovering = false
+
+    var body: some View {
+        Button {
+            onSelect?(app.id)
+        } label: {
+            HUDItemView(
+                icon: icon,
+                isActive: isActive,
+                isRunning: app.isRunning,
+                isHovering: isHovering,
+                size: 72
+            )
+        }
+        .buttonStyle(.plain)
+        // HUD arrow navigation is handled by HUDManager. Avoid creating a
+        // SwiftUI focus-effect responder solely to suppress the system ring.
+        .focusable(false)
+        .background {
+            HUDAppKitHoverTracker { hovering in
+                isHovering = hovering
+            }
+        }
+        .accessibilityLabel(app.name)
+        .accessibilityAddTraits(isActive ? .isSelected : [])
+    }
+}
+
+struct HUDAppKitHoverTracker: NSViewRepresentable {
+    let onHoverChange: (Bool) -> Void
+
+    func makeNSView(context: Context) -> HUDAppKitHoverView {
+        let view = HUDAppKitHoverView()
+        view.onHoverChange = onHoverChange
+        return view
+    }
+
+    func updateNSView(_ nsView: HUDAppKitHoverView, context: Context) {
+        nsView.onHoverChange = onHoverChange
+    }
+
+    static func dismantleNSView(_ nsView: HUDAppKitHoverView, coordinator: ()) {
+        nsView.stopTracking()
+    }
+}
+
+final class HUDAppKitHoverView: NSView {
+    var onHoverChange: ((Bool) -> Void)?
+    private(set) var isHovering = false
+    private(set) var managedTrackingArea: NSTrackingArea?
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        setAccessibilityElement(false)
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setAccessibilityElement(false)
+    }
+
+    override func updateTrackingAreas() {
+        if let managedTrackingArea {
+            removeTrackingArea(managedTrackingArea)
+        }
+
+        super.updateTrackingAreas()
+
+        let trackingArea = NSTrackingArea(
+            rect: .zero,
+            options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
+            owner: self,
+            userInfo: nil
+        )
+        addTrackingArea(trackingArea)
+        managedTrackingArea = trackingArea
+    }
+
+    override func mouseEntered(with event: NSEvent) {
+        updateHovering(true)
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        updateHovering(false)
+    }
+
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        nil
+    }
+
+    func updateHovering(_ hovering: Bool) {
+        guard isHovering != hovering else { return }
+        isHovering = hovering
+        onHoverChange?(hovering)
+    }
+
+    func stopTracking() {
+        if let managedTrackingArea {
+            removeTrackingArea(managedTrackingArea)
+            self.managedTrackingArea = nil
+        }
+        // SwiftUI calls dismantleNSView while invalidating its graph. Do not
+        // invoke the state callback from teardown or it can mutate @State
+        // during graph destruction.
+        isHovering = false
+        onHoverChange = nil
+    }
+}
+
 struct HUDItemView: View {
     let icon: NSImage
     let isActive: Bool
     let isRunning: Bool
+    let isHovering: Bool
     var size: CGFloat = 72 // Default size
-    
-    @State private var isHovering = false
+
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     
     var body: some View {
@@ -219,8 +326,5 @@ struct HUDItemView: View {
                 value: isActive
             )
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.15), value: isHovering)
-            .onHover { hovering in
-                isHovering = hovering
-            }
     }
 }
