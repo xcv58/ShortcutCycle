@@ -84,26 +84,14 @@ struct AppSwitcherHUDView: View {
     }
     
     private var horizontalListLayout: some View {
-        ScrollViewReader { proxy in
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 20) {
-                    ForEach(apps) { app in
-                        hudButton(for: app)
-                    }
-                }
-                .padding(.horizontal, 32)
-                .padding(.vertical, 24)
-            }
-            .frame(maxWidth: 700)
-            .onAppear { scrollToActive(proxy: proxy, animated: false, anchor: nil) }
-            .onChange(of: activeAppId) { _, _ in
-                scrollToActive(
-                    proxy: proxy,
-                    animated: HUDMotionPolicy.shouldAnimateSelection(reduceMotion: reduceMotion),
-                    anchor: nil
-                )
+        HStack(spacing: 20) {
+            ForEach(apps) { app in
+                hudButton(for: app)
             }
         }
+        .padding(.horizontal, 32)
+        .padding(.vertical, 24)
+        .frame(maxWidth: 700)
     }
     
     private var activeAppNameView: some View {

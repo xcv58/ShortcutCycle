@@ -963,6 +963,7 @@ class HUDManager: @preconcurrency ObservableObject {
         window?.orderOut(nil)
         window?.contentView = nil
         window = nil
+        hostingView = nil
         currentSelectedAppId = nil
         currentShortcut = nil
         sessionPhase = .idle

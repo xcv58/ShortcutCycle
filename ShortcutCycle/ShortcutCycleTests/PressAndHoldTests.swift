@@ -1365,7 +1365,7 @@ final class PressAndHoldTests: XCTestCase {
     }
 
     @MainActor
-    func testHUDReusesHostingViewAcrossRapidUpdatesAndNewSessions() throws {
+    func testHUDReusesHostingViewAcrossRapidUpdatesAndResetsForNewSession() throws {
         let icon = NSImage(size: NSSize(width: 32, height: 32))
         let items = [
             HUDAppItem(id: "com.test.1", name: "Test 1", icon: icon, isRunning: true),
@@ -1410,8 +1410,8 @@ final class PressAndHoldTests: XCTestCase {
             )
         )
 
-        XCTAssertTrue(nextSessionWindow.contentView === firstHostingView)
-        XCTAssertEqual(manager.hostingViewIdentityForTesting, firstIdentity)
+        XCTAssertFalse(nextSessionWindow.contentView === firstHostingView)
+        XCTAssertNotEqual(manager.hostingViewIdentityForTesting, firstIdentity)
     }
 
     // MARK: - Phantom Loop Prevention Tests

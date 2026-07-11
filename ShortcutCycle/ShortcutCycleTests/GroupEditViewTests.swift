@@ -201,6 +201,54 @@ final class GroupEditViewTests: XCTestCase {
         XCTAssertTrue(hoverView.isHovering)
     }
 
+    func testHorizontalHUDCentersSmallAppGroupsWithoutScrollView() throws {
+        let icon = NSImage(size: NSSize(width: 32, height: 32))
+        let apps = [
+            HUDAppItem(id: "com.test.calendar", name: "Calendar", icon: icon, isRunning: true),
+            HUDAppItem(id: "com.test.mail", name: "Mail", icon: icon, isRunning: true)
+        ]
+        let hostingView = hostFittingView(
+            AnyView(
+                AppSwitcherHUDView(
+                    apps: apps,
+                    activeAppId: apps[0].id,
+                    shortcutString: "⌥1"
+                )
+            )
+        )
+        let hoverViews = findSubviews(ofType: HUDAppKitHoverView.self, in: hostingView)
+        let itemFrames = hoverViews.map { $0.convert($0.bounds, to: hostingView) }
+        let leftMargin = try XCTUnwrap(itemFrames.map(\.minX).min())
+        let rightMargin = hostingView.bounds.maxX - (try XCTUnwrap(itemFrames.map(\.maxX).max()))
+
+        XCTAssertNil(findSubview(ofType: NSScrollView.self, in: hostingView))
+        XCTAssertEqual(hoverViews.count, apps.count)
+        XCTAssertEqual(leftMargin, rightMargin, accuracy: 1.0)
+    }
+
+    func testGridHUDKeepsScrollViewForLargerAppGroups() {
+        let icon = NSImage(size: NSSize(width: 32, height: 32))
+        let apps = (0..<6).map { index in
+            HUDAppItem(
+                id: "com.test.grid.\(index)",
+                name: "Grid \(index)",
+                icon: icon,
+                isRunning: true
+            )
+        }
+        let hostingView = hostFittingView(
+            AnyView(
+                AppSwitcherHUDView(
+                    apps: apps,
+                    activeAppId: apps[0].id,
+                    shortcutString: "⌥1"
+                )
+            )
+        )
+
+        XCTAssertNotNil(findSubview(ofType: NSScrollView.self, in: hostingView))
+    }
+
     func testRunningAppCandidatesDoNotRefreshForPureReorder() throws {
         let groupId = try XCTUnwrap(store.groups.first?.id)
         let app1 = AppItem(bundleIdentifier: "com.test.alpha", name: "Alpha")
@@ -367,6 +415,12 @@ final class GroupEditViewTests: XCTestCase {
         return hostingView
     }
 
+    private func hostFittingView(_ rootView: AnyView) -> NSHostingView<AnyView> {
+        let sizingView = NSHostingView(rootView: rootView)
+        let fittingSize = sizingView.fittingSize
+        return hostView(rootView, width: fittingSize.width, height: fittingSize.height)
+    }
+
     @discardableResult
     private func drainMainRunLoop(
         timeout: TimeInterval = 0.1,
@@ -416,6 +470,17 @@ final class GroupEditViewTests: XCTestCase {
         }
 
         return nil
+    }
+
+    private func findSubviews<ViewType: NSView>(ofType type: ViewType.Type, in root: NSView) -> [ViewType] {
+        var matches: [ViewType] = []
+        if let match = root as? ViewType {
+            matches.append(match)
+        }
+        for subview in root.subviews {
+            matches.append(contentsOf: findSubviews(ofType: type, in: subview))
+        }
+        return matches
     }
 
     private func snapshotData(of view: NSView) -> Data? {
