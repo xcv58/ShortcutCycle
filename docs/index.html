@@ -84,8 +84,8 @@
       "name": "ShortcutCycle",
       "operatingSystem": "macOS 14.0+",
       "applicationCategory": "ProductivityApplication",
-      "softwareVersion": "1.6",
-      "datePublished": "2026-04-05",
+      "softwareVersion": "1.8",
+      "datePublished": "2026-07-12",
       "offers": {
         "@type": "Offer",
         "price": "3.99",
@@ -1893,7 +1893,7 @@
                                 <span class="versus-icon">🎯</span>
                                 <div class="versus-content">
                                     <strong data-i18n="comparison.new.scopeTitle">Instant Scope</strong>
-                                    <span data-i18n="comparison.new.scopeBody">Only cycle relevant windows (e.g., just
+                                    <span data-i18n="comparison.new.scopeBody">Only cycle relevant apps (e.g., just
                                         browsers). Ignore the noise.</span>
                                 </div>
                             </li>
@@ -1922,14 +1922,14 @@
                     <div class="feature-card">
                         <span class="feature-icon">🎯</span>
                         <h3 data-i18n="features.groups.title">Context Groups</h3>
-                        <p data-i18n="features.groups.body">Stop cycling through 20 irrelevant windows. Group apps by workflow—"coding", "writing",
+                        <p data-i18n="features.groups.body">Stop cycling through 20 irrelevant apps. Group apps by workflow—"coding", "writing",
                             "social"—and switch only between what you need.</p>
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">⚡️</span>
                         <h3 data-i18n="features.switching.title">Instant Switching</h3>
-                        <p data-i18n-html="features.switching.body">Press <code>Option+1</code> to activate your browser group. Press again to cycle through
-                            windows. Build instant muscle memory.</p>
+                        <p data-i18n-html="features.switching.body">Quick-tap to switch, or hold to reveal the HUD. With one app in Running Apps Only mode,
+                            the shortcut instantly hides it when it is frontmost.</p>
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">👥</span>
@@ -1946,14 +1946,13 @@
                     <div class="feature-card">
                         <span class="feature-icon">💻</span>
                         <h3 data-i18n="features.native.title">Native & Fast</h3>
-                        <p data-i18n="features.native.body">Built with Swift for Apple Silicon. Instant startup, zero lag, and negligible battery impact.
+                        <p data-i18n="features.native.body">Built natively with Swift for Apple Silicon and Intel. Instant startup and negligible battery impact.
                         </p>
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">🚀</span>
-                        <h3 data-i18n="features.launch.title">Auto-Launch</h3>
-                        <p data-i18n="features.launch.body">Targeted app not running? We launch it instantly. ShortcutCycle is a switcher and launcher in
-                            one.</p>
+                        <h3 data-i18n="features.launch.title">Per-Group Modes</h3>
+                        <p data-i18n="features.launch.body">Choose Running Apps Only to cycle open apps, or All Apps to launch closed apps when needed.</p>
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">🔒</span>
@@ -1982,9 +1981,9 @@
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">♿️</span>
-                        <h3 data-i18n="features.accessibility.title">Fully Accessible</h3>
-                        <p data-i18n="features.accessibility.body">Complete VoiceOver support, Voice Control compatibility, and keyboard navigation throughout.
-                            Built with accessibility in mind from day one.</p>
+                        <h3 data-i18n="features.accessibility.title">Accessible by Design</h3>
+                        <p data-i18n="features.accessibility.body">VoiceOver-friendly controls, keyboard navigation, Dark Interface, Sufficient Contrast, and
+                            Reduced Motion support.</p>
                     </div>
                 </div>
             </section>
@@ -2302,7 +2301,7 @@
                         memoryTitle: 'Muscle Memory',
                         memoryBody: 'Your fingers know exactly where "Code" is. Zero thought required.',
                         scopeTitle: 'Instant Scope',
-                        scopeBody: 'Only cycle relevant windows (e.g., just browsers). Ignore the noise.',
+                        scopeBody: 'Only cycle relevant apps (e.g., just browsers). Ignore the noise.',
                         keyTitle: 'One Keystroke',
                         keyBody: 'Option+1. Done. You\'re there instantly.'
                     }
@@ -2315,11 +2314,11 @@
                     },
                     groups: {
                         title: 'Context Groups',
-                        body: 'Stop cycling through 20 irrelevant windows. Group apps by workflow—"coding", "writing", "social"—and switch only between what you need.'
+                        body: 'Stop cycling through 20 irrelevant apps. Group apps by workflow—"coding", "writing", "social"—and switch only between what you need.'
                     },
                     switching: {
                         title: 'Instant Switching',
-                        body: 'Press <code>Option+1</code> to activate your browser group. Press again to cycle through windows. Build instant muscle memory.'
+                        body: 'Quick-tap to switch, or hold to reveal the HUD. With one app in Running Apps Only mode, the shortcut instantly hides it when it is frontmost.'
                     },
                     profiles: {
                         title: 'Browser Profiles',
@@ -2331,11 +2330,11 @@
                     },
                     native: {
                         title: 'Native & Fast',
-                        body: 'Built with Swift for Apple Silicon. Instant startup, zero lag, and negligible battery impact.'
+                        body: 'Built natively with Swift for Apple Silicon and Intel. Instant startup and negligible battery impact.'
                     },
                     launch: {
-                        title: 'Auto-Launch',
-                        body: 'Targeted app not running? We launch it instantly. ShortcutCycle is a switcher and launcher in one.'
+                        title: 'Per-Group Modes',
+                        body: 'Choose Running Apps Only to cycle open apps, or All Apps to launch closed apps when needed.'
                     },
                     privacy: {
                         title: 'Private by Design',
@@ -2354,8 +2353,8 @@
                         body: 'Fully localized interface in 15 languages. Productivity that speaks your language.'
                     },
                     accessibility: {
-                        title: 'Fully Accessible',
-                        body: 'Complete VoiceOver support, Voice Control compatibility, and keyboard navigation throughout. Built with accessibility in mind from day one.'
+                        title: 'Accessible by Design',
+                        body: 'VoiceOver-friendly controls, keyboard navigation, Dark Interface, Sufficient Contrast, and Reduced Motion support.'
                     }
                 },
                 videos: {
@@ -2510,7 +2509,7 @@
                         memoryTitle: '肌肉记忆',
                         memoryBody: '手指知道“开发”在哪里，几乎不用想。',
                         scopeTitle: '范围明确',
-                        scopeBody: '只在相关窗口里轮换（比如只轮换浏览器），噪音自动隔开。',
+                        scopeBody: '只在相关 App 之间轮换（比如只轮换浏览器），噪音自动隔开。',
                         keyTitle: '一个快捷键',
                         keyBody: 'Option+1，完成。马上到位。'
                     }
@@ -2523,11 +2522,11 @@
                     },
                     groups: {
                         title: '场景分组',
-                        body: '不用在 20 个无关窗口里来回找。按工作流分组，比如“开发”“写作”“社交”，只在真正需要的 App 之间切换。'
+                        body: '不用在 20 个无关 App 里来回找。按工作流分组，比如“开发”“写作”“社交”，只在真正需要的 App 之间切换。'
                     },
                     switching: {
                         title: '即时切换',
-                        body: '按 <code>Option+1</code> 激活浏览器分组。再按一次继续轮换窗口，很快就能形成肌肉记忆。'
+                        body: '快速轻按即可切换，按住则显示 HUD。在“仅运行中的 App”模式下只有一个 App 时，如果它位于最前方，快捷键会立即将它隐藏。'
                     },
                     profiles: {
                         title: '浏览器配置文件',
@@ -2539,11 +2538,11 @@
                     },
                     native: {
                         title: '原生又轻快',
-                        body: '使用 Swift 为 Apple Silicon 打造。启动快、无卡顿，对电池影响很小。'
+                        body: '使用 Swift 为 Apple Silicon 和 Intel 原生打造。启动快，对电池影响很小。'
                     },
                     launch: {
-                        title: '自动启动',
-                        body: '目标 App 没打开？ShortcutCycle 会立刻帮你启动。它既是切换器，也是启动器。'
+                        title: '每组独立模式',
+                        body: '每个分组都可以选择“仅运行中的 App”，或选择“所有 App”并在需要时启动尚未打开的 App。'
                     },
                     privacy: {
                         title: '隐私优先',
@@ -2562,8 +2561,8 @@
                         body: 'App 内界面已本地化为 15 种语言。让效率工具使用你的语言。'
                     },
                     accessibility: {
-                        title: '完整辅助功能',
-                        body: '支持 VoiceOver、语音控制和完整键盘导航。从第一天起就把无障碍体验纳入设计。'
+                        title: '无障碍设计',
+                        body: '提供适合 VoiceOver 的控件与键盘导航，并支持深色界面、充足对比度和减弱动态效果。'
                     }
                 },
                 videos: {
@@ -2718,7 +2717,7 @@
                         memoryTitle: '肌肉記憶',
                         memoryBody: '手指知道「開發」在哪裡，幾乎不用想。',
                         scopeTitle: '範圍明確',
-                        scopeBody: '只在相關視窗裡輪換（例如只輪換瀏覽器），雜訊自動隔開。',
+                        scopeBody: '只在相關 App 之間輪換（例如只輪換瀏覽器），雜訊自動隔開。',
                         keyTitle: '一個快捷鍵',
                         keyBody: 'Option+1，完成。馬上到位。'
                     }
@@ -2731,11 +2730,11 @@
                     },
                     groups: {
                         title: '情境分組',
-                        body: '不用在 20 個無關視窗裡來回找。依工作流程分組，例如「開發」「寫作」「社群」，只在真正需要的 App 之間切換。'
+                        body: '不用在 20 個無關 App 裡來回找。依工作流程分組，例如「開發」「寫作」「社群」，只在真正需要的 App 之間切換。'
                     },
                     switching: {
                         title: '即時切換',
-                        body: '按 <code>Option+1</code> 啟動瀏覽器分組。再按一次繼續輪換視窗，很快就能形成肌肉記憶。'
+                        body: '快速輕按即可切換，按住則顯示 HUD。在「僅執行中的 App」模式下只有一個 App 時，如果它位於最前方，快捷鍵會立即將它隱藏。'
                     },
                     profiles: {
                         title: '瀏覽器設定檔',
@@ -2747,11 +2746,11 @@
                     },
                     native: {
                         title: '原生又輕快',
-                        body: '使用 Swift 為 Apple Silicon 打造。啟動快、無卡頓，對電池影響很小。'
+                        body: '使用 Swift 為 Apple Silicon 和 Intel 原生打造。啟動快，對電池影響很小。'
                     },
                     launch: {
-                        title: '自動啟動',
-                        body: '目標 App 還沒打開？ShortcutCycle 會立刻幫你啟動。它既是切換器，也是啟動器。'
+                        title: '每組獨立模式',
+                        body: '每個分組都可以選擇「僅執行中的 App」，或選擇「所有 App」並在需要時啟動尚未打開的 App。'
                     },
                     privacy: {
                         title: '隱私優先',
@@ -2770,8 +2769,8 @@
                         body: 'App 內介面已在地化為 15 種語言。讓效率工具使用你的語言。'
                     },
                     accessibility: {
-                        title: '完整輔助功能',
-                        body: '支援 VoiceOver、語音控制與完整鍵盤導覽。從第一天起就把無障礙體驗納入設計。'
+                        title: '輔助使用設計',
+                        body: '提供適合 VoiceOver 的控制項與鍵盤導覽，並支援深色介面、足夠對比度和減少動態效果。'
                     }
                 },
                 videos: {
