@@ -16,45 +16,53 @@ jobs:
       working-directory: ShortcutCycle
 
     - name: Generate coverage report
-      if: always()
+      if: success()
       working-directory: ShortcutCycle
       run: |
         CODECOV_PATH=$(swift test --show-codecov-path 2>/dev/null || true)
-        if [ -f "$CODECOV_PATH" ]; then
-          # Export to LCOV
-          # We need the binary path for llvm-cov
-          BIN_PATH=$(swift build --show-bin-path)
-          TEST_BINARY="$BIN_PATH/ShortcutCyclePackageTests.xctest/Contents/MacOS/ShortcutCyclePackageTests"
-          
-          # If the standard location doesn't exist, try to find it (sometimes it's a flat binary depending on swift version/platform)
-          if [ ! -f "$TEST_BINARY" ]; then
-             TEST_BINARY=$(find "$BIN_PATH" -name "ShortcutCyclePackageTests" -type f | head -n 1)
-          fi
-          
-          # Find profile data
-          # CODECOV_PATH is usually .../codecov/ShortcutCycle.json
-          # We expect .../codecov/default.profdata
-          PROFDATA_PATH="$(dirname "$CODECOV_PATH")/default.profdata"
-          
-          if [ -f "$TEST_BINARY" ] && [ -f "$PROFDATA_PATH" ]; then
-              echo "Found test binary at $TEST_BINARY"
-              echo "Found profile data at $PROFDATA_PATH"
-              xcrun llvm-cov export -format="lcov" \
-                "$TEST_BINARY" \
-                -instr-profile="$PROFDATA_PATH" \
-                -ignore-filename-regex=".build|Tests" \
-                > coverage.lcov
-          else
-              echo "Could not find test binary or profile data"
-              echo "Binary: $TEST_BINARY"
-              echo "Profile: $PROFDATA_PATH"
-          fi
+        if [ ! -f "$CODECOV_PATH" ]; then
+          echo "Coverage data not found at: $CODECOV_PATH" >&2
+          exit 1
+        fi
 
-          echo "## Test Coverage" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "| File | Coverage |" >> "$GITHUB_STEP_SUMMARY"
-          echo "|------|----------|" >> "$GITHUB_STEP_SUMMARY"
-          python3 -c "
+        # Export to LCOV
+        # We need the binary path for llvm-cov
+        BIN_PATH=$(swift build --show-bin-path)
+        TEST_BINARY="$BIN_PATH/ShortcutCyclePackageTests.xctest/Contents/MacOS/ShortcutCyclePackageTests"
+
+        # If the standard location doesn't exist, try to find it (sometimes it's a flat binary depending on swift version/platform)
+        if [ ! -f "$TEST_BINARY" ]; then
+           TEST_BINARY=$(find "$BIN_PATH" -name "ShortcutCyclePackageTests" -type f | head -n 1)
+        fi
+
+        # CODECOV_PATH is usually .../codecov/ShortcutCycle.json.
+        PROFDATA_PATH="$(dirname "$CODECOV_PATH")/default.profdata"
+
+        if [ ! -f "$TEST_BINARY" ] || [ ! -f "$PROFDATA_PATH" ]; then
+          echo "Could not find test binary or profile data" >&2
+          echo "Binary: $TEST_BINARY" >&2
+          echo "Profile: $PROFDATA_PATH" >&2
+          exit 1
+        fi
+
+        echo "Found test binary at $TEST_BINARY"
+        echo "Found profile data at $PROFDATA_PATH"
+        xcrun llvm-cov export -format="lcov" \
+          "$TEST_BINARY" \
+          -instr-profile="$PROFDATA_PATH" \
+          -ignore-filename-regex=".build|Tests" \
+          > coverage.lcov
+
+        if [ ! -s coverage.lcov ]; then
+          echo "LCOV export produced no coverage data" >&2
+          exit 1
+        fi
+
+        echo "## Test Coverage" >> "$GITHUB_STEP_SUMMARY"
+        echo "" >> "$GITHUB_STEP_SUMMARY"
+        echo "| File | Coverage |" >> "$GITHUB_STEP_SUMMARY"
+        echo "|------|----------|" >> "$GITHUB_STEP_SUMMARY"
+        python3 -c "
         import json, sys, os
         
         # Also filter the LCOV file if it exists
@@ -112,14 +120,11 @@ jobs:
         if total_count > 0:
             total_pct = 100.0 * total_covered / total_count
             print(f'| **Total** | **{total_pct:.1f}%** ({total_covered}/{total_count} lines) |')
-          " >> "$GITHUB_STEP_SUMMARY"
-        else
-          echo "Coverage data not found" >> "$GITHUB_STEP_SUMMARY"
-        fi
+        " >> "$GITHUB_STEP_SUMMARY"
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v5
-      if: always()
+      if: success()
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         slug: xcv58/ShortcutCycle

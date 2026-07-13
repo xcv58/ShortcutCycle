@@ -7,6 +7,25 @@ import XCTest
 
 @MainActor
 final class AppSwitcherTests: XCTestCase {
+    private final class MockTimerScheduler: TimerScheduler {
+        private var scheduledTimers: [(Timer, (Timer) -> Void)] = []
+
+        func schedule(timeInterval: TimeInterval, repeats: Bool, block: @escaping (Timer) -> Void) -> Timer {
+            let timer = Timer(timeInterval: timeInterval, repeats: repeats) { _ in }
+            scheduledTimers.append((timer, block))
+            return timer
+        }
+
+        @discardableResult
+        func fireLastTimer() -> Bool {
+            guard let timer = scheduledTimers.popLast() else {
+                return false
+            }
+            timer.1(timer.0)
+            return true
+        }
+    }
+
     private var switcher: AppSwitcher!
     private var originalShowHUDValue: Any?
 
@@ -143,17 +162,21 @@ final class AppSwitcherTests: XCTestCase {
         let manager = HUDManager.shared
         let savedPresentHUDWindow = manager.presentHUDWindow
         let savedActivatePendingTargetApp = manager.activatePendingTargetApp
+        let savedTimerScheduler = manager.timerScheduler
+        let timerScheduler = MockTimerScheduler()
         defer {
             manager.activatePendingTargetApp = { _ in }
             manager.hide()
             manager.presentHUDWindow = savedPresentHUDWindow
             manager.activatePendingTargetApp = savedActivatePendingTargetApp
+            manager.timerScheduler = savedTimerScheduler
         }
 
         var hideCount = 0
         var activationCount = 0
         switcher.isRunningAppActive = { _ in false }
         switcher.hideRunningApp = { _ in hideCount += 1 }
+        manager.timerScheduler = timerScheduler
         manager.presentHUDWindow = { _ in }
         manager.activatePendingTargetApp = { _ in activationCount += 1 }
         UserDefaults.standard.set(true, forKey: "showHUD")
@@ -165,7 +188,8 @@ final class AppSwitcherTests: XCTestCase {
         XCTAssertTrue(manager.isSessionActive, "The background single-app path should prepare the normal HUD session")
         XCTAssertFalse(manager.isVisible, "The HUD should retain its presentation delay")
 
-        try await Task.sleep(nanoseconds: 300_000_000)
+        XCTAssertTrue(timerScheduler.fireLastTimer(), "The HUD presentation delay should be scheduled")
+        await Task.yield()
 
         XCTAssertTrue(manager.isVisible, "Holding a background single-app shortcut should reveal the HUD after the normal delay")
     }
