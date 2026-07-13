@@ -12,7 +12,7 @@ Cycle apps by group, instantly.
 ## Promotional Text
 Stop endlessly tabbing. Group your apps by context—Web, Code, Social—and cycle through them with dedicated hotkeys. Build muscle memory and flow.
 
-## What's New (1.8)
+## What's New (1.9)
 - In Running Apps Only mode, a shortcut now hides its sole available app immediately when that app is already frontmost, without showing the HUD.
 - When the sole available app is in the background, the familiar delayed HUD behavior remains unchanged.
 

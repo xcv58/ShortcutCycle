@@ -2,7 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.8] - Unreleased
+## [1.9] - Unreleased
+
+### Changed
+- **Release train**: Version 1.9 carries forward the refined single-app shortcut behavior in Running Apps Only mode.
+
+## [1.8] - 2026-07-13
 
 ### Changed
 - **Single-app toggling**: In Running Apps Only mode, pressing a group's shortcut now hides its sole eligible app immediately when it is already frontmost and skips the HUD; a background app retains the normal delayed HUD behavior.
