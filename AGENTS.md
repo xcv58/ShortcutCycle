@@ -177,6 +177,7 @@ When adding new user-facing strings, add the key to all 15 `Localizable.strings`
 
 ## Tips for AI Assistants
 
+- Before a signed TestFlight/App Store upload on the Mini, read `RELEASE_KEYCHAIN.md` and unlock the protected release keychain. Never copy, print, commit, or request the password.
 - Always run `swift test` from the `ShortcutCycle/` directory after making changes to verify nothing breaks.
 - Model files in `Models/` are shared between the `ShortcutCycleCore` and `ShortcutCycle` targets — they are listed explicitly in `Package.swift` sources/excludes. If you add a new model file, update both the `sources` array in the Core target and the `exclude` array in the executable target.
 - The test target depends on both `ShortcutCycleCore` and the `ShortcutCycle` executable target. Put pure, reusable logic in Core when possible, and add app-target tests for UI/service behavior that lives in the executable target, such as HUD, settings-window lifecycle, and AppSwitcher integration paths.

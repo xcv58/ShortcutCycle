@@ -43,11 +43,14 @@ class AppSwitcher: @preconcurrency ObservableObject {
     }
     
     /// Handle a shortcut activation for a given group
-    func handleShortcut(for group: AppGroup, store: GroupStore) {
+    func handleShortcut(for group: AppGroup, store: GroupStore, frontmostAppIdAtKeyDown: String? = nil) {
         let modifierFlags = getModifierFlags(for: group)
         let shortcutString = group.shortcutDisplayString
         let activeKey = getShortcutKey(for: group)
-        let prioritizeFrontmost = lastInvokedGroupId == group.id
+        // A cold-start invocation should advance from the frontmost app just as
+        // a continuing invocation does. Only a genuine cross-group transition
+        // restores the destination group's saved context.
+        let prioritizeFrontmost = lastInvokedGroupId == nil || lastInvokedGroupId == group.id
         
         let hudItems = getHUDItems(for: group)
 
@@ -62,6 +65,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
                 modifierFlags: modifierFlags,
                 shortcut: shortcutString,
                 activeKey: activeKey,
+                frontmostAppIdAtKeyDown: frontmostAppIdAtKeyDown,
                 prioritizeFrontmost: prioritizeFrontmost
              )
         } else {
@@ -73,6 +77,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
                 modifierFlags: modifierFlags,
                 shortcut: shortcutString,
                 activeKey: activeKey,
+                frontmostAppIdAtKeyDown: frontmostAppIdAtKeyDown,
                 prioritizeFrontmost: prioritizeFrontmost
              )
         }
@@ -81,10 +86,14 @@ class AppSwitcher: @preconcurrency ObservableObject {
             lastInvokedGroupId = group.id
         }
     }
+
+    func handleShortcutRelease(for groupId: UUID) {
+        HUDManager.shared.handleShortcutKeyUp(for: groupId)
+    }
     
     // MARK: - Logic for "Open App If Needed" (New Feature)
     
-    private func cycleAllApps(hudItems: [HUDAppItem], group: AppGroup, store: GroupStore, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key?, prioritizeFrontmost: Bool) -> Bool {
+    private func cycleAllApps(hudItems: [HUDAppItem], group: AppGroup, store: GroupStore, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key?, frontmostAppIdAtKeyDown: String?, prioritizeFrontmost: Bool) -> Bool {
         // If the HUD is currently self-driving (looping via timer), ignore external shortcut requests (Key Repeats)
         // This prevents double-incrementing when holding the key.
         if HUDManager.shared.isLooping {
@@ -101,13 +110,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
 
         // Use shared logic
         let cycleItems = hudItems.map { CyclingAppItem(id: $0.id) }
-        let frontmostApp = NSWorkspace.shared.frontmostApplication
-
-        // Build unique ID for frontmost app (bundleId::pid format)
-        let frontmostAppUniqueId: String? = {
-            guard let app = frontmostApp, let bundleId = app.bundleIdentifier else { return nil }
-            return "\(bundleId)::\(app.processIdentifier)"
-        }()
+        let frontmostAppUniqueId = frontmostAppIdAtKeyDown ?? currentFrontmostApplicationId()
 
         let resolvableItems = hudItems.map { ResolvableAppItem(id: $0.id, bundleId: $0.bundleId) }
         let resolvedLastActiveId = AppCyclingLogic.resolveLastActiveId(
@@ -153,6 +156,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
         let hudShown = showHUD(
             items: hudItems,
             activeAppId: nextAppId,
+            groupId: group.id,
             modifierFlags: modifierFlags,
             shortcut: shortcut,
             activeKey: activeKey,
@@ -179,7 +183,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
     
     // MARK: - Legacy Logic (Only Running Apps)
     
-    private func cycleRunningAppsOnly(hudItems: [HUDAppItem], group: AppGroup, store: GroupStore, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key?, prioritizeFrontmost: Bool) -> Bool {
+    private func cycleRunningAppsOnly(hudItems: [HUDAppItem], group: AppGroup, store: GroupStore, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key?, frontmostAppIdAtKeyDown: String?, prioritizeFrontmost: Bool) -> Bool {
         // If the HUD is currently self-driving (looping via timer), ignore external shortcut requests (Key Repeats)
         if HUDManager.shared.isLooping {
             return false
@@ -226,6 +230,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
                 let hudShown = showHUD(
                     items: runningItems,
                     activeAppId: item.id,
+                    groupId: group.id,
                     modifierFlags: modifierFlags,
                     shortcut: shortcut,
                     activeKey: activeKey,
@@ -254,13 +259,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
         
         // Use shared logic
         let cycleItems = runningItems.map { CyclingAppItem(id: $0.id) }
-        let frontmostApp = NSWorkspace.shared.frontmostApplication
-
-        // Build unique ID for frontmost app (bundleId::pid format)
-        let frontmostAppUniqueId: String? = {
-            guard let app = frontmostApp, let bundleId = app.bundleIdentifier else { return nil }
-            return "\(bundleId)::\(app.processIdentifier)"
-        }()
+        let frontmostAppUniqueId = frontmostAppIdAtKeyDown ?? currentFrontmostApplicationId()
 
         let resolvableItems = runningItems.map { ResolvableAppItem(id: $0.id, bundleId: $0.bundleId) }
         let resolvedLastActiveId = AppCyclingLogic.resolveLastActiveId(
@@ -293,6 +292,7 @@ class AppSwitcher: @preconcurrency ObservableObject {
         let hudShown = showHUD(
             items: runningItems,
             activeAppId: nextAppId,
+            groupId: group.id,
             modifierFlags: modifierFlags,
             shortcut: shortcut,
             activeKey: activeKey,
@@ -332,6 +332,14 @@ class AppSwitcher: @preconcurrency ObservableObject {
         )
         cycleSessionState = result.nextState
         return result.nextId
+    }
+
+    private func currentFrontmostApplicationId() -> String? {
+        guard let app = NSWorkspace.shared.frontmostApplication,
+              let bundleId = app.bundleIdentifier else {
+            return nil
+        }
+        return "\(bundleId)::\(app.processIdentifier)"
     }
     
     private func getHUDItems(for group: AppGroup) -> [HUDAppItem] {
@@ -443,11 +451,12 @@ class AppSwitcher: @preconcurrency ObservableObject {
     }
     
     @discardableResult
-    private func showHUD(items: [HUDAppItem], activeAppId: String, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key? = nil, shouldActivate: Bool = true, immediate: Bool = false, onSelect: ((String) -> Void)? = nil, onFinalize: ((String) -> Void)? = nil) -> Bool {
+    private func showHUD(items: [HUDAppItem], activeAppId: String, groupId: UUID, modifierFlags: NSEvent.ModifierFlags?, shortcut: String?, activeKey: KeyboardShortcuts.Key? = nil, shouldActivate: Bool = true, immediate: Bool = false, onSelect: ((String) -> Void)? = nil, onFinalize: ((String) -> Void)? = nil) -> Bool {
         if UserDefaults.standard.bool(forKey: "showHUD") {
             HUDManager.shared.scheduleShow(
                 items: items,
                 activeAppId: activeAppId,
+                groupId: groupId,
                 modifierFlags: modifierFlags,
                 shortcut: shortcut,
                 activeKey: activeKey,

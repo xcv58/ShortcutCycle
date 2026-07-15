@@ -84,6 +84,22 @@ final class AppCyclingLogicTests: XCTestCase {
         XCTAssertEqual(next, "com.app.B")
     }
 
+    func testNewCycleUsesFrontmostSnapshotCapturedAtShortcutPress() {
+        let items = makeItems(["com.app.A::101", "com.app.B::202"])
+
+        // The global shortcut must use the app that was frontmost when the key
+        // was pressed, even if the later HUD work would observe ShortcutCycle.
+        let next = AppCyclingLogic.nextAppId(
+            items: items,
+            currentFrontmostAppId: "com.app.A::101",
+            currentHUDSelectionId: nil,
+            lastActiveAppId: "com.app.A::101",
+            isHUDVisible: false
+        )
+
+        XCTAssertEqual(next, "com.app.B::202")
+    }
+
     func testNewCycleFrontmostInGroupWithoutPrioritizingFrontmost_UsesLastActive() {
         let items = makeItems(["com.app.A", "com.app.B", "com.app.C"])
 

@@ -373,6 +373,7 @@ final class PressAndHoldTests: XCTestCase {
     @MainActor
     func testPreparedRevealReinstallsGlobalReleaseFallbackAfterReveal() async throws {
         manager.currentModifierFlags = { [.command, .shift] }
+        let groupId = UUID()
         var activateCount = 0
         manager.activatePendingTargetApp = { _ in
             activateCount += 1
@@ -382,6 +383,7 @@ final class PressAndHoldTests: XCTestCase {
         manager.scheduleShow(
             items: items,
             activeAppId: "com.test.current",
+            groupId: groupId,
             modifierFlags: [.command, .shift],
             shortcut: "Cmd+Shift+J",
             activeKey: .j
@@ -398,15 +400,18 @@ final class PressAndHoldTests: XCTestCase {
             "Prepared HUD should register one global keyUp fallback before reveal"
         )
 
+        manager.handleShortcutKeyUp(for: groupId)
+
         manager.scheduleShow(
             items: items,
             activeAppId: "com.test.current",
+            groupId: groupId,
             modifierFlags: [.command, .shift],
             shortcut: "Cmd+Shift+J",
             activeKey: .j
         )
 
-        XCTAssertTrue(manager.isVisible, "A second shortcut invocation should reveal the prepared HUD")
+        XCTAssertTrue(manager.isVisible, "A second key-down after a confirmed key-up should reveal the HUD")
         XCTAssertEqual(
             globalMonitorMasks.filter { $0 == .flagsChanged }.count,
             2,
@@ -511,13 +516,16 @@ final class PressAndHoldTests: XCTestCase {
     }
 
     @MainActor
-    func testRepeatedInvocationBeforeRevealRevealsImmediately() {
+    func testConfirmedRepeatedInvocationBeforeRevealRevealsImmediately() {
+        let groupId = UUID()
+        manager.currentModifierFlags = { [.option] }
         manager.scheduleShow(
             items: [
                 HUDAppItem(bundleId: "com.test.1", name: "Test 1", icon: nil),
                 HUDAppItem(bundleId: "com.test.2", name: "Test 2", icon: nil)
             ],
             activeAppId: "com.test.1",
+            groupId: groupId,
             modifierFlags: [.option],
             shortcut: "Opt+1"
         )
@@ -525,7 +533,8 @@ final class PressAndHoldTests: XCTestCase {
         XCTAssertFalse(manager.isVisible)
         XCTAssertTrue(manager.isSessionActive)
 
-        timeMock.currentTime = timeMock.currentTime.addingTimeInterval(0.1)
+        manager.handleShortcutKeyUp(for: groupId)
+        XCTAssertFalse(manager.isVisible, "Releasing the main key alone must not reveal the HUD")
 
         manager.scheduleShow(
             items: [
@@ -533,17 +542,18 @@ final class PressAndHoldTests: XCTestCase {
                 HUDAppItem(bundleId: "com.test.2", name: "Test 2", icon: nil)
             ],
             activeAppId: "com.test.2",
+            groupId: groupId,
             modifierFlags: [.option],
             shortcut: "Opt+1"
         )
 
-        XCTAssertTrue(manager.isVisible, "A repeated hit during the invisible preparation phase should reveal the HUD immediately")
+        XCTAssertTrue(manager.isVisible, "A second key-down after release should reveal the HUD immediately")
         XCTAssertEqual(windowAlphaChanges.last, 1, "Repeated hit should reveal the HUD to full opacity")
         XCTAssertEqual(mouseInteractionStates.last, false, "Revealed HUD should allow mouse interaction")
     }
 
     @MainActor
-    func testPeekRevealsHUDWithoutStartingLoopWhenLoopKeyIsReleasedDuringPreparedInvisible() async throws {
+    func testReleasedMainKeyWaitsForPresentationDelayBeforeShowingHUD() async throws {
         manager.currentModifierFlags = { [.option] }
 
         manager.scheduleShow(
@@ -564,15 +574,18 @@ final class PressAndHoldTests: XCTestCase {
         await Task.yield()
         await Task.yield()
 
-        XCTAssertTrue(manager.isVisible, "Releasing only the loop key should reveal the HUD for peeking")
+        XCTAssertFalse(manager.isVisible, "Releasing only the main key must not reveal the HUD immediately")
+        timerMock.fireLastNonRepeatingTimer()
+        let didReveal = await eventually { manager.isVisible }
+        XCTAssertTrue(didReveal, "Keeping the modifier held through the delay should reveal the HUD")
         XCTAssertFalse(manager.isLooping, "Peek should not start the repeating loop")
         XCTAssertFalse(manager.isRepeatingLoopActive, "Peek should leave the repeating loop inactive")
-        XCTAssertEqual(windowAlphaChanges.last, 1, "Peek reveal should animate the HUD to full opacity")
-        XCTAssertEqual(mouseInteractionStates.last, false, "Peek reveal should allow HUD interaction")
+        XCTAssertEqual(windowAlphaChanges.last, 1, "Delayed reveal should animate the HUD to full opacity")
+        XCTAssertEqual(mouseInteractionStates.last, false, "Delayed reveal should allow HUD interaction")
     }
 
     @MainActor
-    func testPeekThenModifierReleaseFinalizesAndActivatesPendingTarget() async throws {
+    func testDelayedRevealThenModifierReleaseFinalizesAndActivatesPendingTarget() async throws {
         let settingsWindow = MockWindow(
             identifier: NSUserInterfaceItemIdentifier("settings"),
             isVisible: true,
@@ -606,7 +619,9 @@ final class PressAndHoldTests: XCTestCase {
         await Task.yield()
         await Task.yield()
 
-        XCTAssertTrue(manager.isVisible, "Peek should reveal the HUD before modifier release")
+        timerMock.fireLastNonRepeatingTimer()
+        let didReveal = await eventually { manager.isVisible }
+        XCTAssertTrue(didReveal, "Holding the modifier through the delay should reveal the HUD")
 
         let flagsHandler = try XCTUnwrap(latestLocalMonitorHandler(for: .flagsChanged))
         _ = flagsHandler(try makeFlagsChangedEvent(modifierFlags: []))
@@ -615,7 +630,7 @@ final class PressAndHoldTests: XCTestCase {
 
         XCTAssertFalse(manager.isSessionActive, "Modifier release after a peek should end the HUD session")
         XCTAssertFalse(manager.isVisible, "Modifier release after a peek should hide the HUD")
-        XCTAssertEqual(events, ["close", "activate"], "Peek finalize should use the revealed cleanup path and not order current-space windows back")
+        XCTAssertEqual(events, ["close", "activate"], "Delayed reveal finalize should use the revealed cleanup path and not order current-space windows back")
     }
 
     @MainActor
@@ -1305,6 +1320,72 @@ final class PressAndHoldTests: XCTestCase {
         XCTAssertFalse(manager.isVisible, "A new quick tap should not reveal the HUD immediately")
     }
 
+    @MainActor
+    func testCompletedRapidShortcutPressesNeverRevealHUD() {
+        let groupId = UUID()
+        var activationCount = 0
+        manager.currentModifierFlags = { [] }
+        manager.activatePendingTargetApp = { _ in
+            activationCount += 1
+        }
+
+        manager.scheduleShow(
+            items: [HUDAppItem(bundleId: "com.test.1", name: "Test 1", icon: nil)],
+            activeAppId: "com.test.1",
+            groupId: groupId,
+            modifierFlags: [.option],
+            shortcut: "Opt+1",
+            activeKey: .a
+        )
+        manager.handleShortcutKeyUp(for: groupId)
+
+        XCTAssertFalse(manager.isSessionActive)
+        XCTAssertFalse(manager.isVisible)
+
+        manager.scheduleShow(
+            items: [HUDAppItem(bundleId: "com.test.1", name: "Test 1", icon: nil)],
+            activeAppId: "com.test.1",
+            groupId: groupId,
+            modifierFlags: [.option],
+            shortcut: "Opt+1",
+            activeKey: .a
+        )
+        manager.handleShortcutKeyUp(for: groupId)
+
+        XCTAssertFalse(manager.isVisible, "Each completed rapid shortcut press should remain a blind switch")
+        XCTAssertEqual(activationCount, 2)
+    }
+
+    @MainActor
+    func testVisibleSettingsCompletedShortcutPressDoesNotRevealHUD() {
+        let groupId = UUID()
+        let settingsWindow = MockWindow(
+            identifier: NSUserInterfaceItemIdentifier("settings"),
+            isVisible: true,
+            isOnActiveSpace: true
+        )
+        var activationCount = 0
+        manager.currentModifierFlags = { [] }
+        manager.settingsWindowsProvider = { [settingsWindow] }
+        manager.activatePendingTargetApp = { _ in
+            activationCount += 1
+        }
+
+        manager.scheduleShow(
+            items: [HUDAppItem(bundleId: "com.test.settings", name: "Settings Target", icon: nil)],
+            activeAppId: "com.test.settings",
+            groupId: groupId,
+            modifierFlags: [.option],
+            shortcut: "Opt+1",
+            activeKey: .a
+        )
+        manager.handleShortcutKeyUp(for: groupId)
+
+        XCTAssertFalse(manager.isVisible)
+        XCTAssertFalse(manager.isSessionActive)
+        XCTAssertEqual(activationCount, 1)
+    }
+
     // MARK: - isLooping / Throttling Tests
 
     @MainActor
@@ -1513,11 +1594,25 @@ final class PressAndHoldTests: XCTestCase {
 
         timeMock.currentTime = timeMock.currentTime.addingTimeInterval(0.1)
 
-        // Second call takes immediate path, which calls scheduleLoopStart
-        // when an activeKey is provided.
+        let groupId = UUID()
+        manager.hide()
+        manager.currentModifierFlags = { [.option] }
         manager.scheduleShow(
             items: items,
             activeAppId: items[0].id,
+            groupId: groupId,
+            modifierFlags: [.option],
+            shortcut: "Opt+1",
+            activeKey: .a
+        )
+        manager.handleShortcutKeyUp(for: groupId)
+
+        // A confirmed second press takes the immediate HUD path and schedules
+        // the loop-start delay.
+        manager.scheduleShow(
+            items: items,
+            activeAppId: items[0].id,
+            groupId: groupId,
             modifierFlags: [.option],
             shortcut: "Opt+1",
             activeKey: .a,

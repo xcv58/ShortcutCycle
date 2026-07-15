@@ -21,6 +21,7 @@ class ShortcutManager: @preconcurrency ObservableObject {
     
     private var registeredGroupIds: Set<UUID> = []
     private var observedGroupIds: Set<UUID> = []
+    private var pressedGroupIds: Set<UUID> = []
     private var hasRegisteredToggleSettingsShortcut = false
     
     private init() {
@@ -72,8 +73,18 @@ class ShortcutManager: @preconcurrency ObservableObject {
         if !observedGroupIds.contains(groupId) {
             // Register the callback for when the shortcut is pressed
             KeyboardShortcuts.onKeyDown(for: shortcutName) { [weak self] in
-                Task { @MainActor in
-                    self?.handleShortcut(for: groupId)
+                // Carbon delivers this event on the main event loop. Capture the
+                // foreground app before scheduling any HUD or activation work: a
+                // later lookup can see ShortcutCycle itself instead of the app
+                // from which the user invoked the shortcut.
+                MainActor.assumeIsolated {
+                    let frontmostAppId = Self.currentFrontmostApplicationId()
+                    self?.handleShortcut(for: groupId, frontmostAppId: frontmostAppId)
+                }
+            }
+            KeyboardShortcuts.onKeyUp(for: shortcutName) { [weak self] in
+                MainActor.assumeIsolated {
+                    self?.handleShortcutRelease(for: groupId)
                 }
             }
             observedGroupIds.insert(groupId)
@@ -89,6 +100,7 @@ class ShortcutManager: @preconcurrency ObservableObject {
         let shortcutName = KeyboardShortcuts.Name.forGroup(groupId)
         KeyboardShortcuts.disable(shortcutName)
         registeredGroupIds.remove(groupId)
+        pressedGroupIds.remove(groupId)
     }
     
     /// Unregister all shortcuts
@@ -98,27 +110,41 @@ class ShortcutManager: @preconcurrency ObservableObject {
             KeyboardShortcuts.disable(shortcutName)
         }
         registeredGroupIds.removeAll()
+        pressedGroupIds.removeAll()
     }
     
-    /// Handle a shortcut press for a given group ID
-    private var lastShortcutTime: Date?
+    private static func currentFrontmostApplicationId() -> String? {
+        guard let app = NSWorkspace.shared.frontmostApplication,
+              let bundleId = app.bundleIdentifier else {
+            return nil
+        }
+        return "\(bundleId)::\(app.processIdentifier)"
+    }
 
-    private func handleShortcut(for groupId: UUID) {
-        // Throttle: process the first event immediately, block duplicates within 50ms.
-        // This prevents double-triggers (especially with multi-modifier shortcuts) while
-        // keeping cycling responsive (no delay on the first event).
-        let now = Date()
-        if let last = lastShortcutTime, now.timeIntervalSince(last) < 0.05 {
+    private func handleShortcut(for groupId: UUID, frontmostAppId: String?) {
+        // A shortcut can emit repeated key-down events while its main key is held.
+        // Treat a new physical press (one that followed key-up) as distinct, however
+        // quickly it occurs, so modifier-held cycling remains responsive.
+        guard !pressedGroupIds.contains(groupId) else {
             return
         }
-        lastShortcutTime = now
+        pressedGroupIds.insert(groupId)
 
         let store = groupStore
         guard let group = store.groups.first(where: { $0.id == groupId }) else {
             return
         }
 
-        AppSwitcher.shared.handleShortcut(for: group, store: store)
+        AppSwitcher.shared.handleShortcut(
+            for: group,
+            store: store,
+            frontmostAppIdAtKeyDown: frontmostAppId
+        )
+    }
+
+    private func handleShortcutRelease(for groupId: UUID) {
+        pressedGroupIds.remove(groupId)
+        AppSwitcher.shared.handleShortcutRelease(for: groupId)
     }
     
     /// Handle the settings toggle shortcut
