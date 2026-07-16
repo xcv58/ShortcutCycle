@@ -223,6 +223,15 @@ enum ShortcutRecorderInput {
     ]
 }
 
+enum ShortcutRecorderSessionPolicy {
+    static let monitoredEventTypes: NSEvent.EventTypeMask = [.keyDown, .flagsChanged]
+
+    static let cancelingWindowNotifications: [Notification.Name] = [
+        NSWindow.didResignKeyNotification,
+        NSWindow.willCloseNotification
+    ]
+}
+
 @MainActor
 private final class ShortcutRecorderDisplayState: ObservableObject {
     @Published var previewText: String
@@ -354,7 +363,8 @@ private struct ShortcutRecorderPopoverAnchor: NSViewRepresentable {
     final class Coordinator: NSObject, NSPopoverDelegate {
         private var popover: NSPopover?
         private var eventMonitor: Any?
-        private var committed = false
+        private var cancellationObservers: [NSObjectProtocol] = []
+        private var isRecordingSessionActive = false
         private var wantsPresentation = false
         private var presentationRetryScheduled = false
         private var selectedLanguage = "system"
@@ -387,33 +397,36 @@ private struct ShortcutRecorderPopoverAnchor: NSViewRepresentable {
             }
         }
 
-        func popoverShouldClose(_ popover: NSPopover) -> Bool {
-            guard committed else {
-                displayState?.reject()
-                return false
-            }
-
-            return true
-        }
-
-        func close() {
-            wantsPresentation = false
-
-            guard let popover else {
-                cleanup()
+        func popoverDidClose(_ notification: Notification) {
+            guard let closingPopover = notification.object as? NSPopover,
+                  closingPopover === popover else {
                 return
             }
 
+            popover = nil
+            finishSession(closePopover: false)
+        }
+
+        func close() {
+            finishSession(closePopover: true)
+        }
+
+        private func finishSession(closePopover: Bool) {
+            wantsPresentation = false
+
             let dismiss = onDismiss
             let endRecording = onEndRecording
-            let wasRecording = displayState != nil
+            let wasRecording = isRecordingSessionActive
 
-            popover.delegate = nil
-            self.popover = nil
-            popover.close()
+            if closePopover, let popover {
+                popover.delegate = nil
+                self.popover = nil
+                popover.close()
+            }
             cleanup()
-            dismiss?()
+
             if wasRecording {
+                dismiss?()
                 endRecording?()
             }
         }
@@ -448,9 +461,9 @@ private struct ShortcutRecorderPopoverAnchor: NSViewRepresentable {
         }
 
         private func present(from sourceView: NSView) {
-            committed = false
             let displayState = ShortcutRecorderDisplayState(selectedLanguage: selectedLanguage)
             self.displayState = displayState
+            isRecordingSessionActive = true
             onBeginRecording?()
 
             let controller = NSHostingController(
@@ -470,9 +483,7 @@ private struct ShortcutRecorderPopoverAnchor: NSViewRepresentable {
             self.popover = popover
 
             eventMonitor = NSEvent.addLocalMonitorForEvents(
-                matching: [.keyDown, .flagsChanged, .leftMouseDown, .rightMouseDown,
-                           .otherMouseDown, .leftMouseUp, .rightMouseUp, .otherMouseUp,
-                           .scrollWheel, .mouseEntered, .mouseExited, .mouseMoved]
+                matching: ShortcutRecorderSessionPolicy.monitoredEventTypes
             ) { [weak self] event in
                 guard let self else {
                     return event
@@ -482,6 +493,7 @@ private struct ShortcutRecorderPopoverAnchor: NSViewRepresentable {
             }
 
             popover.show(relativeTo: sourceView.bounds, of: sourceView, preferredEdge: .maxY)
+            registerCancellationObservers(for: sourceView.window)
         }
 
         private func handleEvent(_ event: NSEvent) -> NSEvent? {
@@ -495,10 +507,6 @@ private struct ShortcutRecorderPopoverAnchor: NSViewRepresentable {
                 return event
             case .keyDown:
                 return handleKey(event)
-            case .leftMouseDown, .rightMouseDown, .otherMouseDown,
-                 .leftMouseUp, .rightMouseUp, .otherMouseUp,
-                 .scrollWheel, .mouseEntered, .mouseExited, .mouseMoved:
-                return nil
             default:
                 return event
             }
@@ -533,7 +541,6 @@ private struct ShortcutRecorderPopoverAnchor: NSViewRepresentable {
 
             switch onRecord?(shortcut) ?? .accepted {
             case .accepted:
-                committed = true
                 close()
             case let .rejected(message):
                 displayState?.reject(message: message)
@@ -541,14 +548,44 @@ private struct ShortcutRecorderPopoverAnchor: NSViewRepresentable {
             return nil
         }
 
+        private func registerCancellationObservers(for window: NSWindow?) {
+            let center = NotificationCenter.default
+
+            if let window {
+                cancellationObservers.append(contentsOf:
+                    ShortcutRecorderSessionPolicy.cancelingWindowNotifications.map { name in
+                        center.addObserver(forName: name, object: window, queue: .main) { [weak self] _ in
+                            Task { @MainActor [weak self] in
+                                self?.close()
+                            }
+                        }
+                    }
+                )
+            }
+
+            cancellationObservers.append(
+                center.addObserver(
+                    forName: NSApplication.didResignActiveNotification,
+                    object: NSApp,
+                    queue: .main
+                ) { [weak self] _ in
+                    Task { @MainActor [weak self] in
+                        self?.close()
+                    }
+                }
+            )
+        }
+
         private func cleanup() {
             if let eventMonitor {
                 NSEvent.removeMonitor(eventMonitor)
             }
+            cancellationObservers.forEach(NotificationCenter.default.removeObserver)
 
             eventMonitor = nil
+            cancellationObservers.removeAll()
             displayState = nil
-            committed = false
+            isRecordingSessionActive = false
             presentationRetryScheduled = false
             onRecord = nil
             onDismiss = nil

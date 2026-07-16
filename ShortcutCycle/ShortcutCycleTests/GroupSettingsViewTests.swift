@@ -63,4 +63,53 @@ final class GroupSettingsViewTests: XCTestCase {
             "⌃ + ⇧ + ⌘"
         )
     }
+
+    func testRecorderOnlyConsumesKeyboardEvents() {
+        XCTAssertTrue(ShortcutRecorderSessionPolicy.monitoredEventTypes.contains(.keyDown))
+        XCTAssertTrue(ShortcutRecorderSessionPolicy.monitoredEventTypes.contains(.flagsChanged))
+        XCTAssertFalse(ShortcutRecorderSessionPolicy.monitoredEventTypes.contains(.leftMouseDown))
+        XCTAssertFalse(ShortcutRecorderSessionPolicy.monitoredEventTypes.contains(.scrollWheel))
+    }
+
+    func testRecorderCancelsWhenItsWindowLosesFocusOrCloses() {
+        XCTAssertEqual(
+            ShortcutRecorderSessionPolicy.cancelingWindowNotifications,
+            [NSWindow.didResignKeyNotification, NSWindow.willCloseNotification]
+        )
+    }
+
+    func testShortcutRecordingSuspensionIsIdempotentAndRestoresGlobalState() {
+        let manager = ShortcutManager.shared
+        let originalState = KeyboardShortcuts.isEnabled
+        defer {
+            manager.resumeAfterShortcutRecording()
+            KeyboardShortcuts.isEnabled = originalState
+        }
+
+        KeyboardShortcuts.isEnabled = true
+        manager.suspendForShortcutRecording()
+        manager.suspendForShortcutRecording()
+
+        XCTAssertFalse(KeyboardShortcuts.isEnabled)
+
+        manager.resumeAfterShortcutRecording()
+        manager.resumeAfterShortcutRecording()
+
+        XCTAssertTrue(KeyboardShortcuts.isEnabled)
+    }
+
+    func testShortcutRecordingSuspensionPreservesAnExistingDisabledState() {
+        let manager = ShortcutManager.shared
+        let originalState = KeyboardShortcuts.isEnabled
+        defer {
+            manager.resumeAfterShortcutRecording()
+            KeyboardShortcuts.isEnabled = originalState
+        }
+
+        KeyboardShortcuts.isEnabled = false
+        manager.suspendForShortcutRecording()
+        manager.resumeAfterShortcutRecording()
+
+        XCTAssertFalse(KeyboardShortcuts.isEnabled)
+    }
 }

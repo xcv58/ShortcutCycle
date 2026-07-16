@@ -240,7 +240,9 @@ struct GeneralSettingsView: View {
                     LocalizedKeyboardShortcutRecorder(
                         name: .toggleSettings,
                         selectedLanguage: selectedLanguage,
-                        onRecord: recordSettingsWindowShortcut
+                        onRecord: recordSettingsWindowShortcut,
+                        onBeginRecording: suspendGlobalShortcuts,
+                        onEndRecording: resumeGlobalShortcuts
                     )
                 } label: {
                     Text("Settings Window".localized(language: selectedLanguage))
@@ -365,6 +367,16 @@ struct GeneralSettingsView: View {
         KeyboardShortcuts.setShortcut(shortcut, for: .toggleSettings)
         refreshSettingsShortcutState()
         return .accepted
+    }
+
+    @MainActor
+    private func suspendGlobalShortcuts() {
+        ShortcutManager.shared.suspendForShortcutRecording()
+    }
+
+    @MainActor
+    private func resumeGlobalShortcuts() {
+        ShortcutManager.shared.resumeAfterShortcutRecording()
     }
 
     @MainActor

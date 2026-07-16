@@ -671,7 +671,9 @@ private struct GroupShortcutEditor: View {
                 LocalizedKeyboardShortcutRecorder(
                     name: shortcutName,
                     selectedLanguage: selectedLanguage,
-                    onRecord: recordShortcut
+                    onRecord: recordShortcut,
+                    onBeginRecording: suspendGlobalShortcuts,
+                    onEndRecording: resumeGlobalShortcuts
                 )
                     .padding(.leading, 4)
                     .id("\(selectedLanguage)-\(groupId.uuidString)-\(shortcutRefreshToken)")
@@ -758,6 +760,16 @@ private struct GroupShortcutEditor: View {
         KeyboardShortcuts.setShortcut(shortcut, for: shortcutName)
         refreshShortcutState()
         return .accepted
+    }
+
+    @MainActor
+    private func suspendGlobalShortcuts() {
+        ShortcutManager.shared.suspendForShortcutRecording()
+    }
+
+    @MainActor
+    private func resumeGlobalShortcuts() {
+        ShortcutManager.shared.resumeAfterShortcutRecording()
     }
 
     @MainActor
