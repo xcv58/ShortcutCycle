@@ -129,7 +129,7 @@
 "Running apps only" = "Running apps only";
 "All apps (open if needed)" = "All apps (open if needed)";
 "Displays the keyboard shortcut used to trigger the switch." = "Displays the keyboard shortcut used to trigger the switch.";
-"Try a simple pattern like ⌥1, ⌥2, and ⌥3." = "Try a simple pattern like ⌥1, ⌥2, and ⌥3.";
+"Reuse a recent shortcut or try an available suggestion." = "Reuse a recent shortcut or try an available suggestion.";
 "Opening…" = "Opening…";
 "Cycle through all apps in the group. Non-running apps will be launched when selected." = "Cycle through all apps in the group. Non-running apps will be launched when selected.";
 "Cycle through running apps only. If no app is running, the first app in the group will be launched." = "Cycle through running apps only. If no app is running, the first app in the group will be launched.";

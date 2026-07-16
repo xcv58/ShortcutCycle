@@ -655,7 +655,12 @@ private struct GroupShortcutEditor: View {
     }
 
     private var suggestionShortcuts: [KeyboardShortcuts.Shortcut] {
-        ShortcutSuggestions.available(for: store.groups, excluding: groupId)
+        ShortcutSuggestions.available(
+            for: store.groups,
+            excluding: groupId,
+            recentShortcuts: group.recentShortcuts?.map(\.shortcut) ?? [],
+            currentShortcut: currentShortcut
+        )
     }
 
     private var shouldShowSuggestions: Bool {
@@ -742,8 +747,7 @@ private struct GroupShortcutEditor: View {
             return
         }
 
-        KeyboardShortcuts.setShortcut(shortcut, for: shortcutName)
-        refreshShortcutState()
+        applyShortcut(shortcut)
     }
 
     @MainActor
@@ -757,9 +761,19 @@ private struct GroupShortcutEditor: View {
             return .rejected(conflict.message { $0.localized(language: selectedLanguage) })
         }
 
+        applyShortcut(shortcut)
+        return .accepted
+    }
+
+    @MainActor
+    private func applyShortcut(_ shortcut: KeyboardShortcuts.Shortcut?) {
+        let previousShortcut = currentShortcut
+        if previousShortcut != shortcut, let previousShortcut {
+            store.rememberShortcut(previousShortcut, for: groupId)
+        }
+
         KeyboardShortcuts.setShortcut(shortcut, for: shortcutName)
         refreshShortcutState()
-        return .accepted
     }
 
     @MainActor
@@ -821,7 +835,7 @@ private struct ShortcutSuggestionRow: View {
                 }
             }
 
-            Text("Try a simple pattern like ⌥1, ⌥2, and ⌥3.".localized(language: selectedLanguage))
+            Text("Reuse a recent shortcut or try an available suggestion.".localized(language: selectedLanguage))
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }

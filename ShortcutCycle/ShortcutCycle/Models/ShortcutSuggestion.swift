@@ -7,6 +7,8 @@ public enum ShortcutSuggestions {
     public static func available(
         for groups: [AppGroup],
         excluding groupID: UUID,
+        recentShortcuts: [KeyboardShortcuts.Shortcut] = [],
+        currentShortcut: KeyboardShortcuts.Shortcut? = nil,
         limit: Int = 3
     ) -> [KeyboardShortcuts.Shortcut] {
         guard limit > 0 else { return [] }
@@ -31,10 +33,30 @@ public enum ShortcutSuggestions {
             takenShortcuts.append(settingsShortcut)
         }
 
-        return candidates
-            .filter { candidate in !takenShortcuts.contains(candidate) }
-            .prefix(limit)
-            .map { $0 }
+        if let currentShortcut {
+            takenShortcuts.append(currentShortcut)
+        }
+
+        func isAvailable(_ shortcut: KeyboardShortcuts.Shortcut) -> Bool {
+            !takenShortcuts.contains(shortcut)
+                && AppCommandShortcutConflicts.conflict(for: shortcut) == nil
+        }
+
+        var suggestions: [KeyboardShortcuts.Shortcut] = []
+
+        for shortcut in recentShortcuts where isAvailable(shortcut) {
+            guard !suggestions.contains(shortcut) else { continue }
+            suggestions.append(shortcut)
+            guard suggestions.count < limit else { return suggestions }
+        }
+
+        for shortcut in candidates where isAvailable(shortcut) {
+            guard !suggestions.contains(shortcut) else { continue }
+            suggestions.append(shortcut)
+            guard suggestions.count < limit else { break }
+        }
+
+        return suggestions
     }
 }
 

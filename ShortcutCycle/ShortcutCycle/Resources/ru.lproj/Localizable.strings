@@ -127,7 +127,7 @@
 "Running apps only" = "Только запущенные приложения";
 "All apps (open if needed)" = "Все приложения (открыть при необходимости)";
 "Displays the keyboard shortcut used to trigger the switch." = "Отображает сочетание клавиш для переключения.";
-"Try a simple pattern like ⌥1, ⌥2, and ⌥3." = "Попробуйте простую схему, например ⌥1, ⌥2 и ⌥3.";
+"Reuse a recent shortcut or try an available suggestion." = "Повторно используйте недавнее сочетание или попробуйте доступный вариант.";
 "Opening…" = "Открытие…";
 "Cycle through all apps in the group. Non-running apps will be launched when selected." = "Переключаться между всеми приложениями группы. Незапущенные приложения будут открыты при выборе.";
 "Cycle through running apps only. If no app is running, the first app in the group will be launched." = "Переключаться только между запущенными приложениями. Если ни одно приложение не запущено, будет открыто первое приложение группы.";

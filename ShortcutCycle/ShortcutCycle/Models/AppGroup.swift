@@ -13,6 +13,7 @@ public struct AppGroup: Identifiable, Codable, Equatable {
     public var lastModified: Date = Date()
     public var openAppIfNeeded: Bool?
     public var mruOrder: [String]?
+    public var recentShortcuts: [ShortcutData]?
 
     public var shouldOpenAppIfNeeded: Bool {
         openAppIfNeeded ?? false
@@ -22,14 +23,40 @@ public struct AppGroup: Identifiable, Codable, Equatable {
     // This allows old data to be decoded without crashing
     private var shortcut: LegacyKeyboardShortcutData?
     
-    public init(id: UUID = UUID(), name: String, apps: [AppItem] = [], isEnabled: Bool = true, openAppIfNeeded: Bool? = nil, mruOrder: [String]? = nil, lastModified: Date = Date()) {
+    public init(
+        id: UUID = UUID(),
+        name: String,
+        apps: [AppItem] = [],
+        isEnabled: Bool = true,
+        openAppIfNeeded: Bool? = nil,
+        mruOrder: [String]? = nil,
+        recentShortcuts: [ShortcutData]? = nil,
+        lastModified: Date = Date()
+    ) {
         self.id = id
         self.name = name
         self.apps = apps
         self.isEnabled = isEnabled
         self.openAppIfNeeded = openAppIfNeeded
         self.mruOrder = mruOrder
+        self.recentShortcuts = recentShortcuts
         self.lastModified = lastModified
+    }
+
+    public mutating func rememberShortcut(
+        _ shortcut: KeyboardShortcuts.Shortcut,
+        limit: Int = 3
+    ) {
+        guard limit > 0 else {
+            recentShortcuts = nil
+            return
+        }
+
+        let entry = ShortcutData(shortcut)
+        var history = recentShortcuts ?? []
+        history.removeAll { $0 == entry }
+        history.insert(entry, at: 0)
+        recentShortcuts = Array(history.prefix(limit))
     }
     
     public mutating func addApp(_ app: AppItem) {

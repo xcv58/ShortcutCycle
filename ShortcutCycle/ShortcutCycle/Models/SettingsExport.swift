@@ -66,6 +66,20 @@ public struct ShortcutData: Codable, Equatable {
         self.carbonKeyCode = carbonKeyCode
         self.carbonModifiers = carbonModifiers
     }
+
+    public init(_ shortcut: KeyboardShortcuts.Shortcut) {
+        self.init(
+            carbonKeyCode: shortcut.carbonKeyCode,
+            carbonModifiers: shortcut.carbonModifiers
+        )
+    }
+
+    public var shortcut: KeyboardShortcuts.Shortcut {
+        KeyboardShortcuts.Shortcut(
+            carbonKeyCode: carbonKeyCode,
+            carbonModifiers: carbonModifiers
+        )
+    }
 }
 
 /// App preferences stored in @AppStorage

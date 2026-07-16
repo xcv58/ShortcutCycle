@@ -50,6 +50,41 @@ final class AppGroupTests: XCTestCase {
         XCTAssertNil(group.openAppIfNeeded)
     }
 
+    func testRecentShortcutsDefaultToNil() {
+        let group = AppGroup(name: "G")
+        XCTAssertNil(group.recentShortcuts)
+    }
+
+    func testRememberShortcutKeepsMostRecentThreeWithoutDuplicates() {
+        var group = AppGroup(name: "G")
+        let shortcuts = [
+            KeyboardShortcuts.Shortcut(.one, modifiers: [.option]),
+            KeyboardShortcuts.Shortcut(.two, modifiers: [.option]),
+            KeyboardShortcuts.Shortcut(.three, modifiers: [.option]),
+            KeyboardShortcuts.Shortcut(.four, modifiers: [.option])
+        ]
+
+        shortcuts.forEach { group.rememberShortcut($0) }
+        group.rememberShortcut(shortcuts[1])
+
+        XCTAssertEqual(
+            group.recentShortcuts,
+            [shortcuts[1], shortcuts[3], shortcuts[2]].map(ShortcutData.init)
+        )
+    }
+
+    func testRememberShortcutWithNonpositiveLimitClearsHistory() {
+        let shortcut = KeyboardShortcuts.Shortcut(.one, modifiers: [.option])
+        var group = AppGroup(
+            name: "G",
+            recentShortcuts: [ShortcutData(shortcut)]
+        )
+
+        group.rememberShortcut(shortcut, limit: 0)
+
+        XCTAssertNil(group.recentShortcuts)
+    }
+
     // MARK: - shouldOpenAppIfNeeded
 
     func testShouldOpenAppIfNeededDefaultsFalse() {
@@ -321,6 +356,7 @@ final class AppGroupTests: XCTestCase {
         XCTAssertFalse(decoded.shouldOpenAppIfNeeded)
         XCTAssertNil(decoded.lastActiveAppBundleId)
         XCTAssertNil(decoded.mruOrder)
+        XCTAssertNil(decoded.recentShortcuts)
     }
 
     func testCodableRoundTripWithMRUOrder() throws {
@@ -334,6 +370,20 @@ final class AppGroupTests: XCTestCase {
         let decoded = try JSONDecoder().decode(AppGroup.self, from: data)
 
         XCTAssertEqual(decoded.mruOrder, ["com.a", "com.b"])
+    }
+
+    func testCodableRoundTripWithRecentShortcuts() throws {
+        let shortcut = KeyboardShortcuts.Shortcut(.one, modifiers: [.option])
+        let group = AppGroup(
+            name: "History",
+            recentShortcuts: [ShortcutData(shortcut)]
+        )
+
+        let data = try JSONEncoder().encode(group)
+        let decoded = try JSONDecoder().decode(AppGroup.self, from: data)
+
+        XCTAssertEqual(decoded.recentShortcuts, [ShortcutData(shortcut)])
+        XCTAssertEqual(decoded.recentShortcuts?.first?.shortcut, shortcut)
     }
 
     // MARK: - Equatable

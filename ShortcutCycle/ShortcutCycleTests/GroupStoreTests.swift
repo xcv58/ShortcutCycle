@@ -1,4 +1,5 @@
 import XCTest
+import KeyboardShortcuts
 #if canImport(ShortcutCycleCore)
 @testable import ShortcutCycleCore
 #else
@@ -313,6 +314,35 @@ final class GroupStoreTests: XCTestCase {
     func testUpdateLastActiveAppNonexistentGroup() {
         // Should not crash
         store.updateLastActiveApp(bundleId: "com.test.app", for: UUID())
+    }
+
+    func testRememberShortcutUpdatesAndPersistsGroupHistory() {
+        let groupId = store.groups.first!.id
+        let shortcut = KeyboardShortcuts.Shortcut(.one, modifiers: [.option])
+
+        store.rememberShortcut(shortcut, for: groupId)
+
+        XCTAssertEqual(
+            store.groups.first(where: { $0.id == groupId })?.recentShortcuts,
+            [ShortcutData(shortcut)]
+        )
+
+        let reloadedStore = GroupStore(userDefaults: userDefaults)
+        XCTAssertEqual(
+            reloadedStore.groups.first(where: { $0.id == groupId })?.recentShortcuts,
+            [ShortcutData(shortcut)]
+        )
+    }
+
+    func testRememberShortcutForMissingGroupIsNoOp() {
+        let groupsBefore = store.groups
+
+        store.rememberShortcut(
+            KeyboardShortcuts.Shortcut(.one, modifiers: [.option]),
+            for: UUID()
+        )
+
+        XCTAssertEqual(store.groups, groupsBefore)
     }
 
     func testUpdateLastActiveAppDoesNotScheduleAutoBackup() {

@@ -53,6 +53,70 @@ final class ShortcutSuggestionTests: XCTestCase {
     }
 
     @MainActor
+    func testAvailablePrioritizesRecentShortcutsThenBackfillsSuggestions() {
+        let previousSettingsShortcut = KeyboardShortcuts.getShortcut(for: .toggleSettings)
+        let group = AppGroup(id: UUID(), name: "Target")
+        let recent = [
+            KeyboardShortcuts.Shortcut(.x, modifiers: [.control]),
+            KeyboardShortcuts.Shortcut(.eight, modifiers: [.option])
+        ]
+        let current = KeyboardShortcuts.Shortcut(.four, modifiers: [.option])
+        KeyboardShortcuts.setShortcut(nil, for: .toggleSettings)
+
+        defer {
+            KeyboardShortcuts.setShortcut(previousSettingsShortcut, for: .toggleSettings)
+            KeyboardShortcuts.setShortcut(nil, for: group.shortcutName)
+        }
+
+        let suggestions = ShortcutSuggestions.available(
+            for: [group],
+            excluding: group.id,
+            recentShortcuts: recent,
+            currentShortcut: current
+        )
+
+        XCTAssertEqual(
+            suggestions,
+            recent + [KeyboardShortcuts.Shortcut(.one, modifiers: [.option])]
+        )
+    }
+
+    @MainActor
+    func testAvailableFiltersCurrentTakenConflictingAndDuplicateHistory() {
+        let previousSettingsShortcut = KeyboardShortcuts.getShortcut(for: .toggleSettings)
+        let target = AppGroup(id: UUID(), name: "Target")
+        let other = AppGroup(id: UUID(), name: "Other")
+        let current = KeyboardShortcuts.Shortcut(.four, modifiers: [.option])
+        let taken = KeyboardShortcuts.Shortcut(.x, modifiers: [.control])
+        let valid = KeyboardShortcuts.Shortcut(.v, modifiers: [.control, .option])
+        let appCommandConflict = KeyboardShortcuts.Shortcut(.n, modifiers: [.command])
+        KeyboardShortcuts.setShortcut(nil, for: .toggleSettings)
+        KeyboardShortcuts.setShortcut(taken, for: other.shortcutName)
+
+        defer {
+            KeyboardShortcuts.setShortcut(previousSettingsShortcut, for: .toggleSettings)
+            KeyboardShortcuts.setShortcut(nil, for: target.shortcutName)
+            KeyboardShortcuts.setShortcut(nil, for: other.shortcutName)
+        }
+
+        let suggestions = ShortcutSuggestions.available(
+            for: [target, other],
+            excluding: target.id,
+            recentShortcuts: [current, taken, appCommandConflict, valid, valid],
+            currentShortcut: current
+        )
+
+        XCTAssertEqual(
+            suggestions,
+            [
+                valid,
+                KeyboardShortcuts.Shortcut(.one, modifiers: [.option]),
+                KeyboardShortcuts.Shortcut(.two, modifiers: [.option])
+            ]
+        )
+    }
+
+    @MainActor
     func testAvailableReturnsFewerThanLimitWhenNotEnoughCandidatesRemain() {
         let previousSettingsShortcut = KeyboardShortcuts.getShortcut(for: .toggleSettings)
         let optionKeys: [KeyboardShortcuts.Key] = [.one, .two, .three, .four, .five, .six, .seven, .eight, .nine]
