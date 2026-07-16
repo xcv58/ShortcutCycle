@@ -283,6 +283,8 @@ private struct ShortcutRecorderPopoverView: View {
     @ObservedObject var displayState: ShortcutRecorderDisplayState
     let selectedLanguage: String
 
+    private let contentWidth: CGFloat = 280
+
     var body: some View {
         VStack(spacing: 0) {
             Text(displayState.previewText)
@@ -306,6 +308,9 @@ private struct ShortcutRecorderPopoverView: View {
                 Text(rejectionMessage)
                     .foregroundStyle(.red)
                     .font(.caption2.weight(.medium))
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity)
                     .padding(.top, 8)
                     .transition(.asymmetric(
                         insertion: .opacity.combined(with: .offset(y: -6)),
@@ -315,6 +320,9 @@ private struct ShortcutRecorderPopoverView: View {
                 Text("Press ESC to cancel".localized(language: selectedLanguage))
                     .foregroundStyle(.secondary)
                     .font(.caption2.weight(.medium))
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity)
                     .padding(.top, 8)
                     .transition(.asymmetric(
                         insertion: .opacity.combined(with: .offset(y: -6)),
@@ -322,9 +330,9 @@ private struct ShortcutRecorderPopoverView: View {
                     ))
             }
         }
+        .frame(width: contentWidth)
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .frame(minWidth: 160)
     }
 }
 
@@ -526,7 +534,7 @@ private struct ShortcutRecorderPopoverAnchor: NSViewRepresentable {
             }
 
             if ShortcutRecorderInput.requiresModifier(keyCode: keyCode, modifierFlags: modifiers) {
-                displayState?.reject(
+                reject(
                     message: "Shortcut must include a modifier key.".localized(language: selectedLanguage)
                 )
                 return nil
@@ -543,9 +551,28 @@ private struct ShortcutRecorderPopoverAnchor: NSViewRepresentable {
             case .accepted:
                 close()
             case let .rejected(message):
-                displayState?.reject(message: message)
+                reject(message: message)
             }
             return nil
+        }
+
+        private func reject(message: String) {
+            displayState?.reject(message: message)
+
+            // The popover is initially sized before validation feedback exists.
+            // Recalculate after SwiftUI applies the new multiline text.
+            DispatchQueue.main.async { [weak self] in
+                guard
+                    let popover = self?.popover,
+                    popover.isShown,
+                    let contentView = popover.contentViewController?.view
+                else {
+                    return
+                }
+
+                contentView.layoutSubtreeIfNeeded()
+                popover.contentSize = contentView.fittingSize
+            }
         }
 
         private func registerCancellationObservers(for window: NSWindow?) {
