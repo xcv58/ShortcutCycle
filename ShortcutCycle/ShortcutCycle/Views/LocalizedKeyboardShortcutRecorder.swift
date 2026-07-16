@@ -49,7 +49,6 @@ struct LocalizedKeyboardShortcutRecorder: NSViewRepresentable {
             if let recorderActiveObserver {
                 NotificationCenter.default.removeObserver(recorderActiveObserver)
             }
-            MenuShortcutRecorderGuard.shared.end()
         }
 
         func attach(_ recorder: NSViewType) {
@@ -80,13 +79,10 @@ struct LocalizedKeyboardShortcutRecorder: NSViewRepresentable {
         }
 
         private func handleRecorderActiveStatusDidChange(isActive: Bool) {
-            if isActive {
-                MenuShortcutRecorderGuard.shared.begin()
-                isRecording = recorder?.currentEditor() != nil
-            } else {
-                isRecording = false
-                MenuShortcutRecorderGuard.shared.end()
-            }
+            // Do not temporarily clear NSApp.mainMenu key equivalents here. SwiftUI-owned
+            // CommandGroup items can retain stale shortcut state on newer macOS releases,
+            // which prevents RecorderCocoa from recording or clearing a shortcut.
+            isRecording = isActive && recorder?.currentEditor() != nil
 
             applyPlaceholder()
         }
@@ -94,61 +90,6 @@ struct LocalizedKeyboardShortcutRecorder: NSViewRepresentable {
         private func applyPlaceholder() {
             let key = isRecording ? "Press Shortcut" : "Record Shortcut"
             recorder?.placeholderString = key.localized(language: selectedLanguage)
-        }
-    }
-}
-
-private final class MenuShortcutRecorderGuard {
-    static let shared = MenuShortcutRecorderGuard()
-
-    private struct SavedMenuShortcut {
-        let item: NSMenuItem
-        let keyEquivalent: String
-        let modifierMask: NSEvent.ModifierFlags
-    }
-
-    private var savedShortcuts: [SavedMenuShortcut] = []
-
-    private init() {}
-
-    func begin() {
-        guard savedShortcuts.isEmpty else {
-            return
-        }
-
-        let menuItems = allMenuItems(in: NSApp.mainMenu)
-        for item in menuItems where !item.keyEquivalent.isEmpty {
-            savedShortcuts.append(
-                SavedMenuShortcut(
-                    item: item,
-                    keyEquivalent: item.keyEquivalent,
-                    modifierMask: item.keyEquivalentModifierMask
-                )
-            )
-            item.keyEquivalent = ""
-            item.keyEquivalentModifierMask = []
-        }
-    }
-
-    func end() {
-        guard !savedShortcuts.isEmpty else {
-            return
-        }
-
-        for savedShortcut in savedShortcuts {
-            savedShortcut.item.keyEquivalent = savedShortcut.keyEquivalent
-            savedShortcut.item.keyEquivalentModifierMask = savedShortcut.modifierMask
-        }
-        savedShortcuts.removeAll()
-    }
-
-    private func allMenuItems(in menu: NSMenu?) -> [NSMenuItem] {
-        guard let menu else {
-            return []
-        }
-
-        return menu.items.flatMap { item in
-            [item] + allMenuItems(in: item.submenu)
         }
     }
 }
