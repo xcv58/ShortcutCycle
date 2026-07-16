@@ -35,11 +35,12 @@ struct LocalizedKeyboardShortcutRecorder: View {
             return "Press Shortcut".localized(language: selectedLanguage)
         }
 
-        return shortcut?.description ?? "Record Shortcut".localized(language: selectedLanguage)
+        return shortcut.map(ShortcutRecorderDisplay.formattedShortcut)
+            ?? "Record Shortcut".localized(language: selectedLanguage)
     }
 
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 6) {
             Button {
                 isRecording = true
             } label: {
@@ -60,7 +61,7 @@ struct LocalizedKeyboardShortcutRecorder: View {
                     Image(systemName: "xmark.circle.fill")
                         .font(.body)
                         .foregroundStyle(.secondary)
-                        .frame(width: 24, height: 24)
+                        .frame(width: 22, height: 22)
                 }
                 .buttonStyle(.borderless)
                 .accessibilityLabel(Text("Delete".localized(language: selectedLanguage)))
@@ -87,16 +88,14 @@ struct LocalizedKeyboardShortcutRecorder: View {
 
 /// The shared visual treatment for a saved shortcut and its live recording preview.
 private struct ShortcutRecorderField: View {
-    @Environment(\.colorScheme) private var colorScheme
-
     let displayText: String
     let isPlaceholder: Bool
     let isRecording: Bool
-    var minWidth: CGFloat = 146
+    var minWidth: CGFloat = 126
 
     var body: some View {
         Text(displayText)
-            .font(.system(.body, design: .monospaced))
+            .font(.system(size: 12, design: .monospaced))
             .lineLimit(1)
             .minimumScaleFactor(0.8)
             .foregroundStyle(
@@ -106,28 +105,70 @@ private struct ShortcutRecorderField: View {
                         ? AnyShapeStyle(.tertiary)
                         : AnyShapeStyle(.primary)
             )
-            .padding(.horizontal, 14)
-            .padding(.vertical, 8)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
             .frame(minWidth: minWidth, alignment: .center)
             .background(
-                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
                     .fill(fieldBackgroundColor)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
                     .strokeBorder(
                         isRecording
                             ? Color.accentColor
-                            : Color(nsColor: .separatorColor).opacity(0.8),
+                            : fieldBorderColor,
                         lineWidth: isRecording ? 1.5 : 1
                     )
             )
     }
 
     private var fieldBackgroundColor: Color {
-        colorScheme == .light
-            ? .white
-            : Color(nsColor: .textBackgroundColor)
+        dynamicColor(light: 0xFFFFFF, dark: 0x1C1D20)
+    }
+
+    private var fieldBorderColor: Color {
+        dynamicColor(light: 0xDDE1E7, dark: 0x3B3C42)
+    }
+
+    private func dynamicColor(light: UInt32, dark: UInt32) -> Color {
+        Color(
+            nsColor: NSColor(name: nil, dynamicProvider: { appearance in
+                let color = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+                    ? dark
+                    : light
+                return NSColor(
+                    calibratedRed: CGFloat((color >> 16) & 0xFF) / 255,
+                    green: CGFloat((color >> 8) & 0xFF) / 255,
+                    blue: CGFloat(color & 0xFF) / 255,
+                    alpha: 1
+                )
+            })
+        )
+    }
+}
+
+/// Formats shortcuts as separate controls, matching the recorder's visual language.
+@MainActor
+enum ShortcutRecorderDisplay {
+    static func formattedShortcut(_ shortcut: KeyboardShortcuts.Shortcut) -> String {
+        let modifierSymbols = shortcut.modifiers.ks_symbolicRepresentation
+        let key = String(shortcut.description.dropFirst(modifierSymbols.count))
+        return components(modifiers: modifierSymbols, key: key)
+    }
+
+    static func formattedModifierPreview(_ modifiers: NSEvent.ModifierFlags) -> String {
+        components(modifiers: modifiers.ks_symbolicRepresentation, key: nil)
+    }
+
+    private static func components(modifiers: String, key: String?) -> String {
+        var components = modifiers.map(String.init)
+
+        if let key, !key.isEmpty {
+            components.append(key)
+        }
+
+        return components.joined(separator: " + ")
     }
 }
 
@@ -173,11 +214,11 @@ private final class ShortcutRecorderDisplayState: ObservableObject {
 
     func updateModifierPreview(_ modifierFlags: NSEvent.ModifierFlags, selectedLanguage: String) {
         let modifiers = modifierFlags.intersection(.deviceIndependentFlagsMask)
-        let symbols = modifiers.ks_symbolicRepresentation
-        isShowingPlaceholder = symbols.isEmpty
-        previewText = symbols.isEmpty
+        let preview = ShortcutRecorderDisplay.formattedModifierPreview(modifiers)
+        isShowingPlaceholder = preview.isEmpty
+        previewText = preview.isEmpty
             ? "Press Shortcut".localized(language: selectedLanguage)
-            : symbols
+            : preview
     }
 }
 
@@ -185,12 +226,20 @@ private struct ShortcutRecorderPopoverView: View {
     @ObservedObject var displayState: ShortcutRecorderDisplayState
 
     var body: some View {
-        ShortcutRecorderField(
-            displayText: displayState.previewText,
-            isPlaceholder: displayState.isShowingPlaceholder,
-            isRecording: true
-        )
-        .padding(12)
+        Text(displayState.previewText)
+            .font(.subheadline.weight(.medium))
+            .foregroundStyle(Color.accentColor)
+            .lineLimit(1)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .frame(minWidth: 130, alignment: .center)
+            .background(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(Color.accentColor.opacity(0.08))
+            )
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .frame(minWidth: 160)
     }
 }
 

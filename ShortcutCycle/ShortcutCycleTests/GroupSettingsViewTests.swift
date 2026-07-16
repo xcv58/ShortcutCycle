@@ -1,3 +1,4 @@
+import KeyboardShortcuts
 import XCTest
 @testable import ShortcutCycle
 
@@ -37,6 +38,22 @@ final class GroupSettingsViewTests: XCTestCase {
                 51,
                 modifierFlags: [.command]
             )
+        )
+    }
+
+    func testCustomShortcutRecorderFormatsModifiersAndKeyWithSeparators() {
+        let shortcut = KeyboardShortcuts.Shortcut(.x, modifiers: [.shift, .command])
+
+        XCTAssertEqual(
+            ShortcutRecorderDisplay.formattedShortcut(shortcut),
+            "⇧ + ⌘ + X"
+        )
+    }
+
+    func testCustomShortcutRecorderFormatsModifierPreviewWithSeparators() {
+        XCTAssertEqual(
+            ShortcutRecorderDisplay.formattedModifierPreview([.control, .shift, .command]),
+            "⌃ + ⇧ + ⌘"
         )
     }
 }
