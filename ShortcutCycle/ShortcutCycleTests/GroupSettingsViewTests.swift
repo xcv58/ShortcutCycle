@@ -57,6 +57,24 @@ final class GroupSettingsViewTests: XCTestCase {
         )
     }
 
+    func testCustomShortcutRecorderFormatsArrowKeyWithSeparators() {
+        let shortcut = KeyboardShortcuts.Shortcut(.upArrow, modifiers: [.control, .command])
+
+        XCTAssertEqual(
+            ShortcutRecorderDisplay.formattedShortcut(shortcut),
+            "⌃ + ⌘ + ↑"
+        )
+    }
+
+    func testCustomShortcutRecorderFormatsFunctionKeyWithoutModifiers() {
+        let shortcut = KeyboardShortcuts.Shortcut(.f1)
+
+        XCTAssertEqual(
+            ShortcutRecorderDisplay.formattedShortcut(shortcut),
+            "F1"
+        )
+    }
+
     func testCustomShortcutRecorderFormatsModifierPreviewWithSeparators() {
         XCTAssertEqual(
             ShortcutRecorderDisplay.formattedModifierPreview([.control, .shift, .command]),
@@ -78,10 +96,11 @@ final class GroupSettingsViewTests: XCTestCase {
         )
     }
 
-    func testShortcutRecordingSuspensionIsIdempotentAndRestoresGlobalState() {
+    func testShortcutRecordingSuspensionWaitsForEveryActiveRecorder() {
         let manager = ShortcutManager.shared
         let originalState = KeyboardShortcuts.isEnabled
         defer {
+            manager.resumeAfterShortcutRecording()
             manager.resumeAfterShortcutRecording()
             KeyboardShortcuts.isEnabled = originalState
         }
@@ -93,8 +112,12 @@ final class GroupSettingsViewTests: XCTestCase {
         XCTAssertFalse(KeyboardShortcuts.isEnabled)
 
         manager.resumeAfterShortcutRecording()
-        manager.resumeAfterShortcutRecording()
+        XCTAssertFalse(KeyboardShortcuts.isEnabled)
 
+        manager.resumeAfterShortcutRecording()
+        XCTAssertTrue(KeyboardShortcuts.isEnabled)
+
+        manager.resumeAfterShortcutRecording()
         XCTAssertTrue(KeyboardShortcuts.isEnabled)
     }
 

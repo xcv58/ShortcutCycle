@@ -743,7 +743,8 @@ private struct GroupShortcutEditor: View {
 
     @MainActor
     private func assignShortcut(_ shortcut: KeyboardShortcuts.Shortcut) {
-        guard !showConflictIfNeeded(for: shortcut) else {
+        if let conflict = conflict(for: shortcut) {
+            shortcutConflict = conflict
             return
         }
 
@@ -752,12 +753,7 @@ private struct GroupShortcutEditor: View {
 
     @MainActor
     private func recordShortcut(_ shortcut: KeyboardShortcuts.Shortcut?) -> ShortcutRecorderRecordingResult {
-        if let shortcut,
-           let conflict = ShortcutAssignmentConflicts.conflict(
-               for: shortcut,
-               assigning: .group(id: groupId, name: group.name),
-               groups: store.groups
-           ) {
+        if let conflict = conflict(for: shortcut) {
             return .rejected(conflict.message { $0.localized(language: selectedLanguage) })
         }
 
@@ -787,17 +783,14 @@ private struct GroupShortcutEditor: View {
     }
 
     @MainActor
-    private func showConflictIfNeeded(for shortcut: KeyboardShortcuts.Shortcut) -> Bool {
-        guard let conflict = ShortcutAssignmentConflicts.conflict(
+    private func conflict(
+        for shortcut: KeyboardShortcuts.Shortcut?
+    ) -> ShortcutAssignmentConflict? {
+        ShortcutAssignmentConflicts.conflict(
             for: shortcut,
             assigning: .group(id: groupId, name: group.name),
             groups: store.groups
-        ) else {
-            return false
-        }
-
-        shortcutConflict = conflict
-        return true
+        )
     }
 
     @MainActor
