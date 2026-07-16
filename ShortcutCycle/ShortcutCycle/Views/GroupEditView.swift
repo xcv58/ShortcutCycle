@@ -671,7 +671,7 @@ private struct GroupShortcutEditor: View {
                 LocalizedKeyboardShortcutRecorder(
                     name: shortcutName,
                     selectedLanguage: selectedLanguage,
-                    onChange: handleShortcutChange
+                    onRecord: recordShortcut
                 )
                     .padding(.leading, 4)
                     .id("\(selectedLanguage)-\(groupId.uuidString)-\(shortcutRefreshToken)")
@@ -745,14 +745,19 @@ private struct GroupShortcutEditor: View {
     }
 
     @MainActor
-    private func handleShortcutChange(_ shortcut: KeyboardShortcuts.Shortcut?) {
-        if let shortcut, showConflictIfNeeded(for: shortcut) {
-            KeyboardShortcuts.setShortcut(nil, for: shortcutName)
-            refreshShortcutState()
-            return
+    private func recordShortcut(_ shortcut: KeyboardShortcuts.Shortcut?) -> ShortcutRecorderRecordingResult {
+        if let shortcut,
+           let conflict = ShortcutAssignmentConflicts.conflict(
+               for: shortcut,
+               assigning: .group(id: groupId, name: group.name),
+               groups: store.groups
+           ) {
+            return .rejected(conflict.message { $0.localized(language: selectedLanguage) })
         }
 
+        KeyboardShortcuts.setShortcut(shortcut, for: shortcutName)
         refreshShortcutState()
+        return .accepted
     }
 
     @MainActor

@@ -1,3 +1,4 @@
+import Carbon.HIToolbox
 import KeyboardShortcuts
 import XCTest
 @testable import ShortcutCycle
@@ -26,17 +27,23 @@ final class GroupSettingsViewTests: XCTestCase {
         )
     }
 
-    func testCustomShortcutRecorderTreatsDeleteAsClearOnlyWithoutModifiers() {
+    func testCustomShortcutRecorderAllowsFunctionKeysWithoutModifiers() {
         XCTAssertTrue(
-            ShortcutRecorderInput.isClearKey(
-                51,
+            ShortcutRecorderInput.isRecordable(
+                keyCode: UInt16(kVK_F1),
                 modifierFlags: []
             )
         )
         XCTAssertFalse(
-            ShortcutRecorderInput.isClearKey(
-                51,
-                modifierFlags: [.command]
+            ShortcutRecorderInput.requiresModifier(
+                keyCode: UInt16(kVK_F1),
+                modifierFlags: []
+            )
+        )
+        XCTAssertTrue(
+            ShortcutRecorderInput.requiresModifier(
+                keyCode: 0,
+                modifierFlags: []
             )
         )
     }

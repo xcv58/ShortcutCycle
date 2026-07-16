@@ -9,21 +9,32 @@ import SwiftUI
 /// longer receives recording events reliably in SwiftUI settings windows on macOS 27.
 /// Capturing the event in a transient popover matches the implementation used by
 /// MacTools while preserving KeyboardShortcuts for persistence and global handling.
+enum ShortcutRecorderRecordingResult: Equatable {
+    case accepted
+    case rejected(String)
+}
+
 struct LocalizedKeyboardShortcutRecorder: View {
     let name: KeyboardShortcuts.Name
     let selectedLanguage: String
-    let onChange: ((KeyboardShortcuts.Shortcut?) -> Void)?
+    let onRecord: (KeyboardShortcuts.Shortcut?) -> ShortcutRecorderRecordingResult
+    let onBeginRecording: (() -> Void)?
+    let onEndRecording: (() -> Void)?
 
     @State private var isRecording = false
 
     init(
         name: KeyboardShortcuts.Name,
         selectedLanguage: String,
-        onChange: ((KeyboardShortcuts.Shortcut?) -> Void)? = nil
+        onRecord: @escaping (KeyboardShortcuts.Shortcut?) -> ShortcutRecorderRecordingResult,
+        onBeginRecording: (() -> Void)? = nil,
+        onEndRecording: (() -> Void)? = nil
     ) {
         self.name = name
         self.selectedLanguage = selectedLanguage
-        self.onChange = onChange
+        self.onRecord = onRecord
+        self.onBeginRecording = onBeginRecording
+        self.onEndRecording = onEndRecording
     }
 
     private var shortcut: KeyboardShortcuts.Shortcut? {
@@ -31,12 +42,8 @@ struct LocalizedKeyboardShortcutRecorder: View {
     }
 
     private var displayText: String {
-        if isRecording {
-            return "Press Shortcut".localized(language: selectedLanguage)
-        }
-
         return shortcut.map(ShortcutRecorderDisplay.formattedShortcut)
-            ?? "Record Shortcut".localized(language: selectedLanguage)
+            ?? "No shortcut".localized(language: selectedLanguage)
     }
 
     var body: some View {
@@ -46,7 +53,7 @@ struct LocalizedKeyboardShortcutRecorder: View {
             } label: {
                 ShortcutRecorderField(
                     displayText: displayText,
-                    isPlaceholder: shortcut == nil && !isRecording,
+                    isPlaceholder: shortcut == nil,
                     isRecording: isRecording
                 )
             }
@@ -56,7 +63,7 @@ struct LocalizedKeyboardShortcutRecorder: View {
 
             if shortcut != nil {
                 Button {
-                    saveShortcut(nil)
+                    _ = onRecord(nil)
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .font(.body)
@@ -70,19 +77,18 @@ struct LocalizedKeyboardShortcutRecorder: View {
         }
         .fixedSize(horizontal: true, vertical: false)
         .background {
-            ShortcutRecorderPopoverAnchor(
-                isPresented: $isRecording,
-                selectedLanguage: selectedLanguage,
-                onRecord: saveShortcut
-            )
-            .allowsHitTesting(false)
+            GeometryReader { proxy in
+                ShortcutRecorderPopoverAnchor(
+                    isPresented: $isRecording,
+                    selectedLanguage: selectedLanguage,
+                    onRecord: onRecord,
+                    onBeginRecording: onBeginRecording,
+                    onEndRecording: onEndRecording
+                )
+                .frame(width: max(proxy.size.width, 1), height: max(proxy.size.height, 1))
+                .allowsHitTesting(false)
+            }
         }
-    }
-
-    @MainActor
-    private func saveShortcut(_ shortcut: KeyboardShortcuts.Shortcut?) {
-        KeyboardShortcuts.setShortcut(shortcut, for: name)
-        onChange?(shortcut)
     }
 }
 
@@ -175,11 +181,6 @@ enum ShortcutRecorderDisplay {
 /// The event policy is intentionally independent from the popover so the recorder's
 /// most important behavior can be regression-tested without driving AppKit UI.
 enum ShortcutRecorderInput {
-    static func isClearKey(_ keyCode: UInt16, modifierFlags: NSEvent.ModifierFlags) -> Bool {
-        modifierFlags.intersection(.deviceIndependentFlagsMask).isEmpty
-            && (keyCode == UInt16(kVK_Delete) || keyCode == UInt16(kVK_ForwardDelete))
-    }
-
     static func isRecordable(keyCode: UInt16, modifierFlags: NSEvent.ModifierFlags) -> Bool {
         guard !modifierKeyCodes.contains(keyCode) else {
             return false
@@ -187,6 +188,19 @@ enum ShortcutRecorderInput {
 
         let modifiers = modifierFlags.intersection(.deviceIndependentFlagsMask)
         return !modifiers.intersection([.command, .control, .option, .function]).isEmpty
+            || modifierlessFunctionKeyCodes.contains(keyCode)
+    }
+
+    static func requiresModifier(keyCode: UInt16, modifierFlags: NSEvent.ModifierFlags) -> Bool {
+        guard !modifierKeyCodes.contains(keyCode) else {
+            return false
+        }
+
+        return modifierFlags
+            .intersection(.deviceIndependentFlagsMask)
+            .intersection([.command, .control, .option, .function])
+            .isEmpty
+            && !modifierlessFunctionKeyCodes.contains(keyCode)
     }
 
     private static let modifierKeyCodes: Set<UInt16> = [
@@ -201,12 +215,21 @@ enum ShortcutRecorderInput {
         UInt16(kVK_CapsLock),
         UInt16(kVK_Function)
     ]
+
+    private static let modifierlessFunctionKeyCodes: Set<UInt16> = [
+        UInt16(kVK_F1), UInt16(kVK_F2), UInt16(kVK_F3), UInt16(kVK_F4),
+        UInt16(kVK_F5), UInt16(kVK_F6), UInt16(kVK_F7), UInt16(kVK_F8),
+        UInt16(kVK_F9), UInt16(kVK_F10), UInt16(kVK_F11), UInt16(kVK_F12)
+    ]
 }
 
 @MainActor
 private final class ShortcutRecorderDisplayState: ObservableObject {
     @Published var previewText: String
-    @Published var isShowingPlaceholder = true
+    @Published private(set) var showEscapeHint = false
+    @Published private(set) var rejectionMessage: String?
+    @Published private(set) var shakeOffset: CGFloat = 0
+    @Published private(set) var isShaking = false
 
     init(selectedLanguage: String) {
         previewText = "Press Shortcut".localized(language: selectedLanguage)
@@ -215,38 +238,93 @@ private final class ShortcutRecorderDisplayState: ObservableObject {
     func updateModifierPreview(_ modifierFlags: NSEvent.ModifierFlags, selectedLanguage: String) {
         let modifiers = modifierFlags.intersection(.deviceIndependentFlagsMask)
         let preview = ShortcutRecorderDisplay.formattedModifierPreview(modifiers)
-        isShowingPlaceholder = preview.isEmpty
         previewText = preview.isEmpty
             ? "Press Shortcut".localized(language: selectedLanguage)
             : preview
+    }
+
+    func reject(message: String? = nil) {
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
+            showEscapeHint = true
+            if let message {
+                rejectionMessage = message
+            }
+        }
+
+        isShaking = true
+        let steps: [(CGFloat, Double)] = [
+            (10, 0.00), (-8, 0.06), (7, 0.12), (-5, 0.18), (3, 0.24), (0, 0.30)
+        ]
+
+        for (offset, delay) in steps {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                withAnimation(.linear(duration: 0.05)) {
+                    self?.shakeOffset = offset
+                }
+            }
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.38) { [weak self] in
+            self?.isShaking = false
+        }
     }
 }
 
 private struct ShortcutRecorderPopoverView: View {
     @ObservedObject var displayState: ShortcutRecorderDisplayState
+    let selectedLanguage: String
 
     var body: some View {
-        Text(displayState.previewText)
-            .font(.subheadline.weight(.medium))
-            .foregroundStyle(Color.accentColor)
-            .lineLimit(1)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .frame(minWidth: 130, alignment: .center)
-            .background(
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(Color.accentColor.opacity(0.08))
-            )
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .frame(minWidth: 160)
+        VStack(spacing: 0) {
+            Text(displayState.previewText)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(Color.accentColor)
+                .lineLimit(1)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .frame(minWidth: 130, alignment: .center)
+                .background(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(
+                            displayState.isShaking
+                                ? Color.red.opacity(0.18)
+                                : Color.accentColor.opacity(0.08)
+                        )
+                )
+                .offset(x: displayState.shakeOffset)
+
+            if let rejectionMessage = displayState.rejectionMessage {
+                Text(rejectionMessage)
+                    .foregroundStyle(.red)
+                    .font(.caption2.weight(.medium))
+                    .padding(.top, 8)
+                    .transition(.asymmetric(
+                        insertion: .opacity.combined(with: .offset(y: -6)),
+                        removal: .opacity
+                    ))
+            } else if displayState.showEscapeHint {
+                Text("Press ESC to cancel".localized(language: selectedLanguage))
+                    .foregroundStyle(.secondary)
+                    .font(.caption2.weight(.medium))
+                    .padding(.top, 8)
+                    .transition(.asymmetric(
+                        insertion: .opacity.combined(with: .offset(y: -6)),
+                        removal: .opacity
+                    ))
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .frame(minWidth: 160)
     }
 }
 
 private struct ShortcutRecorderPopoverAnchor: NSViewRepresentable {
     @Binding var isPresented: Bool
     let selectedLanguage: String
-    let onRecord: (KeyboardShortcuts.Shortcut?) -> Void
+    let onRecord: (KeyboardShortcuts.Shortcut?) -> ShortcutRecorderRecordingResult
+    var onBeginRecording: (() -> Void)?
+    var onEndRecording: (() -> Void)?
 
     func makeCoordinator() -> Coordinator {
         Coordinator()
@@ -262,7 +340,9 @@ private struct ShortcutRecorderPopoverAnchor: NSViewRepresentable {
             sourceView: nsView,
             selectedLanguage: selectedLanguage,
             onRecord: onRecord,
-            onDismiss: { isPresented = false }
+            onDismiss: { isPresented = false },
+            onBeginRecording: onBeginRecording,
+            onEndRecording: onEndRecording
         )
     }
 
@@ -273,25 +353,32 @@ private struct ShortcutRecorderPopoverAnchor: NSViewRepresentable {
     @MainActor
     final class Coordinator: NSObject, NSPopoverDelegate {
         private var popover: NSPopover?
-        private var keyMonitor: Any?
+        private var eventMonitor: Any?
+        private var committed = false
         private var wantsPresentation = false
         private var presentationRetryScheduled = false
         private var selectedLanguage = "system"
-        private var onRecord: ((KeyboardShortcuts.Shortcut?) -> Void)?
+        private var onRecord: ((KeyboardShortcuts.Shortcut?) -> ShortcutRecorderRecordingResult)?
         private var onDismiss: (() -> Void)?
+        private var onBeginRecording: (() -> Void)?
+        private var onEndRecording: (() -> Void)?
         private var displayState: ShortcutRecorderDisplayState?
 
         func update(
             isPresented: Bool,
             sourceView: NSView,
             selectedLanguage: String,
-            onRecord: @escaping (KeyboardShortcuts.Shortcut?) -> Void,
-            onDismiss: @escaping () -> Void
+            onRecord: @escaping (KeyboardShortcuts.Shortcut?) -> ShortcutRecorderRecordingResult,
+            onDismiss: @escaping () -> Void,
+            onBeginRecording: (() -> Void)?,
+            onEndRecording: (() -> Void)?
         ) {
             wantsPresentation = isPresented
             self.selectedLanguage = selectedLanguage
             self.onRecord = onRecord
             self.onDismiss = onDismiss
+            self.onBeginRecording = onBeginRecording
+            self.onEndRecording = onEndRecording
 
             if isPresented {
                 requestPresentation(from: sourceView)
@@ -300,10 +387,13 @@ private struct ShortcutRecorderPopoverAnchor: NSViewRepresentable {
             }
         }
 
-        func popoverDidClose(_ notification: Notification) {
-            popover = nil
-            cleanup()
-            onDismiss?()
+        func popoverShouldClose(_ popover: NSPopover) -> Bool {
+            guard committed else {
+                displayState?.reject()
+                return false
+            }
+
+            return true
         }
 
         func close() {
@@ -314,11 +404,18 @@ private struct ShortcutRecorderPopoverAnchor: NSViewRepresentable {
                 return
             }
 
+            let dismiss = onDismiss
+            let endRecording = onEndRecording
+            let wasRecording = displayState != nil
+
             popover.delegate = nil
             self.popover = nil
             popover.close()
             cleanup()
-            onDismiss?()
+            dismiss?()
+            if wasRecording {
+                endRecording?()
+            }
         }
 
         private func requestPresentation(from sourceView: NSView) {
@@ -351,11 +448,16 @@ private struct ShortcutRecorderPopoverAnchor: NSViewRepresentable {
         }
 
         private func present(from sourceView: NSView) {
+            committed = false
             let displayState = ShortcutRecorderDisplayState(selectedLanguage: selectedLanguage)
             self.displayState = displayState
+            onBeginRecording?()
 
             let controller = NSHostingController(
-                rootView: ShortcutRecorderPopoverView(displayState: displayState)
+                rootView: ShortcutRecorderPopoverView(
+                    displayState: displayState,
+                    selectedLanguage: selectedLanguage
+                )
             )
             controller.view.layoutSubtreeIfNeeded()
 
@@ -363,32 +465,47 @@ private struct ShortcutRecorderPopoverAnchor: NSViewRepresentable {
             popover.contentViewController = controller
             popover.contentSize = controller.view.fittingSize
             popover.behavior = .transient
+            popover.animates = true
             popover.delegate = self
             self.popover = popover
 
-            keyMonitor = NSEvent.addLocalMonitorForEvents(
-                matching: [.keyDown, .flagsChanged]
+            eventMonitor = NSEvent.addLocalMonitorForEvents(
+                matching: [.keyDown, .flagsChanged, .leftMouseDown, .rightMouseDown,
+                           .otherMouseDown, .leftMouseUp, .rightMouseUp, .otherMouseUp,
+                           .scrollWheel, .mouseEntered, .mouseExited, .mouseMoved]
             ) { [weak self] event in
                 guard let self else {
                     return event
                 }
 
-                return self.handle(event)
+                return self.handleEvent(event)
             }
 
             popover.show(relativeTo: sourceView.bounds, of: sourceView, preferredEdge: .maxY)
         }
 
-        private func handle(_ event: NSEvent) -> NSEvent? {
-            guard popover?.isShown == true else {
-                return event
-            }
-
-            if event.type == .flagsChanged {
+        private func handleEvent(_ event: NSEvent) -> NSEvent? {
+            switch event.type {
+            case .flagsChanged:
+                guard popover?.isShown == true else { return event }
                 displayState?.updateModifierPreview(
                     event.modifierFlags,
                     selectedLanguage: selectedLanguage
                 )
+                return event
+            case .keyDown:
+                return handleKey(event)
+            case .leftMouseDown, .rightMouseDown, .otherMouseDown,
+                 .leftMouseUp, .rightMouseUp, .otherMouseUp,
+                 .scrollWheel, .mouseEntered, .mouseExited, .mouseMoved:
+                return nil
+            default:
+                return event
+            }
+        }
+
+        private func handleKey(_ event: NSEvent) -> NSEvent? {
+            guard popover?.isShown == true else {
                 return event
             }
 
@@ -400,8 +517,10 @@ private struct ShortcutRecorderPopoverAnchor: NSViewRepresentable {
                 return nil
             }
 
-            if ShortcutRecorderInput.isClearKey(keyCode, modifierFlags: modifiers) {
-                commit(nil)
+            if ShortcutRecorderInput.requiresModifier(keyCode: keyCode, modifierFlags: modifiers) {
+                displayState?.reject(
+                    message: "Shortcut must include a modifier key.".localized(language: selectedLanguage)
+                )
                 return nil
             }
 
@@ -409,27 +528,32 @@ private struct ShortcutRecorderPopoverAnchor: NSViewRepresentable {
                 ShortcutRecorderInput.isRecordable(keyCode: keyCode, modifierFlags: modifiers),
                 let shortcut = KeyboardShortcuts.Shortcut(event: event)
             else {
-                NSSound.beep()
                 return nil
             }
 
-            commit(shortcut)
+            switch onRecord?(shortcut) ?? .accepted {
+            case .accepted:
+                committed = true
+                close()
+            case let .rejected(message):
+                displayState?.reject(message: message)
+            }
             return nil
         }
 
-        private func commit(_ shortcut: KeyboardShortcuts.Shortcut?) {
-            onRecord?(shortcut)
-            close()
-        }
-
         private func cleanup() {
-            if let keyMonitor {
-                NSEvent.removeMonitor(keyMonitor)
+            if let eventMonitor {
+                NSEvent.removeMonitor(eventMonitor)
             }
 
-            keyMonitor = nil
+            eventMonitor = nil
             displayState = nil
+            committed = false
             presentationRetryScheduled = false
+            onRecord = nil
+            onDismiss = nil
+            onBeginRecording = nil
+            onEndRecording = nil
         }
     }
 }

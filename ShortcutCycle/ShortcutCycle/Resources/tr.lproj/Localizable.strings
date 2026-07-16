@@ -1,4 +1,6 @@
 /* Turkish */
+"Press ESC to cancel" = "İptal etmek için ESC'ye basın";
+"Shortcut must include a modifier key." = "Kısayol bir değiştirici tuş içermelidir.";
 "ShortcutCycle" = "ShortcutCycle";
 "Settings..." = "Ayarlar...";
 "Quit" = "Çıkış";

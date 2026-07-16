@@ -1,4 +1,6 @@
 /* Dutch */
+"Press ESC to cancel" = "Druk op ESC om te annuleren";
+"Shortcut must include a modifier key." = "De sneltoets moet een modificatietoets bevatten.";
 "ShortcutCycle" = "ShortcutCycle";
 "Settings..." = "Instellingen...";
 "Quit" = "Stop";

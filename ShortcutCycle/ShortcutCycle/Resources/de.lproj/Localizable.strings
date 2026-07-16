@@ -1,4 +1,6 @@
 /* German */
+"Press ESC to cancel" = "Zum Abbrechen ESC drücken";
+"Shortcut must include a modifier key." = "Der Kurzbefehl muss eine Modifikatortaste enthalten.";
 "ShortcutCycle" = "ShortcutCycle";
 "Settings..." = "Einstellungen...";
 "Quit" = "Beenden";

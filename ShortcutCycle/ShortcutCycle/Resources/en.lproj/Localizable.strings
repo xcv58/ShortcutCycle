@@ -1,4 +1,6 @@
 /* English */
+"Press ESC to cancel" = "Press ESC to cancel";
+"Shortcut must include a modifier key." = "Shortcut must include a modifier key.";
 "ShortcutCycle" = "ShortcutCycle";
 "Settings..." = "Settings...";
 "Quit" = "Quit";

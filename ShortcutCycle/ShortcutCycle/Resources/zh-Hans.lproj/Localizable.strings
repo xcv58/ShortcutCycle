@@ -1,4 +1,6 @@
 /* Chinese (Simplified) */
+"Press ESC to cancel" = "按 ESC 取消";
+"Shortcut must include a modifier key." = "快捷键必须包含修饰键。";
 "ShortcutCycle" = "ShortcutCycle";
 "Settings..." = "设置...";
 "Quit" = "退出";

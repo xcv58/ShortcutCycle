@@ -1,4 +1,6 @@
 /* Polish */
+"Press ESC to cancel" = "Naciśnij ESC, aby anulować";
+"Shortcut must include a modifier key." = "Skrót musi zawierać klawisz modyfikujący.";
 "ShortcutCycle" = "ShortcutCycle";
 "Settings..." = "Ustawienia...";
 "Quit" = "Zakończ";
