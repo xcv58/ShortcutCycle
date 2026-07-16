@@ -808,24 +808,30 @@ private struct ShortcutSuggestionRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 8) {
-                ForEach(Array(suggestions.enumerated()), id: \.offset) { _, shortcut in
-                    Button {
-                        onSelect(shortcut)
-                    } label: {
-                        Text(shortcut.description)
-                            .font(.caption.weight(.medium))
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 5)
-                            .background(
-                                Capsule()
-                                    .fill(Color.secondary.opacity(0.12))
-                            )
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(Array(suggestions.enumerated()), id: \.offset) { _, shortcut in
+                        let displayText = ShortcutRecorderDisplay.formattedShortcut(shortcut)
+
+                        Button {
+                            onSelect(shortcut)
+                        } label: {
+                            Text(displayText)
+                                .font(.caption.weight(.medium))
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 5)
+                                .background(
+                                    Capsule()
+                                        .fill(Color.secondary.opacity(0.12))
+                                )
+                        }
+                        .buttonStyle(.plain)
+                        .help(displayText)
+                        .accessibilityLabel(displayText)
                     }
-                    .buttonStyle(.plain)
-                    .help(shortcut.description)
                 }
+                .fixedSize(horizontal: true, vertical: false)
             }
 
             Text("Reuse a recent shortcut or try an available suggestion.".localized(language: selectedLanguage))

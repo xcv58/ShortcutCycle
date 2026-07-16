@@ -75,6 +75,15 @@ final class GroupSettingsViewTests: XCTestCase {
         )
     }
 
+    func testShortcutSuggestionUsesPlusSeparatedRecorderFormatting() {
+        let shortcut = KeyboardShortcuts.Shortcut(.five, modifiers: [.option])
+
+        XCTAssertEqual(
+            ShortcutRecorderDisplay.formattedShortcut(shortcut),
+            "⌥ + 5"
+        )
+    }
+
     func testCustomShortcutRecorderFormatsModifierPreviewWithSeparators() {
         XCTAssertEqual(
             ShortcutRecorderDisplay.formattedModifierPreview([.control, .shift, .command]),
