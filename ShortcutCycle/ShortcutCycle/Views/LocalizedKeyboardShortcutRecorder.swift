@@ -43,14 +43,11 @@ struct LocalizedKeyboardShortcutRecorder: View {
             Button {
                 isRecording = true
             } label: {
-                Text(displayText)
-                    .font(.system(.body, design: .monospaced))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-                    .foregroundStyle(shortcut == nil && !isRecording ? .tertiary : .primary)
-                    .padding(.horizontal, 14)
-                    .frame(minWidth: 140, minHeight: 34, alignment: .center)
-                    .background(shortcutFieldBackground)
+                ShortcutRecorderField(
+                    displayText: displayText,
+                    isPlaceholder: shortcut == nil && !isRecording,
+                    isRecording: isRecording
+                )
             }
             .buttonStyle(.plain)
             .accessibilityLabel(Text("Keyboard Shortcut".localized(language: selectedLanguage)))
@@ -81,28 +78,56 @@ struct LocalizedKeyboardShortcutRecorder: View {
         }
     }
 
-    private var shortcutFieldBackground: some View {
-        RoundedRectangle(cornerRadius: 9, style: .continuous)
-            .fill(
+    @MainActor
+    private func saveShortcut(_ shortcut: KeyboardShortcuts.Shortcut?) {
+        KeyboardShortcuts.setShortcut(shortcut, for: name)
+        onChange?(shortcut)
+    }
+}
+
+/// The shared visual treatment for a saved shortcut and its live recording preview.
+private struct ShortcutRecorderField: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    let displayText: String
+    let isPlaceholder: Bool
+    let isRecording: Bool
+    var minWidth: CGFloat = 146
+
+    var body: some View {
+        Text(displayText)
+            .font(.system(.body, design: .monospaced))
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+            .foregroundStyle(
                 isRecording
-                    ? Color.accentColor.opacity(0.12)
-                    : Color(nsColor: .controlBackgroundColor)
+                    ? AnyShapeStyle(Color.accentColor)
+                    : isPlaceholder
+                        ? AnyShapeStyle(.tertiary)
+                        : AnyShapeStyle(.primary)
+            )
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .frame(minWidth: minWidth, alignment: .center)
+            .background(
+                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                    .fill(fieldBackgroundColor)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 9, style: .continuous)
                     .strokeBorder(
                         isRecording
                             ? Color.accentColor
-                            : Color(nsColor: .separatorColor).opacity(0.65),
+                            : Color(nsColor: .separatorColor).opacity(0.8),
                         lineWidth: isRecording ? 1.5 : 1
                     )
             )
     }
 
-    @MainActor
-    private func saveShortcut(_ shortcut: KeyboardShortcuts.Shortcut?) {
-        KeyboardShortcuts.setShortcut(shortcut, for: name)
-        onChange?(shortcut)
+    private var fieldBackgroundColor: Color {
+        colorScheme == .light
+            ? .white
+            : Color(nsColor: .textBackgroundColor)
     }
 }
 
@@ -140,6 +165,7 @@ enum ShortcutRecorderInput {
 @MainActor
 private final class ShortcutRecorderDisplayState: ObservableObject {
     @Published var previewText: String
+    @Published var isShowingPlaceholder = true
 
     init(selectedLanguage: String) {
         previewText = "Press Shortcut".localized(language: selectedLanguage)
@@ -148,6 +174,7 @@ private final class ShortcutRecorderDisplayState: ObservableObject {
     func updateModifierPreview(_ modifierFlags: NSEvent.ModifierFlags, selectedLanguage: String) {
         let modifiers = modifierFlags.intersection(.deviceIndependentFlagsMask)
         let symbols = modifiers.ks_symbolicRepresentation
+        isShowingPlaceholder = symbols.isEmpty
         previewText = symbols.isEmpty
             ? "Press Shortcut".localized(language: selectedLanguage)
             : symbols
@@ -158,13 +185,12 @@ private struct ShortcutRecorderPopoverView: View {
     @ObservedObject var displayState: ShortcutRecorderDisplayState
 
     var body: some View {
-        Text(displayState.previewText)
-            .font(.system(.body, design: .monospaced).weight(.medium))
-            .foregroundStyle(Color.accentColor)
-            .lineLimit(1)
-            .frame(minWidth: 150, alignment: .center)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
+        ShortcutRecorderField(
+            displayText: displayState.previewText,
+            isPlaceholder: displayState.isShowingPlaceholder,
+            isRecording: true
+        )
+        .padding(12)
     }
 }
 
