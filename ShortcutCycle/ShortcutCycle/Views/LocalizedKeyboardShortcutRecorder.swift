@@ -48,23 +48,29 @@ struct LocalizedKeyboardShortcutRecorder: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
                     .foregroundStyle(shortcut == nil && !isRecording ? .tertiary : .primary)
-                    .frame(minWidth: 128, alignment: .center)
+                    .padding(.horizontal, 14)
+                    .frame(minWidth: 140, minHeight: 34, alignment: .center)
+                    .background(shortcutFieldBackground)
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(.plain)
             .accessibilityLabel(Text("Keyboard Shortcut".localized(language: selectedLanguage)))
+            .help("Record Shortcut".localized(language: selectedLanguage))
 
             if shortcut != nil {
                 Button {
                     saveShortcut(nil)
                 } label: {
                     Image(systemName: "xmark.circle.fill")
+                        .font(.body)
                         .foregroundStyle(.secondary)
+                        .frame(width: 24, height: 24)
                 }
                 .buttonStyle(.borderless)
                 .accessibilityLabel(Text("Delete".localized(language: selectedLanguage)))
                 .help("Delete".localized(language: selectedLanguage))
             }
         }
+        .fixedSize(horizontal: true, vertical: false)
         .background {
             ShortcutRecorderPopoverAnchor(
                 isPresented: $isRecording,
@@ -73,6 +79,24 @@ struct LocalizedKeyboardShortcutRecorder: View {
             )
             .allowsHitTesting(false)
         }
+    }
+
+    private var shortcutFieldBackground: some View {
+        RoundedRectangle(cornerRadius: 9, style: .continuous)
+            .fill(
+                isRecording
+                    ? Color.accentColor.opacity(0.12)
+                    : Color(nsColor: .controlBackgroundColor)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                    .strokeBorder(
+                        isRecording
+                            ? Color.accentColor
+                            : Color(nsColor: .separatorColor).opacity(0.65),
+                        lineWidth: isRecording ? 1.5 : 1
+                    )
+            )
     }
 
     @MainActor

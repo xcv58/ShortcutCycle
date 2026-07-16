@@ -659,7 +659,7 @@ private struct GroupShortcutEditor: View {
     }
 
     private var shouldShowSuggestions: Bool {
-        currentShortcut == nil && !suggestionShortcuts.isEmpty
+        !suggestionShortcuts.isEmpty
     }
 
     var body: some View {
