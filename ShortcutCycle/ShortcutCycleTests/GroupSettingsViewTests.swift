@@ -9,4 +9,34 @@ final class GroupSettingsViewTests: XCTestCase {
     func testGroupSettingsViewCanBeConstructed() {
         _ = GroupSettingsView()
     }
+
+    func testCustomShortcutRecorderRequiresAFunctionalModifier() {
+        XCTAssertFalse(
+            ShortcutRecorderInput.isRecordable(
+                keyCode: 18,
+                modifierFlags: [.shift]
+            )
+        )
+        XCTAssertTrue(
+            ShortcutRecorderInput.isRecordable(
+                keyCode: 18,
+                modifierFlags: [.option]
+            )
+        )
+    }
+
+    func testCustomShortcutRecorderTreatsDeleteAsClearOnlyWithoutModifiers() {
+        XCTAssertTrue(
+            ShortcutRecorderInput.isClearKey(
+                51,
+                modifierFlags: []
+            )
+        )
+        XCTAssertFalse(
+            ShortcutRecorderInput.isClearKey(
+                51,
+                modifierFlags: [.command]
+            )
+        )
+    }
 }
