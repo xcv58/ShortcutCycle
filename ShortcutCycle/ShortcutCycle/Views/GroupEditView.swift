@@ -811,7 +811,7 @@ private struct ShortcutSuggestionRow: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     ForEach(Array(suggestions.enumerated()), id: \.offset) { _, shortcut in
-                        let displayText = ShortcutRecorderDisplay.formattedShortcut(shortcut)
+                        let displayText = ShortcutDisplayFormatter.formattedShortcut(shortcut)
 
                         Button {
                             onSelect(shortcut)

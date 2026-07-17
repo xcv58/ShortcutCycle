@@ -451,13 +451,13 @@ final class AppGroupTests: XCTestCase {
     }
 
     @MainActor
-    func testShortcutDisplayStringNonNilWhenRegistered() {
+    func testShortcutDisplayStringUsesPlusSeparatedFormattingWhenRegistered() {
         let group = AppGroup(name: "With Shortcut")
         let shortcut = KeyboardShortcuts.Shortcut(carbonKeyCode: 0, carbonModifiers: 256)
         KeyboardShortcuts.setShortcut(shortcut, for: group.shortcutName)
         defer { KeyboardShortcuts.setShortcut(nil, for: group.shortcutName) }
 
-        XCTAssertNotNil(group.shortcutDisplayString)
+        XCTAssertEqual(group.shortcutDisplayString, "⌘ + A")
     }
 
     // MARK: - Legacy Shortcut Decoding

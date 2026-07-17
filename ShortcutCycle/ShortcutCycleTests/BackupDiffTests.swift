@@ -211,7 +211,7 @@ final class BackupDiffTests: XCTestCase {
             return XCTFail("Expected keyboard shortcut change")
         }
         XCTAssertEqual(shortcutChange.oldValue, "none")
-        XCTAssertEqual(shortcutChange.newValue, "⌘keyCode:\(unmappedKeyCode)")
+        XCTAssertEqual(shortcutChange.newValue, "⌘ + keyCode:\(unmappedKeyCode)")
     }
 
     func testGroupShortcutChangeUsesKeyCodeFallbackWithoutModifiersForUnmappedKey() {

@@ -2,6 +2,9 @@ import AppKit
 import Carbon.HIToolbox
 import KeyboardShortcuts
 import SwiftUI
+#if canImport(ShortcutCycleCore)
+import ShortcutCycleCore
+#endif
 
 /// A custom recorder that uses a transient AppKit popover and a local event monitor.
 ///
@@ -42,7 +45,7 @@ struct LocalizedKeyboardShortcutRecorder: View {
     }
 
     private var displayText: String {
-        return shortcut.map(ShortcutRecorderDisplay.formattedShortcut)
+        return shortcut.map(ShortcutDisplayFormatter.formattedShortcut)
             ?? "No shortcut".localized(language: selectedLanguage)
     }
 
@@ -154,33 +157,6 @@ private struct ShortcutRecorderField: View {
     }
 }
 
-/// Formats shortcuts as separate controls, matching the recorder's visual language.
-@MainActor
-enum ShortcutRecorderDisplay {
-    static func formattedShortcut(_ shortcut: KeyboardShortcuts.Shortcut) -> String {
-        let modifierSymbols = shortcut.modifiers.ks_symbolicRepresentation
-        // KeyboardShortcuts defines `description` as this same modifier prefix
-        // followed by its presentable key label. Keep tests for ordinary and
-        // special keys so an upstream representation change is caught early.
-        let key = String(shortcut.description.dropFirst(modifierSymbols.count))
-        return components(modifiers: modifierSymbols, key: key)
-    }
-
-    static func formattedModifierPreview(_ modifiers: NSEvent.ModifierFlags) -> String {
-        components(modifiers: modifiers.ks_symbolicRepresentation, key: nil)
-    }
-
-    private static func components(modifiers: String, key: String?) -> String {
-        var components = modifiers.map(String.init)
-
-        if let key, !key.isEmpty {
-            components.append(key)
-        }
-
-        return components.joined(separator: " + ")
-    }
-}
-
 /// The event policy is intentionally independent from the popover so the recorder's
 /// most important behavior can be regression-tested without driving AppKit UI.
 enum ShortcutRecorderInput {
@@ -249,7 +225,7 @@ private final class ShortcutRecorderDisplayState: ObservableObject {
 
     func updateModifierPreview(_ modifierFlags: NSEvent.ModifierFlags, selectedLanguage: String) {
         let modifiers = modifierFlags.intersection(.deviceIndependentFlagsMask)
-        let preview = ShortcutRecorderDisplay.formattedModifierPreview(modifiers)
+        let preview = ShortcutDisplayFormatter.formattedModifierPreview(modifiers)
         previewText = preview.isEmpty
             ? "Press Shortcut".localized(language: selectedLanguage)
             : preview

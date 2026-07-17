@@ -559,17 +559,17 @@ private struct KeyboardShortcutReferencePopover: View {
 
     private var shortcutReferences: [(title: String, shortcuts: [String])] {
         [
-            ("Settings...".localized(language: selectedLanguage), ["⌘,"]),
-            ("Toggle Appearance".localized(language: selectedLanguage), ["⌃⌘A"]),
-            ("Groups".localized(language: selectedLanguage), ["⌘1"]),
-            ("General".localized(language: selectedLanguage), ["⌘2"]),
-            ("Add Group".localized(language: selectedLanguage), ["⌘N"]),
-            ("Delete Group".localized(language: selectedLanguage), ["⌘⌫"]),
-            ("Toggle Sidebar".localized(language: selectedLanguage), ["⌃⌘S"]),
-            ("Previous Group".localized(language: selectedLanguage), ["⌘↑", "⌘[", "⌘K"]),
-            ("Next Group".localized(language: selectedLanguage), ["⌘↓", "⌘]", "⌘J"]),
-            ("Move Group Up".localized(language: selectedLanguage), ["⌥⌘↑"]),
-            ("Move Group Down".localized(language: selectedLanguage), ["⌥⌘↓"])
+            ("Settings...".localized(language: selectedLanguage), ["⌘ + ,"]),
+            ("Toggle Appearance".localized(language: selectedLanguage), ["⌃ + ⌘ + A"]),
+            ("Groups".localized(language: selectedLanguage), ["⌘ + 1"]),
+            ("General".localized(language: selectedLanguage), ["⌘ + 2"]),
+            ("Add Group".localized(language: selectedLanguage), ["⌘ + N"]),
+            ("Delete Group".localized(language: selectedLanguage), ["⌘ + ⌫"]),
+            ("Toggle Sidebar".localized(language: selectedLanguage), ["⌃ + ⌘ + S"]),
+            ("Previous Group".localized(language: selectedLanguage), ["⌘ + ↑", "⌘ + [", "⌘ + K"]),
+            ("Next Group".localized(language: selectedLanguage), ["⌘ + ↓", "⌘ + ]", "⌘ + J"]),
+            ("Move Group Up".localized(language: selectedLanguage), ["⌥ + ⌘ + ↑"]),
+            ("Move Group Down".localized(language: selectedLanguage), ["⌥ + ⌘ + ↓"])
         ]
     }
 
@@ -625,25 +625,31 @@ private struct KeyboardShortcutReferenceRow: View {
 }
 
 enum KeyboardShortcutGlyphLayout {
-    static func symbols(in shortcut: String) -> [String] {
-        shortcut.map(String.init)
+    static func components(in shortcut: String) -> [String] {
+        shortcut.components(separatedBy: " + ")
     }
 }
 
 private struct KeyboardShortcutBadge: View {
     let shortcut: String
 
-    private var symbols: [String] {
-        KeyboardShortcutGlyphLayout.symbols(in: shortcut)
+    private var components: [String] {
+        KeyboardShortcutGlyphLayout.components(in: shortcut)
     }
 
     var body: some View {
         HStack(spacing: 2) {
-            ForEach(Array(symbols.enumerated()), id: \.offset) { _, symbol in
-                Text(symbol)
+            ForEach(Array(components.enumerated()), id: \.offset) { index, component in
+                Text(component)
                     .font(.system(size: 12, weight: .semibold, design: .rounded))
                     .lineLimit(1)
                     .fixedSize()
+
+                if index < components.count - 1 {
+                    Text("+")
+                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.tertiary)
+                }
             }
         }
         .foregroundStyle(.secondary)
@@ -653,5 +659,7 @@ private struct KeyboardShortcutBadge: View {
             RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .fill(Color(nsColor: .controlBackgroundColor))
         )
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(shortcut)
     }
 }

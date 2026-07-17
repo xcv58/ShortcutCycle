@@ -2,6 +2,35 @@ import AppKit
 import Foundation
 import KeyboardShortcuts
 
+/// Produces the app's user-facing shortcut notation, with each keyboard
+/// component separated consistently (for example, `⌥ + ⇧ + A`).
+@MainActor
+public enum ShortcutDisplayFormatter {
+    public static func formattedShortcut(_ shortcut: KeyboardShortcuts.Shortcut) -> String {
+        let modifierSymbols = shortcut.modifiers.ks_symbolicRepresentation
+
+        // KeyboardShortcuts defines `description` as this same modifier prefix
+        // followed by its presentable key label. Keep tests for ordinary and
+        // special keys so an upstream representation change is caught early.
+        let key = String(shortcut.description.dropFirst(modifierSymbols.count))
+        return components(modifiers: modifierSymbols, key: key)
+    }
+
+    public static func formattedModifierPreview(_ modifiers: NSEvent.ModifierFlags) -> String {
+        components(modifiers: modifiers.ks_symbolicRepresentation, key: nil)
+    }
+
+    private static func components(modifiers: String, key: String?) -> String {
+        var components = modifiers.map(String.init)
+
+        if let key, !key.isEmpty {
+            components.append(key)
+        }
+
+        return components.joined(separator: " + ")
+    }
+}
+
 public enum ShortcutSuggestions {
     @MainActor
     public static func available(
@@ -114,7 +143,7 @@ public struct ShortcutAssignmentConflict: Equatable, Identifiable {
     public func message(localize: (String) -> String) -> String {
         let conflictMessage = String(
             format: localize("The shortcut %@ is already used by %@."),
-            shortcut.description,
+            ShortcutDisplayFormatter.formattedShortcut(shortcut),
             owner.displayName(localize: localize)
         )
         let guidance = localize("Choose a different shortcut to avoid triggering both actions.")

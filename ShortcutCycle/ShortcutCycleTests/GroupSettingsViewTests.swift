@@ -1,6 +1,9 @@
 import Carbon.HIToolbox
 import KeyboardShortcuts
 import XCTest
+#if canImport(ShortcutCycleCore)
+@testable import ShortcutCycleCore
+#endif
 @testable import ShortcutCycle
 
 @MainActor
@@ -52,7 +55,7 @@ final class GroupSettingsViewTests: XCTestCase {
         let shortcut = KeyboardShortcuts.Shortcut(.x, modifiers: [.shift, .command])
 
         XCTAssertEqual(
-            ShortcutRecorderDisplay.formattedShortcut(shortcut),
+            ShortcutDisplayFormatter.formattedShortcut(shortcut),
             "⇧ + ⌘ + X"
         )
     }
@@ -61,7 +64,7 @@ final class GroupSettingsViewTests: XCTestCase {
         let shortcut = KeyboardShortcuts.Shortcut(.upArrow, modifiers: [.control, .command])
 
         XCTAssertEqual(
-            ShortcutRecorderDisplay.formattedShortcut(shortcut),
+            ShortcutDisplayFormatter.formattedShortcut(shortcut),
             "⌃ + ⌘ + ↑"
         )
     }
@@ -70,7 +73,7 @@ final class GroupSettingsViewTests: XCTestCase {
         let shortcut = KeyboardShortcuts.Shortcut(.f1)
 
         XCTAssertEqual(
-            ShortcutRecorderDisplay.formattedShortcut(shortcut),
+            ShortcutDisplayFormatter.formattedShortcut(shortcut),
             "F1"
         )
     }
@@ -79,14 +82,14 @@ final class GroupSettingsViewTests: XCTestCase {
         let shortcut = KeyboardShortcuts.Shortcut(.five, modifiers: [.option])
 
         XCTAssertEqual(
-            ShortcutRecorderDisplay.formattedShortcut(shortcut),
+            ShortcutDisplayFormatter.formattedShortcut(shortcut),
             "⌥ + 5"
         )
     }
 
     func testCustomShortcutRecorderFormatsModifierPreviewWithSeparators() {
         XCTAssertEqual(
-            ShortcutRecorderDisplay.formattedModifierPreview([.control, .shift, .command]),
+            ShortcutDisplayFormatter.formattedModifierPreview([.control, .shift, .command]),
             "⌃ + ⇧ + ⌘"
         )
     }

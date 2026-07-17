@@ -212,7 +212,7 @@ final class GroupEditViewTests: XCTestCase {
                 AppSwitcherHUDView(
                     apps: apps,
                     activeAppId: apps[0].id,
-                    shortcutString: "⌥1"
+                    shortcutString: "⌥ + 1"
                 )
             )
         )
@@ -241,7 +241,7 @@ final class GroupEditViewTests: XCTestCase {
                 AppSwitcherHUDView(
                     apps: apps,
                     activeAppId: apps[0].id,
-                    shortcutString: "⌥1"
+                    shortcutString: "⌥ + 1"
                 )
             )
         )

@@ -192,7 +192,7 @@ struct ScreenshotHUDSceneView: View {
             AppSwitcherHUDView(
                 apps: items,
                 activeAppId: activeItemID,
-                shortcutString: "⌥\(items.firstIndex(where: { $0.id == activeItemID }).map { String($0 + 1) } ?? "1")"
+                shortcutString: "⌥ + \(items.firstIndex(where: { $0.id == activeItemID }).map { String($0 + 1) } ?? "1")"
             )
             .fixedSize()
         }

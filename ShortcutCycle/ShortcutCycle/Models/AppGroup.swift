@@ -103,7 +103,7 @@ public extension AppGroup {
         guard let shortcut = KeyboardShortcuts.getShortcut(for: shortcutName) else {
             return nil
         }
-        return shortcut.description
+        return ShortcutDisplayFormatter.formattedShortcut(shortcut)
     }
 }
 

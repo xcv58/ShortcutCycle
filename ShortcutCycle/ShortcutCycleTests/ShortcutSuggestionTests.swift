@@ -338,7 +338,7 @@ final class ShortcutSuggestionTests: XCTestCase {
 
         XCTAssertEqual(
             conflict.message { translations[$0] ?? $0 },
-            "Conflict: \(shortcut.description) / Preferences.\n\nChoose another."
+            "Conflict: ⌥ + 1 / Preferences.\n\nChoose another."
         )
     }
 

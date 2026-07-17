@@ -159,7 +159,7 @@ enum ScreenshotFixtureLibrary {
 
         let shortcut: String?
         if let index = items.firstIndex(where: { $0.id == activeItemID }) {
-            shortcut = "⌥\(index + 1)"
+            shortcut = "⌥ + \(index + 1)"
         } else {
             shortcut = nil
         }
