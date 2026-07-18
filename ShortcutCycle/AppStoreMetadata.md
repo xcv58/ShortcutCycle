@@ -13,8 +13,9 @@ Cycle apps by group, instantly.
 Stop endlessly tabbing. Group your apps by context—Web, Code, Social—and cycle through them with dedicated hotkeys. Build muscle memory and flow.
 
 ## What's New (1.9)
-- In Running Apps Only mode, a shortcut now hides its sole available app immediately when that app is already frontmost, without showing the HUD.
-- When the sole available app is in the background, the familiar delayed HUD behavior remains unchanged.
+- Keyboard shortcut recording now works reliably on newer macOS releases. Record, replace, and clear Group and Settings Window shortcuts without triggering app commands.
+- Shortcut fields, inline conflict guidance, and recently used shortcut suggestions make it easier to find and test the right combination.
+- In Running Apps Only mode, a shortcut now hides its sole available app immediately when that app is already frontmost, without showing the HUD. If it is in the background, the familiar delayed HUD behavior remains unchanged.
 
 ## App Icon
 `ShortcutCycle/ShortcutCycle/Assets.xcassets/AppIcon.appiconset/1024.png`

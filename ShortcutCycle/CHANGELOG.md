@@ -5,7 +5,12 @@ All notable changes to this project will be documented in this file.
 ## [1.9] - Unreleased
 
 ### Changed
-- **Release train**: Version 1.9 carries forward the refined single-app shortcut behavior in Running Apps Only mode.
+- **Shortcut recorder**: The Group and Settings Window shortcut editors now use a dedicated recording popover with consistent `modifier + key` notation, inline conflict guidance, and recent-shortcut suggestions.
+- **Single-app toggling**: In Running Apps Only mode, pressing a group's shortcut hides its sole eligible app immediately when it is already frontmost and skips the HUD; a background app retains the normal delayed HUD behavior.
+
+### Fixed
+- **Newer macOS shortcut recording**: Recording, replacing, and clearing shortcuts no longer relies on mutating SwiftUI-owned menu shortcuts, which could leave the old recorder unable to accept or clear input.
+- **Shortcut safety while recording**: App menu commands and ShortcutCycle global shortcuts are temporarily suppressed during recording, preventing an assigned combination from switching apps or dismissing Settings.
 
 ## [1.8] - 2026-07-13
 
