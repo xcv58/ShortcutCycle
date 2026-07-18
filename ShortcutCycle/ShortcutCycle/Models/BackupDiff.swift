@@ -198,11 +198,13 @@ public struct BackupDiff {
         )
 
         let modifiers = parsed.modifiers.ks_symbolicRepresentation
+        let modifierComponents = modifiers.map(String.init)
         if let keyLabel = keyLabel(for: parsed.key) {
-            return modifiers + keyLabel
+            return (modifierComponents + [keyLabel]).joined(separator: " + ")
         }
         if !modifiers.isEmpty {
-            return "\(modifiers)keyCode:\(shortcut.carbonKeyCode)"
+            return (modifierComponents + ["keyCode:\(shortcut.carbonKeyCode)"])
+                .joined(separator: " + ")
         }
 
         return "keyCode:\(shortcut.carbonKeyCode)"

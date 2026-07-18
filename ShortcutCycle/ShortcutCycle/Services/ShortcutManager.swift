@@ -23,6 +23,8 @@ class ShortcutManager: @preconcurrency ObservableObject {
     private var observedGroupIds: Set<UUID> = []
     private var pressedGroupIds: Set<UUID> = []
     private var hasRegisteredToggleSettingsShortcut = false
+    private var shortcutRecordingSuspensionCount = 0
+    private var shortcutsWereEnabledBeforeRecording = true
     
     private init() {
         // Observers
@@ -56,6 +58,34 @@ class ShortcutManager: @preconcurrency ObservableObject {
         for group in store.groups where group.isEnabled {
             registerShortcut(for: group)
         }
+    }
+
+    /// Temporarily prevents every ShortcutCycle global shortcut from firing while
+    /// a recorder owns keyboard input. The saved shortcuts remain registered so a
+    /// recording can update them without creating a gap when the session ends.
+    func suspendForShortcutRecording() {
+        shortcutRecordingSuspensionCount += 1
+        guard shortcutRecordingSuspensionCount == 1 else {
+            return
+        }
+
+        shortcutsWereEnabledBeforeRecording = KeyboardShortcuts.isEnabled
+        KeyboardShortcuts.isEnabled = false
+    }
+
+    /// Restores the global shortcut state after every active recorder has ended.
+    func resumeAfterShortcutRecording() {
+        guard shortcutRecordingSuspensionCount > 0 else {
+            return
+        }
+
+        shortcutRecordingSuspensionCount -= 1
+        guard shortcutRecordingSuspensionCount == 0 else {
+            return
+        }
+
+        let shouldEnableShortcuts = shortcutsWereEnabledBeforeRecording
+        KeyboardShortcuts.isEnabled = shouldEnableShortcuts
     }
     
     /// Register a single shortcut handler for a group

@@ -1,4 +1,6 @@
 /* Turkish */
+"Press ESC to cancel" = "İptal etmek için ESC'ye basın";
+"Shortcut must include a modifier key." = "Kısayol bir değiştirici tuş içermelidir.";
 "ShortcutCycle" = "ShortcutCycle";
 "Settings..." = "Ayarlar...";
 "Quit" = "Çıkış";
@@ -125,7 +127,7 @@
 "Running apps only" = "Yalnızca çalışan uygulamalar";
 "All apps (open if needed)" = "Tüm uygulamalar (gerekirse aç)";
 "Displays the keyboard shortcut used to trigger the switch." = "Geçişi tetiklemek için kullanılan klavye kısayolunu gösterir.";
-"Try a simple pattern like ⌥1, ⌥2, and ⌥3." = "⌥1, ⌥2 ve ⌥3 gibi basit bir düzen deneyin.";
+"Reuse a recent shortcut or try an available suggestion." = "Yakın zamanda kullanılan bir kısayolu yeniden kullanın veya uygun bir öneriyi deneyin.";
 "Opening…" = "Açılıyor…";
 "Cycle through all apps in the group. Non-running apps will be launched when selected." = "Gruptaki tüm uygulamalarda gezin. Çalışmayan uygulamalar seçildiğinde açılır.";
 "Cycle through running apps only. If no app is running, the first app in the group will be launched." = "Yalnızca çalışan uygulamalarda gezin. Hiçbir uygulama çalışmıyorsa gruptaki ilk uygulama açılır.";

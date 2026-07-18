@@ -102,7 +102,7 @@ struct HUDPreviewView: View {
                     .fontWeight(.semibold)
                 
                 if showShortcut {
-                    Text("⌃ ⌥ ⌘  C")
+                    Text("⌃ + ⌥ + ⌘ + C")
                     .font(.caption)
                     .fontWeight(.medium)
                     .foregroundStyle(.secondary)

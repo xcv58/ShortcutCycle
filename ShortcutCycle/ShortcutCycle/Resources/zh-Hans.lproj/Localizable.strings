@@ -1,4 +1,6 @@
 /* Chinese (Simplified) */
+"Press ESC to cancel" = "按 ESC 取消";
+"Shortcut must include a modifier key." = "快捷键必须包含修饰键。";
 "ShortcutCycle" = "ShortcutCycle";
 "Settings..." = "设置...";
 "Quit" = "退出";
@@ -126,7 +128,7 @@
 "Running apps only" = "仅运行中的应用";
 "All apps (open if needed)" = "所有应用（必要时打开）";
 "Displays the keyboard shortcut used to trigger the switch." = "显示用于触发切换的键盘快捷键。";
-"Try a simple pattern like ⌥1, ⌥2, and ⌥3." = "试试像 ⌥1、⌥2 和 ⌥3 这样简单的模式。";
+"Reuse a recent shortcut or try an available suggestion." = "重新使用最近的快捷键，或尝试可用的建议。";
 "Opening…" = "正在打开…";
 "Cycle through all apps in the group. Non-running apps will be launched when selected." = "循环组内所有应用。未运行的应用在选中时将被启动。";
 "Cycle through running apps only. If no app is running, the first app in the group will be launched." = "仅循环运行中的应用。如果没有应用在运行，将启动组内的第一个应用。";

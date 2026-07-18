@@ -117,6 +117,13 @@ final class SettingsExportTests: XCTestCase {
         XCTAssertNotEqual(a, c)
     }
 
+    func testShortcutDataConvertsToAndFromKeyboardShortcut() {
+        let shortcut = KeyboardShortcuts.Shortcut(.one, modifiers: [.option])
+        let data = ShortcutData(shortcut)
+
+        XCTAssertEqual(data.shortcut, shortcut)
+    }
+
     // MARK: - AppSettings
 
     func testAppSettingsIncludesAppTheme() throws {

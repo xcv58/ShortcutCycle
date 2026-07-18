@@ -81,9 +81,15 @@ final class SettingsWindowObserverTests: XCTestCase {
         XCTAssertEqual(targetView.scrolledRect, targetView.bounds.insetBy(dx: 0, dy: -20))
     }
 
-    func testShortcutGlyphLayoutSplitsModifierSequenceIntoIndividualSymbols() {
-        XCTAssertEqual(KeyboardShortcutGlyphLayout.symbols(in: "⌥⌘↑"), ["⌥", "⌘", "↑"])
-        XCTAssertEqual(KeyboardShortcutGlyphLayout.symbols(in: "⌘,"), ["⌘", ","])
+    func testShortcutGlyphLayoutSplitsPlusSeparatedComponents() {
+        XCTAssertEqual(
+            KeyboardShortcutGlyphLayout.components(in: "⌥ + ⌘ + ↑"),
+            ["⌥", "⌘", "↑"]
+        )
+        XCTAssertEqual(
+            KeyboardShortcutGlyphLayout.components(in: "⌘ + ,"),
+            ["⌘", ","]
+        )
     }
 }
 

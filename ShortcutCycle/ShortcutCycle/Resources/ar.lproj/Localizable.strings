@@ -1,4 +1,6 @@
 /* Arabic */
+"Press ESC to cancel" = "اضغط ESC للإلغاء";
+"Shortcut must include a modifier key." = "يجب أن يتضمن الاختصار مفتاح تعديل.";
 "ShortcutCycle" = "ShortcutCycle";
 "Settings..." = "الإعدادات...";
 "Quit" = "إنهاء";
@@ -126,7 +128,7 @@
 "Running apps only" = "التطبيقات المشغلة فقط";
 "All apps (open if needed)" = "جميع التطبيقات (فتح إذا لزم الأمر)";
 "Displays the keyboard shortcut used to trigger the switch." = "يعرض اختصار لوحة المفاتيح المستخدم لتشغيل التبديل.";
-"Try a simple pattern like ⌥1, ⌥2, and ⌥3." = "جرّب نمطًا بسيطًا مثل ⌥1 و⌥2 و⌥3.";
+"Reuse a recent shortcut or try an available suggestion." = "أعد استخدام اختصار حديث أو جرّب اقتراحًا متاحًا.";
 "Opening…" = "جارٍ الفتح…";
 "Cycle through all apps in the group. Non-running apps will be launched when selected." = "التنقل بين جميع التطبيقات في المجموعة. سيتم فتح التطبيقات غير المشغلة عند اختيارها.";
 "Cycle through running apps only. If no app is running, the first app in the group will be launched." = "التنقل بين التطبيقات المشغلة فقط. إذا لم يكن أي تطبيق مشغلاً، سيتم فتح أول تطبيق في المجموعة.";

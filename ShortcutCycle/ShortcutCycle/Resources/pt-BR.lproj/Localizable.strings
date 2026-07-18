@@ -1,4 +1,6 @@
 /* Portuguese (Brazil) */
+"Press ESC to cancel" = "Pressione ESC para cancelar";
+"Shortcut must include a modifier key." = "O atalho deve incluir uma tecla modificadora.";
 "ShortcutCycle" = "ShortcutCycle";
 "Settings..." = "Ajustes...";
 "Quit" = "Sair";
@@ -125,7 +127,7 @@
 "Running apps only" = "Apenas apps em execução";
 "All apps (open if needed)" = "Todos os apps (abrir se necessário)";
 "Displays the keyboard shortcut used to trigger the switch." = "Exibe o atalho de teclado usado para acionar a troca.";
-"Try a simple pattern like ⌥1, ⌥2, and ⌥3." = "Experimente um padrão simples como ⌥1, ⌥2 e ⌥3.";
+"Reuse a recent shortcut or try an available suggestion." = "Reutilize um atalho recente ou experimente uma sugestão disponível.";
 "Opening…" = "Abrindo…";
 "Cycle through all apps in the group. Non-running apps will be launched when selected." = "Alternar entre todos os apps do grupo. Apps não abertos serão iniciados ao selecionar.";
 "Cycle through running apps only. If no app is running, the first app in the group will be launched." = "Alternar apenas entre apps em execução. Se nenhum app estiver aberto, o primeiro app do grupo será iniciado.";

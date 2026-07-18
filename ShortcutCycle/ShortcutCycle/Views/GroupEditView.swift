@@ -655,11 +655,16 @@ private struct GroupShortcutEditor: View {
     }
 
     private var suggestionShortcuts: [KeyboardShortcuts.Shortcut] {
-        ShortcutSuggestions.available(for: store.groups, excluding: groupId)
+        ShortcutSuggestions.available(
+            for: store.groups,
+            excluding: groupId,
+            recentShortcuts: group.recentShortcuts?.map(\.shortcut) ?? [],
+            currentShortcut: currentShortcut
+        )
     }
 
     private var shouldShowSuggestions: Bool {
-        currentShortcut == nil && !suggestionShortcuts.isEmpty
+        !suggestionShortcuts.isEmpty
     }
 
     var body: some View {
@@ -671,7 +676,9 @@ private struct GroupShortcutEditor: View {
                 LocalizedKeyboardShortcutRecorder(
                     name: shortcutName,
                     selectedLanguage: selectedLanguage,
-                    onChange: handleShortcutChange
+                    onRecord: recordShortcut,
+                    onBeginRecording: suspendGlobalShortcuts,
+                    onEndRecording: resumeGlobalShortcuts
                 )
                     .padding(.leading, 4)
                     .id("\(selectedLanguage)-\(groupId.uuidString)-\(shortcutRefreshToken)")
@@ -736,8 +743,29 @@ private struct GroupShortcutEditor: View {
 
     @MainActor
     private func assignShortcut(_ shortcut: KeyboardShortcuts.Shortcut) {
-        guard !showConflictIfNeeded(for: shortcut) else {
+        if let conflict = conflict(for: shortcut) {
+            shortcutConflict = conflict
             return
+        }
+
+        applyShortcut(shortcut)
+    }
+
+    @MainActor
+    private func recordShortcut(_ shortcut: KeyboardShortcuts.Shortcut?) -> ShortcutRecorderRecordingResult {
+        if let conflict = conflict(for: shortcut) {
+            return .rejected(conflict.message { $0.localized(language: selectedLanguage) })
+        }
+
+        applyShortcut(shortcut)
+        return .accepted
+    }
+
+    @MainActor
+    private func applyShortcut(_ shortcut: KeyboardShortcuts.Shortcut?) {
+        let previousShortcut = currentShortcut
+        if previousShortcut != shortcut, let previousShortcut {
+            store.rememberShortcut(previousShortcut, for: groupId)
         }
 
         KeyboardShortcuts.setShortcut(shortcut, for: shortcutName)
@@ -745,28 +773,24 @@ private struct GroupShortcutEditor: View {
     }
 
     @MainActor
-    private func handleShortcutChange(_ shortcut: KeyboardShortcuts.Shortcut?) {
-        if let shortcut, showConflictIfNeeded(for: shortcut) {
-            KeyboardShortcuts.setShortcut(nil, for: shortcutName)
-            refreshShortcutState()
-            return
-        }
-
-        refreshShortcutState()
+    private func suspendGlobalShortcuts() {
+        ShortcutManager.shared.suspendForShortcutRecording()
     }
 
     @MainActor
-    private func showConflictIfNeeded(for shortcut: KeyboardShortcuts.Shortcut) -> Bool {
-        guard let conflict = ShortcutAssignmentConflicts.conflict(
+    private func resumeGlobalShortcuts() {
+        ShortcutManager.shared.resumeAfterShortcutRecording()
+    }
+
+    @MainActor
+    private func conflict(
+        for shortcut: KeyboardShortcuts.Shortcut?
+    ) -> ShortcutAssignmentConflict? {
+        ShortcutAssignmentConflicts.conflict(
             for: shortcut,
             assigning: .group(id: groupId, name: group.name),
             groups: store.groups
-        ) else {
-            return false
-        }
-
-        shortcutConflict = conflict
-        return true
+        )
     }
 
     @MainActor
@@ -784,27 +808,33 @@ private struct ShortcutSuggestionRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 8) {
-                ForEach(Array(suggestions.enumerated()), id: \.offset) { _, shortcut in
-                    Button {
-                        onSelect(shortcut)
-                    } label: {
-                        Text(shortcut.description)
-                            .font(.caption.weight(.medium))
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 5)
-                            .background(
-                                Capsule()
-                                    .fill(Color.secondary.opacity(0.12))
-                            )
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(Array(suggestions.enumerated()), id: \.offset) { _, shortcut in
+                        let displayText = ShortcutDisplayFormatter.formattedShortcut(shortcut)
+
+                        Button {
+                            onSelect(shortcut)
+                        } label: {
+                            Text(displayText)
+                                .font(.caption.weight(.medium))
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 5)
+                                .background(
+                                    Capsule()
+                                        .fill(Color.secondary.opacity(0.12))
+                                )
+                        }
+                        .buttonStyle(.plain)
+                        .help(displayText)
+                        .accessibilityLabel(displayText)
                     }
-                    .buttonStyle(.plain)
-                    .help(shortcut.description)
                 }
+                .fixedSize(horizontal: true, vertical: false)
             }
 
-            Text("Try a simple pattern like ⌥1, ⌥2, and ⌥3.".localized(language: selectedLanguage))
+            Text("Reuse a recent shortcut or try an available suggestion.".localized(language: selectedLanguage))
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }

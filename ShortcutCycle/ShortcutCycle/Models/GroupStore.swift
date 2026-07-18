@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import Combine
+import KeyboardShortcuts
 
 public enum ManualBackupResult {
     case saved, noChange, error(String)
@@ -174,6 +175,17 @@ public class GroupStore: ObservableObject {
     }
     
     // MARK: - Shortcut Management
+
+    public func rememberShortcut(_ shortcut: KeyboardShortcuts.Shortcut, for groupId: UUID) {
+        guard let index = groups.firstIndex(where: { $0.id == groupId }) else { return }
+
+        let previousHistory = groups[index].recentShortcuts
+        groups[index].rememberShortcut(shortcut)
+
+        if groups[index].recentShortcuts != previousHistory {
+            saveGroups(triggerAutoBackup: false)
+        }
+    }
     
     public func updateLastActiveApp(bundleId: String, for groupId: UUID) {
         if let index = groups.firstIndex(where: { $0.id == groupId }) {

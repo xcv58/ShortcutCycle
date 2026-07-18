@@ -1,4 +1,6 @@
 /* Polish */
+"Press ESC to cancel" = "Naciśnij ESC, aby anulować";
+"Shortcut must include a modifier key." = "Skrót musi zawierać klawisz modyfikujący.";
 "ShortcutCycle" = "ShortcutCycle";
 "Settings..." = "Ustawienia...";
 "Quit" = "Zakończ";
@@ -125,7 +127,7 @@
 "Running apps only" = "Tylko uruchomione aplikacje";
 "All apps (open if needed)" = "Wszystkie aplikacje (otwórz jeśli potrzeba)";
 "Displays the keyboard shortcut used to trigger the switch." = "Wyświetla skrót klawiszowy używany do przełączania.";
-"Try a simple pattern like ⌥1, ⌥2, and ⌥3." = "Wypróbuj prosty schemat, taki jak ⌥1, ⌥2 i ⌥3.";
+"Reuse a recent shortcut or try an available suggestion." = "Użyj ponownie ostatniego skrótu lub wypróbuj dostępną sugestię.";
 "Opening…" = "Otwieranie…";
 "Cycle through all apps in the group. Non-running apps will be launched when selected." = "Przełączaj wszystkie aplikacje w grupie. Nieuruchomione aplikacje zostaną otwarte po wybraniu.";
 "Cycle through running apps only. If no app is running, the first app in the group will be launched." = "Przełączaj tylko uruchomione aplikacje. Jeśli żadna aplikacja nie jest uruchomiona, pierwsza aplikacja z grupy zostanie otwarta.";
