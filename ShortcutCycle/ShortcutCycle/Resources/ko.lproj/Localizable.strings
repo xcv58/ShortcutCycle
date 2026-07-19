@@ -172,3 +172,9 @@
 "Show welcome again" = "환영 메시지 다시 보기";
 "ShortcutCycle is running in your menu bar" = "ShortcutCycle이 메뉴 막대에서 실행 중입니다";
 "Look for the ShortcutCycle icon in the top-right menu bar whenever you want to open the app again." = "앱을 다시 열고 싶을 때는 오른쪽 상단 메뉴 막대에서 ShortcutCycle 아이콘을 찾으세요.";
+
+/* App distribution */
+"Development Build" = "개발 빌드";
+"TestFlight Beta" = "TestFlight 베타";
+"This is a local development build. Its settings are kept separate from the App Store app." = "이것은 로컬 개발 빌드입니다. 설정은 App Store 앱과 별도로 저장됩니다.";
+"This beta build was installed with TestFlight." = "이 베타 빌드는 TestFlight로 설치되었습니다.";

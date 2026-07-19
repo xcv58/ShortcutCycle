@@ -8,6 +8,7 @@ import KeyboardShortcuts
 struct MenuBarView: View {
     @EnvironmentObject var store: GroupStore
     @StateObject private var launchAtLogin = LaunchAtLoginManager.shared
+    @StateObject private var appDistribution = AppDistributionMonitor()
     @AppStorage("appTheme") private var appTheme: AppTheme = .system
     @AppStorage(WelcomeExperiencePolicy.hasDismissedWelcomeKey) private var hasDismissedWelcome = false
 
@@ -82,9 +83,24 @@ struct MenuBarView: View {
         VStack(alignment: .leading, spacing: 0) {
             // Header
             HStack {
-                Text("ShortcutCycle")
+                Text(appDistribution.channel.applicationName)
                     .font(.headline)
                     .foregroundStyle(.primary)
+                if shouldShowDistributionBadge {
+                    Text(appDistribution.channel.titleKey.localized(language: selectedLanguage))
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(appDistribution.channel.usesWarningColor ? .orange : Color.accentColor)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3)
+                        .background(
+                            Capsule()
+                                .fill(
+                                    appDistribution.channel.usesWarningColor
+                                        ? Color.orange.opacity(0.14)
+                                        : Color.accentColor.opacity(0.14)
+                                )
+                        )
+                }
                 Spacer()
             }
             .padding(.horizontal, 14)
@@ -236,6 +252,14 @@ struct MenuBarView: View {
                 return app.bundleIdentifier
             }
         )
+    }
+
+    private var shouldShowDistributionBadge: Bool {
+        #if DEBUG
+        return !ScreenshotMode.usesSyntheticControls && appDistribution.channel != .appStore
+        #else
+        return appDistribution.channel != .appStore
+        #endif
     }
 }
 

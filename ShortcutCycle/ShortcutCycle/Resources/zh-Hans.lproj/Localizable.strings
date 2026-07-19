@@ -173,3 +173,9 @@
 "Show welcome again" = "再次显示欢迎信息";
 "ShortcutCycle is running in your menu bar" = "ShortcutCycle 正在菜单栏中运行";
 "Look for the ShortcutCycle icon in the top-right menu bar whenever you want to open the app again." = "每当您想再次打开应用时，请在右上角菜单栏中找到 ShortcutCycle 图标。";
+
+/* App distribution */
+"Development Build" = "开发构建版本";
+"TestFlight Beta" = "TestFlight 测试版";
+"This is a local development build. Its settings are kept separate from the App Store app." = "这是本地开发构建版本。其设置与 App Store 版应用分开保存。";
+"This beta build was installed with TestFlight." = "此测试版通过 TestFlight 安装。";

@@ -114,4 +114,34 @@ final class WelcomeExperiencePolicyTests: XCTestCase {
             "Suppressed call should not set the flag"
         )
     }
+
+    func testDistributionChannelMarksDebugBuildsAsDevelopment() {
+        XCTAssertEqual(
+            AppDistributionChannel.resolve(
+                isDebugBuild: true,
+                storeEnvironment: .production
+            ),
+            .development
+        )
+    }
+
+    func testDistributionChannelMarksSandboxArchivesAsTestFlight() {
+        XCTAssertEqual(
+            AppDistributionChannel.resolve(
+                isDebugBuild: false,
+                storeEnvironment: .sandbox
+            ),
+            .testFlight
+        )
+    }
+
+    func testDistributionChannelMarksProductionArchivesAsAppStore() {
+        XCTAssertEqual(
+            AppDistributionChannel.resolve(
+                isDebugBuild: false,
+                storeEnvironment: .production
+            ),
+            .appStore
+        )
+    }
 }

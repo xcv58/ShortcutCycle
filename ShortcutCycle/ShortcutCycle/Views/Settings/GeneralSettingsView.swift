@@ -31,6 +31,8 @@ struct GeneralSettingsView: View {
     @State private var manualBackupFeedback: String?
     @State private var showShortcutReferencePopover = false
     @State private var settingsShortcutRefreshToken = 0
+    @State private var shortcutConflict: ShortcutAssignmentConflict?
+    @StateObject private var appDistribution = AppDistributionMonitor()
 
     // Clipboard state
     @State private var showClipboardImportConfirmation = false
@@ -201,6 +203,25 @@ struct GeneralSettingsView: View {
             }
 
             Section {
+                if shouldShowDistributionStatus,
+                   let detailKey = appDistribution.channel.detailKey,
+                   let symbolName = appDistribution.channel.symbolName {
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: symbolName)
+                            .foregroundStyle(appDistribution.channel.usesWarningColor ? .orange : Color.accentColor)
+                            .frame(width: 18)
+
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(appDistribution.channel.titleKey.localized(language: selectedLanguage))
+                                .font(.subheadline.weight(.semibold))
+                            Text(detailKey.localized(language: selectedLanguage))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+
                 #if DEBUG
                 if isScreenshotMode {
                     screenshotToggleRow("Open at Login".localized(language: selectedLanguage), isOn: launchAtLogin.isEnabled)
@@ -344,12 +365,22 @@ struct GeneralSettingsView: View {
     }
 
     #if DEBUG
+    private var shouldShowDistributionStatus: Bool {
+        !isScreenshotMode && appDistribution.channel != .appStore
+    }
+
     private func screenshotToggleRow(_ title: String, isOn: Bool) -> some View {
         HStack(spacing: 12) {
             Text(title)
             Spacer()
             ScreenshotAccentSwitch(isOn: isOn)
         }
+    }
+    #endif
+
+    #if !DEBUG
+    private var shouldShowDistributionStatus: Bool {
+        appDistribution.channel != .appStore
     }
     #endif
 
