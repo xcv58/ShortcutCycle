@@ -1,20 +1,20 @@
 import Combine
 import Foundation
-import StoreKit
+import Security
 
 // MARK: - App Distribution
 
     /// The channel through which this copy of ShortcutCycle is running.
 enum AppDistributionChannel: Equatable {
     case development
-    case sandboxBeta
+    case testFlightBeta
     case appStore
 
     var applicationName: String {
         switch self {
         case .development:
             return "ShortcutCycle Dev"
-        case .sandboxBeta, .appStore:
+        case .testFlightBeta, .appStore:
             return "ShortcutCycle"
         }
     }
@@ -23,8 +23,8 @@ enum AppDistributionChannel: Equatable {
         switch self {
         case .development:
             return "Development Build"
-        case .sandboxBeta:
-            return "Sandbox Beta"
+        case .testFlightBeta:
+            return "TestFlight Beta"
         case .appStore:
             return nil
         }
@@ -34,8 +34,8 @@ enum AppDistributionChannel: Equatable {
         switch self {
         case .development:
             return "This is a local development build. Its settings are kept separate from the App Store app."
-        case .sandboxBeta:
-            return "This beta build uses the StoreKit sandbox environment."
+        case .testFlightBeta:
+            return "This beta build was installed with TestFlight."
         case .appStore:
             return nil
         }
@@ -45,7 +45,7 @@ enum AppDistributionChannel: Equatable {
         switch self {
         case .development:
             return "hammer.fill"
-        case .sandboxBeta:
+        case .testFlightBeta:
             return "testtube.2"
         case .appStore:
             return nil
@@ -58,15 +58,18 @@ enum AppDistributionChannel: Equatable {
 
     static func resolve(
         isDebugBuild: Bool,
-        storeEnvironment: AppStore.Environment?
+        signingCertificateSubjects: [String]
     ) -> AppDistributionChannel {
         guard !isDebugBuild else { return .development }
-        return storeEnvironment == .sandbox ? .sandboxBeta : .appStore
+        return signingCertificateSubjects.contains("TestFlight Beta Distribution")
+            ? .testFlightBeta
+            : .appStore
     }
 }
 
-/// Publishes the channel for release archives after StoreKit verifies the app transaction.
-/// Debug builds are known locally at compile time and never make a StoreKit request.
+/// Publishes the channel from the app bundle's signing identity.
+/// TestFlight macOS builds use the `TestFlight Beta Distribution` signing certificate,
+/// while App Store builds remain unbadged.
 @MainActor
 final class AppDistributionMonitor: ObservableObject {
     static let shared = AppDistributionMonitor()
@@ -85,22 +88,36 @@ final class AppDistributionMonitor: ObservableObject {
         #if DEBUG
         channel = .development
         #else
-        channel = .appStore
-        Task { [weak self] in
-            await self?.refresh()
-        }
+        channel = AppDistributionChannel.resolve(
+            isDebugBuild: false,
+            signingCertificateSubjects: Self.signingCertificateSubjects()
+        )
         #endif
     }
 
-    private func refresh() async {
-        guard let result = try? await AppTransaction.shared,
-              case .verified(let transaction) = result else {
-            return
+    private static func signingCertificateSubjects() -> [String] {
+        var staticCode: SecStaticCode?
+        guard SecStaticCodeCreateWithPath(
+            Bundle.main.bundleURL as CFURL,
+            SecCSFlags(),
+            &staticCode
+        ) == errSecSuccess,
+        let staticCode else {
+            return []
         }
 
-        channel = AppDistributionChannel.resolve(
-            isDebugBuild: false,
-            storeEnvironment: transaction.environment
-        )
+        var signingInformation: CFDictionary?
+        guard SecCodeCopySigningInformation(
+            staticCode,
+            SecCSFlags(rawValue: kSecCSSigningInformation),
+            &signingInformation
+        ) == errSecSuccess,
+        let certificates = (signingInformation as NSDictionary?)?[kSecCodeInfoCertificates] as? [SecCertificate] else {
+            return []
+        }
+
+        return certificates.compactMap {
+            SecCertificateCopySubjectSummary($0) as String?
+        }
     }
 }

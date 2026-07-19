@@ -2,31 +2,45 @@ import XCTest
 @testable import ShortcutCycle
 
 final class AppDistributionChannelTests: XCTestCase {
-    func testDebugBuildIsDevelopmentEvenWithProductionStoreEnvironment() {
+    func testDebugBuildIsDevelopmentEvenWithTestFlightSigningCertificate() {
         XCTAssertEqual(
             AppDistributionChannel.resolve(
                 isDebugBuild: true,
-                storeEnvironment: .production
+                signingCertificateSubjects: ["TestFlight Beta Distribution"]
             ),
             .development
         )
     }
 
-    func testSandboxStoreEnvironmentIsSandboxBeta() {
+    func testTestFlightSigningCertificateIsTestFlightBeta() {
         XCTAssertEqual(
             AppDistributionChannel.resolve(
                 isDebugBuild: false,
-                storeEnvironment: .sandbox
+                signingCertificateSubjects: [
+                    "TestFlight Beta Distribution",
+                    "Apple Worldwide Developer Relations Certification Authority",
+                    "Apple Root CA"
+                ]
             ),
-            .sandboxBeta
+            .testFlightBeta
         )
     }
 
-    func testProductionStoreEnvironmentIsAppStore() {
+    func testNonTestFlightSigningCertificateIsAppStore() {
         XCTAssertEqual(
             AppDistributionChannel.resolve(
                 isDebugBuild: false,
-                storeEnvironment: .production
+                signingCertificateSubjects: ["Apple Distribution: Jenny Media LLC (5736QK4NZX)"]
+            ),
+            .appStore
+        )
+    }
+
+    func testMissingSigningCertificateIsAppStore() {
+        XCTAssertEqual(
+            AppDistributionChannel.resolve(
+                isDebugBuild: false,
+                signingCertificateSubjects: []
             ),
             .appStore
         )

@@ -175,6 +175,6 @@
 
 /* App distribution */
 "Development Build" = "Сборка для разработки";
-"Sandbox Beta" = "Бета-версия в песочнице";
+"TestFlight Beta" = "Бета-версия TestFlight";
 "This is a local development build. Its settings are kept separate from the App Store app." = "Это локальная сборка для разработки. Ее настройки хранятся отдельно от приложения из App Store.";
-"This beta build uses the StoreKit sandbox environment." = "Эта бета-версия использует среду песочницы StoreKit.";
+"This beta build was installed with TestFlight." = "Эта бета-версия была установлена через TestFlight.";

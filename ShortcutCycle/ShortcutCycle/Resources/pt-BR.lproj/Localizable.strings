@@ -175,6 +175,6 @@
 
 /* App distribution */
 "Development Build" = "Compilação de desenvolvimento";
-"Sandbox Beta" = "Beta de sandbox";
+"TestFlight Beta" = "Beta do TestFlight";
 "This is a local development build. Its settings are kept separate from the App Store app." = "Esta é uma compilação de desenvolvimento local. Seus ajustes são mantidos separados do app da App Store.";
-"This beta build uses the StoreKit sandbox environment." = "Esta compilação beta usa o ambiente sandbox do StoreKit.";
+"This beta build was installed with TestFlight." = "Esta versão beta foi instalada com o TestFlight.";

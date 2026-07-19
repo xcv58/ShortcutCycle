@@ -176,6 +176,6 @@
 
 /* App distribution */
 "Development Build" = "开发构建版本";
-"Sandbox Beta" = "沙盒测试版";
+"TestFlight Beta" = "TestFlight 测试版";
 "This is a local development build. Its settings are kept separate from the App Store app." = "这是本地开发构建版本。其设置与 App Store 版应用分开保存。";
-"This beta build uses the StoreKit sandbox environment." = "此测试版使用 StoreKit 沙盒环境。";
+"This beta build was installed with TestFlight." = "此测试版通过 TestFlight 安装。";
