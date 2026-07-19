@@ -7,26 +7,26 @@ import StoreKit
 /// The channel through which this copy of ShortcutCycle is running.
 enum AppDistributionChannel: Equatable {
     case development
-    case testFlight
+    case sandboxBeta
     case appStore
 
     var applicationName: String {
         switch self {
         case .development:
             return "ShortcutCycle Dev"
-        case .testFlight, .appStore:
+        case .sandboxBeta, .appStore:
             return "ShortcutCycle"
         }
     }
 
-    var titleKey: String {
+    var titleKey: String? {
         switch self {
         case .development:
             return "Development Build"
-        case .testFlight:
-            return "TestFlight Beta"
+        case .sandboxBeta:
+            return "Sandbox Beta"
         case .appStore:
-            return ""
+            return nil
         }
     }
 
@@ -34,8 +34,8 @@ enum AppDistributionChannel: Equatable {
         switch self {
         case .development:
             return "This is a local development build. Its settings are kept separate from the App Store app."
-        case .testFlight:
-            return "This beta build was installed with TestFlight."
+        case .sandboxBeta:
+            return "This beta build uses the StoreKit sandbox environment."
         case .appStore:
             return nil
         }
@@ -45,7 +45,7 @@ enum AppDistributionChannel: Equatable {
         switch self {
         case .development:
             return "hammer.fill"
-        case .testFlight:
+        case .sandboxBeta:
             return "testtube.2"
         case .appStore:
             return nil
@@ -61,7 +61,7 @@ enum AppDistributionChannel: Equatable {
         storeEnvironment: AppStore.Environment?
     ) -> AppDistributionChannel {
         guard !isDebugBuild else { return .development }
-        return storeEnvironment == .sandbox ? .testFlight : .appStore
+        return storeEnvironment == .sandbox ? .sandboxBeta : .appStore
     }
 }
 
@@ -69,9 +69,11 @@ enum AppDistributionChannel: Equatable {
 /// Debug builds are known locally at compile time and never make a StoreKit request.
 @MainActor
 final class AppDistributionMonitor: ObservableObject {
+    static let shared = AppDistributionMonitor()
+
     @Published private(set) var channel: AppDistributionChannel
 
-    init() {
+    private init() {
         #if DEBUG
         channel = .development
         #else

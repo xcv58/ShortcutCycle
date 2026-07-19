@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [1.9] - Unreleased
 
+### Added
+- **Build-channel identity**: Xcode Debug builds now install as ShortcutCycle Dev with a distinct icon, data container, and `shortcutcycle-dev://` automation scheme. Sandbox beta builds show a clearly labeled in-app status while App Store builds remain unbadged.
+
 ### Changed
 - **Shortcut recorder**: The Group and Settings Window shortcut editors now use a dedicated recording popover with consistent `modifier + key` notation, inline conflict guidance, and recent-shortcut suggestions.
 - **Single-app toggling**: In Running Apps Only mode, pressing a group's shortcut hides its sole eligible app immediately when it is already frontmost and skips the HUD; a background app retains the normal delayed HUD behavior.

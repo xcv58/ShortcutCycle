@@ -31,8 +31,7 @@ struct GeneralSettingsView: View {
     @State private var manualBackupFeedback: String?
     @State private var showShortcutReferencePopover = false
     @State private var settingsShortcutRefreshToken = 0
-    @State private var shortcutConflict: ShortcutAssignmentConflict?
-    @StateObject private var appDistribution = AppDistributionMonitor()
+    @ObservedObject private var appDistribution = AppDistributionMonitor.shared
 
     // Clipboard state
     @State private var showClipboardImportConfirmation = false
@@ -204,6 +203,7 @@ struct GeneralSettingsView: View {
 
             Section {
                 if shouldShowDistributionStatus,
+                   let titleKey = appDistribution.channel.titleKey,
                    let detailKey = appDistribution.channel.detailKey,
                    let symbolName = appDistribution.channel.symbolName {
                     HStack(alignment: .top, spacing: 10) {
@@ -212,7 +212,7 @@ struct GeneralSettingsView: View {
                             .frame(width: 18)
 
                         VStack(alignment: .leading, spacing: 3) {
-                            Text(appDistribution.channel.titleKey.localized(language: selectedLanguage))
+                            Text(titleKey.localized(language: selectedLanguage))
                                 .font(.subheadline.weight(.semibold))
                             Text(detailKey.localized(language: selectedLanguage))
                                 .font(.caption)
@@ -364,23 +364,21 @@ struct GeneralSettingsView: View {
         .background(SettingsChromePalette.windowBackground(for: colorScheme))
     }
 
-    #if DEBUG
     private var shouldShowDistributionStatus: Bool {
+        #if DEBUG
         !isScreenshotMode && appDistribution.channel != .appStore
+        #else
+        appDistribution.channel != .appStore
+        #endif
     }
 
+    #if DEBUG
     private func screenshotToggleRow(_ title: String, isOn: Bool) -> some View {
         HStack(spacing: 12) {
             Text(title)
             Spacer()
             ScreenshotAccentSwitch(isOn: isOn)
         }
-    }
-    #endif
-
-    #if !DEBUG
-    private var shouldShowDistributionStatus: Bool {
-        appDistribution.channel != .appStore
     }
     #endif
 

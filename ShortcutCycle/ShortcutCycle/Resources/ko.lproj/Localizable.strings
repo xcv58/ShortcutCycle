@@ -175,6 +175,6 @@
 
 /* App distribution */
 "Development Build" = "개발 빌드";
-"TestFlight Beta" = "TestFlight 베타";
+"Sandbox Beta" = "샌드박스 베타";
 "This is a local development build. Its settings are kept separate from the App Store app." = "이것은 로컬 개발 빌드입니다. 설정은 App Store 앱과 별도로 저장됩니다.";
-"This beta build was installed with TestFlight." = "이 베타 빌드는 TestFlight로 설치되었습니다.";
+"This beta build uses the StoreKit sandbox environment." = "이 베타 빌드는 StoreKit 샌드박스 환경을 사용합니다.";

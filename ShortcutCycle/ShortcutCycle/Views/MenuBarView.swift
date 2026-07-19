@@ -8,7 +8,7 @@ import KeyboardShortcuts
 struct MenuBarView: View {
     @EnvironmentObject var store: GroupStore
     @StateObject private var launchAtLogin = LaunchAtLoginManager.shared
-    @StateObject private var appDistribution = AppDistributionMonitor()
+    @ObservedObject private var appDistribution = AppDistributionMonitor.shared
     @AppStorage("appTheme") private var appTheme: AppTheme = .system
     @AppStorage(WelcomeExperiencePolicy.hasDismissedWelcomeKey) private var hasDismissedWelcome = false
 
@@ -86,8 +86,9 @@ struct MenuBarView: View {
                 Text(appDistribution.channel.applicationName)
                     .font(.headline)
                     .foregroundStyle(.primary)
-                if shouldShowDistributionBadge {
-                    Text(appDistribution.channel.titleKey.localized(language: selectedLanguage))
+                if shouldShowDistributionBadge,
+                   let titleKey = appDistribution.channel.titleKey {
+                    Text(titleKey.localized(language: selectedLanguage))
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(appDistribution.channel.usesWarningColor ? .orange : Color.accentColor)
                         .padding(.horizontal, 6)

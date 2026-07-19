@@ -143,6 +143,17 @@ git clone https://github.com/xcv58/ShortcutCycle.git
 open ShortcutCycle/ShortcutCycle.xcodeproj
 ```
 
+### Debug build identity
+
+Xcode Debug builds install as **ShortcutCycle Dev** (`com.xcv58.ShortcutCycle.dev`) with
+an orange DEV app icon. They use the separate `shortcutcycle-dev://` automation scheme,
+so they can run beside the App Store or TestFlight app without taking over its URL commands.
+
+The Dev app has its own sandbox container. Its groups, preferences, keyboard shortcuts,
+permissions, and launch-at-login setting are separate from the production app. On the first
+launch after adopting this build identity, set those up again; if an older development build
+was registered as a login item, disable that old entry in System Settings if it remains.
+
 ## License
 
 MIT License.

@@ -175,6 +175,6 @@
 
 /* App distribution */
 "Development Build" = "Geliştirme derlemesi";
-"TestFlight Beta" = "TestFlight beta sürümü";
+"Sandbox Beta" = "Korumalı alan betası";
 "This is a local development build. Its settings are kept separate from the App Store app." = "Bu, yerel bir geliştirme derlemesidir. Ayarları App Store uygulamasından ayrı tutulur.";
-"This beta build was installed with TestFlight." = "Bu beta derlemesi TestFlight ile yüklendi.";
+"This beta build uses the StoreKit sandbox environment." = "Bu beta derlemesi StoreKit korumalı alan ortamını kullanır.";
