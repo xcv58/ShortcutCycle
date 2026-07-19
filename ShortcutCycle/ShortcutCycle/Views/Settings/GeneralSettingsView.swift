@@ -202,7 +202,7 @@ struct GeneralSettingsView: View {
             }
 
             Section {
-                if shouldShowDistributionStatus,
+                if appDistribution.shouldShowStatus,
                    let titleKey = appDistribution.channel.titleKey,
                    let detailKey = appDistribution.channel.detailKey,
                    let symbolName = appDistribution.channel.symbolName {
@@ -362,14 +362,6 @@ struct GeneralSettingsView: View {
         .formStyle(.grouped)
         .scrollContentBackground(colorScheme == .dark ? .hidden : .automatic)
         .background(SettingsChromePalette.windowBackground(for: colorScheme))
-    }
-
-    private var shouldShowDistributionStatus: Bool {
-        #if DEBUG
-        !isScreenshotMode && appDistribution.channel != .appStore
-        #else
-        appDistribution.channel != .appStore
-        #endif
     }
 
     #if DEBUG

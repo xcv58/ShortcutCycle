@@ -49,7 +49,8 @@ public enum ShortcutCycleURLParser {
     /// The automation scheme registered by App Store and TestFlight builds.
     public static let scheme = "shortcutcycle"
     /// The automation scheme registered by Debug builds so they can coexist with production.
-    public static let developmentScheme = "shortcutcycle-dev"
+    /// Keep the `-dev` suffix aligned with `SHORTCUTCYCLE_URL_SCHEME` in the Debug build settings.
+    public static let developmentScheme = "\(scheme)-dev"
     public static let queryResultFileName = "shortcutcycle-result.json"
 
     private enum ParameterParseResult<T> {

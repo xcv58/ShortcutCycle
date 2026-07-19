@@ -86,7 +86,7 @@ struct MenuBarView: View {
                 Text(appDistribution.channel.applicationName)
                     .font(.headline)
                     .foregroundStyle(.primary)
-                if shouldShowDistributionBadge,
+                if appDistribution.shouldShowStatus,
                    let titleKey = appDistribution.channel.titleKey {
                     Text(titleKey.localized(language: selectedLanguage))
                         .font(.caption2.weight(.semibold))
@@ -255,13 +255,6 @@ struct MenuBarView: View {
         )
     }
 
-    private var shouldShowDistributionBadge: Bool {
-        #if DEBUG
-        return !ScreenshotMode.usesSyntheticControls && appDistribution.channel != .appStore
-        #else
-        return appDistribution.channel != .appStore
-        #endif
-    }
 }
 
 /// A generic menu bar button with hover effect

@@ -114,5 +114,4 @@ final class WelcomeExperiencePolicyTests: XCTestCase {
             "Suppressed call should not set the flag"
         )
     }
-
 }

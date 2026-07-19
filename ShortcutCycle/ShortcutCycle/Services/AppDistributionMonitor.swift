@@ -4,7 +4,7 @@ import StoreKit
 
 // MARK: - App Distribution
 
-/// The channel through which this copy of ShortcutCycle is running.
+    /// The channel through which this copy of ShortcutCycle is running.
 enum AppDistributionChannel: Equatable {
     case development
     case sandboxBeta
@@ -72,6 +72,14 @@ final class AppDistributionMonitor: ObservableObject {
     static let shared = AppDistributionMonitor()
 
     @Published private(set) var channel: AppDistributionChannel
+
+    var shouldShowStatus: Bool {
+        #if DEBUG
+        return !ScreenshotMode.usesSyntheticControls && channel != .appStore
+        #else
+        return channel != .appStore
+        #endif
+    }
 
     private init() {
         #if DEBUG
