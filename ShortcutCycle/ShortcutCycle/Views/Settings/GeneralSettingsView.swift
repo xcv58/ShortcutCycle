@@ -31,6 +31,7 @@ struct GeneralSettingsView: View {
     @State private var manualBackupFeedback: String?
     @State private var showShortcutReferencePopover = false
     @State private var settingsShortcutRefreshToken = 0
+    @ObservedObject private var appDistribution = AppDistributionMonitor.shared
 
     // Clipboard state
     @State private var showClipboardImportConfirmation = false
@@ -201,6 +202,26 @@ struct GeneralSettingsView: View {
             }
 
             Section {
+                if appDistribution.shouldShowStatus,
+                   let titleKey = appDistribution.channel.titleKey,
+                   let detailKey = appDistribution.channel.detailKey,
+                   let symbolName = appDistribution.channel.symbolName {
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: symbolName)
+                            .foregroundStyle(appDistribution.channel.usesWarningColor ? .orange : Color.accentColor)
+                            .frame(width: 18)
+
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(titleKey.localized(language: selectedLanguage))
+                                .font(.subheadline.weight(.semibold))
+                            Text(detailKey.localized(language: selectedLanguage))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+
                 #if DEBUG
                 if isScreenshotMode {
                     screenshotToggleRow("Open at Login".localized(language: selectedLanguage), isOn: launchAtLogin.isEnabled)

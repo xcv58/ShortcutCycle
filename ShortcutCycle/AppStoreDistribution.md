@@ -46,7 +46,7 @@ Both local archives and Xcode Cloud builds use the same version-sync script:
 ```sh
 SC_BUILD_NUMBER=123 /bin/sh scripts/sync_project_version.sh
 SC_CI_BUILD_OFFSET=2000 /bin/sh scripts/sync_project_version.sh
-SC_MARKETING_VERSION=1.9 /bin/sh scripts/sync_project_version.sh
+SC_MARKETING_VERSION=1.10 /bin/sh scripts/sync_project_version.sh
 ```
 
 ## 4. Launch Checklist

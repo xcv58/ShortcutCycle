@@ -46,7 +46,11 @@ public enum ShortcutCycleURLCommand: Equatable {
 // MARK: - URL Parser
 
 public enum ShortcutCycleURLParser {
+    /// The automation scheme registered by App Store and TestFlight builds.
     public static let scheme = "shortcutcycle"
+    /// The automation scheme registered by Debug builds so they can coexist with production.
+    /// Keep the `-dev` suffix aligned with `SHORTCUTCYCLE_URL_SCHEME` in the Debug build settings.
+    public static let developmentScheme = "\(scheme)-dev"
     public static let queryResultFileName = "shortcutcycle-result.json"
 
     private enum ParameterParseResult<T> {
@@ -73,7 +77,10 @@ public enum ShortcutCycleURLParser {
     }
 
     public static func parse(_ url: URL) -> ShortcutCycleURLCommand? {
-        guard url.scheme?.lowercased() == scheme else { return nil }
+        guard let urlScheme = url.scheme?.lowercased(),
+              urlScheme == scheme || urlScheme == developmentScheme else {
+            return nil
+        }
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return nil }
         guard let action = resolveAction(from: components) else { return nil }
 

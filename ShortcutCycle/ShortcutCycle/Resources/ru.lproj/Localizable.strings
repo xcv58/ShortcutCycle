@@ -172,3 +172,9 @@
 "Show welcome again" = "Показать приветствие снова";
 "ShortcutCycle is running in your menu bar" = "ShortcutCycle работает в строке меню";
 "Look for the ShortcutCycle icon in the top-right menu bar whenever you want to open the app again." = "Ищите значок ShortcutCycle в строке меню в правом верхнем углу, когда захотите снова открыть приложение.";
+
+/* App distribution */
+"Development Build" = "Сборка для разработки";
+"TestFlight Beta" = "Бета-версия TestFlight";
+"This is a local development build. Its settings are kept separate from the App Store app." = "Это локальная сборка для разработки. Ее настройки хранятся отдельно от приложения из App Store.";
+"This beta build was installed with TestFlight." = "Эта бета-версия была установлена через TestFlight.";

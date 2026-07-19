@@ -26,10 +26,10 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>com.xcv58.shortcutcycle</string>
+			<string>com.xcv58.$(SHORTCUTCYCLE_URL_SCHEME)</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>shortcutcycle</string>
+				<string>$(SHORTCUTCYCLE_URL_SCHEME)</string>
 			</array>
 		</dict>
 	</array>

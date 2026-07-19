@@ -4,12 +4,17 @@ This document is the complete reference for automation via the `shortcutcycle://
 
 ## Scheme
 
-- Base scheme: `shortcutcycle://`
+- App Store and TestFlight builds: `shortcutcycle://`
+- Xcode Debug build: `shortcutcycle-dev://`
 - macOS shell usage:
 
 ```bash
 open "shortcutcycle://<command>?<query>"
 ```
+
+The Debug app has a separate bundle identifier and sandbox container, so use the
+`shortcutcycle-dev://` scheme when automating it. Its query result and backup files are kept
+in the Dev container rather than the production app's container.
 
 ## Quick Start
 

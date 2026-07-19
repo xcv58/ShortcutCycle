@@ -79,6 +79,11 @@ final class ShortcutCycleTests: XCTestCase {
         XCTAssertEqual(ShortcutCycleURLParser.parse(url), .openSettings(nil))
     }
 
+    func testParseDevelopmentSchemeURL() {
+        let url = URL(string: "shortcutcycle-dev://open-settings")!
+        XCTAssertEqual(ShortcutCycleURLParser.parse(url), .openSettings(nil))
+    }
+
     func testParseCycleByNameURL() {
         let url = URL(string: "shortcutcycle://cycle?group=Browsers")!
         XCTAssertEqual(ShortcutCycleURLParser.parse(url), .cycle(.name("Browsers")))

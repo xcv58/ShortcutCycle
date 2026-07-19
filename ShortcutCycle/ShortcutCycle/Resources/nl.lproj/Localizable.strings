@@ -172,3 +172,9 @@
 "Show welcome again" = "Welkomst opnieuw tonen";
 "ShortcutCycle is running in your menu bar" = "ShortcutCycle wordt uitgevoerd in de menubalk";
 "Look for the ShortcutCycle icon in the top-right menu bar whenever you want to open the app again." = "Zoek het ShortcutCycle-pictogram in de menubalk rechtsboven wanneer u de app opnieuw wilt openen.";
+
+/* App distribution */
+"Development Build" = "Ontwikkelbuild";
+"TestFlight Beta" = "TestFlight-bèta";
+"This is a local development build. Its settings are kept separate from the App Store app." = "Dit is een lokale ontwikkelbuild. De instellingen worden gescheiden gehouden van de App Store-app.";
+"This beta build was installed with TestFlight." = "Deze bètabuild is geïnstalleerd met TestFlight.";

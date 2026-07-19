@@ -2,7 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.9] - Unreleased
+## [1.10] - Unreleased
+
+### Added
+- **Build-channel identity**: Xcode Debug builds now install as ShortcutCycle Dev with a distinct icon, data container, and `shortcutcycle-dev://` automation scheme. TestFlight beta builds are identified from their signing identity and show a clearly labeled in-app status while App Store builds remain unbadged.
 
 ### Changed
 - **Shortcut recorder**: The Group and Settings Window shortcut editors now use a dedicated recording popover with consistent `modifier + key` notation, inline conflict guidance, and recent-shortcut suggestions.

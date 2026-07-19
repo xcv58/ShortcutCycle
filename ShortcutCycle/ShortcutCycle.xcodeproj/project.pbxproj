@@ -14,6 +14,8 @@
 		A1B200062F70000200C0DE01 /* LocalizedKeyboardShortcutRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B200042F70000200C0DE01 /* LocalizedKeyboardShortcutRecorder.swift */; };
 		C0A1D0012FB0000100C0DE01 /* GroupSwitchPerformanceTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A1D0002FB0000100C0DE01 /* GroupSwitchPerformanceTracker.swift */; };
 		C0A1D0022FB0000100C0DE01 /* GroupSwitchPerformanceTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A1D0002FB0000100C0DE01 /* GroupSwitchPerformanceTracker.swift */; };
+		C3D100022FC2000100C0DE01 /* AppDistributionMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D100012FC2000100C0DE01 /* AppDistributionMonitor.swift */; };
+		C3D100032FC2000100C0DE01 /* AppDistributionMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D100012FC2000100C0DE01 /* AppDistributionMonitor.swift */; };
 		DF88A3762F300B110042E749 /* HUDManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3542F300B110042E749 /* HUDManager.swift */; };
 		DF88A3772F300B110042E749 /* ShortcutCycleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3742F300B110042E749 /* ShortcutCycleApp.swift */; };
 		DF88A3782F300B110042E749 /* GroupEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A36D2F300B110042E749 /* GroupEditView.swift */; };
@@ -117,6 +119,7 @@
 		A1B200012F70000100C0DE01 /* ShortcutSuggestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutSuggestion.swift; sourceTree = "<group>"; };
 		A1B200042F70000200C0DE01 /* LocalizedKeyboardShortcutRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizedKeyboardShortcutRecorder.swift; sourceTree = "<group>"; };
 		C0A1D0002FB0000100C0DE01 /* GroupSwitchPerformanceTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupSwitchPerformanceTracker.swift; sourceTree = "<group>"; };
+		C3D100012FC2000100C0DE01 /* AppDistributionMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDistributionMonitor.swift; sourceTree = "<group>"; };
 		DF88A3372F300B110042E749 /* String+Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Localization.swift"; sourceTree = "<group>"; };
 		DF88A3392F300B110042E749 /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
 		DF88A33A2F300B110042E749 /* AppItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppItem.swift; sourceTree = "<group>"; };
@@ -299,6 +302,7 @@
 		DF88A35D2F300B110042E749 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				C3D100012FC2000100C0DE01 /* AppDistributionMonitor.swift */,
 				DF88A3522F300B110042E749 /* AppSwitcher */,
 				C0A1D0032FB0000100C0DE01 /* Diagnostics */,
 				DF88A3552F300B110042E749 /* HUD */,
@@ -576,6 +580,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C3D100022FC2000100C0DE01 /* AppDistributionMonitor.swift in Sources */,
 				DF88A3912F300C640042E749 /* HUDPreviewView.swift in Sources */,
 				DF88A39A2F300C800042E749 /* HUDAppItem.swift in Sources */,
 				DF88A3B92F300CB20042E749 /* HUDItemFilter.swift in Sources */,
@@ -627,6 +632,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C3D100032FC2000100C0DE01 /* AppDistributionMonitor.swift in Sources */,
 				DF88A3762F300B110042E749 /* HUDManager.swift in Sources */,
 				DF88A3772F300B110042E749 /* ShortcutCycleApp.swift in Sources */,
 				DF88A3782F300B110042E749 /* GroupEditView.swift in Sources */,
@@ -829,19 +835,19 @@
 		702 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIconDev;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_ENTITLEMENTS = ShortcutCycle/ShortcutCycle.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 128;
+				CURRENT_PROJECT_VERSION = 131;
 				DEVELOPMENT_TEAM = 5736QK4NZX;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ShortcutCycle/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = ShortcutCycle;
+				INFOPLIST_KEY_CFBundleDisplayName = "ShortcutCycle Dev";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
@@ -850,11 +856,13 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.9;
-				PRODUCT_BUNDLE_IDENTIFIER = com.xcv58.ShortcutCycle;
+				MARKETING_VERSION = 1.10;
+				PRODUCT_BUNDLE_IDENTIFIER = com.xcv58.ShortcutCycle.dev;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SHORTCUTCYCLE_URL_SCHEME = "shortcutcycle-dev";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
+				WRAPPER_NAME = "$(PRODUCT_NAME) Dev.app";
 			};
 			name = Debug;
 		};
@@ -868,7 +876,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 128;
+				CURRENT_PROJECT_VERSION = 131;
 				DEVELOPMENT_TEAM = 5736QK4NZX;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -882,9 +890,10 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.9;
+				MARKETING_VERSION = 1.10;
 				PRODUCT_BUNDLE_IDENTIFIER = com.xcv58.ShortcutCycle;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SHORTCUTCYCLE_URL_SCHEME = shortcutcycle;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -895,12 +904,12 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 128;
+				CURRENT_PROJECT_VERSION = 131;
 				DEVELOPMENT_TEAM = 5736QK4NZX;
 				GENERATE_INFOPLIST_FILE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.9;
+				MARKETING_VERSION = 1.10;
 				PRODUCT_BUNDLE_IDENTIFIER = com.xcv58.ShortcutCycleTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -908,7 +917,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ShortcutCycle.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ShortcutCycle";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ShortcutCycle Dev.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ShortcutCycle";
 			};
 			name = Debug;
 		};
@@ -917,12 +926,12 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 128;
+				CURRENT_PROJECT_VERSION = 131;
 				DEVELOPMENT_TEAM = 5736QK4NZX;
 				GENERATE_INFOPLIST_FILE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.9;
+				MARKETING_VERSION = 1.10;
 				PRODUCT_BUNDLE_IDENTIFIER = com.xcv58.ShortcutCycleTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;

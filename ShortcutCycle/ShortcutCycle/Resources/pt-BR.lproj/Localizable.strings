@@ -172,3 +172,9 @@
 "Show welcome again" = "Mostrar boas-vindas novamente";
 "ShortcutCycle is running in your menu bar" = "ShortcutCycle está em execução na sua barra de menus";
 "Look for the ShortcutCycle icon in the top-right menu bar whenever you want to open the app again." = "Procure o ícone do ShortcutCycle na barra de menus no canto superior direito sempre que quiser abrir o aplicativo novamente.";
+
+/* App distribution */
+"Development Build" = "Compilação de desenvolvimento";
+"TestFlight Beta" = "Beta do TestFlight";
+"This is a local development build. Its settings are kept separate from the App Store app." = "Esta é uma compilação de desenvolvimento local. Seus ajustes são mantidos separados do app da App Store.";
+"This beta build was installed with TestFlight." = "Esta versão beta foi instalada com o TestFlight.";

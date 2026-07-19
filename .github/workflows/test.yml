@@ -73,7 +73,9 @@ jobs:
         
         data = json.load(open('$CODECOV_PATH'))
         files = data['data'][0]['files']
-        # Only include ShortcutCycleCore source files (Models/)
+        # The coverage contract intentionally covers only ShortcutCycleCore model logic.
+        # App-target services, including AppDistributionMonitor, are compile-tested but
+        # excluded from this report.
         source_files = [
             'AppGroup.swift', 'AppItem.swift', 'BackupDiff.swift',
             'BackupRetention.swift', 'GroupStore.swift',

@@ -1,17 +1,17 @@
 {
-  "version": "1.9",
+  "version": "1.10",
   "locale": "en-US",
   "platform": "macOS",
   "appStoreConnect": {
     "appId": "6758281578",
-    "preferredBuild": "127",
+    "preferredBuild": "130",
     "releasePolicy": "automatic",
     "phasedRelease": false
   },
   "text": {
     "promotionalText": "Stop endlessly tabbing. Group your apps by context - Web, Code, Social - and cycle through them with dedicated hotkeys. Build muscle memory and flow.",
     "description": "Master your workflow. Stop hunting for windows.\n\nThe standard Command+Tab switcher is cluttered. It mixes your music player with your code editor, and your messages with your browser. ShortcutCycle solves this by allowing you to switch between contexts, not just lists.\n\nShortcutCycle lets you assign a single hotkey to a specific group of apps. Need a browser? Hit your Web hotkey. Need to check a deploy? Hit your Dev hotkey. If the app is open, it switches to it. If it is not, it launches it.\n\nIt is the fastest way to navigate macOS without taking your hands off the keyboard.\n\nKey Features\n\nContext-Aware Switching\nDo not cycle through 20 open windows to find the one you need.\n- Web Group: Cycle between Chrome, Safari, and Edge.\n- Social Group: Toggle instantly between Slack, Discord, and Messages.\n- Creative Group: Move fluently between Figma, Sketch, and Photoshop.\n\nOne-Shortcut Switching\nPress your shortcut to focus the first app in the group. Press it again to cycle to the next. This builds instant muscle memory - you always know exactly which key brings up your work.\n\nSmart Launching\nShortcutCycle acts as both a switcher and a launcher. If you try to cycle to an app that is not running, ShortcutCycle opens it for you automatically.\n\nBeautiful Visual HUD\n- Linear View: A sleek, minimal overlay for quick switching.\n- Grid View: A power-user view for larger groups.\n- Arrow Navigation: Use keyboard arrows to navigate the grid when you have complex groups.\n- Invisible Mode: Turn off the HUD completely for lightning-fast, silent switching.\n\nNative & Global\n- Localized: Native support for 15 languages including English, Japanese, Chinese, German, Spanish, and French.\n- Accessible: Named VoiceOver and Voice Control actions for group management, plus High Contrast and Reduced Motion support.\n- Portable: Export your configuration to JSON to sync across machines or share with teams.\n\nStop digging through your Dock. Download ShortcutCycle and move at the speed of thought.",
-    "whatsNew": "Version 1.9 makes keyboard shortcut recording reliable on newer macOS releases.\n\n- Record, replace, and clear Group and Settings Window shortcuts without interfering with app commands.\n- Clearer shortcut fields, inline conflict guidance, and recently used shortcut suggestions make experimentation safer.\n- In Running Apps Only mode, a shortcut hides its sole eligible app immediately when it is already frontmost.",
+    "whatsNew": "Version 1.10 makes ShortcutCycle's build channels clearer while continuing to improve shortcut setup and switching.\n\n- Development, TestFlight beta, and App Store builds now have distinct, accurate in-app identities. TestFlight builds are identified from their signing identity.\n- Record, replace, and clear Group and Settings Window shortcuts without interfering with app commands.\n- Clearer shortcut fields, inline conflict guidance, and recently used shortcut suggestions make experimentation safer.\n- In Running Apps Only mode, a shortcut hides its sole eligible app immediately when it is already frontmost.",
     "keywords": "shortcuts, productivity, app switcher, hotkey, automation, workflow, tool, mac, cycle, utility",
     "supportUrl": "https://github.com/xcv58/ShortcutCycle/issues",
     "marketingUrl": "https://s.jenny.media",
