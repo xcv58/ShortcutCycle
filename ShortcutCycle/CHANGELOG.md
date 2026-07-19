@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.9] - Unreleased
+## [1.10] - Unreleased
 
 ### Added
 - **Build-channel identity**: Xcode Debug builds now install as ShortcutCycle Dev with a distinct icon, data container, and `shortcutcycle-dev://` automation scheme. Sandbox beta builds show a clearly labeled in-app status while App Store builds remain unbadged.
