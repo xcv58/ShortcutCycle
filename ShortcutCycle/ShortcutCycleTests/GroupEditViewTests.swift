@@ -80,6 +80,36 @@ final class GroupEditViewTests: XCTestCase {
         XCTAssertFalse(GroupEditView.shouldShowRunningAppQuickAddSection([]))
     }
 
+    func testAppPickerPresentsAsSheetForVisibleSettingsWindow() {
+        let settingsWindow = MockWindow(
+            identifier: NSUserInterfaceItemIdentifier("settings"),
+            isVisible: true,
+            isOnActiveSpace: true
+        )
+
+        switch AppPickerPanelPresentation.destination(in: [settingsWindow]) {
+        case .sheet(let owner):
+            XCTAssertTrue(owner === settingsWindow)
+        case .standalone:
+            XCTFail("A visible Settings window should own the app picker sheet.")
+        }
+    }
+
+    func testAppPickerUsesStandalonePanelWithoutVisibleSettingsWindow() {
+        let hiddenSettingsWindow = MockWindow(
+            identifier: NSUserInterfaceItemIdentifier("settings"),
+            isVisible: false,
+            isOnActiveSpace: true
+        )
+
+        switch AppPickerPanelPresentation.destination(in: [hiddenSettingsWindow]) {
+        case .sheet:
+            XCTFail("A hidden Settings window cannot own the app picker sheet.")
+        case .standalone:
+            break
+        }
+    }
+
     func testAccessibilityReorderDestinationsRespectBoundaries() {
         XCTAssertNil(
             AppAccessibilityReorder.destination(for: 0, direction: .earlier, count: 3)

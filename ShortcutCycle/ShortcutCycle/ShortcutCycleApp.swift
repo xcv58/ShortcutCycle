@@ -272,16 +272,8 @@ struct SettingsWindowObserver: NSViewRepresentable {
     }
 
     final class Coordinator {
-        private let setActivationPolicy: (NSApplication.ActivationPolicy) -> Void
-        private var observers: [NSObjectProtocol] = []
         private var keyEventMonitor: Any?
         private weak var observedWindow: NSWindow?
-
-        init(
-            setActivationPolicy: ((NSApplication.ActivationPolicy) -> Void)? = nil
-        ) {
-            self.setActivationPolicy = setActivationPolicy ?? Self.defaultSetActivationPolicy
-        }
 
         func observe(window: NSWindow) {
             guard observedWindow !== window else { return }
@@ -289,8 +281,6 @@ struct SettingsWindowObserver: NSViewRepresentable {
             observedWindow = window
 
             window.identifier = NSUserInterfaceItemIdentifier("settings")
-            registerWindowLifecycleObservers(for: window)
-            scheduleActivationPolicySync()
 
             keyEventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
                 self?.handleKeyDown(event)
@@ -344,51 +334,7 @@ struct SettingsWindowObserver: NSViewRepresentable {
             return window.firstResponder as? NSView
         }
 
-        func syncActivationPolicy() {
-            setActivationPolicy(SettingsWindowLifecycleCoordinator.activationPolicy(for: observedWindow))
-        }
-
-        func scheduleActivationPolicySync() {
-            DispatchQueue.main.async { [weak self] in
-                self?.syncActivationPolicy()
-            }
-        }
-
-        private func registerWindowLifecycleObservers(for window: NSWindow) {
-            let center = NotificationCenter.default
-            let immediateNames: [Notification.Name] = [
-                NSWindow.didBecomeKeyNotification,
-                NSWindow.didBecomeMainNotification
-            ]
-            observers.append(contentsOf: immediateNames.map { name in
-                center.addObserver(forName: name, object: window, queue: .main) { [weak self] _ in
-                    self?.syncActivationPolicy()
-                }
-            })
-
-            let deferredNames: [Notification.Name] = [
-                NSWindow.didResignKeyNotification,
-                NSWindow.didResignMainNotification,
-                NSWindow.willCloseNotification
-            ]
-            observers.append(contentsOf: deferredNames.map { name in
-                center.addObserver(forName: name, object: window, queue: .main) { [weak self] _ in
-                    self?.scheduleActivationPolicySync()
-                }
-            })
-        }
-
-        private static func defaultSetActivationPolicy(_ policy: NSApplication.ActivationPolicy) {
-            #if DEBUG
-            guard ScreenshotArguments.current == nil, !AccessibilityAuditMode.isActive else { return }
-            #endif
-            NSApp.setActivationPolicy(policy)
-        }
-
         private func removeObservers() {
-            observers.forEach(NotificationCenter.default.removeObserver)
-            observers.removeAll()
-
             if let keyEventMonitor {
                 NSEvent.removeMonitor(keyEventMonitor)
                 self.keyEventMonitor = nil
@@ -563,7 +509,6 @@ enum ShortcutCycleURLRouter {
         if let settingsWindow = NSApp.windows.first(where: { window in
             window.identifier?.rawValue == "settings"
         }) {
-            NSApp.setActivationPolicy(.regular)
             if !settingsWindow.isVisible {
                 NSApp.unhide(nil)
                 settingsWindow.orderFrontRegardless()
@@ -597,7 +542,6 @@ enum ShortcutCycleURLRouter {
     }
 
     private static func requestSettingsWindowOpen() {
-        NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
 
         if SettingsWindowBridge.openSettingsWindow() {
@@ -854,9 +798,9 @@ struct ShortcutCycleApp: App {
             RunningAppQuickAddCatalog.shared.setOverrideApps(nil)
             _store = StateObject(wrappedValue: GroupStore.shared)
 
-            // Accessibility-audit mode keeps a regular Settings window active so
-            // Accessibility Inspector can attach to it. Do not let that temporary
-            // harness intercept the user's real global shortcuts.
+            // Accessibility-audit mode keeps Settings open so Accessibility
+            // Inspector can attach to it. Do not let that temporary harness
+            // intercept the user's real global shortcuts.
             if !AccessibilityAuditMode.isActive {
                 Task { @MainActor in
                     ShortcutManager.shared.registerAllShortcuts()
@@ -919,16 +863,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var suppressAutomaticWelcomeForCurrentLaunch = false
 
     func applicationWillFinishLaunching(_ notification: Notification) {
-        #if DEBUG
-        if ScreenshotArguments.current != nil || AccessibilityAuditMode.isActive {
-            NSApp.setActivationPolicy(.regular)
-        } else {
-            // Run as a menu bar app (no dock icon)
-            NSApp.setActivationPolicy(.accessory)
-        }
-        #else
+        // Run as a menu bar app (no Dock icon or Command-Tab entry).
         NSApp.setActivationPolicy(.accessory)
-        #endif
 
         // Register for URL events directly via Apple Events.
         // This is more reliable than application(_:open:) or .onOpenURL,

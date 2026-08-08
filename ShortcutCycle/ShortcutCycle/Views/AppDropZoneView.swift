@@ -241,6 +241,19 @@ struct AppGridItemView: View {
     }
 }
 
+enum AppPickerPanelPresentation {
+    case sheet(NSWindow)
+    case standalone
+
+    static func destination(in windows: [NSWindow]) -> AppPickerPanelPresentation {
+        if let settingsWindow = SettingsWindowLifecycleCoordinator.anyVisibleSettingsWindow(in: windows) {
+            return .sheet(settingsWindow)
+        }
+
+        return .standalone
+    }
+}
+
 /// Drop zone for adding apps from Finder
 struct AppDropZoneView: View {
     @Binding var apps: [AppItem]
@@ -292,12 +305,20 @@ struct AppDropZoneView: View {
         panel.message = "Select applications to add to this group".localized(language: selectedLanguage)
         panel.prompt = "Add".localized(language: selectedLanguage)
         
-        if panel.runModal() == .OK {
+        let addSelectedApps = { (response: NSApplication.ModalResponse) in
+            guard response == .OK else { return }
             for url in panel.urls {
                 if let appItem = AppItem.from(appURL: url) {
                     onAppAdded(appItem)
                 }
             }
+        }
+
+        switch AppPickerPanelPresentation.destination(in: NSApp.windows) {
+        case .sheet(let settingsWindow):
+            panel.beginSheetModal(for: settingsWindow, completionHandler: addSelectedApps)
+        case .standalone:
+            panel.begin(completionHandler: addSelectedApps)
         }
     }
     

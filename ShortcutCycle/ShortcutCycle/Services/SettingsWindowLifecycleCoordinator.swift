@@ -12,24 +12,10 @@ enum SettingsWindowLifecycleCoordinator {
         window.identifier?.rawValue == "settings"
     }
 
-    static func isActiveSettingsWindow(_ window: NSWindow) -> Bool {
-        isSettingsWindow(window)
-            && window.isVisible
-            && (window.isKeyWindow || window.isMainWindow || hasVisibleAttachedSheet(window))
-    }
-
     static func anyVisibleSettingsWindow(in windows: [NSWindow]) -> NSWindow? {
         windows.first { window in
             isSettingsWindow(window) && window.isVisible
         }
-    }
-
-    static func activationPolicy(for window: NSWindow?) -> NSApplication.ActivationPolicy {
-        guard let window, isActiveSettingsWindow(window) else {
-            return .accessory
-        }
-
-        return .regular
     }
 
     static func toggleAction(for window: NSWindow?) -> SettingsWindowToggleAction {
