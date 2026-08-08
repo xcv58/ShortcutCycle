@@ -1,5 +1,6 @@
 import AppKit
 import Carbon.HIToolbox
+import Combine
 import KeyboardShortcuts
 import SwiftUI
 #if canImport(ShortcutCycleCore)
