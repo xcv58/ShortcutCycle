@@ -230,7 +230,7 @@ public struct SettingsExport: Codable {
 
         do {
             let export = try decoder.decode(SettingsExport.self, from: data)
-            guard (1...currentVersion).contains(export.version) else {
+            guard export.version == currentVersion else {
                 return .failure(.invalidVersion)
             }
             return .success(export)

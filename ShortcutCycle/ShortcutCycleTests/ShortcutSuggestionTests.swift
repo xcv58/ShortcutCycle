@@ -8,6 +8,29 @@ import KeyboardShortcuts
 
 final class ShortcutSuggestionTests: XCTestCase {
 
+    func testEligibilityUsesOnlyDefinedCarbonKeyCodes() {
+        let undefinedKeyCodes = [0x34, 0x42, 0x44, 0x46, 0x4D, 0x6C, 0x70, 0x7F]
+        for keyCode in undefinedKeyCodes {
+            XCTAssertEqual(
+                ShortcutAssignmentEligibility.rejection(
+                    keyCode: keyCode,
+                    modifierFlags: [.command]
+                ),
+                .invalidShortcut
+            )
+        }
+
+        let internationalKeyCodes = [0x0A, 0x5D, 0x5E, 0x5F, 0x66, 0x68]
+        for keyCode in internationalKeyCodes {
+            XCTAssertNil(
+                ShortcutAssignmentEligibility.rejection(
+                    keyCode: keyCode,
+                    modifierFlags: [.command]
+                )
+            )
+        }
+    }
+
     @MainActor
     func testAssignmentRejectionTitlesMessagesAndIdentifiers() {
         let shortcut = KeyboardShortcuts.Shortcut(.a, modifiers: [.command])

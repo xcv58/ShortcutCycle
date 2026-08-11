@@ -469,7 +469,7 @@ public class GroupStore: ObservableObject {
         self.selectedGroupId = groups.first?.id
         saveGroups()
 
-        // Apply app settings if present (version 2+)
+        // Apply app settings if present in the current-version snapshot.
         payload.settings?.apply()
 
         // Re-register shortcuts for new groups

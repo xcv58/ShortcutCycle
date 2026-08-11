@@ -490,6 +490,42 @@ final class GroupStoreTests: XCTestCase {
         XCTAssertNil(KeyboardShortcuts.getShortcut(for: importedGroup.shortcutName))
     }
 
+    func testImportRejectsUndefinedCarbonKeyCodeWithoutMutatingState() throws {
+        let existingGroups = store.groups
+        let existingGroup = existingGroups[0]
+        let existingShortcut = KeyboardShortcuts.Shortcut(.f20)
+        KeyboardShortcuts.setShortcut(existingShortcut, for: existingGroup.shortcutName)
+        defer { KeyboardShortcuts.setShortcut(nil, for: existingGroup.shortcutName) }
+
+        let importedGroup = AppGroup(name: "Undefined Key Code")
+        let payload = SettingsExport(
+            groups: [importedGroup],
+            shortcuts: [
+                importedGroup.id.uuidString: ShortcutData(
+                    carbonKeyCode: 0x7F,
+                    carbonModifiers: KeyboardShortcuts.Shortcut(
+                        .a,
+                        modifiers: [.command]
+                    ).carbonModifiers
+                )
+            ]
+        )
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let data = try encoder.encode(payload)
+
+        XCTAssertEqual(
+            try store.importData(data) { _, _ in nil },
+            .rejected(.invalidShortcut)
+        )
+        XCTAssertEqual(store.groups, existingGroups)
+        XCTAssertEqual(
+            KeyboardShortcuts.getShortcut(for: existingGroup.shortcutName),
+            existingShortcut
+        )
+        XCTAssertNil(KeyboardShortcuts.getShortcut(for: importedGroup.shortcutName))
+    }
+
     func testImportReplacesExistingGroups() throws {
         let newGroup = AppGroup(name: "Imported")
         let export = SettingsExport(groups: [newGroup])

@@ -72,7 +72,18 @@ public enum ShortcutAssignmentRejection: Equatable, Identifiable {
 
 /// Shared semantic policy for every shortcut assignment path.
 public enum ShortcutAssignmentEligibility {
-    private static let carbonKeyCodeRange = 0...127
+    /// Virtual key codes declared by Carbon's `Events.h`. The declaration
+    /// covers ANSI, ISO, JIS, keypad, navigation, media, and function keys
+    /// from 0x00 through 0x7E, with these values intentionally undefined.
+    private static let supportedCarbonKeyCodes: Set<Int> = Set(0x00...0x7E).subtracting([
+        0x34,
+        0x42,
+        0x44,
+        0x46,
+        0x4D,
+        0x6C,
+        0x70
+    ])
     private static let qualifyingModifiers: NSEvent.ModifierFlags = [
         .command,
         .control,
@@ -121,7 +132,7 @@ public enum ShortcutAssignmentEligibility {
         keyCode: Int,
         modifierFlags: NSEvent.ModifierFlags
     ) -> ShortcutAssignmentRejection? {
-        guard carbonKeyCodeRange.contains(keyCode), !modifierKeyCodes.contains(keyCode) else {
+        guard supportedCarbonKeyCodes.contains(keyCode), !modifierKeyCodes.contains(keyCode) else {
             return .invalidShortcut
         }
 
@@ -152,7 +163,7 @@ public enum ShortcutAssignmentEligibility {
         for data: ShortcutData
     ) -> ShortcutAssignmentRejection? {
         guard
-            carbonKeyCodeRange.contains(data.carbonKeyCode),
+            supportedCarbonKeyCodes.contains(data.carbonKeyCode),
             data.carbonModifiers >= 0,
             data.carbonModifiers & ~supportedCarbonModifierMask == 0
         else {

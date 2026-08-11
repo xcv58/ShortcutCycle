@@ -39,10 +39,9 @@ final class SettingsExportTests: XCTestCase {
         XCTAssertEqual(decoded.shortcuts?[groups[0].id.uuidString]?.carbonModifiers, 256)
     }
 
-    // MARK: - Version backward compatibility
+    // MARK: - Unsupported legacy versions
 
-    func testVersion1BackwardCompatibility() throws {
-        // v1 JSON has only version, exportDate, and groups (no settings or shortcuts)
+    func testValidateVersion1IsInvalid() {
         let json = """
         {
             "version": 1,
@@ -59,20 +58,14 @@ final class SettingsExportTests: XCTestCase {
         }
         """
         let data = json.data(using: .utf8)!
+        let result = SettingsExport.validate(data: data)
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let decoded = try decoder.decode(SettingsExport.self, from: data)
-
-        XCTAssertEqual(decoded.version, 1)
-        XCTAssertEqual(decoded.groups.count, 1)
-        XCTAssertEqual(decoded.groups[0].name, "Old Group")
-        XCTAssertNil(decoded.settings)
-        XCTAssertNil(decoded.shortcuts)
+        guard case .failure(.invalidVersion) = result else {
+            return XCTFail("Version 1 imports should be rejected")
+        }
     }
 
-    func testVersion2BackwardCompatibility() throws {
-        // v2 JSON has no shortcuts or appTheme fields
+    func testValidateVersion2IsInvalid() {
         let json = """
         {
             "version": 2,
@@ -86,17 +79,11 @@ final class SettingsExportTests: XCTestCase {
         }
         """
         let data = json.data(using: .utf8)!
+        let result = SettingsExport.validate(data: data)
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let decoded = try decoder.decode(SettingsExport.self, from: data)
-
-        XCTAssertEqual(decoded.version, 2)
-        XCTAssertEqual(decoded.groups.count, 0)
-        XCTAssertEqual(decoded.settings?.showHUD, true)
-        XCTAssertEqual(decoded.settings?.showShortcutInHUD, false)
-        XCTAssertNil(decoded.shortcuts)
-        XCTAssertNil(decoded.settings?.appTheme)
+        guard case .failure(.invalidVersion) = result else {
+            return XCTFail("Version 2 imports should be rejected")
+        }
     }
 
     // MARK: - ShortcutData round-trip
@@ -783,6 +770,13 @@ final class SettingsExportTests: XCTestCase {
             ShortcutData(carbonKeyCode: -1, carbonModifiers: 0),
             ShortcutData(carbonKeyCode: Int.max, carbonModifiers: 0),
             ShortcutData(
+                carbonKeyCode: 0x7F,
+                carbonModifiers: KeyboardShortcuts.Shortcut(
+                    .a,
+                    modifiers: [.command]
+                ).carbonModifiers
+            ),
+            ShortcutData(
                 carbonKeyCode: KeyboardShortcuts.Key.a.rawValue,
                 carbonModifiers: Int.max
             )
@@ -815,6 +809,7 @@ final class SettingsExportTests: XCTestCase {
         let malformedValues: [ShortcutData] = [
             ShortcutData(carbonKeyCode: -1, carbonModifiers: 0),
             ShortcutData(carbonKeyCode: Int.max, carbonModifiers: 0),
+            ShortcutData(carbonKeyCode: 0x7F, carbonModifiers: 0),
             ShortcutData(
                 carbonKeyCode: KeyboardShortcuts.Key.a.rawValue,
                 carbonModifiers: Int.max
