@@ -951,6 +951,77 @@
             text-align: left;
         }
 
+        /* --- RELEASE HIGHLIGHT --- */
+        .release-showcase {
+            text-align: center;
+        }
+
+        .release-header {
+            max-width: 760px;
+            margin: 0 auto 40px;
+        }
+
+        .release-kicker {
+            display: inline-flex;
+            align-items: center;
+            padding: 7px 14px;
+            margin-bottom: 18px;
+            border: 1px solid rgba(0, 122, 255, 0.3);
+            border-radius: 999px;
+            background: rgba(0, 122, 255, 0.1);
+            color: var(--accent);
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .release-title {
+            margin-bottom: 16px;
+            font-size: clamp(2rem, 4vw, 3rem);
+            letter-spacing: -0.03em;
+        }
+
+        .release-summary {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            line-height: 1.65;
+        }
+
+        .release-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 24px;
+            text-align: left;
+        }
+
+        .release-card {
+            position: relative;
+            overflow: hidden;
+            padding: 32px;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            background: linear-gradient(145deg, rgba(0, 122, 255, 0.12), var(--surface) 58%);
+        }
+
+        .release-card::before {
+            content: '';
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: 3px;
+            background: var(--accent);
+        }
+
+        .release-card h3 {
+            margin-bottom: 12px;
+            font-size: 1.25rem;
+        }
+
+        .release-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
         /* --- FEATURES --- */
         .features-grid {
             display: grid;
@@ -1909,6 +1980,34 @@
                 </div>
             </section>
 
+            <section class="section section-divider release-showcase" id="whats-new"
+                aria-labelledby="release-heading">
+                <div class="release-header">
+                    <p class="release-kicker" data-i18n="release.kicker">New in version 1.10</p>
+                    <h2 id="release-heading" class="release-title" data-i18n="release.title">Set shortcuts with
+                        confidence.</h2>
+                    <p class="release-summary" data-i18n="release.summary">A redesigned recorder catches conflicts
+                        before they interrupt your flow and keeps imports and restores safe.</p>
+                </div>
+                <div class="release-grid">
+                    <article class="release-card">
+                        <h3 data-i18n="release.recorder.title">Focused recording</h3>
+                        <p data-i18n="release.recorder.body">Record Group and Settings Window shortcuts in a dedicated
+                            popover. Existing app commands stay quiet while you choose a combination.</p>
+                    </article>
+                    <article class="release-card">
+                        <h3 data-i18n="release.conflicts.title">Conflict-aware</h3>
+                        <p data-i18n="release.conflicts.body">ShortcutCycle warns about combinations already used by
+                            the app or macOS, while keeping function keys available.</p>
+                    </article>
+                    <article class="release-card">
+                        <h3 data-i18n="release.restores.title">Safer restores</h3>
+                        <p data-i18n="release.restores.body">Version 3 exports and automatic backups are validated
+                            before anything changes, so invalid shortcut data cannot partially replace your setup.</p>
+                    </article>
+                </div>
+            </section>
+
             <section class="section section-divider" aria-labelledby="features-heading">
                 <h2 id="features-heading" class="sr-only" data-i18n="features.heading">Features</h2>
                 <div class="features-grid">
@@ -2040,8 +2139,9 @@
 
                         <details class="faq-item">
                             <summary data-i18n="faq.gettingStarted.shortcutsQuestion">Can I customize the shortcuts?</summary>
-                            <p data-i18n="faq.gettingStarted.shortcutsAnswer">Yes, you have full control. You can assign any global shortcut to activate a specific group.
-                                Inside the group, apps are cycled based on the order you arrange them in.</p>
+                            <p data-i18n="faq.gettingStarted.shortcutsAnswer">Yes. The recorder suggests recent
+                                combinations and warns when one is already used by ShortcutCycle or macOS. Ordinary
+                                keys require Command, Control, or Option; function keys can be used on their own.</p>
                         </details>
 
                         <details class="faq-item">
@@ -2107,7 +2207,9 @@
                                         data-copy-text='open "shortcutcycle://restore-backup?index=2"' data-i18n="actions.copy">Copy</button>
                                 </div>
                             </div>
-                            <p class="faq-answer-tail"><span data-i18n="faq.automation.importAnswerTail">Import/restore replaces your current groups and settings immediately.</span>
+                            <p class="faq-answer-tail"><span data-i18n="faq.automation.importAnswerTail">Version 3
+                                    imports and restores are validated before they replace your current groups and
+                                    settings.</span>
                                 <a href="https://github.com/xcv58/ShortcutCycle/blob/master/URL_SCHEME.md" target="_blank"
                                     rel="noopener noreferrer" data-i18n="faq.automation.docsLink">See full URL command docs</a>.
                             </p>
@@ -2303,6 +2405,23 @@
                         keyBody: 'Option+1. Done. You\'re there instantly.'
                     }
                 },
+                release: {
+                    kicker: 'New in version 1.10',
+                    title: 'Set shortcuts with confidence.',
+                    summary: 'A redesigned recorder catches conflicts before they interrupt your flow and keeps imports and restores safe.',
+                    recorder: {
+                        title: 'Focused recording',
+                        body: 'Record Group and Settings Window shortcuts in a dedicated popover. Existing app commands stay quiet while you choose a combination.'
+                    },
+                    conflicts: {
+                        title: 'Conflict-aware',
+                        body: 'ShortcutCycle warns about combinations already used by the app or macOS, while keeping function keys available.'
+                    },
+                    restores: {
+                        title: 'Safer restores',
+                        body: 'Version 3 exports and automatic backups are validated before anything changes, so invalid shortcut data cannot partially replace your setup.'
+                    }
+                },
                 features: {
                     heading: 'Features',
                     noSubscriptions: {
@@ -2380,7 +2499,7 @@
                         createQuestion: 'How do I create a group?',
                         createAnswer: 'It\'s simple. Open the settings, click the <strong>+</strong> button to create a new group (like "Social" or "Dev"), and assign a global hotkey (e.g., <code>Option+1</code>). Then, just drag and drop the apps you want into that group.',
                         shortcutsQuestion: 'Can I customize the shortcuts?',
-                        shortcutsAnswer: 'Yes, you have full control. You can assign any global shortcut to activate a specific group. Inside the group, apps are cycled based on the order you arrange them in.',
+                        shortcutsAnswer: 'Yes. The recorder suggests recent combinations and warns when one is already used by ShortcutCycle or macOS. Ordinary keys require Command, Control, or Option; function keys can be used on their own.',
                         closedAppQuestion: 'What happens if an app isn\'t open?',
                         closedAppAnswer: 'The group\'s mode decides. <strong>Running Apps Only</strong> skips closed apps while any group app is running; if none are running, it launches the first app. <strong>All Apps</strong> launches a closed app when selected.'
                     },
@@ -2393,7 +2512,7 @@
                         openAnswerIntro: 'Yes. Use these <code>open</code> commands:',
                         importQuestion: 'Can URL commands import/export settings or restore backups?',
                         importAnswerIntro: 'Yes. You can export/import settings by path and restore backups by latest, index, name, or path. Example command:',
-                        importAnswerTail: 'Import/restore replaces your current groups and settings immediately.'
+                        importAnswerTail: 'Version 3 imports and restores are validated before they replace your current groups and settings.'
                     },
                     privacy: {
                         title: 'Backups & Privacy',
@@ -2511,6 +2630,23 @@
                         keyBody: 'Option+1，完成。马上到位。'
                     }
                 },
+                release: {
+                    kicker: '1.10 版本新功能',
+                    title: '更安心地设置快捷键。',
+                    summary: '重新设计的录制器会提前发现冲突，并让导入与恢复过程更安全，不打断你的工作流。',
+                    recorder: {
+                        title: '专注录制',
+                        body: '在专用弹窗中录制分组和设置窗口快捷键。选择组合时，现有 App 命令不会被触发。'
+                    },
+                    conflicts: {
+                        title: '主动检测冲突',
+                        body: '如果组合已被 ShortcutCycle 或 macOS 使用，App 会提前提醒，同时继续支持功能键。'
+                    },
+                    restores: {
+                        title: '恢复更安全',
+                        body: '版本 3 导出文件和自动备份会在任何更改发生前完成验证，无效快捷键数据不会只替换一部分设置。'
+                    }
+                },
                 features: {
                     heading: '功能',
                     noSubscriptions: {
@@ -2588,7 +2724,7 @@
                         createQuestion: '怎样创建分组？',
                         createAnswer: '很简单。打开设置，点 <strong>+</strong> 创建一个新分组（比如“社交”或“开发”），再分配一个全局快捷键（例如 <code>Option+1</code>）。然后把想要的 App 拖进这个分组就可以。',
                         shortcutsQuestion: '可以自定义快捷键吗？',
-                        shortcutsAnswer: '可以，你完全可以自己决定。每个分组都能设置一个全局快捷键；分组内的 App 会按照你排列的顺序轮换。',
+                        shortcutsAnswer: '可以。录制器会推荐最近使用的组合，并在组合已被 ShortcutCycle 或 macOS 使用时提醒你。普通按键需要搭配 Command、Control 或 Option；功能键可以单独使用。',
                         closedAppQuestion: '如果 App 没有打开会怎样？',
                         closedAppAnswer: '这取决于分组的循环模式。<strong>仅运行中的应用</strong>会在组内有应用正在运行时跳过未运行的应用；如果没有应用正在运行，则会启动第一个应用。<strong>所有应用（必要时打开）</strong>会在选中未运行的应用时将其启动。'
                     },
@@ -2601,7 +2737,7 @@
                         openAnswerIntro: '可以。使用这些 <code>open</code> 命令：',
                         importQuestion: 'URL 命令可以导入/导出设置或恢复备份吗？',
                         importAnswerIntro: '可以。你可以通过路径导入/导出设置，也可以按最新、序号、名称或路径恢复备份。示例命令：',
-                        importAnswerTail: '导入或恢复会立即替换当前分组和设置。'
+                        importAnswerTail: '版本 3 导入和恢复会先完成验证，再替换当前分组和设置。'
                     },
                     privacy: {
                         title: '备份和隐私',
@@ -2719,6 +2855,23 @@
                         keyBody: 'Option+1，完成。馬上到位。'
                     }
                 },
+                release: {
+                    kicker: '1.10 版本新功能',
+                    title: '更安心地設定快捷鍵。',
+                    summary: '重新設計的錄製器會提前找出衝突，並讓匯入與還原過程更安全，不打斷你的工作流程。',
+                    recorder: {
+                        title: '專注錄製',
+                        body: '在專用彈出視窗中錄製分組和設定視窗快捷鍵。選擇組合時，現有 App 指令不會被觸發。'
+                    },
+                    conflicts: {
+                        title: '主動偵測衝突',
+                        body: '如果組合已被 ShortcutCycle 或 macOS 使用，App 會提前提醒，同時繼續支援功能鍵。'
+                    },
+                    restores: {
+                        title: '還原更安全',
+                        body: '版本 3 匯出檔案和自動備份會在任何變更發生前完成驗證，無效快捷鍵資料不會只取代部分設定。'
+                    }
+                },
                 features: {
                     heading: '功能',
                     noSubscriptions: {
@@ -2796,7 +2949,7 @@
                         createQuestion: '怎樣建立分組？',
                         createAnswer: '很簡單。打開設定，點 <strong>+</strong> 建立一個新分組（例如「社群」或「開發」），再分配一個全域快捷鍵（例如 <code>Option+1</code>）。然後把想要的 App 拖進這個分組就可以。',
                         shortcutsQuestion: '可以自訂快捷鍵嗎？',
-                        shortcutsAnswer: '可以，你完全可以自己決定。每個分組都能設定一個全域快捷鍵；分組內的 App 會依照你排列的順序輪換。',
+                        shortcutsAnswer: '可以。錄製器會推薦最近使用的組合，並在組合已被 ShortcutCycle 或 macOS 使用時提醒你。一般按鍵需要搭配 Command、Control 或 Option；功能鍵可以單獨使用。',
                         closedAppQuestion: '如果 App 沒有打開會怎樣？',
                         closedAppAnswer: '這取決於群組的循環模式。<strong>僅執行中的應用程式</strong>會在群組內有應用程式正在執行時略過未執行的應用程式；如果沒有應用程式正在執行，則會啟動第一個應用程式。<strong>所有應用程式（必要時開啟）</strong>會在選取未執行的應用程式時將其啟動。'
                     },
@@ -2809,7 +2962,7 @@
                         openAnswerIntro: '可以。使用這些 <code>open</code> 命令：',
                         importQuestion: 'URL 命令可以匯入/匯出設定或恢復備份嗎？',
                         importAnswerIntro: '可以。你可以透過路徑匯入/匯出設定，也可以按最新、序號、名稱或路徑恢復備份。範例命令：',
-                        importAnswerTail: '匯入或恢復會立即替換目前分組和設定。'
+                        importAnswerTail: '版本 3 匯入和還原會先完成驗證，再取代目前分組和設定。'
                     },
                     privacy: {
                         title: '備份和隱私',
