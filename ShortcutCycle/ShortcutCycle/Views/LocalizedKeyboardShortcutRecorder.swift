@@ -162,45 +162,202 @@ private struct ShortcutRecorderField: View {
 /// most important behavior can be regression-tested without driving AppKit UI.
 enum ShortcutRecorderInput {
     static func isRecordable(keyCode: UInt16, modifierFlags: NSEvent.ModifierFlags) -> Bool {
-        guard !modifierKeyCodes.contains(keyCode) else {
-            return false
-        }
-
-        let modifiers = modifierFlags.intersection(.deviceIndependentFlagsMask)
-        return !modifiers.intersection([.command, .control, .option, .function]).isEmpty
-            || modifierlessFunctionKeyCodes.contains(keyCode)
+        ShortcutAssignmentEligibility.rejection(
+            keyCode: Int(keyCode),
+            modifierFlags: modifierFlags
+        ) == nil
     }
 
     static func requiresModifier(keyCode: UInt16, modifierFlags: NSEvent.ModifierFlags) -> Bool {
-        guard !modifierKeyCodes.contains(keyCode) else {
+        ShortcutAssignmentEligibility.rejection(
+            keyCode: Int(keyCode),
+            modifierFlags: modifierFlags
+        ) == .requiresModifier
+    }
+}
+
+/// Restores the reservation checks provided by `KeyboardShortcuts.RecorderCocoa`
+/// while keeping the custom popover responsible for recording key events.
+@MainActor
+enum ShortcutReservationValidator {
+    struct Context {
+        let mainMenu: NSMenu?
+        let systemShortcuts: Set<KeyboardShortcuts.Shortcut>
+        let operatingSystemVersion: OperatingSystemVersion
+        let isSandboxed: Bool
+
+        @MainActor
+        static var current: Self {
+            Self(
+                mainMenu: NSApp.mainMenu,
+                systemShortcuts: enabledSystemShortcuts(),
+                operatingSystemVersion: ProcessInfo.processInfo.operatingSystemVersion,
+                isSandboxed: ProcessInfo.processInfo.environment["APP_SANDBOX_CONTAINER_ID"] != nil
+            )
+        }
+    }
+
+    static func conflict(
+        for shortcut: KeyboardShortcuts.Shortcut
+    ) -> ShortcutAssignmentConflict? {
+        conflict(for: shortcut, context: .current)
+    }
+
+    static func assignmentRejection(
+        for shortcut: KeyboardShortcuts.Shortcut,
+        assigning owner: ShortcutAssignmentOwner,
+        groups: [AppGroup]
+    ) -> ShortcutAssignmentRejection? {
+        if let rejection = ShortcutAssignmentEligibility.rejection(for: shortcut) {
+            return rejection
+        }
+
+        if let conflict = ShortcutAssignmentConflicts.conflict(
+            for: shortcut,
+            assigning: owner,
+            groups: groups
+        ) ?? conflict(for: shortcut) {
+            return .conflict(conflict)
+        }
+
+        return nil
+    }
+
+    static func importRejection(
+        for shortcut: KeyboardShortcuts.Shortcut,
+        assigning owner: ShortcutAssignmentOwner
+    ) -> ShortcutAssignmentRejection? {
+        assignmentRejection(for: shortcut, assigning: owner, groups: [])
+    }
+
+    static func conflict(
+        for shortcut: KeyboardShortcuts.Shortcut,
+        context: Context
+    ) -> ShortcutAssignmentConflict? {
+        if let menuItem = context.mainMenu.flatMap({ matchingMenuItem(for: shortcut, in: $0) }) {
+            let title = menuItem.title.isEmpty ? "ShortcutCycle" : menuItem.title
+            return ShortcutAssignmentConflict(
+                shortcut: shortcut,
+                owner: .appCommand(titleKey: title)
+            )
+        }
+
+        if isDisallowed(
+            shortcut,
+            operatingSystemVersion: context.operatingSystemVersion,
+            isSandboxed: context.isSandboxed
+        ) {
+            return systemConflict(for: shortcut)
+        }
+
+        if shortcut != KeyboardShortcuts.Shortcut(.f12),
+           context.systemShortcuts.contains(shortcut) {
+            return systemConflict(for: shortcut)
+        }
+
+        return nil
+    }
+
+    static func availableShortcuts(
+        from candidates: [KeyboardShortcuts.Shortcut],
+        limit: Int = 3,
+        context: Context
+    ) -> [KeyboardShortcuts.Shortcut] {
+        guard limit > 0 else { return [] }
+
+        return Array(
+            candidates.lazy
+                .filter {
+                    ShortcutAssignmentEligibility.rejection(for: $0) == nil
+                        && conflict(for: $0, context: context) == nil
+                }
+                .prefix(limit)
+        )
+    }
+
+    private static func systemConflict(
+        for shortcut: KeyboardShortcuts.Shortcut
+    ) -> ShortcutAssignmentConflict {
+        ShortcutAssignmentConflict(
+            shortcut: shortcut,
+            owner: .appCommand(titleKey: "macOS")
+        )
+    }
+
+    private static func isDisallowed(
+        _ shortcut: KeyboardShortcuts.Shortcut,
+        operatingSystemVersion: OperatingSystemVersion,
+        isSandboxed: Bool
+    ) -> Bool {
+        guard
+            operatingSystemVersion.majorVersion == 15,
+            operatingSystemVersion.minorVersion == 0 || operatingSystemVersion.minorVersion == 1,
+            isSandboxed,
+            shortcut.modifiers.contains(.option)
+        else {
             return false
         }
 
-        return modifierFlags
-            .intersection(.deviceIndependentFlagsMask)
-            .intersection([.command, .control, .option, .function])
-            .isEmpty
-            && !modifierlessFunctionKeyCodes.contains(keyCode)
+        let otherModifiers: NSEvent.ModifierFlags = [.command, .control, .function, .capsLock]
+        return shortcut.modifiers.isDisjoint(with: otherModifiers)
     }
 
-    private static let modifierKeyCodes: Set<UInt16> = [
-        UInt16(kVK_Command),
-        UInt16(kVK_RightCommand),
-        UInt16(kVK_Control),
-        UInt16(kVK_RightControl),
-        UInt16(kVK_Option),
-        UInt16(kVK_RightOption),
-        UInt16(kVK_Shift),
-        UInt16(kVK_RightShift),
-        UInt16(kVK_CapsLock),
-        UInt16(kVK_Function)
-    ]
+    private static func matchingMenuItem(
+        for shortcut: KeyboardShortcuts.Shortcut,
+        in menu: NSMenu
+    ) -> NSMenuItem? {
+        guard let shortcutKeyEquivalent = shortcut.nsMenuItemKeyEquivalent else {
+            return nil
+        }
 
-    private static let modifierlessFunctionKeyCodes: Set<UInt16> = [
-        UInt16(kVK_F1), UInt16(kVK_F2), UInt16(kVK_F3), UInt16(kVK_F4),
-        UInt16(kVK_F5), UInt16(kVK_F6), UInt16(kVK_F7), UInt16(kVK_F8),
-        UInt16(kVK_F9), UInt16(kVK_F10), UInt16(kVK_F11), UInt16(kVK_F12)
-    ]
+        for item in menu.items {
+            var keyEquivalent = item.keyEquivalent
+            var modifierMask = item.keyEquivalentModifierMask
+
+            if shortcut.modifiers.contains(.shift),
+               keyEquivalent.lowercased() != keyEquivalent {
+                keyEquivalent = keyEquivalent.lowercased()
+                modifierMask.insert(.shift)
+            }
+
+            if shortcutKeyEquivalent == keyEquivalent,
+               shortcut.modifiers == modifierMask {
+                return item
+            }
+
+            if let submenu = item.submenu,
+               let match = matchingMenuItem(for: shortcut, in: submenu) {
+                return match
+            }
+        }
+
+        return nil
+    }
+
+    private static func enabledSystemShortcuts() -> Set<KeyboardShortcuts.Shortcut> {
+        var shortcutsUnmanaged: Unmanaged<CFArray>?
+        guard
+            CopySymbolicHotKeys(&shortcutsUnmanaged) == noErr,
+            let shortcuts = shortcutsUnmanaged?.takeRetainedValue() as? [[String: Any]]
+        else {
+            return []
+        }
+
+        return Set(shortcuts.compactMap { shortcut in
+            guard
+                (shortcut[kHISymbolicHotKeyEnabled] as? Bool) == true,
+                let carbonKeyCode = shortcut[kHISymbolicHotKeyCode] as? Int,
+                let carbonModifiers = shortcut[kHISymbolicHotKeyModifiers] as? Int
+            else {
+                return nil
+            }
+
+            return KeyboardShortcuts.Shortcut(
+                carbonKeyCode: carbonKeyCode,
+                carbonModifiers: carbonModifiers
+            )
+        })
+    }
 }
 
 enum ShortcutRecorderSessionPolicy {

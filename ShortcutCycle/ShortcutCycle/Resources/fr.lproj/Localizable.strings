@@ -1,6 +1,7 @@
 /* French */
 "Press ESC to cancel" = "Appuyez sur Échap pour annuler";
 "Shortcut must include a modifier key." = "Le raccourci doit inclure une touche de modification.";
+"The shortcut is invalid." = "Le raccourci n’est pas valide.";
 "ShortcutCycle" = "ShortcutCycle";
 "Settings..." = "Réglages...";
 "Quit" = "Quitter";

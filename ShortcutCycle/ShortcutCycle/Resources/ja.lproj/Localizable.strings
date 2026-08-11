@@ -1,6 +1,7 @@
 /* Japanese */
 "Press ESC to cancel" = "ESCキーを押してキャンセル";
 "Shortcut must include a modifier key." = "ショートカットには修飾キーが必要です。";
+"The shortcut is invalid." = "ショートカットが無効です。";
 "ShortcutCycle" = "ShortcutCycle";
 "Settings..." = "設定...";
 "Quit" = "終了";

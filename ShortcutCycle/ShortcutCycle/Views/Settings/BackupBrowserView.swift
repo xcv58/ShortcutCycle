@@ -58,6 +58,7 @@ struct BackupBrowserView: View {
     @State private var showRestoreConfirmation = false
     @State private var showDeleteConfirmation = false
     @State private var showSharePicker = false
+    @State private var shortcutRejection: ShortcutAssignmentRejection?
 
     private static let displayDateFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -139,6 +140,13 @@ struct BackupBrowserView: View {
             Button("Delete".localized(language: selectedLanguage), role: .destructive) { performDelete() }
         } message: {
             Text("This backup file will be permanently deleted.".localized(language: selectedLanguage))
+        }
+        .alert(item: $shortcutRejection) { rejection in
+            Alert(
+                title: Text(rejection.title { $0.localized(language: selectedLanguage) }),
+                message: Text(rejection.message { $0.localized(language: selectedLanguage) }),
+                dismissButton: .default(Text("OK".localized(language: selectedLanguage)))
+            )
         }
     }
 
@@ -524,8 +532,15 @@ struct BackupBrowserView: View {
 
     private func performRestore() {
         guard let export = selectedExport else { return }
-        store.applyImport(export)
-        dismiss()
+        switch store.applyImport(
+            export,
+            validatingShortcutsWith: ShortcutReservationValidator.importRejection
+        ) {
+        case .applied:
+            dismiss()
+        case .rejected(let rejection):
+            shortcutRejection = rejection
+        }
     }
 
     private func performDelete() {

@@ -376,13 +376,16 @@ struct GeneralSettingsView: View {
 
     @MainActor
     private func recordSettingsWindowShortcut(_ shortcut: KeyboardShortcuts.Shortcut?) -> ShortcutRecorderRecordingResult {
-        if let shortcut,
-           let conflict = ShortcutAssignmentConflicts.conflict(
-               for: shortcut,
-               assigning: .settingsWindow,
-               groups: store.groups
-           ) {
-            return .rejected(conflict.message { $0.localized(language: selectedLanguage) })
+        if let shortcut {
+            let rejection = ShortcutReservationValidator.assignmentRejection(
+                for: shortcut,
+                assigning: .settingsWindow,
+                groups: store.groups
+            )
+
+            if let rejection {
+                return .rejected(rejection.message { $0.localized(language: selectedLanguage) })
+            }
         }
 
         KeyboardShortcuts.setShortcut(shortcut, for: .toggleSettings)
@@ -468,8 +471,16 @@ struct GeneralSettingsView: View {
 
         do {
             let data = try Data(contentsOf: url)
-            try store.importData(data)
-            showImportSuccess = true
+            switch try store.importData(
+                data,
+                validatingShortcutsWith: ShortcutReservationValidator.importRejection
+            ) {
+            case .applied:
+                showImportSuccess = true
+            case .rejected(let rejection):
+                errorMessage = rejection.message { $0.localized(language: selectedLanguage) }
+                showImportError = true
+            }
         } catch {
             errorMessage = error.localizedDescription
             showImportError = true
@@ -539,8 +550,16 @@ struct GeneralSettingsView: View {
 
     private func performClipboardImport() {
         guard let export = pendingClipboardExport else { return }
-        store.applyImport(export)
-        showClipboardImportSuccess = true
+        switch store.applyImport(
+            export,
+            validatingShortcutsWith: ShortcutReservationValidator.importRejection
+        ) {
+        case .applied:
+            showClipboardImportSuccess = true
+        case .rejected(let rejection):
+            clipboardErrorMessage = rejection.message { $0.localized(language: selectedLanguage) }
+            showClipboardError = true
+        }
         pendingClipboardExport = nil
     }
 }

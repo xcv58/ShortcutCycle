@@ -66,7 +66,7 @@ enum ScreenshotRuntime {
             theme: arguments.theme,
             language: arguments.language
         )
-        store.applyImport(export)
+        _ = store.applyImport(export) { _, _ in nil }
 
         if let groupKey = arguments.groupKey,
            let groupID = ScreenshotFixtureLibrary.groupID(for: groupKey) {

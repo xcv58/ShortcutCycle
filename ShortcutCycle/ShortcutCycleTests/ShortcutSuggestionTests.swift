@@ -9,6 +9,38 @@ import KeyboardShortcuts
 final class ShortcutSuggestionTests: XCTestCase {
 
     @MainActor
+    func testAssignmentRejectionTitlesMessagesAndIdentifiers() {
+        let shortcut = KeyboardShortcuts.Shortcut(.a, modifiers: [.command])
+        let conflict = ShortcutAssignmentConflict(
+            shortcut: shortcut,
+            owner: .appCommand(titleKey: "Reserved")
+        )
+        let conflictRejection = ShortcutAssignmentRejection.conflict(conflict)
+
+        XCTAssertEqual(conflictRejection.id, "conflict-\(conflict.id)")
+        XCTAssertEqual(conflictRejection.title(localize: { $0 }), "Shortcut Already Used")
+        XCTAssertTrue(conflictRejection.message(localize: { $0 }).contains("Reserved"))
+        XCTAssertEqual(ShortcutAssignmentRejection.requiresModifier.id, "requiresModifier")
+        XCTAssertEqual(
+            ShortcutAssignmentRejection.requiresModifier.title(localize: { $0 }),
+            "Keyboard Shortcut"
+        )
+        XCTAssertEqual(
+            ShortcutAssignmentRejection.requiresModifier.message(localize: { $0 }),
+            "Shortcut must include a modifier key."
+        )
+        XCTAssertEqual(ShortcutAssignmentRejection.invalidShortcut.id, "invalidShortcut")
+        XCTAssertEqual(
+            ShortcutAssignmentRejection.invalidShortcut.title(localize: { $0 }),
+            "Keyboard Shortcut"
+        )
+        XCTAssertEqual(
+            ShortcutAssignmentRejection.invalidShortcut.message(localize: { $0 }),
+            "The shortcut is invalid."
+        )
+    }
+
+    @MainActor
     func testAvailableReturnsEmptyForNonpositiveLimit() {
         XCTAssertTrue(
             ShortcutSuggestions.available(for: [], excluding: UUID(), limit: 0).isEmpty
@@ -78,6 +110,41 @@ final class ShortcutSuggestionTests: XCTestCase {
         XCTAssertEqual(
             suggestions,
             recent + [KeyboardShortcuts.Shortcut(.one, modifiers: [.option])]
+        )
+    }
+
+    @MainActor
+    func testAvailableFiltersIneligibleRecentShortcutsAndBackfills() {
+        let previousSettingsShortcut = KeyboardShortcuts.getShortcut(for: .toggleSettings)
+        let group = AppGroup(id: UUID(), name: "Target")
+        let validRecent = KeyboardShortcuts.Shortcut(.x, modifiers: [.control])
+        let ineligibleRecent: [KeyboardShortcuts.Shortcut] = [
+            .init(.a),
+            .init(.a, modifiers: [.shift]),
+            .init(.a, modifiers: [.function]),
+            .init(.a, modifiers: [.shift, .function]),
+            .init(.command, modifiers: [.command])
+        ]
+        KeyboardShortcuts.setShortcut(nil, for: .toggleSettings)
+
+        defer {
+            KeyboardShortcuts.setShortcut(previousSettingsShortcut, for: .toggleSettings)
+            KeyboardShortcuts.setShortcut(nil, for: group.shortcutName)
+        }
+
+        let suggestions = ShortcutSuggestions.available(
+            for: [group],
+            excluding: group.id,
+            recentShortcuts: ineligibleRecent + [validRecent]
+        )
+
+        XCTAssertEqual(
+            suggestions,
+            [
+                validRecent,
+                KeyboardShortcuts.Shortcut(.one, modifiers: [.option]),
+                KeyboardShortcuts.Shortcut(.two, modifiers: [.option])
+            ]
         )
     }
 

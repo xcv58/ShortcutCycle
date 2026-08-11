@@ -1,6 +1,7 @@
 /* Russian */
 "Press ESC to cancel" = "Для отмены нажмите ESC";
 "Shortcut must include a modifier key." = "Сочетание клавиш должно включать клавишу-модификатор.";
+"The shortcut is invalid." = "Сочетание клавиш недопустимо.";
 "ShortcutCycle" = "ShortcutCycle";
 "Settings..." = "Настройки...";
 "Quit" = "Выход";

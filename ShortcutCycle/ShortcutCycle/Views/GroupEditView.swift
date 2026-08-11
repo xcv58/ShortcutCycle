@@ -631,7 +631,7 @@ private struct GroupShortcutEditor: View {
 
     @AppStorage("selectedLanguage") private var selectedLanguage = "system"
     @State private var shortcutRefreshToken = 0
-    @State private var shortcutConflict: ShortcutAssignmentConflict?
+    @State private var shortcutRejection: ShortcutAssignmentRejection?
 
     private var shortcutName: KeyboardShortcuts.Name {
         .forGroup(groupId)
@@ -655,11 +655,16 @@ private struct GroupShortcutEditor: View {
     }
 
     private var suggestionShortcuts: [KeyboardShortcuts.Shortcut] {
-        ShortcutSuggestions.available(
+        let candidates = ShortcutSuggestions.available(
             for: store.groups,
             excluding: groupId,
             recentShortcuts: group.recentShortcuts?.map(\.shortcut) ?? [],
-            currentShortcut: currentShortcut
+            currentShortcut: currentShortcut,
+            limit: .max
+        )
+        return ShortcutReservationValidator.availableShortcuts(
+            from: candidates,
+            context: .current
         )
     }
 
@@ -732,10 +737,10 @@ private struct GroupShortcutEditor: View {
         .task(id: groupId) {
             GroupSwitchPerformanceTracker.shared.markShortcutSectionVisible(for: groupId)
         }
-        .alert(item: $shortcutConflict) { conflict in
+        .alert(item: $shortcutRejection) { rejection in
             Alert(
-                title: Text("Shortcut Already Used".localized(language: selectedLanguage)),
-                message: Text(conflict.message { $0.localized(language: selectedLanguage) }),
+                title: Text(rejection.title { $0.localized(language: selectedLanguage) }),
+                message: Text(rejection.message { $0.localized(language: selectedLanguage) }),
                 dismissButton: .default(Text("OK".localized(language: selectedLanguage)))
             )
         }
@@ -743,8 +748,8 @@ private struct GroupShortcutEditor: View {
 
     @MainActor
     private func assignShortcut(_ shortcut: KeyboardShortcuts.Shortcut) {
-        if let conflict = conflict(for: shortcut) {
-            shortcutConflict = conflict
+        if let rejection = rejection(for: shortcut) {
+            shortcutRejection = rejection
             return
         }
 
@@ -753,8 +758,8 @@ private struct GroupShortcutEditor: View {
 
     @MainActor
     private func recordShortcut(_ shortcut: KeyboardShortcuts.Shortcut?) -> ShortcutRecorderRecordingResult {
-        if let conflict = conflict(for: shortcut) {
-            return .rejected(conflict.message { $0.localized(language: selectedLanguage) })
+        if let rejection = rejection(for: shortcut) {
+            return .rejected(rejection.message { $0.localized(language: selectedLanguage) })
         }
 
         applyShortcut(shortcut)
@@ -783,14 +788,16 @@ private struct GroupShortcutEditor: View {
     }
 
     @MainActor
-    private func conflict(
+    private func rejection(
         for shortcut: KeyboardShortcuts.Shortcut?
-    ) -> ShortcutAssignmentConflict? {
-        ShortcutAssignmentConflicts.conflict(
-            for: shortcut,
-            assigning: .group(id: groupId, name: group.name),
-            groups: store.groups
-        )
+    ) -> ShortcutAssignmentRejection? {
+        shortcut.flatMap {
+            ShortcutReservationValidator.assignmentRejection(
+                for: $0,
+                assigning: .group(id: groupId, name: group.name),
+                groups: store.groups
+            )
+        }
     }
 
     @MainActor

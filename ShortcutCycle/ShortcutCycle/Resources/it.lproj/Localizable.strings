@@ -1,6 +1,7 @@
 /* Italian */
 "Press ESC to cancel" = "Premi ESC per annullare";
 "Shortcut must include a modifier key." = "La scorciatoia deve includere un tasto modificatore.";
+"The shortcut is invalid." = "La scorciatoia non è valida.";
 "ShortcutCycle" = "ShortcutCycle";
 "Settings..." = "Impostazioni...";
 "Quit" = "Esci";

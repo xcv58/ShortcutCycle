@@ -157,20 +157,70 @@ public struct SettingsExport: Codable {
         )
     }
 
-    /// Apply imported shortcuts to KeyboardShortcuts
+    /// Validate every imported shortcut before replacing the persisted set.
+    ///
+    /// Duplicate shortcuts in the payload are rejected here. Runtime-specific
+    /// reservations (for example, app menu commands and macOS hotkeys) are
+    /// supplied by the app target through `validator`.
     @MainActor
-    public func applyShortcuts() {
-        guard let shortcuts = shortcuts else { return }
+    func applyShortcuts(
+        validatingWith validator: (
+            KeyboardShortcuts.Shortcut,
+            ShortcutAssignmentOwner
+        ) -> ShortcutAssignmentRejection?
+    ) -> ShortcutAssignmentRejection? {
+        var assignments: [(group: AppGroup, shortcut: KeyboardShortcuts.Shortcut)] = []
+
         for group in groups {
+            for recentShortcut in group.recentShortcuts ?? [] {
+                if let rejection = ShortcutAssignmentEligibility.rawDataRejection(
+                    for: recentShortcut
+                ) {
+                    return rejection
+                }
+            }
+
             let key = group.id.uuidString
-            if let data = shortcuts[key] {
-                let shortcut = KeyboardShortcuts.Shortcut(
-                    carbonKeyCode: data.carbonKeyCode,
-                    carbonModifiers: data.carbonModifiers
-                )
-                KeyboardShortcuts.setShortcut(shortcut, for: group.shortcutName)
+            if let data = shortcuts?[key] {
+                if let rejection = ShortcutAssignmentEligibility.rejection(for: data) {
+                    return rejection
+                }
+
+                let shortcut = data.shortcut
+                let owner = ShortcutAssignmentOwner.group(id: group.id, name: group.name)
+
+                if let duplicate = assignments.first(where: { $0.shortcut == shortcut }) {
+                    return .conflict(
+                        ShortcutAssignmentConflict(
+                            shortcut: shortcut,
+                            owner: .group(id: duplicate.group.id, name: duplicate.group.name)
+                        )
+                    )
+                }
+
+                if let conflict = validator(shortcut, owner) {
+                    return conflict
+                }
+
+                assignments.append((group, shortcut))
             }
         }
+
+        // The import is a replacement snapshot. Reset every persisted shortcut
+        // name so historical group assignments are removed, while preserving
+        // the Settings-window shortcut which is not part of the export format.
+        let settingsShortcut = KeyboardShortcuts.getShortcut(for: .toggleSettings)
+        KeyboardShortcuts.resetAll()
+        KeyboardShortcuts.setShortcut(settingsShortcut, for: .toggleSettings)
+
+        for assignment in assignments {
+            KeyboardShortcuts.setShortcut(
+                assignment.shortcut,
+                for: assignment.group.shortcutName
+            )
+        }
+
+        return nil
     }
 
     /// Validate that this export has the expected structure
@@ -180,7 +230,7 @@ public struct SettingsExport: Codable {
 
         do {
             let export = try decoder.decode(SettingsExport.self, from: data)
-            guard export.version > 0 else {
+            guard (1...currentVersion).contains(export.version) else {
                 return .failure(.invalidVersion)
             }
             return .success(export)

@@ -661,7 +661,16 @@ enum ShortcutCycleURLRouter {
 
         do {
             let data = try Data(contentsOf: fileURL)
-            try store.importData(data)
+            switch try store.importData(
+                data,
+                validatingShortcutsWith: ShortcutReservationValidator.importRejection
+            ) {
+            case .applied:
+                break
+            case .rejected(let rejection):
+                let language = UserDefaults.standard.string(forKey: "selectedLanguage") ?? "system"
+                presentURLCommandError(rejection.message { $0.localized(language: language) })
+            }
         } catch {
             presentURLCommandError("Failed to import settings from \(fileURL.path): \(error.localizedDescription)")
         }
@@ -699,7 +708,16 @@ enum ShortcutCycleURLRouter {
 
         switch SettingsExport.validate(data: data) {
         case .success(let export):
-            store.applyImport(export)
+            switch store.applyImport(
+                export,
+                validatingShortcutsWith: ShortcutReservationValidator.importRejection
+            ) {
+            case .applied:
+                break
+            case .rejected(let rejection):
+                let language = UserDefaults.standard.string(forKey: "selectedLanguage") ?? "system"
+                presentURLCommandError(rejection.message { $0.localized(language: language) })
+            }
         case .failure(let error):
             presentURLCommandError("Failed to restore backup from \(backupURL.path): \(error.localizedDescription)")
         }

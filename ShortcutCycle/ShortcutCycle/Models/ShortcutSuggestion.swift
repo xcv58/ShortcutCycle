@@ -31,6 +31,146 @@ public enum ShortcutDisplayFormatter {
     }
 }
 
+public enum ShortcutAssignmentRejection: Equatable, Identifiable {
+    case conflict(ShortcutAssignmentConflict)
+    case requiresModifier
+    case invalidShortcut
+
+    public var id: String {
+        switch self {
+        case .conflict(let conflict):
+            return "conflict-\(conflict.id)"
+        case .requiresModifier:
+            return "requiresModifier"
+        case .invalidShortcut:
+            return "invalidShortcut"
+        }
+    }
+
+    @MainActor
+    public func title(localize: (String) -> String) -> String {
+        switch self {
+        case .conflict:
+            return localize("Shortcut Already Used")
+        case .requiresModifier, .invalidShortcut:
+            return localize("Keyboard Shortcut")
+        }
+    }
+
+    @MainActor
+    public func message(localize: (String) -> String) -> String {
+        switch self {
+        case .conflict(let conflict):
+            return conflict.message(localize: localize)
+        case .requiresModifier:
+            return localize("Shortcut must include a modifier key.")
+        case .invalidShortcut:
+            return localize("The shortcut is invalid.")
+        }
+    }
+}
+
+/// Shared semantic policy for every shortcut assignment path.
+public enum ShortcutAssignmentEligibility {
+    private static let carbonKeyCodeRange = 0...127
+    private static let qualifyingModifiers: NSEvent.ModifierFlags = [
+        .command,
+        .control,
+        .option
+    ]
+    private static let modifierKeyCodes: Set<Int> = [
+        KeyboardShortcuts.Key.command.rawValue,
+        KeyboardShortcuts.Key.rightCommand.rawValue,
+        KeyboardShortcuts.Key.control.rawValue,
+        KeyboardShortcuts.Key.rightControl.rawValue,
+        KeyboardShortcuts.Key.option.rawValue,
+        KeyboardShortcuts.Key.rightOption.rawValue,
+        KeyboardShortcuts.Key.shift.rawValue,
+        KeyboardShortcuts.Key.rightShift.rawValue,
+        KeyboardShortcuts.Key.capsLock.rawValue,
+        KeyboardShortcuts.Key.function.rawValue
+    ]
+    private static let functionKeyCodes: Set<Int> = [
+        KeyboardShortcuts.Key.f1.rawValue,
+        KeyboardShortcuts.Key.f2.rawValue,
+        KeyboardShortcuts.Key.f3.rawValue,
+        KeyboardShortcuts.Key.f4.rawValue,
+        KeyboardShortcuts.Key.f5.rawValue,
+        KeyboardShortcuts.Key.f6.rawValue,
+        KeyboardShortcuts.Key.f7.rawValue,
+        KeyboardShortcuts.Key.f8.rawValue,
+        KeyboardShortcuts.Key.f9.rawValue,
+        KeyboardShortcuts.Key.f10.rawValue,
+        KeyboardShortcuts.Key.f11.rawValue,
+        KeyboardShortcuts.Key.f12.rawValue,
+        KeyboardShortcuts.Key.f13.rawValue,
+        KeyboardShortcuts.Key.f14.rawValue,
+        KeyboardShortcuts.Key.f15.rawValue,
+        KeyboardShortcuts.Key.f16.rawValue,
+        KeyboardShortcuts.Key.f17.rawValue,
+        KeyboardShortcuts.Key.f18.rawValue,
+        KeyboardShortcuts.Key.f19.rawValue,
+        KeyboardShortcuts.Key.f20.rawValue
+    ]
+    private static let supportedCarbonModifierMask = KeyboardShortcuts.Shortcut(
+        .a,
+        modifiers: [.command, .control, .option, .shift, .function]
+    ).carbonModifiers
+
+    public static func rejection(
+        keyCode: Int,
+        modifierFlags: NSEvent.ModifierFlags
+    ) -> ShortcutAssignmentRejection? {
+        guard carbonKeyCodeRange.contains(keyCode), !modifierKeyCodes.contains(keyCode) else {
+            return .invalidShortcut
+        }
+
+        if functionKeyCodes.contains(keyCode) {
+            return nil
+        }
+
+        let normalizedModifiers = modifierFlags
+            .intersection(.deviceIndependentFlagsMask)
+            .subtracting([.capsLock, .numericPad])
+        guard !normalizedModifiers.intersection(qualifyingModifiers).isEmpty else {
+            return .requiresModifier
+        }
+
+        return nil
+    }
+
+    public static func rejection(
+        for shortcut: KeyboardShortcuts.Shortcut
+    ) -> ShortcutAssignmentRejection? {
+        rejection(
+            keyCode: shortcut.carbonKeyCode,
+            modifierFlags: shortcut.modifiers
+        )
+    }
+
+    public static func rawDataRejection(
+        for data: ShortcutData
+    ) -> ShortcutAssignmentRejection? {
+        guard
+            carbonKeyCodeRange.contains(data.carbonKeyCode),
+            data.carbonModifiers >= 0,
+            data.carbonModifiers & ~supportedCarbonModifierMask == 0
+        else {
+            return .invalidShortcut
+        }
+
+        return nil
+    }
+
+    public static func rejection(for data: ShortcutData) -> ShortcutAssignmentRejection? {
+        if let rejection = rawDataRejection(for: data) {
+            return rejection
+        }
+
+        return rejection(for: data.shortcut)
+    }
+}
+
 public enum ShortcutSuggestions {
     @MainActor
     public static func available(
@@ -67,7 +207,8 @@ public enum ShortcutSuggestions {
         }
 
         func isAvailable(_ shortcut: KeyboardShortcuts.Shortcut) -> Bool {
-            !takenShortcuts.contains(shortcut)
+            ShortcutAssignmentEligibility.rejection(for: shortcut) == nil
+                && !takenShortcuts.contains(shortcut)
                 && AppCommandShortcutConflicts.conflict(for: shortcut) == nil
         }
 
@@ -134,6 +275,14 @@ public enum ShortcutAssignmentOwner: Equatable {
 public struct ShortcutAssignmentConflict: Equatable, Identifiable {
     public let shortcut: KeyboardShortcuts.Shortcut
     public let owner: ShortcutAssignmentOwner
+
+    public init(
+        shortcut: KeyboardShortcuts.Shortcut,
+        owner: ShortcutAssignmentOwner
+    ) {
+        self.shortcut = shortcut
+        self.owner = owner
+    }
 
     public var id: String {
         "\(shortcut.carbonKeyCode)-\(shortcut.carbonModifiers)-\(owner.identifier)"

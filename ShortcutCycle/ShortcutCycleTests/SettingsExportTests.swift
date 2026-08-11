@@ -226,8 +226,7 @@ final class SettingsExportTests: XCTestCase {
         }
     }
 
-    func testValidateHighVersionStillValid() {
-        // Future versions should still validate as long as structure is valid
+    func testValidateFutureVersionIsInvalid() {
         let json = """
         {
             "version": 999,
@@ -238,10 +237,13 @@ final class SettingsExportTests: XCTestCase {
         let data = json.data(using: .utf8)!
         let result = SettingsExport.validate(data: data)
         switch result {
-        case .success(let export):
-            XCTAssertEqual(export.version, 999)
+        case .success:
+            XCTFail("Future versions should not be imported destructively")
         case .failure(let error):
-            XCTFail("Future version should still validate: \(error)")
+            guard case .invalidVersion = error else {
+                XCTFail("Expected invalidVersion error, got: \(error)")
+                return
+            }
         }
     }
 
@@ -571,10 +573,14 @@ final class SettingsExportTests: XCTestCase {
     // MARK: - applyShortcuts
 
     func testApplyShortcutsWithNilShortcuts() {
-        let export = SettingsExport(groups: [AppGroup(name: "G")])
+        let group = AppGroup(name: "G")
+        let existingShortcut = KeyboardShortcuts.Shortcut(.a, modifiers: [.command])
+        KeyboardShortcuts.setShortcut(existingShortcut, for: group.shortcutName)
+        let export = SettingsExport(groups: [group])
+        defer { KeyboardShortcuts.setShortcut(nil, for: group.shortcutName) }
 
-        // Should not crash when shortcuts is nil (early return)
-        export.applyShortcuts()
+        XCTAssertNil(export.applyShortcuts { _, _ in nil })
+        XCTAssertNil(KeyboardShortcuts.getShortcut(for: group.shortcutName))
     }
 
     func testApplyShortcutsWithShortcutData() {
@@ -583,9 +589,13 @@ final class SettingsExportTests: XCTestCase {
             group.id.uuidString: ShortcutData(carbonKeyCode: 0, carbonModifiers: 256)
         ]
         let export = SettingsExport(groups: [group], shortcuts: shortcuts)
+        defer { KeyboardShortcuts.setShortcut(nil, for: group.shortcutName) }
 
-        // Should apply without crashing
-        export.applyShortcuts()
+        XCTAssertNil(export.applyShortcuts { _, _ in nil })
+        XCTAssertEqual(
+            KeyboardShortcuts.getShortcut(for: group.shortcutName),
+            shortcuts[group.id.uuidString]?.shortcut
+        )
     }
 
     func testApplyShortcutsIgnoresUnmatchedKeys() {
@@ -594,9 +604,251 @@ final class SettingsExportTests: XCTestCase {
             UUID().uuidString: ShortcutData(carbonKeyCode: 42, carbonModifiers: 512)
         ]
         let export = SettingsExport(groups: [group], shortcuts: shortcuts)
+        KeyboardShortcuts.setShortcut(.init(.b, modifiers: [.command]), for: group.shortcutName)
+        defer { KeyboardShortcuts.setShortcut(nil, for: group.shortcutName) }
 
-        // Shortcut key doesn't match any group — should not crash
-        export.applyShortcuts()
+        XCTAssertNil(export.applyShortcuts { _, _ in nil })
+        XCTAssertNil(KeyboardShortcuts.getShortcut(for: group.shortcutName))
+    }
+
+    func testApplyShortcutsClearsRemovedGroupAssignment() {
+        let removedGroup = AppGroup(name: "Removed")
+        let importedGroup = AppGroup(name: "Imported")
+        KeyboardShortcuts.setShortcut(
+            .init(.a, modifiers: [.command]),
+            for: removedGroup.shortcutName
+        )
+        let export = SettingsExport(groups: [importedGroup])
+        defer { KeyboardShortcuts.setShortcut(nil, for: removedGroup.shortcutName) }
+
+        XCTAssertNil(export.applyShortcuts { _, _ in nil })
+        XCTAssertNil(KeyboardShortcuts.getShortcut(for: removedGroup.shortcutName))
+    }
+
+    func testApplyShortcutsPreservesSettingsWindowAssignment() {
+        let group = AppGroup(name: "Imported")
+        let settingsShortcut = KeyboardShortcuts.Shortcut(.f20)
+        let groupShortcut = KeyboardShortcuts.Shortcut(.one, modifiers: [.option])
+        KeyboardShortcuts.setShortcut(settingsShortcut, for: .toggleSettings)
+        let export = SettingsExport(
+            groups: [group],
+            shortcuts: [group.id.uuidString: ShortcutData(groupShortcut)]
+        )
+        defer {
+            KeyboardShortcuts.setShortcut(nil, for: .toggleSettings)
+            KeyboardShortcuts.setShortcut(nil, for: group.shortcutName)
+        }
+
+        XCTAssertNil(export.applyShortcuts { _, _ in nil })
+        XCTAssertEqual(
+            KeyboardShortcuts.getShortcut(for: .toggleSettings),
+            settingsShortcut
+        )
+        XCTAssertEqual(
+            KeyboardShortcuts.getShortcut(for: group.shortcutName),
+            groupShortcut
+        )
+    }
+
+    func testApplyShortcutsRejectsBeforeApplyingAnyShortcut() {
+        let firstGroup = AppGroup(name: "First")
+        let secondGroup = AppGroup(name: "Second")
+        let firstShortcut = KeyboardShortcuts.Shortcut(.a, modifiers: [.command])
+        let secondShortcut = KeyboardShortcuts.Shortcut(.b, modifiers: [.command])
+        let export = SettingsExport(
+            groups: [firstGroup, secondGroup],
+            shortcuts: [
+                firstGroup.id.uuidString: ShortcutData(firstShortcut),
+                secondGroup.id.uuidString: ShortcutData(secondShortcut)
+            ]
+        )
+        defer {
+            KeyboardShortcuts.setShortcut(nil, for: firstGroup.shortcutName)
+            KeyboardShortcuts.setShortcut(nil, for: secondGroup.shortcutName)
+        }
+
+        let rejection = export.applyShortcuts { shortcut, _ in
+            guard shortcut == secondShortcut else { return nil }
+            return .conflict(
+                ShortcutAssignmentConflict(
+                    shortcut: shortcut,
+                    owner: .appCommand(titleKey: "Reserved")
+                )
+            )
+        }
+
+        XCTAssertEqual(
+            rejection,
+            .conflict(
+                ShortcutAssignmentConflict(
+                    shortcut: secondShortcut,
+                    owner: .appCommand(titleKey: "Reserved")
+                )
+            )
+        )
+        XCTAssertNil(KeyboardShortcuts.getShortcut(for: firstGroup.shortcutName))
+        XCTAssertNil(KeyboardShortcuts.getShortcut(for: secondGroup.shortcutName))
+    }
+
+    func testApplyShortcutsRejectsDuplicateImportedAssignments() {
+        let firstGroup = AppGroup(name: "First")
+        let secondGroup = AppGroup(name: "Second")
+        let shortcut = KeyboardShortcuts.Shortcut(.a, modifiers: [.command])
+        let export = SettingsExport(
+            groups: [firstGroup, secondGroup],
+            shortcuts: [
+                firstGroup.id.uuidString: ShortcutData(shortcut),
+                secondGroup.id.uuidString: ShortcutData(shortcut)
+            ]
+        )
+        defer {
+            KeyboardShortcuts.setShortcut(nil, for: firstGroup.shortcutName)
+            KeyboardShortcuts.setShortcut(nil, for: secondGroup.shortcutName)
+        }
+
+        let rejection = export.applyShortcuts { _, _ in nil }
+
+        XCTAssertEqual(
+            rejection,
+            .conflict(
+                ShortcutAssignmentConflict(
+                    shortcut: shortcut,
+                    owner: .group(id: firstGroup.id, name: firstGroup.name)
+                )
+            )
+        )
+        XCTAssertNil(KeyboardShortcuts.getShortcut(for: firstGroup.shortcutName))
+        XCTAssertNil(KeyboardShortcuts.getShortcut(for: secondGroup.shortcutName))
+    }
+
+    func testApplyShortcutsRejectsIneligibleAssignmentForms() {
+        let group = AppGroup(name: "Imported")
+        let ineligibleShortcuts: [(KeyboardShortcuts.Shortcut, ShortcutAssignmentRejection)] = [
+            (.init(.a), .requiresModifier),
+            (.init(.a, modifiers: [.shift]), .requiresModifier),
+            (.init(.a, modifiers: [.function]), .requiresModifier),
+            (.init(.a, modifiers: [.shift, .function]), .requiresModifier),
+            (.init(.command, modifiers: [.command]), .invalidShortcut)
+        ]
+        defer { KeyboardShortcuts.setShortcut(nil, for: group.shortcutName) }
+
+        for (shortcut, expectedRejection) in ineligibleShortcuts {
+            let export = SettingsExport(
+                groups: [group],
+                shortcuts: [group.id.uuidString: ShortcutData(shortcut)]
+            )
+
+            XCTAssertEqual(
+                export.applyShortcuts { _, _ in nil },
+                expectedRejection
+            )
+            XCTAssertNil(KeyboardShortcuts.getShortcut(for: group.shortcutName))
+        }
+    }
+
+    func testApplyShortcutsAllowsEveryModifierlessFunctionKey() {
+        let group = AppGroup(name: "Imported")
+        let functionKeys: [KeyboardShortcuts.Key] = [
+            .f1, .f2, .f3, .f4, .f5, .f6, .f7, .f8, .f9, .f10,
+            .f11, .f12, .f13, .f14, .f15, .f16, .f17, .f18, .f19, .f20
+        ]
+        defer { KeyboardShortcuts.setShortcut(nil, for: group.shortcutName) }
+
+        for key in functionKeys {
+            let shortcut = KeyboardShortcuts.Shortcut(key)
+            let export = SettingsExport(
+                groups: [group],
+                shortcuts: [group.id.uuidString: ShortcutData(shortcut)]
+            )
+
+            XCTAssertNil(export.applyShortcuts { _, _ in nil })
+            XCTAssertEqual(
+                KeyboardShortcuts.getShortcut(for: group.shortcutName),
+                shortcut
+            )
+        }
+    }
+
+    func testApplyShortcutsRejectsMalformedRawValuesAtomically() {
+        let existingGroup = AppGroup(name: "Existing")
+        let importedGroup = AppGroup(name: "Imported")
+        let existingShortcut = KeyboardShortcuts.Shortcut(.f20)
+        KeyboardShortcuts.setShortcut(existingShortcut, for: existingGroup.shortcutName)
+        defer {
+            KeyboardShortcuts.setShortcut(nil, for: existingGroup.shortcutName)
+            KeyboardShortcuts.setShortcut(nil, for: importedGroup.shortcutName)
+        }
+
+        let malformedValues: [ShortcutData] = [
+            ShortcutData(carbonKeyCode: -1, carbonModifiers: 0),
+            ShortcutData(carbonKeyCode: Int.max, carbonModifiers: 0),
+            ShortcutData(
+                carbonKeyCode: KeyboardShortcuts.Key.a.rawValue,
+                carbonModifiers: Int.max
+            )
+        ]
+
+        for malformed in malformedValues {
+            let export = SettingsExport(
+                groups: [importedGroup],
+                shortcuts: [importedGroup.id.uuidString: malformed]
+            )
+
+            XCTAssertEqual(
+                export.applyShortcuts { _, _ in nil },
+                .invalidShortcut
+            )
+            XCTAssertEqual(
+                KeyboardShortcuts.getShortcut(for: existingGroup.shortcutName),
+                existingShortcut
+            )
+            XCTAssertNil(KeyboardShortcuts.getShortcut(for: importedGroup.shortcutName))
+        }
+    }
+
+    func testApplyShortcutsRejectsMalformedRecentHistoryAtomically() {
+        let existingGroup = AppGroup(name: "Existing")
+        let existingShortcut = KeyboardShortcuts.Shortcut(.f20)
+        KeyboardShortcuts.setShortcut(existingShortcut, for: existingGroup.shortcutName)
+        defer { KeyboardShortcuts.setShortcut(nil, for: existingGroup.shortcutName) }
+
+        let malformedValues: [ShortcutData] = [
+            ShortcutData(carbonKeyCode: -1, carbonModifiers: 0),
+            ShortcutData(carbonKeyCode: Int.max, carbonModifiers: 0),
+            ShortcutData(
+                carbonKeyCode: KeyboardShortcuts.Key.a.rawValue,
+                carbonModifiers: Int.max
+            )
+        ]
+
+        for malformed in malformedValues {
+            let importedGroup = AppGroup(
+                name: "Imported",
+                recentShortcuts: [malformed]
+            )
+            let export = SettingsExport(groups: [importedGroup])
+
+            XCTAssertEqual(
+                export.applyShortcuts { _, _ in nil },
+                .invalidShortcut
+            )
+            XCTAssertEqual(
+                KeyboardShortcuts.getShortcut(for: existingGroup.shortcutName),
+                existingShortcut
+            )
+        }
+    }
+
+    func testApplyShortcutsAllowsRawValidIneligibleRecentHistory() {
+        let recentShortcut = KeyboardShortcuts.Shortcut(.a)
+        let group = AppGroup(
+            name: "Imported",
+            recentShortcuts: [ShortcutData(recentShortcut)]
+        )
+        let export = SettingsExport(groups: [group])
+
+        XCTAssertNil(export.applyShortcuts { _, _ in nil })
+        XCTAssertEqual(group.recentShortcuts, [ShortcutData(recentShortcut)])
     }
 
 }

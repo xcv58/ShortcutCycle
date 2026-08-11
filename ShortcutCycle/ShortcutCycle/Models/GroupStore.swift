@@ -7,6 +7,11 @@ public enum ManualBackupResult {
     case saved, noChange, error(String)
 }
 
+public enum SettingsImportResult: Equatable {
+    case applied
+    case rejected(ShortcutAssignmentRejection)
+}
+
 /// Observable store for managing app groups with persistence
 @MainActor
 public class GroupStore: ObservableObject {
@@ -117,6 +122,7 @@ public class GroupStore: ObservableObject {
     }
     
     public func deleteGroup(_ group: AppGroup) {
+        KeyboardShortcuts.setShortcut(nil, for: group.shortcutName)
         groups.removeAll { $0.id == group.id }
         if selectedGroupId == group.id {
             selectedGroupId = groups.first?.id
@@ -430,15 +436,35 @@ public class GroupStore: ObservableObject {
     }
 
     /// Import settings from exported JSON data
-    public func importData(_ data: Data) throws {
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let importPayload = try decoder.decode(SettingsExport.self, from: data)
-        applyImport(importPayload)
+    public func importData(
+        _ data: Data,
+        validatingShortcutsWith validator: (
+            KeyboardShortcuts.Shortcut,
+            ShortcutAssignmentOwner
+        ) -> ShortcutAssignmentRejection?
+    ) throws -> SettingsImportResult {
+        switch SettingsExport.validate(data: data) {
+        case .success(let importPayload):
+            return applyImport(importPayload, validatingShortcutsWith: validator)
+        case .failure(let error):
+            throw error
+        }
     }
 
     /// Apply a decoded settings export directly
-    public func applyImport(_ payload: SettingsExport) {
+    public func applyImport(
+        _ payload: SettingsExport,
+        validatingShortcutsWith validator: (
+            KeyboardShortcuts.Shortcut,
+            ShortcutAssignmentOwner
+        ) -> ShortcutAssignmentRejection?
+    ) -> SettingsImportResult {
+        // Shortcut validation is a full preflight: `applyShortcuts` does not
+        // persist any assignment unless every imported shortcut is accepted.
+        if let rejection = payload.applyShortcuts(validatingWith: validator) {
+            return .rejected(rejection)
+        }
+
         self.groups = payload.groups
         self.selectedGroupId = groups.first?.id
         saveGroups()
@@ -446,11 +472,9 @@ public class GroupStore: ObservableObject {
         // Apply app settings if present (version 2+)
         payload.settings?.apply()
 
-        // Apply keyboard shortcuts if present (version 3+)
-        payload.applyShortcuts()
-
         // Re-register shortcuts for new groups
         NotificationCenter.default.post(name: .shortcutsNeedUpdate, object: nil)
+        return .applied
     }
     
     // MARK: - Group Actions

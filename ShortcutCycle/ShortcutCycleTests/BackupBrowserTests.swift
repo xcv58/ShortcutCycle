@@ -192,7 +192,7 @@ final class BackupBrowserTests: XCTestCase {
         encoder.dateEncodingStrategy = .iso8601
         let data = try encoder.encode(export)
 
-        try store.importData(data)
+        _ = try store.importData(data) { _, _ in nil }
 
         XCTAssertEqual(store.groups.count, 1)
         XCTAssertEqual(store.groups[0].name, "Imported Group")

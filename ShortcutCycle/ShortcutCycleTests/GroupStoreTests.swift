@@ -117,9 +117,11 @@ final class GroupStoreTests: XCTestCase {
 
     func testDeleteGroup() {
         let group = store.groups.first!
+        KeyboardShortcuts.setShortcut(.init(.f20), for: group.shortcutName)
         store.deleteGroup(group)
 
         XCTAssertFalse(store.groups.contains(where: { $0.id == group.id }))
+        XCTAssertNil(KeyboardShortcuts.getShortcut(for: group.shortcutName))
     }
 
     func testDeleteSelectedGroupSelectsFirst() {
@@ -431,7 +433,7 @@ final class GroupStoreTests: XCTestCase {
         freshDefaults.removePersistentDomain(forName: "TestImport")
         let freshStore = GroupStore(userDefaults: freshDefaults)
 
-        try freshStore.importData(data)
+        _ = try freshStore.importData(data) { _, _ in nil }
 
         XCTAssertTrue(freshStore.groups.contains(where: { $0.name == "Export Test" }))
         let importedGroup = freshStore.groups.first(where: { $0.name == "Export Test" })
@@ -444,7 +446,48 @@ final class GroupStoreTests: XCTestCase {
 
     func testImportMalformedDataThrows() {
         let badData = "not json".data(using: .utf8)!
-        XCTAssertThrowsError(try store.importData(badData))
+        XCTAssertThrowsError(try store.importData(badData) { _, _ in nil })
+    }
+
+    func testImportRejectsInvalidVersionWithoutMutatingState() throws {
+        let existingGroups = store.groups
+        let existingGroup = existingGroups[0]
+        let existingShortcut = KeyboardShortcuts.Shortcut(.f20)
+        KeyboardShortcuts.setShortcut(existingShortcut, for: existingGroup.shortcutName)
+        defer { KeyboardShortcuts.setShortcut(nil, for: existingGroup.shortcutName) }
+
+        let importedGroup = AppGroup(name: "Invalid Version")
+        let payload = SettingsExport(
+            groups: [importedGroup],
+            shortcuts: [
+                importedGroup.id.uuidString: ShortcutData(
+                    KeyboardShortcuts.Shortcut(.one, modifiers: [.option])
+                )
+            ]
+        )
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let validData = try encoder.encode(payload)
+        var json = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: validData) as? [String: Any]
+        )
+        json["version"] = 0
+        let invalidVersionData = try JSONSerialization.data(withJSONObject: json)
+
+        XCTAssertThrowsError(
+            try store.importData(invalidVersionData) { _, _ in nil }
+        ) { error in
+            guard case SettingsExportError.invalidVersion = error else {
+                return XCTFail("Expected invalidVersion, got \(error)")
+            }
+        }
+
+        XCTAssertEqual(store.groups, existingGroups)
+        XCTAssertEqual(
+            KeyboardShortcuts.getShortcut(for: existingGroup.shortcutName),
+            existingShortcut
+        )
+        XCTAssertNil(KeyboardShortcuts.getShortcut(for: importedGroup.shortcutName))
     }
 
     func testImportReplacesExistingGroups() throws {
@@ -455,7 +498,7 @@ final class GroupStoreTests: XCTestCase {
         encoder.dateEncodingStrategy = .iso8601
         let data = try encoder.encode(export)
 
-        try store.importData(data)
+        _ = try store.importData(data) { _, _ in nil }
 
         XCTAssertEqual(store.groups.count, 1)
         XCTAssertEqual(store.groups.first?.name, "Imported")
@@ -706,7 +749,7 @@ final class GroupStoreTests: XCTestCase {
         ])
         let payload = SettingsExport(groups: [group])
 
-        store.applyImport(payload)
+        _ = store.applyImport(payload) { _, _ in nil }
 
         XCTAssertEqual(store.groups.count, 1)
         XCTAssertEqual(store.groups[0].name, "Direct Import")
@@ -723,7 +766,7 @@ final class GroupStoreTests: XCTestCase {
         let settings = AppSettings(showHUD: false, showShortcutInHUD: true)
         let payload = SettingsExport(groups: [AppGroup(name: "G")], settings: settings)
 
-        store.applyImport(payload)
+        _ = store.applyImport(payload) { _, _ in nil }
 
         XCTAssertEqual(defaults.bool(forKey: "showHUD"), false)
     }
@@ -736,9 +779,83 @@ final class GroupStoreTests: XCTestCase {
         let payload = SettingsExport(groups: [group], shortcuts: shortcuts)
 
         // Should not crash
-        store.applyImport(payload)
+        _ = store.applyImport(payload) { _, _ in nil }
 
         XCTAssertEqual(store.groups.count, 1)
+    }
+
+    func testApplyImportRejectionLeavesExistingStateUntouched() {
+        let existingGroups = store.groups
+        let existingGroup = existingGroups[0]
+        let existingShortcut = KeyboardShortcuts.Shortcut(.f20)
+        KeyboardShortcuts.setShortcut(existingShortcut, for: existingGroup.shortcutName)
+        let importedGroup = AppGroup(name: "Rejected Import")
+        let shortcut = KeyboardShortcuts.Shortcut(.a, modifiers: [.command])
+        let payload = SettingsExport(
+            groups: [importedGroup],
+            shortcuts: [importedGroup.id.uuidString: ShortcutData(shortcut)]
+        )
+        defer {
+            KeyboardShortcuts.setShortcut(nil, for: existingGroup.shortcutName)
+            KeyboardShortcuts.setShortcut(nil, for: importedGroup.shortcutName)
+        }
+
+        let result = store.applyImport(payload) { candidate, _ in
+            .conflict(
+                ShortcutAssignmentConflict(
+                    shortcut: candidate,
+                    owner: .appCommand(titleKey: "Reserved")
+                )
+            )
+        }
+
+        XCTAssertEqual(
+            result,
+            .rejected(
+                .conflict(
+                    ShortcutAssignmentConflict(
+                        shortcut: shortcut,
+                        owner: .appCommand(titleKey: "Reserved")
+                    )
+                )
+            )
+        )
+        XCTAssertEqual(store.groups, existingGroups)
+        XCTAssertEqual(
+            KeyboardShortcuts.getShortcut(for: existingGroup.shortcutName),
+            existingShortcut
+        )
+        XCTAssertNil(KeyboardShortcuts.getShortcut(for: importedGroup.shortcutName))
+    }
+
+    func testApplyImportClearsOmittedShortcutForSameGroupID() {
+        let existingGroup = store.groups[0]
+        KeyboardShortcuts.setShortcut(
+            .init(.f20),
+            for: existingGroup.shortcutName
+        )
+        defer { KeyboardShortcuts.setShortcut(nil, for: existingGroup.shortcutName) }
+
+        let result = store.applyImport(
+            SettingsExport(groups: [existingGroup])
+        ) { _, _ in nil }
+
+        XCTAssertEqual(result, .applied)
+        XCTAssertNil(KeyboardShortcuts.getShortcut(for: existingGroup.shortcutName))
+    }
+
+    func testApplyImportClearsHistoricalOrphanedGroupShortcut() {
+        let orphanedGroup = AppGroup(name: "Historical Orphan")
+        let importedGroup = AppGroup(name: "Imported")
+        KeyboardShortcuts.setShortcut(.init(.f20), for: orphanedGroup.shortcutName)
+        defer { KeyboardShortcuts.setShortcut(nil, for: orphanedGroup.shortcutName) }
+
+        let result = store.applyImport(
+            SettingsExport(groups: [importedGroup])
+        ) { _, _ in nil }
+
+        XCTAssertEqual(result, .applied)
+        XCTAssertNil(KeyboardShortcuts.getShortcut(for: orphanedGroup.shortcutName))
     }
 
     // MARK: - Rename Non-existent Group
@@ -946,7 +1063,7 @@ final class GroupStoreTests: XCTestCase {
             freshDefaults.removePersistentDomain(forName: "TestMRUExport")
         }
 
-        try freshStore.importData(data)
+        _ = try freshStore.importData(data) { _, _ in nil }
 
         let importedGroup = freshStore.groups.first(where: { $0.id == groupId })
         XCTAssertEqual(importedGroup?.mruOrder, ["com.test.1"])

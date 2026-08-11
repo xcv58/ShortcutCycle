@@ -1,6 +1,7 @@
 /* Chinese (Traditional) */
 "Press ESC to cancel" = "按 ESC 取消";
 "Shortcut must include a modifier key." = "快速鍵必須包含修飾鍵。";
+"The shortcut is invalid." = "快速鍵無效。";
 "ShortcutCycle" = "ShortcutCycle";
 "Settings..." = "設定...";
 "Quit" = "退出";

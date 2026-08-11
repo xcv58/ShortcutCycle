@@ -1,6 +1,7 @@
 /* Korean */
 "Press ESC to cancel" = "ESC를 눌러 취소";
 "Shortcut must include a modifier key." = "단축키에는 보조 키가 포함되어야 합니다.";
+"The shortcut is invalid." = "단축키가 유효하지 않습니다.";
 "ShortcutCycle" = "ShortcutCycle";
 "Settings..." = "설정...";
 "Quit" = "종료";

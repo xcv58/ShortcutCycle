@@ -1,6 +1,7 @@
 /* Portuguese (Brazil) */
 "Press ESC to cancel" = "Pressione ESC para cancelar";
 "Shortcut must include a modifier key." = "O atalho deve incluir uma tecla modificadora.";
+"The shortcut is invalid." = "O atalho é inválido.";
 "ShortcutCycle" = "ShortcutCycle";
 "Settings..." = "Ajustes...";
 "Quit" = "Sair";

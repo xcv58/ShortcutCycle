@@ -1,6 +1,7 @@
 /* Polish */
 "Press ESC to cancel" = "Naciśnij ESC, aby anulować";
 "Shortcut must include a modifier key." = "Skrót musi zawierać klawisz modyfikujący.";
+"The shortcut is invalid." = "Skrót klawiszowy jest nieprawidłowy.";
 "ShortcutCycle" = "ShortcutCycle";
 "Settings..." = "Ustawienia...";
 "Quit" = "Zakończ";

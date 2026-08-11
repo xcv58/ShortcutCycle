@@ -1,6 +1,7 @@
 /* Arabic */
 "Press ESC to cancel" = "اضغط ESC للإلغاء";
 "Shortcut must include a modifier key." = "يجب أن يتضمن الاختصار مفتاح تعديل.";
+"The shortcut is invalid." = "اختصار لوحة المفاتيح غير صالح.";
 "ShortcutCycle" = "ShortcutCycle";
 "Settings..." = "الإعدادات...";
 "Quit" = "إنهاء";

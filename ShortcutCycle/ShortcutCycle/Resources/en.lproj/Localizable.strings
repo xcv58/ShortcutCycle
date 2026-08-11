@@ -1,6 +1,7 @@
 /* English */
 "Press ESC to cancel" = "Press ESC to cancel";
 "Shortcut must include a modifier key." = "Shortcut must include a modifier key.";
+"The shortcut is invalid." = "The shortcut is invalid.";
 "ShortcutCycle" = "ShortcutCycle";
 "Settings..." = "Settings...";
 "Quit" = "Quit";
