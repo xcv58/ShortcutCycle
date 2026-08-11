@@ -670,6 +670,8 @@ enum ShortcutCycleURLRouter {
             case .rejected(let rejection):
                 let language = UserDefaults.standard.string(forKey: "selectedLanguage") ?? "system"
                 presentURLCommandError(rejection.message { $0.localized(language: language) })
+            case .invalidVersion:
+                presentURLCommandError(SettingsExportError.invalidVersion.localizedDescription)
             }
         } catch {
             presentURLCommandError("Failed to import settings from \(fileURL.path): \(error.localizedDescription)")
@@ -717,6 +719,8 @@ enum ShortcutCycleURLRouter {
             case .rejected(let rejection):
                 let language = UserDefaults.standard.string(forKey: "selectedLanguage") ?? "system"
                 presentURLCommandError(rejection.message { $0.localized(language: language) })
+            case .invalidVersion:
+                presentURLCommandError(SettingsExportError.invalidVersion.localizedDescription)
             }
         case .failure(let error):
             presentURLCommandError("Failed to restore backup from \(backupURL.path): \(error.localizedDescription)")

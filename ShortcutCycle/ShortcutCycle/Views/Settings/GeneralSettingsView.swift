@@ -480,6 +480,9 @@ struct GeneralSettingsView: View {
             case .rejected(let rejection):
                 errorMessage = rejection.message { $0.localized(language: selectedLanguage) }
                 showImportError = true
+            case .invalidVersion:
+                errorMessage = SettingsExportError.invalidVersion.localizedDescription
+                showImportError = true
             }
         } catch {
             errorMessage = error.localizedDescription
@@ -558,6 +561,9 @@ struct GeneralSettingsView: View {
             showClipboardImportSuccess = true
         case .rejected(let rejection):
             clipboardErrorMessage = rejection.message { $0.localized(language: selectedLanguage) }
+            showClipboardError = true
+        case .invalidVersion:
+            clipboardErrorMessage = SettingsExportError.invalidVersion.localizedDescription
             showClipboardError = true
         }
         pendingClipboardExport = nil

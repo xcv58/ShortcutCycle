@@ -10,6 +10,7 @@ public enum ManualBackupResult {
 public enum SettingsImportResult: Equatable {
     case applied
     case rejected(ShortcutAssignmentRejection)
+    case invalidVersion
 }
 
 /// Observable store for managing app groups with persistence
@@ -459,6 +460,10 @@ public class GroupStore: ObservableObject {
             ShortcutAssignmentOwner
         ) -> ShortcutAssignmentRejection?
     ) -> SettingsImportResult {
+        guard payload.version == SettingsExport.currentVersion else {
+            return .invalidVersion
+        }
+
         // Shortcut validation is a full preflight: `applyShortcuts` does not
         // persist any assignment unless every imported shortcut is accepted.
         if let rejection = payload.applyShortcuts(validatingWith: validator) {

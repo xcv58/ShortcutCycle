@@ -540,6 +540,9 @@ struct BackupBrowserView: View {
             dismiss()
         case .rejected(let rejection):
             shortcutRejection = rejection
+        case .invalidVersion:
+            selectedExport = nil
+            invalidSelection = true
         }
     }
 

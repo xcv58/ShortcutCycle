@@ -792,6 +792,65 @@ final class GroupStoreTests: XCTestCase {
         XCTAssertEqual(store.selectedGroupId, store.groups.first?.id)
     }
 
+    func testApplyImportRejectsUnsupportedDecodedVersionsWithoutMutatingState() throws {
+        let existingGroups = store.groups
+        let existingSelection = store.selectedGroupId
+        let existingGroup = existingGroups[0]
+        let existingShortcut = KeyboardShortcuts.Shortcut(.f20)
+        let importedGroup = AppGroup(name: "Unsupported Version")
+        let defaults = UserDefaults.standard
+        let originalShowHUD = defaults.object(forKey: "showHUD")
+        defaults.set(true, forKey: "showHUD")
+        KeyboardShortcuts.setShortcut(existingShortcut, for: existingGroup.shortcutName)
+
+        defer {
+            if let originalShowHUD {
+                defaults.set(originalShowHUD, forKey: "showHUD")
+            } else {
+                defaults.removeObject(forKey: "showHUD")
+            }
+            KeyboardShortcuts.setShortcut(nil, for: existingGroup.shortcutName)
+            KeyboardShortcuts.setShortcut(nil, for: importedGroup.shortcutName)
+        }
+
+        let payload = SettingsExport(
+            groups: [importedGroup],
+            settings: AppSettings(showHUD: false, showShortcutInHUD: true),
+            shortcuts: [
+                importedGroup.id.uuidString: ShortcutData(
+                    KeyboardShortcuts.Shortcut(.one, modifiers: [.option])
+                )
+            ]
+        )
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let encodedPayload = try encoder.encode(payload)
+        var json = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: encodedPayload) as? [String: Any]
+        )
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        for unsupportedVersion in [1, 2, SettingsExport.currentVersion + 1] {
+            json["version"] = unsupportedVersion
+            let data = try JSONSerialization.data(withJSONObject: json)
+            let decodedPayload = try decoder.decode(SettingsExport.self, from: data)
+
+            XCTAssertEqual(
+                store.applyImport(decodedPayload) { _, _ in nil },
+                .invalidVersion
+            )
+            XCTAssertEqual(store.groups, existingGroups)
+            XCTAssertEqual(store.selectedGroupId, existingSelection)
+            XCTAssertTrue(defaults.bool(forKey: "showHUD"))
+            XCTAssertEqual(
+                KeyboardShortcuts.getShortcut(for: existingGroup.shortcutName),
+                existingShortcut
+            )
+            XCTAssertNil(KeyboardShortcuts.getShortcut(for: importedGroup.shortcutName))
+        }
+    }
+
     func testApplyImportWithSettings() {
         let defaults = UserDefaults.standard
         let originalShowHUD = defaults.object(forKey: "showHUD")
