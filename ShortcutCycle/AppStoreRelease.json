@@ -4,7 +4,7 @@
   "platform": "macOS",
   "appStoreConnect": {
     "appId": "6758281578",
-    "preferredBuild": "130",
+    "preferredBuild": "132",
     "releasePolicy": "automatic",
     "phasedRelease": false
   },
