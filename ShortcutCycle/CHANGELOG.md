@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11] - Unreleased
+
+### Changed
+- **App Store release version**: Advanced the version metadata after the approved 1.10 release closed that upload train. There are no user-facing behavior changes from 1.10.
+
 ## [1.10] - 2026-08-12
 
 ### Added

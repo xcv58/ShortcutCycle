@@ -12,12 +12,8 @@ Cycle apps by group, instantly.
 ## Promotional Text
 Stop endlessly tabbing. Group your apps by context—Web, Code, Social—and cycle through them with dedicated hotkeys. Build muscle memory and flow.
 
-## What's New (1.10)
-- Development, TestFlight beta, and App Store builds now have distinct, accurate in-app identities.
-- A redesigned recorder for Group and Settings Window shortcuts adds consistent notation, recent suggestions, and inline conflict guidance without triggering app commands while you record.
-- ShortcutCycle now warns about combinations already used by the app or macOS before saving them.
-- Version 3 imports and backup restores validate every shortcut before replacing your setup, so invalid data leaves your current settings untouched.
-- In Running Apps Only mode, a shortcut now hides its sole available app immediately when that app is already frontmost, without showing the HUD. If it is in the background, the familiar delayed HUD behavior remains unchanged.
+## What's New (1.11)
+This maintenance update keeps ShortcutCycle current for App Store distribution. It contains no user-facing changes from version 1.10.
 
 ## App Icon
 `ShortcutCycle/ShortcutCycle/Assets.xcassets/AppIcon.appiconset/1024.png`

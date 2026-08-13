@@ -41,12 +41,19 @@ Both local archives and Xcode Cloud builds use the same version-sync script:
 - For Xcode Cloud, the default build number is `CI_BUILD_NUMBER + SC_CI_BUILD_OFFSET`. `SC_CI_BUILD_OFFSET` defaults to `1000`, and a monotonic guard prevents regressions.
 - `MARKETING_VERSION` remains manual unless explicitly overridden.
 - Local archives will update `ShortcutCycle.xcodeproj/project.pbxproj`, which is expected.
+- After a version is approved, its pre-release train is closed. The next upload must use a higher `MARKETING_VERSION`; increasing only the build number is not sufficient.
 
 ### Optional overrides
 ```sh
 SC_BUILD_NUMBER=123 /bin/sh scripts/sync_project_version.sh
 SC_CI_BUILD_OFFSET=2000 /bin/sh scripts/sync_project_version.sh
-SC_MARKETING_VERSION=1.10 /bin/sh scripts/sync_project_version.sh
+SC_MARKETING_VERSION=1.11 /bin/sh scripts/sync_project_version.sh
+```
+
+For the next local archive after rejected build 134, the checked-in 134 baseline produces version `1.11` build `135`. To prepare those values explicitly without archiving:
+
+```sh
+SC_BUILD_NUMBER=135 SC_MARKETING_VERSION=1.11 /bin/sh scripts/sync_project_version.sh
 ```
 
 ## 4. Launch Checklist
