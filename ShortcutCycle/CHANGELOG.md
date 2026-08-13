@@ -2,22 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.10] - Unreleased
+## [1.10] - 2026-08-12
 
 ### Added
 - **Build-channel identity**: Xcode Debug builds now install as ShortcutCycle Dev with a distinct icon, data container, and `shortcutcycle-dev://` automation scheme. TestFlight beta builds are identified from their signing identity and show a clearly labeled in-app status while App Store builds remain unbadged.
 
 ### Changed
-- **Shortcut recorder**: The Group and Settings Window shortcut editors now use a dedicated recording popover with consistent `modifier + key` notation, inline conflict guidance, and recent-shortcut suggestions.
 - **Shortcut eligibility**: Ordinary keys now require Command, Control, or Option, while function keys remain available without modifiers. Assignments are checked against ShortcutCycle commands and enabled macOS shortcuts before they are saved.
 - **Import compatibility**: Settings import and backup restore now accept the current version 3 export format only.
-- **Single-app toggling**: In Running Apps Only mode, pressing a group's shortcut hides its sole eligible app immediately when it is already frontmost and skips the HUD; a background app retains the normal delayed HUD behavior.
+
+### Fixed
+- **Safe settings replacement**: Imports and restores validate shortcut data before changing groups, settings, or registered shortcuts. Invalid or incompatible files leave the current setup untouched.
+- **Shortcut cleanup**: Deleting groups and replacing imported settings now remove stale registered group shortcuts while preserving the Settings Window shortcut.
+
+## [1.9] - 2026-07-18
+
+### Changed
+- **Shortcut recorder**: The Group and Settings Window shortcut editors now use a dedicated recording popover with consistent `modifier + key` notation, inline conflict guidance, and recent-shortcut suggestions.
 
 ### Fixed
 - **Newer macOS shortcut recording**: Recording, replacing, and clearing shortcuts no longer relies on mutating SwiftUI-owned menu shortcuts, which could leave the old recorder unable to accept or clear input.
 - **Shortcut safety while recording**: App menu commands and ShortcutCycle global shortcuts are temporarily suppressed during recording, preventing an assigned combination from switching apps or dismissing Settings.
-- **Safe settings replacement**: Imports and restores validate shortcut data before changing groups, settings, or registered shortcuts. Invalid or incompatible files leave the current setup untouched.
-- **Shortcut cleanup**: Deleting groups and replacing imported settings now remove stale registered group shortcuts while preserving the Settings Window shortcut.
 
 ## [1.8] - 2026-07-13
 

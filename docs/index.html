@@ -84,8 +84,8 @@
       "name": "ShortcutCycle",
       "operatingSystem": "macOS 14.0+",
       "applicationCategory": "ProductivityApplication",
-      "softwareVersion": "1.8",
-      "datePublished": "2026-07-12",
+      "softwareVersion": "1.10",
+      "datePublished": "2026-08-12",
       "offers": {
         "@type": "Offer",
         "price": "3.99",
@@ -93,12 +93,7 @@
       },
       "description": "Group your apps by context and cycle through them with dedicated hotkeys.",
       "screenshot": "https://s.jenny.media/assets/images/hud-light.webp",
-      "downloadUrl": "https://apps.apple.com/us/app/shortcutcycle/id6758281578",
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "5",
-        "ratingCount": "1"
-      }
+      "downloadUrl": "https://apps.apple.com/us/app/shortcutcycle/id6758281578"
     }
     </script>
 
@@ -951,77 +946,6 @@
             text-align: left;
         }
 
-        /* --- RELEASE HIGHLIGHT --- */
-        .release-showcase {
-            text-align: center;
-        }
-
-        .release-header {
-            max-width: 760px;
-            margin: 0 auto 40px;
-        }
-
-        .release-kicker {
-            display: inline-flex;
-            align-items: center;
-            padding: 7px 14px;
-            margin-bottom: 18px;
-            border: 1px solid rgba(0, 122, 255, 0.3);
-            border-radius: 999px;
-            background: rgba(0, 122, 255, 0.1);
-            color: var(--accent);
-            font-size: 0.8rem;
-            font-weight: 700;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
-        }
-
-        .release-title {
-            margin-bottom: 16px;
-            font-size: clamp(2rem, 4vw, 3rem);
-            letter-spacing: -0.03em;
-        }
-
-        .release-summary {
-            color: var(--text-secondary);
-            font-size: 1.1rem;
-            line-height: 1.65;
-        }
-
-        .release-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 24px;
-            text-align: left;
-        }
-
-        .release-card {
-            position: relative;
-            overflow: hidden;
-            padding: 32px;
-            border: 1px solid var(--border);
-            border-radius: 18px;
-            background: linear-gradient(145deg, rgba(0, 122, 255, 0.12), var(--surface) 58%);
-        }
-
-        .release-card::before {
-            content: '';
-            position: absolute;
-            inset: 0 auto 0 0;
-            width: 3px;
-            background: var(--accent);
-        }
-
-        .release-card h3 {
-            margin-bottom: 12px;
-            font-size: 1.25rem;
-        }
-
-        .release-card p {
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-        }
-
         /* --- FEATURES --- */
         .features-grid {
             display: grid;
@@ -1725,13 +1649,13 @@
                             context—Web, Code, Social—and cycle with dedicated hotkeys.</p>
                         <p class="hero-benefit">
                             <span class="tooltip-trigger" tabindex="0" aria-describedby="hero-benefit-tooltip"
-                                data-tooltip="Based on saving 3 seconds per switch, 400 times a day = ~2 hours saved/week."
+                                data-tooltip="Dedicated shortcuts make familiar app groups easy to reach without scanning a long list."
                                 data-i18n="hero.benefitHighlight" data-i18n-data-tooltip="hero.benefitTooltipShort">
-                                Save hours every week
+                                Stay in your flow
                             </span>
-                            <span id="hero-benefit-tooltip" class="sr-only" data-i18n="hero.benefitTooltipLong">Based on
-                                saving 3 seconds per switch, 400 times a day equals about 2 hours saved per week.</span>
-                            <span data-i18n="hero.benefitSuffix">with app switching tailored to your own workflow.</span>
+                            <span id="hero-benefit-tooltip" class="sr-only" data-i18n="hero.benefitTooltipLong">Dedicated
+                                shortcuts make familiar app groups easy to reach without scanning a long list.</span>
+                            <span data-i18n="hero.benefitSuffix">with familiar shortcuts for the apps you use together.</span>
                         </p>
                         <div class="cta-group">
                             <a href="https://apps.apple.com/us/app/shortcutcycle/id6758281578?mt=12"
@@ -1901,44 +1825,43 @@
             <!-- Comparison Section -->
             <section class="section section-divider" id="comparison">
                 <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 16px;"
-                    data-i18n="comparison.title">The Group Cycling Advantage</h2>
+                    data-i18n="comparison.title">A shortcut for every part of your day</h2>
                 <p class="section-subtitle"
                     style="max-width: 700px; margin: 0 auto 60px auto; color: var(--text-secondary); text-align: center; font-size: 1.1rem; line-height: 1.6;">
-                    <span data-i18n-html="comparison.subtitle">Most switchers force you to search, type, or scan a
-                        history list. ShortcutCycle uses <strong>muscle memory</strong>. Group your apps by context
-                        (e.g., "Browsers", "Code") and cycle them with a single keystroke. It's faster, consistent, and
-                        demands less cognitive load.</span>
+                    <span data-i18n-html="comparison.subtitle">Keep the switchers and launchers you already like.
+                        ShortcutCycle adds a <strong>repeatable path</strong> for the app groups you visit all day, so a
+                        familiar shortcut always takes you back to the right context.</span>
                 </p>
                 <div class="versus-grid">
                     <!-- The Old Way -->
                     <div class="versus-card old-way">
                         <div class="versus-header">
-                            <h3 data-i18n="comparison.old.title">The Old Way</h3>
-                            <p data-i18n="comparison.old.subtitle">Cmd+Tab / AltTab • Raycast / Alfred</p>
+                            <h3 data-i18n="comparison.old.title">Search when you need it</h3>
+                            <p data-i18n="comparison.old.subtitle">Command+Tab • Window switchers • Launchers</p>
                         </div>
                         <ul class="versus-list">
                             <li class="versus-item">
                                 <span class="versus-icon">🔍</span>
                                 <div class="versus-content">
-                                    <strong data-i18n="comparison.old.searchTitle">Search & Scan</strong>
-                                    <span data-i18n="comparison.old.searchBody">Requires reading lists, typing names, or
-                                        scanning icons. Breaks your flow.</span>
+                                    <strong data-i18n="comparison.old.searchTitle">Great for discovery</strong>
+                                    <span data-i18n="comparison.old.searchBody">Browse everything that is open or type a
+                                        name when you are not sure where you are headed.</span>
                                 </div>
                             </li>
                             <li class="versus-item">
                                 <span class="versus-icon">🤯</span>
                                 <div class="versus-content">
-                                    <strong data-i18n="comparison.old.loadTitle">High Cognitive Load</strong>
-                                    <span data-i18n="comparison.old.loadBody">"Is it window 3 or 4? What did I title it?"
-                                        Constant micro-decisions add up.</span>
+                                    <strong data-i18n="comparison.old.loadTitle">More choice each time</strong>
+                                    <span data-i18n="comparison.old.loadBody">Perfect for one-off jumps, but repeated
+                                        workflows still ask you to scan and decide.</span>
                                 </div>
                             </li>
                             <li class="versus-item">
                                 <span class="versus-icon">🐌</span>
                                 <div class="versus-content">
-                                    <strong data-i18n="comparison.old.slowTitle">Slow Inputs</strong>
-                                    <span data-i18n="comparison.old.slowBody">Cmd+Space+T-y-p-e or Cmd+Tab+Tab+Tab. Every
-                                        switch takes seconds.</span>
+                                    <strong data-i18n="comparison.old.slowTitle">The path can change</strong>
+                                    <span data-i18n="comparison.old.slowBody">Window order, history, and search results
+                                        shift as your day moves on.</span>
                                 </div>
                             </li>
                         </ul>
@@ -1946,65 +1869,38 @@
 
                     <!-- ShortcutCycle -->
                     <div class="versus-card new-way">
-                        <div class="card-badge" data-i18n="comparison.new.badge">The Better Way</div>
+                        <div class="card-badge" data-i18n="comparison.new.badge">For repeated workflows</div>
                         <div class="versus-header">
                             <h3 style="color: var(--accent);">ShortcutCycle</h3>
-                            <p data-i18n="comparison.new.subtitle">Context-Aware Group Cycling</p>
+                            <p data-i18n="comparison.new.subtitle">Dedicated shortcuts for app groups</p>
                         </div>
                         <ul class="versus-list">
                             <li class="versus-item">
                                 <span class="versus-icon">⚡️</span>
                                 <div class="versus-content">
-                                    <strong data-i18n="comparison.new.memoryTitle">Muscle Memory</strong>
-                                    <span data-i18n="comparison.new.memoryBody">Your fingers know exactly where "Code" is.
-                                        Zero thought required.</span>
+                                    <strong data-i18n="comparison.new.memoryTitle">A shortcut becomes a place</strong>
+                                    <span data-i18n="comparison.new.memoryBody">Option+1 always means Browsers. Option+2
+                                        always means Dev.</span>
                                 </div>
                             </li>
                             <li class="versus-item">
                                 <span class="versus-icon">🎯</span>
                                 <div class="versus-content">
-                                    <strong data-i18n="comparison.new.scopeTitle">Instant Scope</strong>
-                                    <span data-i18n="comparison.new.scopeBody">Only cycle relevant apps (e.g., just
-                                        browsers). Ignore the noise.</span>
+                                    <strong data-i18n="comparison.new.scopeTitle">Only the apps that belong</strong>
+                                    <span data-i18n="comparison.new.scopeBody">Each shortcut cycles one context, without
+                                        mixing in the rest of your desktop.</span>
                                 </div>
                             </li>
                             <li class="versus-item">
                                 <span class="versus-icon">🎹</span>
                                 <div class="versus-content">
-                                    <strong data-i18n="comparison.new.keyTitle">One Keystroke</strong>
-                                    <span data-i18n="comparison.new.keyBody">Option+1. Done. You're there instantly.</span>
+                                    <strong data-i18n="comparison.new.keyTitle">Tap or hold</strong>
+                                    <span data-i18n="comparison.new.keyBody">Tap to switch instantly, or hold for a quick
+                                        visual check.</span>
                                 </div>
                             </li>
                         </ul>
                     </div>
-                </div>
-            </section>
-
-            <section class="section section-divider release-showcase" id="whats-new"
-                aria-labelledby="release-heading">
-                <div class="release-header">
-                    <p class="release-kicker" data-i18n="release.kicker">New in version 1.10</p>
-                    <h2 id="release-heading" class="release-title" data-i18n="release.title">Set shortcuts with
-                        confidence.</h2>
-                    <p class="release-summary" data-i18n="release.summary">A redesigned recorder catches conflicts
-                        before they interrupt your flow and keeps imports and restores safe.</p>
-                </div>
-                <div class="release-grid">
-                    <article class="release-card">
-                        <h3 data-i18n="release.recorder.title">Focused recording</h3>
-                        <p data-i18n="release.recorder.body">Record Group and Settings Window shortcuts in a dedicated
-                            popover. Existing app commands stay quiet while you choose a combination.</p>
-                    </article>
-                    <article class="release-card">
-                        <h3 data-i18n="release.conflicts.title">Conflict-aware</h3>
-                        <p data-i18n="release.conflicts.body">ShortcutCycle warns about combinations already used by
-                            the app or macOS, while keeping function keys available.</p>
-                    </article>
-                    <article class="release-card">
-                        <h3 data-i18n="release.restores.title">Safer restores</h3>
-                        <p data-i18n="release.restores.body">Version 3 exports and automatic backups are validated
-                            before anything changes, so invalid shortcut data cannot partially replace your setup.</p>
-                    </article>
                 </div>
             </section>
 
@@ -2013,9 +1909,9 @@
                 <div class="features-grid">
                     <div class="feature-card">
                         <span class="feature-icon">💎</span>
-                        <h3 data-i18n="features.noSubscriptions.title">No Subscriptions</h3>
-                        <p data-i18n-html="features.noSubscriptions.body">Pay once, keep it forever. Enjoy a
-                            <strong>lifetime license</strong> for just <strong>$3.99</strong>. No recurring fees, ever.
+                        <h3 data-i18n="features.noSubscriptions.title">One Price, Yours for Good</h3>
+                        <p data-i18n-html="features.noSubscriptions.body">Pay <strong>$3.99</strong> once and keep
+                            ShortcutCycle. No subscription and no recurring fees.
                         </p>
                     </div>
                     <div class="feature-card">
@@ -2027,14 +1923,14 @@
                     <div class="feature-card">
                         <span class="feature-icon">⚡️</span>
                         <h3 data-i18n="features.switching.title">Instant Switching</h3>
-                        <p data-i18n-html="features.switching.body">Quick-tap to switch, or hold to reveal the HUD. With one app in Running Apps Only mode,
-                            the shortcut instantly hides it when it is frontmost.</p>
+                        <p data-i18n-html="features.switching.body">Tap to switch or hold to preview. Set a one-app
+                            group to use running apps only, then use its shortcut to bring the app forward and hide it again.</p>
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">👥</span>
                         <h3 data-i18n="features.profiles.title">Browser Profiles</h3>
-                        <p data-i18n="features.profiles.body">Treat work and personal profiles (Chrome, Firefox, Edge) as separate apps. Cycle through your
-                            work browser without seeing your personal tabs.</p>
+                        <p data-i18n="features.profiles.body">When Chrome, Firefox, or Edge runs profiles as separate
+                            instances, ShortcutCycle keeps work and personal profiles distinct.</p>
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">✨</span>
@@ -2044,45 +1940,42 @@
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">💻</span>
-                        <h3 data-i18n="features.native.title">Native & Fast</h3>
-                        <p data-i18n="features.native.body">Built natively with Swift for macOS. Instant startup and negligible battery impact.
+                        <h3 data-i18n="features.native.title">At Home on Your Mac</h3>
+                        <p data-i18n="features.native.body">Opens quickly, stays out of the Dock, and feels like part of macOS.
                         </p>
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">🚀</span>
-                        <h3 data-i18n="features.launch.title">Per-Group Modes</h3>
-                        <p data-i18n="features.launch.body">Choose Running Apps Only to cycle open apps, or All Apps to launch closed apps when needed.</p>
+                        <h3 data-i18n="features.launch.title">Each Group, Your Way</h3>
+                        <p data-i18n="features.launch.body">Choose whether a group includes only apps already open or can open the next app for you.</p>
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">🔒</span>
                         <h3 data-i18n="features.privacy.title">Private by Design</h3>
-                        <p data-i18n="features.privacy.body">No analytics. No tracking. Your configuration stays on your Mac. Export to JSON to backup
-                            your settings.</p>
+                        <p data-i18n="features.privacy.body">No analytics or tracking. Your groups and shortcuts stay on your Mac, and you can export a copy whenever you want.</p>
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">🛟</span>
                         <h3 data-i18n="features.backups.title">Automatic Backups</h3>
-                        <p data-i18n="features.backups.body">Mistakes happen. Configuration snapshots are saved automatically, letting you restore
-                            previous setups in seconds.</p>
+                        <p data-i18n="features.backups.body">ShortcutCycle quietly saves earlier setups, so an accidental change is easy to undo.</p>
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">🤖</span>
-                        <h3 data-i18n="features.automation.title">Automation Ready</h3>
-                        <p data-i18n-html="features.automation.body">Control ShortcutCycle with the <code>shortcutcycle://</code> URL scheme from Apple
-                            Shortcuts, Alfred, Raycast, or Keyboard Maestro. <a
+                        <h3 data-i18n="features.automation.title">Fits Your Automation</h3>
+                        <p data-i18n-html="features.automation.body">Connect your groups to Apple Shortcuts, Alfred,
+                            Raycast, Keyboard Maestro, or shell scripts. <a
                                 href="https://github.com/xcv58/ShortcutCycle/blob/master/URL_SCHEME.md"
-                                target="_blank" rel="noopener noreferrer">See URL command docs</a>.</p>
+                                target="_blank" rel="noopener noreferrer">Explore automation commands</a>.</p>
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">🌍</span>
-                        <h3 data-i18n="features.global.title">Global Ready</h3>
-                        <p data-i18n="features.global.body">Fully localized interface in 15 languages. Productivity that speaks your language.</p>
+                        <h3 data-i18n="features.global.title">Your Language, Built In</h3>
+                        <p data-i18n="features.global.body">Use ShortcutCycle in any of 15 supported languages.</p>
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">♿️</span>
-                        <h3 data-i18n="features.accessibility.title">Accessible by Design</h3>
-                        <p data-i18n="features.accessibility.body">VoiceOver-friendly controls, keyboard navigation, Dark Interface, Sufficient Contrast, and
-                            Reduced Motion support.</p>
+                        <h3 data-i18n="features.accessibility.title">More Ways to Work</h3>
+                        <p data-i18n="features.accessibility.body">Works with VoiceOver, Voice Control, keyboard navigation, Reduce Motion, and your preferred appearance.</p>
                     </div>
                 </div>
             </section>
@@ -2090,7 +1983,7 @@
             <!-- Video Demo Section -->
             <section class="section section-divider video-section" aria-labelledby="video-heading">
                 <h2 id="video-heading" data-i18n="videos.title">See It In Action</h2>
-                <p class="section-subtitle" data-i18n="videos.subtitle">Watch how ShortcutCycle transforms your workflow</p>
+                <p class="section-subtitle" data-i18n="videos.subtitle">From the first shortcut to your everyday switching rhythm</p>
 
                 <div class="video-grid">
                     <div class="video-card">
@@ -2132,16 +2025,16 @@
                         <h3 class="faq-group-title" data-i18n="faq.gettingStarted.title">Getting Started</h3>
                         <details class="faq-item">
                             <summary data-i18n="faq.gettingStarted.createQuestion">How do I create a group?</summary>
-                            <p data-i18n-html="faq.gettingStarted.createAnswer">It's simple. Open the settings, click the <strong>+</strong> button to create a new group
-                                (like "Social" or "Dev"), and assign a global hotkey (e.g., <code>Option+1</code>). Then,
-                                just drag and drop the apps you want into that group.</p>
+                            <p data-i18n-html="faq.gettingStarted.createAnswer">Open Settings, click <strong>+</strong>,
+                                and name a group such as "Social" or "Dev." Add apps that are running now or browse for
+                                others, then press the shortcut you want, such as <code>Option+1</code>.</p>
                         </details>
 
                         <details class="faq-item">
                             <summary data-i18n="faq.gettingStarted.shortcutsQuestion">Can I customize the shortcuts?</summary>
-                            <p data-i18n="faq.gettingStarted.shortcutsAnswer">Yes. The recorder suggests recent
-                                combinations and warns when one is already used by ShortcutCycle or macOS. Ordinary
-                                keys require Command, Control, or Option; function keys can be used on their own.</p>
+                            <p data-i18n="faq.gettingStarted.shortcutsAnswer">Yes. Press the combination you want.
+                                ShortcutCycle suggests recent choices and warns if one is already in use. Add Command,
+                                Control, or Option to letter and number keys; function keys can work on their own.</p>
                         </details>
 
                         <details class="faq-item">
@@ -2151,12 +2044,11 @@
                     </div>
 
                     <div class="faq-group">
-                        <h3 class="faq-group-title" data-i18n="faq.automation.title">Automation &amp; URL Commands</h3>
+                        <h3 class="faq-group-title" data-i18n="faq.automation.title">Automation</h3>
                         <details class="faq-item">
                             <summary data-i18n="faq.automation.toolsQuestion">Can I automate ShortcutCycle with Shortcuts, Alfred, or Raycast?</summary>
-                            <p class="faq-answer-intro" data-i18n-html="faq.automation.toolsAnswerIntro">Yes. ShortcutCycle supports the custom URL scheme
-                                <code>shortcutcycle://</code>, so you can trigger actions from automation tools. Example
-                                command:</p>
+                            <p class="faq-answer-intro" data-i18n-html="faq.automation.toolsAnswerIntro">Yes. Connect a
+                                group to the automation tools you already use. For example:</p>
                             <div class="faq-command-list">
                                 <div class="faq-command">
                                     <code>open "shortcutcycle://cycle?group=Browsers"</code>
@@ -2167,12 +2059,12 @@
                             <p class="faq-answer-tail"><a
                                     href="https://github.com/xcv58/ShortcutCycle/blob/master/URL_SCHEME.md"
                                     target="_blank" rel="noopener noreferrer"
-                                    data-i18n="faq.automation.docsLink">See full URL command docs</a>.</p>
+                                    data-i18n="faq.automation.docsLink">Explore all automation commands</a>.</p>
                         </details>
 
                         <details class="faq-item">
-                            <summary data-i18n="faq.automation.openQuestion">Can URL commands open a specific settings tab or the backup browser?</summary>
-                            <p class="faq-answer-intro" data-i18n-html="faq.automation.openAnswerIntro">Yes. Use these <code>open</code> commands:</p>
+                            <summary data-i18n="faq.automation.openQuestion">Can automation open Settings or my backups?</summary>
+                            <p class="faq-answer-intro" data-i18n-html="faq.automation.openAnswerIntro">Yes. Use these commands:</p>
                             <div class="faq-command-list">
                                 <div class="faq-command">
                                     <code>open "shortcutcycle://open-settings?tab=groups"</code>
@@ -2193,13 +2085,13 @@
                             <p class="faq-answer-tail"><a
                                     href="https://github.com/xcv58/ShortcutCycle/blob/master/URL_SCHEME.md"
                                     target="_blank" rel="noopener noreferrer"
-                                    data-i18n="faq.automation.docsLink">See full URL command docs</a>.</p>
+                                    data-i18n="faq.automation.docsLink">Explore all automation commands</a>.</p>
                         </details>
 
                         <details class="faq-item">
-                            <summary data-i18n="faq.automation.importQuestion">Can URL commands import/export settings or restore backups?</summary>
-                            <p class="faq-answer-intro" data-i18n="faq.automation.importAnswerIntro">Yes. You can export/import settings by path and restore backups by
-                                latest, index, name, or path. Example command:</p>
+                            <summary data-i18n="faq.automation.importQuestion">Can I automate setup transfers or backup restores?</summary>
+                            <p class="faq-answer-intro" data-i18n="faq.automation.importAnswerIntro">Yes. Automation can
+                                save or load a setup and bring back a backup. For example:</p>
                             <div class="faq-command-list">
                                 <div class="faq-command">
                                     <code>open "shortcutcycle://restore-backup?index=2"</code>
@@ -2207,11 +2099,11 @@
                                         data-copy-text='open "shortcutcycle://restore-backup?index=2"' data-i18n="actions.copy">Copy</button>
                                 </div>
                             </div>
-                            <p class="faq-answer-tail"><span data-i18n="faq.automation.importAnswerTail">Version 3
-                                    imports and restores are validated before they replace your current groups and
-                                    settings.</span>
+                            <p class="faq-answer-tail"><span data-i18n="faq.automation.importAnswerTail">ShortcutCycle
+                                    checks an incoming setup before replacing anything. If it cannot be used safely,
+                                    your current groups and settings stay unchanged.</span>
                                 <a href="https://github.com/xcv58/ShortcutCycle/blob/master/URL_SCHEME.md" target="_blank"
-                                    rel="noopener noreferrer" data-i18n="faq.automation.docsLink">See full URL command docs</a>.
+                                    rel="noopener noreferrer" data-i18n="faq.automation.docsLink">Explore all automation commands</a>.
                             </p>
                         </details>
                     </div>
@@ -2219,17 +2111,17 @@
                     <div class="faq-group">
                         <h3 class="faq-group-title" data-i18n="faq.privacy.title">Backups &amp; Privacy</h3>
                         <details class="faq-item">
-                            <summary data-i18n="faq.privacy.backupQuestion">Can I backup my configuration?</summary>
-                            <p data-i18n="faq.privacy.backupAnswer">Yes! ShortcutCycle automatically creates backups using GFS (Grandfather-Father-Son)
-                                retention. You can also manually export your entire configuration to a JSON file for
-                                safekeeping or to transfer to another Mac.</p>
+                            <summary data-i18n="faq.privacy.backupQuestion">Can I back up my setup?</summary>
+                            <p data-i18n="faq.privacy.backupAnswer">Yes. ShortcutCycle automatically keeps a useful
+                                history of earlier setups. You can also export a copy whenever you want to keep one
+                                elsewhere or move it to another Mac.</p>
                         </details>
 
                         <details class="faq-item">
                             <summary data-i18n="faq.privacy.privateQuestion">Is my data private?</summary>
-                            <p data-i18n-html="faq.privacy.privateAnswer">Absolutely. ShortcutCycle runs entirely on your Mac with <strong>zero analytics or
-                                    tracking</strong>. Your app groups and shortcuts are stored locally in your user
-                                defaults. We never see or collect any of your data.</p>
+                            <p data-i18n-html="faq.privacy.privateAnswer">Yes. ShortcutCycle runs entirely on your Mac
+                                with <strong>no analytics or tracking</strong>. Your app groups and shortcuts stay on
+                                your Mac; we never see or collect them.</p>
                         </details>
                     </div>
 
@@ -2248,9 +2140,9 @@
 
                         <details class="faq-item">
                             <summary data-i18n="faq.compatibility.windowQuestion">Why doesn't ShortcutCycle switch to a specific window?</summary>
-                            <p data-i18n="faq.compatibility.windowAnswer">ShortcutCycle is designed to be privacy-first. Reliable per-window switching would require much
-                                broader accessibility access to control other apps in deeper ways. We intentionally keep
-                                permissions narrower and focus on fast, dependable app switching.</p>
+                            <p data-i18n="faq.compatibility.windowAnswer">ShortcutCycle switches apps rather than
+                                individual windows. That keeps its permissions limited while making app-group switching
+                                fast and dependable.</p>
                         </details>
 
                         <details class="faq-item">
@@ -2353,10 +2245,10 @@
                 hero: {
                     title: 'Cycle apps by group, instantly.',
                     subtitle: 'Stop endlessly tabbing. Group apps by context—Web, Code, Social—and cycle with dedicated hotkeys.',
-                    benefitHighlight: 'Save hours every week',
-                    benefitTooltipShort: 'Based on saving 3 seconds per switch, 400 times a day = ~2 hours saved/week.',
-                    benefitTooltipLong: 'Based on saving 3 seconds per switch, 400 times a day equals about 2 hours saved per week.',
-                    benefitSuffix: 'with app switching tailored to your own workflow.',
+                    benefitHighlight: 'Stay in your flow',
+                    benefitTooltipShort: 'Dedicated shortcuts make familiar app groups easy to reach without scanning a long list.',
+                    benefitTooltipLong: 'Dedicated shortcuts make familiar app groups easy to reach without scanning a long list.',
+                    benefitSuffix: 'with familiar shortcuts for the apps you use together.',
                     appStoreAria: 'Download ShortcutCycle on the App Store',
                     appStoreAlt: 'Download on the App Store',
                     videoAria: 'Demo: quick app switching with ShortcutCycle'
@@ -2382,51 +2274,34 @@
                     menuBar: 'Menu Bar'
                 },
                 comparison: {
-                    title: 'The Group Cycling Advantage',
-                    subtitle: 'Most switchers force you to search, type, or scan a history list. ShortcutCycle uses <strong>muscle memory</strong>. Group your apps by context (e.g., "Browsers", "Code") and cycle them with a single keystroke. It\'s faster, consistent, and demands less cognitive load.',
+                    title: 'A shortcut for every part of your day',
+                    subtitle: 'Keep the switchers and launchers you already like. ShortcutCycle adds a <strong>repeatable path</strong> for the app groups you visit all day, so a familiar shortcut always takes you back to the right context.',
                     old: {
-                        title: 'The Old Way',
-                        subtitle: 'Cmd+Tab / AltTab • Raycast / Alfred',
-                        searchTitle: 'Search & Scan',
-                        searchBody: 'Requires reading lists, typing names, or scanning icons. Breaks your flow.',
-                        loadTitle: 'High Cognitive Load',
-                        loadBody: '"Is it window 3 or 4? What did I title it?" Constant micro-decisions add up.',
-                        slowTitle: 'Slow Inputs',
-                        slowBody: 'Cmd+Space+T-y-p-e or Cmd+Tab+Tab+Tab. Every switch takes seconds.'
+                        title: 'Search when you need it',
+                        subtitle: 'Command+Tab • Window switchers • Launchers',
+                        searchTitle: 'Great for discovery',
+                        searchBody: 'Browse everything that is open or type a name when you are not sure where you are headed.',
+                        loadTitle: 'More choice each time',
+                        loadBody: 'Perfect for one-off jumps, but repeated workflows still ask you to scan and decide.',
+                        slowTitle: 'The path can change',
+                        slowBody: 'Window order, history, and search results shift as your day moves on.'
                     },
                     new: {
-                        badge: 'The Better Way',
-                        subtitle: 'Context-Aware Group Cycling',
-                        memoryTitle: 'Muscle Memory',
-                        memoryBody: 'Your fingers know exactly where "Code" is. Zero thought required.',
-                        scopeTitle: 'Instant Scope',
-                        scopeBody: 'Only cycle relevant apps (e.g., just browsers). Ignore the noise.',
-                        keyTitle: 'One Keystroke',
-                        keyBody: 'Option+1. Done. You\'re there instantly.'
-                    }
-                },
-                release: {
-                    kicker: 'New in version 1.10',
-                    title: 'Set shortcuts with confidence.',
-                    summary: 'A redesigned recorder catches conflicts before they interrupt your flow and keeps imports and restores safe.',
-                    recorder: {
-                        title: 'Focused recording',
-                        body: 'Record Group and Settings Window shortcuts in a dedicated popover. Existing app commands stay quiet while you choose a combination.'
-                    },
-                    conflicts: {
-                        title: 'Conflict-aware',
-                        body: 'ShortcutCycle warns about combinations already used by the app or macOS, while keeping function keys available.'
-                    },
-                    restores: {
-                        title: 'Safer restores',
-                        body: 'Version 3 exports and automatic backups are validated before anything changes, so invalid shortcut data cannot partially replace your setup.'
+                        badge: 'For repeated workflows',
+                        subtitle: 'Dedicated shortcuts for app groups',
+                        memoryTitle: 'A shortcut becomes a place',
+                        memoryBody: 'Option+1 always means Browsers. Option+2 always means Dev.',
+                        scopeTitle: 'Only the apps that belong',
+                        scopeBody: 'Each shortcut cycles one context, without mixing in the rest of your desktop.',
+                        keyTitle: 'Tap or hold',
+                        keyBody: 'Tap to switch instantly, or hold for a quick visual check.'
                     }
                 },
                 features: {
                     heading: 'Features',
                     noSubscriptions: {
-                        title: 'No Subscriptions',
-                        body: 'Pay once, keep it forever. Enjoy a <strong>lifetime license</strong> for just <strong>$3.99</strong>. No recurring fees, ever.'
+                        title: 'One Price, Yours for Good',
+                        body: 'Pay <strong>$3.99</strong> once and keep ShortcutCycle. No subscription and no recurring fees.'
                     },
                     groups: {
                         title: 'Context Groups',
@@ -2434,48 +2309,48 @@
                     },
                     switching: {
                         title: 'Instant Switching',
-                        body: 'Quick-tap to switch, or hold to reveal the HUD. With one app in Running Apps Only mode, the shortcut instantly hides it when it is frontmost.'
+                        body: 'Tap to switch or hold to preview. Set a one-app group to use running apps only, then use its shortcut to bring the app forward and hide it again.'
                     },
                     profiles: {
                         title: 'Browser Profiles',
-                        body: 'Treat work and personal profiles (Chrome, Firefox, Edge) as separate apps. Cycle through your work browser without seeing your personal tabs.'
+                        body: 'When Chrome, Firefox, or Edge runs profiles as separate instances, ShortcutCycle keeps work and personal profiles distinct.'
                     },
                     hud: {
                         title: 'Beautiful HUD',
                         body: 'A native, lightweight overlay shows your target before you switch. Know exactly where you\'re landing.'
                     },
                     native: {
-                        title: 'Native & Fast',
-                        body: 'Built natively with Swift for macOS. Instant startup and negligible battery impact.'
+                        title: 'At Home on Your Mac',
+                        body: 'Opens quickly, stays out of the Dock, and feels like part of macOS.'
                     },
                     launch: {
-                        title: 'Per-Group Modes',
-                        body: 'Choose Running Apps Only to cycle open apps, or All Apps to launch closed apps when needed.'
+                        title: 'Each Group, Your Way',
+                        body: 'Choose whether a group includes only apps already open or can open the next app for you.'
                     },
                     privacy: {
                         title: 'Private by Design',
-                        body: 'No analytics. No tracking. Your configuration stays on your Mac. Export to JSON to backup your settings.'
+                        body: 'No analytics or tracking. Your groups and shortcuts stay on your Mac, and you can export a copy whenever you want.'
                     },
                     backups: {
                         title: 'Automatic Backups',
-                        body: 'Mistakes happen. Configuration snapshots are saved automatically, letting you restore previous setups in seconds.'
+                        body: 'ShortcutCycle quietly saves earlier setups, so an accidental change is easy to undo.'
                     },
                     automation: {
-                        title: 'Automation Ready',
-                        body: 'Control ShortcutCycle with the <code>shortcutcycle://</code> URL scheme from Apple Shortcuts, Alfred, Raycast, or Keyboard Maestro. <a href="https://github.com/xcv58/ShortcutCycle/blob/master/URL_SCHEME.md" target="_blank" rel="noopener noreferrer">See URL command docs</a>.'
+                        title: 'Fits Your Automation',
+                        body: 'Connect your groups to Apple Shortcuts, Alfred, Raycast, Keyboard Maestro, or shell scripts. <a href="https://github.com/xcv58/ShortcutCycle/blob/master/URL_SCHEME.md" target="_blank" rel="noopener noreferrer">Explore automation commands</a>.'
                     },
                     global: {
-                        title: 'Global Ready',
-                        body: 'Fully localized interface in 15 languages. Productivity that speaks your language.'
+                        title: 'Your Language, Built In',
+                        body: 'Use ShortcutCycle in any of 15 supported languages.'
                     },
                     accessibility: {
-                        title: 'Accessible by Design',
-                        body: 'VoiceOver-friendly controls, keyboard navigation, Dark Interface, Sufficient Contrast, and Reduced Motion support.'
+                        title: 'More Ways to Work',
+                        body: 'Works with VoiceOver, Voice Control, keyboard navigation, Reduce Motion, and your preferred appearance.'
                     }
                 },
                 videos: {
                     title: 'See It In Action',
-                    subtitle: 'Watch how ShortcutCycle transforms your workflow',
+                    subtitle: 'From the first shortcut to your everyday switching rhythm',
                     unsupported: 'Your browser does not support the video tag.',
                     quick: {
                         title: 'Quick App Switching',
@@ -2497,29 +2372,29 @@
                     gettingStarted: {
                         title: 'Getting Started',
                         createQuestion: 'How do I create a group?',
-                        createAnswer: 'It\'s simple. Open the settings, click the <strong>+</strong> button to create a new group (like "Social" or "Dev"), and assign a global hotkey (e.g., <code>Option+1</code>). Then, just drag and drop the apps you want into that group.',
+                        createAnswer: 'Open Settings, click <strong>+</strong>, and name a group such as "Social" or "Dev." Add apps that are running now or browse for others, then press the shortcut you want, such as <code>Option+1</code>.',
                         shortcutsQuestion: 'Can I customize the shortcuts?',
-                        shortcutsAnswer: 'Yes. The recorder suggests recent combinations and warns when one is already used by ShortcutCycle or macOS. Ordinary keys require Command, Control, or Option; function keys can be used on their own.',
+                        shortcutsAnswer: 'Yes. Press the combination you want. ShortcutCycle suggests recent choices and warns if one is already in use. Add Command, Control, or Option to letter and number keys; function keys can work on their own.',
                         closedAppQuestion: 'What happens if an app isn\'t open?',
                         closedAppAnswer: 'The group\'s mode decides. <strong>Running Apps Only</strong> skips closed apps while any group app is running; if none are running, it launches the first app. <strong>All Apps</strong> launches a closed app when selected.'
                     },
                     automation: {
-                        title: 'Automation & URL Commands',
+                        title: 'Automation',
                         toolsQuestion: 'Can I automate ShortcutCycle with Shortcuts, Alfred, or Raycast?',
-                        toolsAnswerIntro: 'Yes. ShortcutCycle supports the custom URL scheme <code>shortcutcycle://</code>, so you can trigger actions from automation tools. Example command:',
-                        docsLink: 'See full URL command docs',
-                        openQuestion: 'Can URL commands open a specific settings tab or the backup browser?',
-                        openAnswerIntro: 'Yes. Use these <code>open</code> commands:',
-                        importQuestion: 'Can URL commands import/export settings or restore backups?',
-                        importAnswerIntro: 'Yes. You can export/import settings by path and restore backups by latest, index, name, or path. Example command:',
-                        importAnswerTail: 'Version 3 imports and restores are validated before they replace your current groups and settings.'
+                        toolsAnswerIntro: 'Yes. Connect a group to the automation tools you already use. For example:',
+                        docsLink: 'Explore all automation commands',
+                        openQuestion: 'Can automation open Settings or my backups?',
+                        openAnswerIntro: 'Yes. Use these commands:',
+                        importQuestion: 'Can I automate setup transfers or backup restores?',
+                        importAnswerIntro: 'Yes. Automation can save or load a setup and bring back a backup. For example:',
+                        importAnswerTail: 'ShortcutCycle checks an incoming setup before replacing anything. If it cannot be used safely, your current groups and settings stay unchanged.'
                     },
                     privacy: {
                         title: 'Backups & Privacy',
-                        backupQuestion: 'Can I backup my configuration?',
-                        backupAnswer: 'Yes! ShortcutCycle automatically creates backups using GFS (Grandfather-Father-Son) retention. You can also manually export your entire configuration to a JSON file for safekeeping or to transfer to another Mac.',
+                        backupQuestion: 'Can I back up my setup?',
+                        backupAnswer: 'Yes. ShortcutCycle automatically keeps a useful history of earlier setups. You can also export a copy whenever you want to keep one elsewhere or move it to another Mac.',
                         privateQuestion: 'Is my data private?',
-                        privateAnswer: 'Absolutely. ShortcutCycle runs entirely on your Mac with <strong>zero analytics or tracking</strong>. Your app groups and shortcuts are stored locally in your user defaults. We never see or collect any of your data.'
+                        privateAnswer: 'Yes. ShortcutCycle runs entirely on your Mac with <strong>no analytics or tracking</strong>. Your app groups and shortcuts stay on your Mac; we never see or collect them.'
                     },
                     compatibility: {
                         title: 'Compatibility & Project',
@@ -2528,7 +2403,7 @@
                         monitorsQuestion: 'Does it work with multiple monitors?',
                         monitorsAnswer: 'Yes, ShortcutCycle works seamlessly across multiple monitors. The HUD overlay appears on your active display, and app switching works regardless of which monitor the app is on.',
                         windowQuestion: 'Why doesn\'t ShortcutCycle switch to a specific window?',
-                        windowAnswer: 'ShortcutCycle is designed to be privacy-first. Reliable per-window switching would require much broader accessibility access to control other apps in deeper ways. We intentionally keep permissions narrower and focus on fast, dependable app switching.',
+                        windowAnswer: 'ShortcutCycle switches apps rather than individual windows. That keeps its permissions limited while making app-group switching fast and dependable.',
                         openSourceQuestion: 'Is it open source?',
                         openSourceAnswer: 'Yes! ShortcutCycle is <strong>100% open source</strong> under the MIT license. You can view the code, contribute, or build it yourself on <a href="https://github.com/xcv58/ShortcutCycle" target="_blank" rel="noopener noreferrer">GitHub</a>.'
                     }
@@ -2578,10 +2453,10 @@
                 hero: {
                     title: '按分组，瞬间切换 App。',
                     subtitle: '不用再反复 Tab。把 App 按场景分组，比如网页、开发、社交，再用专属快捷键轮换。',
-                    benefitHighlight: '每周省下好几个小时',
-                    benefitTooltipShort: '按每次切换省 3 秒、每天切换 400 次估算，约等于每周省下 2 小时。',
-                    benefitTooltipLong: '按每次切换省 3 秒、每天切换 400 次估算，约等于每周省下 2 小时。',
-                    benefitSuffix: '让 App 切换贴合你自己的工作流。',
+                    benefitHighlight: '保持工作节奏',
+                    benefitTooltipShort: '专属快捷键让常用 App 分组触手可及，不必再浏览长长的列表。',
+                    benefitTooltipLong: '专属快捷键让常用 App 分组触手可及，不必再浏览长长的列表。',
+                    benefitSuffix: '用熟悉的快捷键切换经常一起使用的 App。',
                     appStoreAria: '在 App Store 下载 ShortcutCycle',
                     appStoreAlt: '在 App Store 下载',
                     videoAria: '演示：使用 ShortcutCycle 快速切换 App'
@@ -2607,51 +2482,34 @@
                     menuBar: '菜单栏'
                 },
                 comparison: {
-                    title: '分组轮换的优势',
-                    subtitle: '大多数切换工具需要你搜索、输入或扫一遍历史列表。ShortcutCycle 利用<strong>肌肉记忆</strong>。按场景给 App 分组（例如“浏览器”“开发”），一个快捷键就能轮换。更快、更稳定，也更省心。',
+                    title: '为一天中的每种状态留一个快捷键',
+                    subtitle: '继续使用你喜欢的切换器和启动器。ShortcutCycle 为每天反复访问的 App 分组提供<strong>固定路径</strong>，让熟悉的快捷键始终带你回到正确场景。',
                     old: {
-                        title: '传统方式',
-                        subtitle: 'Cmd+Tab / AltTab • Raycast / Alfred',
-                        searchTitle: '搜索和扫视',
-                        searchBody: '需要读列表、输入名称、扫图标，很容易打断思路。',
-                        loadTitle: '认知负担高',
-                        loadBody: '“是第 3 个还是第 4 个窗口？我标题怎么写的？”这些小判断会不断累积。',
-                        slowTitle: '输入步骤多',
-                        slowBody: 'Cmd+Space+T-y-p-e 或 Cmd+Tab+Tab+Tab，每次切换都要多花几秒。'
+                        title: '需要时再搜索',
+                        subtitle: 'Command+Tab • 窗口切换器 • 启动器',
+                        searchTitle: '适合探索',
+                        searchBody: '不确定要去哪里时，可以浏览所有已打开的内容，或输入名称查找。',
+                        loadTitle: '每次都有更多选择',
+                        loadBody: '很适合偶尔跳转，但重复工作流仍需要你查看列表并做决定。',
+                        slowTitle: '路径会变化',
+                        slowBody: '窗口顺序、历史记录和搜索结果会随着一天的工作不断变化。'
                     },
                     new: {
-                        badge: '更好的方式',
-                        subtitle: '按场景分组轮换',
-                        memoryTitle: '肌肉记忆',
-                        memoryBody: '手指知道“开发”在哪里，几乎不用想。',
-                        scopeTitle: '范围明确',
-                        scopeBody: '只在相关 App 之间轮换（比如只轮换浏览器），噪音自动隔开。',
-                        keyTitle: '一个快捷键',
-                        keyBody: 'Option+1，完成。马上到位。'
-                    }
-                },
-                release: {
-                    kicker: '1.10 版本新功能',
-                    title: '更安心地设置快捷键。',
-                    summary: '重新设计的录制器会提前发现冲突，并让导入与恢复过程更安全，不打断你的工作流。',
-                    recorder: {
-                        title: '专注录制',
-                        body: '在专用弹窗中录制分组和设置窗口快捷键。选择组合时，现有 App 命令不会被触发。'
-                    },
-                    conflicts: {
-                        title: '主动检测冲突',
-                        body: '如果组合已被 ShortcutCycle 或 macOS 使用，App 会提前提醒，同时继续支持功能键。'
-                    },
-                    restores: {
-                        title: '恢复更安全',
-                        body: '版本 3 导出文件和自动备份会在任何更改发生前完成验证，无效快捷键数据不会只替换一部分设置。'
+                        badge: '适合重复工作流',
+                        subtitle: 'App 分组专属快捷键',
+                        memoryTitle: '一个快捷键，一个场景',
+                        memoryBody: 'Option+1 永远是浏览器，Option+2 永远是开发工具。',
+                        scopeTitle: '只看相关 App',
+                        scopeBody: '每个快捷键只轮换一个场景，不会混入桌面上的其他 App。',
+                        keyTitle: '轻按或按住',
+                        keyBody: '轻按立即切换，按住则先快速确认目标。'
                     }
                 },
                 features: {
                     heading: '功能',
                     noSubscriptions: {
-                        title: '无需订阅',
-                        body: '一次购买，永久使用。只需 <strong>$3.99</strong>，获得<strong>终身许可</strong>。没有任何周期性费用。'
+                        title: '一次付费，永久使用',
+                        body: '只需一次支付 <strong>$3.99</strong>，ShortcutCycle 就一直属于你。没有订阅，也没有周期性费用。'
                     },
                     groups: {
                         title: '场景分组',
@@ -2659,48 +2517,48 @@
                     },
                     switching: {
                         title: '即时切换',
-                        body: '快速轻按即可切换，按住则显示 HUD。在“仅运行中的 App”模式下只有一个 App 时，如果它位于最前方，快捷键会立即将它隐藏。'
+                        body: '轻按即可切换，按住则先预览。把单个 App 的分组设为只使用运行中的 App，即可用同一个快捷键显示或隐藏它。'
                     },
                     profiles: {
                         title: '浏览器配置文件',
-                        body: '把工作和个人配置文件（Chrome、Firefox、Edge）当作不同 App。切到工作浏览器时，不会看到个人标签页。'
+                        body: '当 Chrome、Firefox 或 Edge 把不同配置文件作为独立实例运行时，ShortcutCycle 会将工作和个人配置文件分开显示。'
                     },
                     hud: {
                         title: '漂亮的 HUD',
                         body: '原生、轻量的浮层会在切换前显示目标，让你清楚知道下一步会到哪里。'
                     },
                     native: {
-                        title: '原生又轻快',
-                        body: '使用 Swift 为 macOS 原生打造。启动快，对电池影响很小。'
+                        title: '自然融入 Mac',
+                        body: '启动迅速，不占用 Dock，用起来就像 macOS 自带的一部分。'
                     },
                     launch: {
-                        title: '每组独立模式',
-                        body: '每个分组都可以选择“仅运行中的 App”，或选择“所有 App”并在需要时启动尚未打开的 App。'
+                        title: '每个分组都按你的方式',
+                        body: '你可以让分组只包含已打开的 App，也可以让它在需要时替你打开下一个 App。'
                     },
                     privacy: {
                         title: '隐私优先',
-                        body: '没有分析统计，没有跟踪。你的配置留在自己的 Mac 上，也可以导出为 JSON 备份。'
+                        body: '没有分析统计，也没有跟踪。分组和快捷键都留在你的 Mac 上，并可随时导出副本。'
                     },
                     backups: {
                         title: '自动备份',
-                        body: '设置难免会改错。ShortcutCycle 会自动保存配置快照，让你几秒内恢复到之前的设置。'
+                        body: 'ShortcutCycle 会安静地保存之前的设置，误改时可以轻松恢复。'
                     },
                     automation: {
-                        title: '支持自动化',
-                        body: '可以通过 <code>shortcutcycle://</code> URL Scheme，用快捷指令、Alfred、Raycast 或 Keyboard Maestro 控制 ShortcutCycle。<a href="https://github.com/xcv58/ShortcutCycle/blob/master/URL_SCHEME.md" target="_blank" rel="noopener noreferrer">查看 URL 命令文档</a>。'
+                        title: '融入你的自动化',
+                        body: '把分组连接到快捷指令、Alfred、Raycast、Keyboard Maestro 或 Shell 脚本。<a href="https://github.com/xcv58/ShortcutCycle/blob/master/URL_SCHEME.md" target="_blank" rel="noopener noreferrer">查看自动化命令</a>。'
                     },
                     global: {
-                        title: '多语言界面',
-                        body: 'App 内界面已本地化为 15 种语言。让效率工具使用你的语言。'
+                        title: '内置你的语言',
+                        body: 'ShortcutCycle 支持 15 种界面语言。'
                     },
                     accessibility: {
-                        title: '无障碍设计',
-                        body: '提供适合 VoiceOver 的控件与键盘导航，并支持深色界面、充足对比度和减弱动态效果。'
+                        title: '适合更多使用方式',
+                        body: '支持 VoiceOver、语音控制、键盘导航、减弱动态效果和你偏好的外观。'
                     }
                 },
                 videos: {
                     title: '看看它怎么工作',
-                    subtitle: '看看 ShortcutCycle 如何改变你的切换流程',
+                    subtitle: '从第一个快捷键，到每天自然流畅的切换节奏',
                     unsupported: '你的浏览器不支持播放此视频。',
                     quick: {
                         title: '快速切换 App',
@@ -2722,29 +2580,29 @@
                     gettingStarted: {
                         title: '开始使用',
                         createQuestion: '怎样创建分组？',
-                        createAnswer: '很简单。打开设置，点 <strong>+</strong> 创建一个新分组（比如“社交”或“开发”），再分配一个全局快捷键（例如 <code>Option+1</code>）。然后把想要的 App 拖进这个分组就可以。',
+                        createAnswer: '打开设置，点 <strong>+</strong>，然后给分组起个名字，比如“社交”或“开发”。添加当前正在运行的 App，或浏览选择其他 App，再按下你想使用的快捷键，例如 <code>Option+1</code>。',
                         shortcutsQuestion: '可以自定义快捷键吗？',
-                        shortcutsAnswer: '可以。录制器会推荐最近使用的组合，并在组合已被 ShortcutCycle 或 macOS 使用时提醒你。普通按键需要搭配 Command、Control 或 Option；功能键可以单独使用。',
+                        shortcutsAnswer: '可以。直接按下想使用的组合即可。ShortcutCycle 会推荐最近的选择，并在组合已被占用时提醒你。字母和数字键需要搭配 Command、Control 或 Option；功能键可以单独使用。',
                         closedAppQuestion: '如果 App 没有打开会怎样？',
                         closedAppAnswer: '这取决于分组的循环模式。<strong>仅运行中的应用</strong>会在组内有应用正在运行时跳过未运行的应用；如果没有应用正在运行，则会启动第一个应用。<strong>所有应用（必要时打开）</strong>会在选中未运行的应用时将其启动。'
                     },
                     automation: {
-                        title: '自动化和 URL 命令',
+                        title: '自动化',
                         toolsQuestion: '可以用快捷指令、Alfred 或 Raycast 自动化 ShortcutCycle 吗？',
-                        toolsAnswerIntro: '可以。ShortcutCycle 支持自定义 URL Scheme <code>shortcutcycle://</code>，所以你可以从自动化工具触发操作。示例命令：',
-                        docsLink: '查看完整 URL 命令文档',
-                        openQuestion: 'URL 命令可以打开指定设置页或备份浏览器吗？',
-                        openAnswerIntro: '可以。使用这些 <code>open</code> 命令：',
-                        importQuestion: 'URL 命令可以导入/导出设置或恢复备份吗？',
-                        importAnswerIntro: '可以。你可以通过路径导入/导出设置，也可以按最新、序号、名称或路径恢复备份。示例命令：',
-                        importAnswerTail: '版本 3 导入和恢复会先完成验证，再替换当前分组和设置。'
+                        toolsAnswerIntro: '可以。把分组连接到你已经在使用的自动化工具。例如：',
+                        docsLink: '查看全部自动化命令',
+                        openQuestion: '自动化可以打开设置或备份吗？',
+                        openAnswerIntro: '可以。使用以下命令：',
+                        importQuestion: '可以自动迁移设置或恢复备份吗？',
+                        importAnswerIntro: '可以。自动化可以保存或载入设置，也可以恢复备份。例如：',
+                        importAnswerTail: 'ShortcutCycle 会先检查导入的设置，再替换任何内容。如果无法安全使用，你当前的分组和设置会保持不变。'
                     },
                     privacy: {
                         title: '备份和隐私',
-                        backupQuestion: '可以备份配置吗？',
-                        backupAnswer: '可以。ShortcutCycle 会使用 GFS（祖父-父-子）保留策略自动创建备份。你也可以手动把完整配置导出为 JSON 文件，方便保存或迁移到另一台 Mac。',
+                        backupQuestion: '可以备份我的设置吗？',
+                        backupAnswer: '可以。ShortcutCycle 会自动保留一段实用的历史设置。你也可以随时导出副本，保存到其他位置或迁移到另一台 Mac。',
                         privateQuestion: '我的数据是私密的吗？',
-                        privateAnswer: '当然。ShortcutCycle 完全在你的 Mac 上运行，<strong>没有任何分析统计或跟踪</strong>。你的 App 分组和快捷键保存在本机用户默认设置中。我们看不到，也不会收集这些数据。'
+                        privateAnswer: '是的。ShortcutCycle 完全在你的 Mac 上运行，<strong>没有分析统计或跟踪</strong>。你的 App 分组和快捷键都留在 Mac 上；我们看不到，也不会收集。'
                     },
                     compatibility: {
                         title: '兼容性和项目',
@@ -2753,7 +2611,7 @@
                         monitorsQuestion: '支持多显示器吗？',
                         monitorsAnswer: '支持。ShortcutCycle 可以顺畅处理多显示器。HUD 浮层会出现在当前活跃显示器上，无论 App 在哪个显示器都能切换。',
                         windowQuestion: '为什么不能切换到某个具体窗口？',
-                        windowAnswer: 'ShortcutCycle 的设计重点是隐私优先。可靠地控制单个窗口需要更广泛的辅助功能权限，深入控制其他 App。我们有意保持权限更窄，把重点放在快速、稳定的 App 切换上。',
+                        windowAnswer: 'ShortcutCycle 切换的是 App，而不是单个窗口。这样可以保持较少的权限，同时让 App 分组切换保持快速稳定。',
                         openSourceQuestion: '它是开源的吗？',
                         openSourceAnswer: '是的。ShortcutCycle 在 MIT 许可下 <strong>100% 开源</strong>。你可以在 <a href="https://github.com/xcv58/ShortcutCycle" target="_blank" rel="noopener noreferrer">GitHub</a> 查看代码、参与贡献，或自行构建。'
                     }
@@ -2803,10 +2661,10 @@
                 hero: {
                     title: '依分組，瞬間切換 App。',
                     subtitle: '不用再反覆 Tab。把 App 依情境分組，例如網頁、開發、社群，再用專屬快捷鍵輪換。',
-                    benefitHighlight: '每週省下好幾個小時',
-                    benefitTooltipShort: '以每次切換省 3 秒、每天切換 400 次估算，約等於每週省下 2 小時。',
-                    benefitTooltipLong: '以每次切換省 3 秒、每天切換 400 次估算，約等於每週省下 2 小時。',
-                    benefitSuffix: '讓 App 切換更貼近你自己的工作流程。',
+                    benefitHighlight: '保持工作節奏',
+                    benefitTooltipShort: '專屬快捷鍵讓常用 App 分組觸手可及，不必再瀏覽長長的列表。',
+                    benefitTooltipLong: '專屬快捷鍵讓常用 App 分組觸手可及，不必再瀏覽長長的列表。',
+                    benefitSuffix: '用熟悉的快捷鍵切換經常一起使用的 App。',
                     appStoreAria: '在 App Store 下載 ShortcutCycle',
                     appStoreAlt: '在 App Store 下載',
                     videoAria: '示範：使用 ShortcutCycle 快速切換 App'
@@ -2832,51 +2690,34 @@
                     menuBar: '選單列'
                 },
                 comparison: {
-                    title: '分組輪換的優勢',
-                    subtitle: '大多數切換工具都要你搜尋、輸入，或掃一遍歷史列表。ShortcutCycle 使用<strong>肌肉記憶</strong>。依情境替 App 分組（例如「瀏覽器」「開發」），一個快捷鍵就能輪換。更快、更穩定，也更省心。',
+                    title: '為一天中的每種狀態留一個快捷鍵',
+                    subtitle: '繼續使用你喜歡的切換器和啟動器。ShortcutCycle 為每天反覆造訪的 App 分組提供<strong>固定路徑</strong>，讓熟悉的快捷鍵始終帶你回到正確情境。',
                     old: {
-                        title: '傳統方式',
-                        subtitle: 'Cmd+Tab / AltTab • Raycast / Alfred',
-                        searchTitle: '搜尋與掃視',
-                        searchBody: '需要讀列表、輸入名稱或掃圖示，很容易打斷思路。',
-                        loadTitle: '認知負擔高',
-                        loadBody: '「是第 3 個還是第 4 個視窗？我標題怎麼寫的？」這些小判斷會不斷累積。',
-                        slowTitle: '輸入步驟多',
-                        slowBody: 'Cmd+Space+T-y-p-e 或 Cmd+Tab+Tab+Tab，每次切換都要多花幾秒。'
+                        title: '需要時再搜尋',
+                        subtitle: 'Command+Tab • 視窗切換器 • 啟動器',
+                        searchTitle: '適合探索',
+                        searchBody: '不確定要去哪裡時，可以瀏覽所有已開啟的內容，或輸入名稱查找。',
+                        loadTitle: '每次都有更多選擇',
+                        loadBody: '很適合偶爾跳轉，但重複工作流程仍需要你查看列表並做決定。',
+                        slowTitle: '路徑會變化',
+                        slowBody: '視窗順序、歷史記錄和搜尋結果會隨著一天的工作不斷變化。'
                     },
                     new: {
-                        badge: '更好的方式',
-                        subtitle: '依情境分組輪換',
-                        memoryTitle: '肌肉記憶',
-                        memoryBody: '手指知道「開發」在哪裡，幾乎不用想。',
-                        scopeTitle: '範圍明確',
-                        scopeBody: '只在相關 App 之間輪換（例如只輪換瀏覽器），雜訊自動隔開。',
-                        keyTitle: '一個快捷鍵',
-                        keyBody: 'Option+1，完成。馬上到位。'
-                    }
-                },
-                release: {
-                    kicker: '1.10 版本新功能',
-                    title: '更安心地設定快捷鍵。',
-                    summary: '重新設計的錄製器會提前找出衝突，並讓匯入與還原過程更安全，不打斷你的工作流程。',
-                    recorder: {
-                        title: '專注錄製',
-                        body: '在專用彈出視窗中錄製分組和設定視窗快捷鍵。選擇組合時，現有 App 指令不會被觸發。'
-                    },
-                    conflicts: {
-                        title: '主動偵測衝突',
-                        body: '如果組合已被 ShortcutCycle 或 macOS 使用，App 會提前提醒，同時繼續支援功能鍵。'
-                    },
-                    restores: {
-                        title: '還原更安全',
-                        body: '版本 3 匯出檔案和自動備份會在任何變更發生前完成驗證，無效快捷鍵資料不會只取代部分設定。'
+                        badge: '適合重複工作流程',
+                        subtitle: 'App 分組專屬快捷鍵',
+                        memoryTitle: '一個快捷鍵，一個情境',
+                        memoryBody: 'Option+1 永遠是瀏覽器，Option+2 永遠是開發工具。',
+                        scopeTitle: '只看相關 App',
+                        scopeBody: '每個快捷鍵只輪換一個情境，不會混入桌面上的其他 App。',
+                        keyTitle: '輕按或按住',
+                        keyBody: '輕按立即切換，按住則先快速確認目標。'
                     }
                 },
                 features: {
                     heading: '功能',
                     noSubscriptions: {
-                        title: '無須訂閱',
-                        body: '一次購買，永久使用。只要 <strong>$3.99</strong>，就能取得<strong>終身授權</strong>。沒有任何週期性費用。'
+                        title: '一次付費，永久使用',
+                        body: '只需一次支付 <strong>$3.99</strong>，ShortcutCycle 就一直属於你。沒有訂閱，也沒有週期性費用。'
                     },
                     groups: {
                         title: '情境分組',
@@ -2884,48 +2725,48 @@
                     },
                     switching: {
                         title: '即時切換',
-                        body: '快速輕按即可切換，按住則顯示 HUD。在「僅執行中的 App」模式下只有一個 App 時，如果它位於最前方，快捷鍵會立即將它隱藏。'
+                        body: '輕按即可切換，按住則先預覽。把單一 App 的分組設為只使用執行中的 App，即可用同一個快捷鍵顯示或隱藏它。'
                     },
                     profiles: {
                         title: '瀏覽器設定檔',
-                        body: '把工作和個人設定檔（Chrome、Firefox、Edge）當成不同 App。切到工作瀏覽器時，不會看到個人分頁。'
+                        body: '當 Chrome、Firefox 或 Edge 把不同設定檔作為獨立實例執行時，ShortcutCycle 會將工作和個人設定檔分開顯示。'
                     },
                     hud: {
                         title: '漂亮的 HUD',
                         body: '原生、輕量的浮層會在切換前顯示目標，讓你清楚知道下一步會到哪裡。'
                     },
                     native: {
-                        title: '原生又輕快',
-                        body: '使用 Swift 為 macOS 原生打造。啟動快，對電池影響很小。'
+                        title: '自然融入 Mac',
+                        body: '啟動迅速，不占用 Dock，用起來就像 macOS 內建的一部分。'
                     },
                     launch: {
-                        title: '每組獨立模式',
-                        body: '每個分組都可以選擇「僅執行中的 App」，或選擇「所有 App」並在需要時啟動尚未打開的 App。'
+                        title: '每個分組都照你的方式',
+                        body: '你可以讓分組只包含已開啟的 App，也可以讓它在需要時替你開啟下一個 App。'
                     },
                     privacy: {
                         title: '隱私優先',
-                        body: '沒有分析統計，沒有追蹤。你的設定留在自己的 Mac 上，也可以匯出為 JSON 備份。'
+                        body: '沒有分析統計，也沒有追蹤。分組和快捷鍵都留在你的 Mac 上，並可隨時匯出副本。'
                     },
                     backups: {
                         title: '自動備份',
-                        body: '設定難免會改錯。ShortcutCycle 會自動保存設定快照，讓你幾秒內恢復到之前的設定。'
+                        body: 'ShortcutCycle 會安靜地保留之前的設定，誤改時可以輕鬆還原。'
                     },
                     automation: {
-                        title: '支援自動化',
-                        body: '可以透過 <code>shortcutcycle://</code> URL Scheme，用快捷指令、Alfred、Raycast 或 Keyboard Maestro 控制 ShortcutCycle。<a href="https://github.com/xcv58/ShortcutCycle/blob/master/URL_SCHEME.md" target="_blank" rel="noopener noreferrer">查看 URL 命令文件</a>。'
+                        title: '融入你的自動化',
+                        body: '把分組連接到快捷指令、Alfred、Raycast、Keyboard Maestro 或 Shell 指令碼。<a href="https://github.com/xcv58/ShortcutCycle/blob/master/URL_SCHEME.md" target="_blank" rel="noopener noreferrer">查看自動化命令</a>。'
                     },
                     global: {
-                        title: '多語言介面',
-                        body: 'App 內介面已在地化為 15 種語言。讓效率工具使用你的語言。'
+                        title: '內建你的語言',
+                        body: 'ShortcutCycle 支援 15 種介面語言。'
                     },
                     accessibility: {
-                        title: '輔助使用設計',
-                        body: '提供適合 VoiceOver 的控制項與鍵盤導覽，並支援深色介面、足夠對比度和減少動態效果。'
+                        title: '適合更多使用方式',
+                        body: '支援 VoiceOver、語音控制、鍵盤導覽、減少動態效果和你偏好的外觀。'
                     }
                 },
                 videos: {
                     title: '看看它怎麼運作',
-                    subtitle: '看看 ShortcutCycle 如何改變你的切換流程',
+                    subtitle: '從第一個快捷鍵，到每天自然流暢的切換節奏',
                     unsupported: '你的瀏覽器不支援播放此影片。',
                     quick: {
                         title: '快速切換 App',
@@ -2947,29 +2788,29 @@
                     gettingStarted: {
                         title: '開始使用',
                         createQuestion: '怎樣建立分組？',
-                        createAnswer: '很簡單。打開設定，點 <strong>+</strong> 建立一個新分組（例如「社群」或「開發」），再分配一個全域快捷鍵（例如 <code>Option+1</code>）。然後把想要的 App 拖進這個分組就可以。',
+                        createAnswer: '打開設定，點 <strong>+</strong>，然後替分組取個名字，例如「社群」或「開發」。加入目前正在執行的 App，或瀏覽選擇其他 App，再按下你想使用的快捷鍵，例如 <code>Option+1</code>。',
                         shortcutsQuestion: '可以自訂快捷鍵嗎？',
-                        shortcutsAnswer: '可以。錄製器會推薦最近使用的組合，並在組合已被 ShortcutCycle 或 macOS 使用時提醒你。一般按鍵需要搭配 Command、Control 或 Option；功能鍵可以單獨使用。',
+                        shortcutsAnswer: '可以。直接按下想使用的組合即可。ShortcutCycle 會推薦最近的選擇，並在組合已被占用時提醒你。字母和數字鍵需要搭配 Command、Control 或 Option；功能鍵可以單獨使用。',
                         closedAppQuestion: '如果 App 沒有打開會怎樣？',
                         closedAppAnswer: '這取決於群組的循環模式。<strong>僅執行中的應用程式</strong>會在群組內有應用程式正在執行時略過未執行的應用程式；如果沒有應用程式正在執行，則會啟動第一個應用程式。<strong>所有應用程式（必要時開啟）</strong>會在選取未執行的應用程式時將其啟動。'
                     },
                     automation: {
-                        title: '自動化和 URL 命令',
+                        title: '自動化',
                         toolsQuestion: '可以用快捷指令、Alfred 或 Raycast 自動化 ShortcutCycle 嗎？',
-                        toolsAnswerIntro: '可以。ShortcutCycle 支援自訂 URL Scheme <code>shortcutcycle://</code>，所以你可以從自動化工具觸發操作。範例命令：',
-                        docsLink: '查看完整 URL 命令文件',
-                        openQuestion: 'URL 命令可以打開指定設定頁或備份瀏覽器嗎？',
-                        openAnswerIntro: '可以。使用這些 <code>open</code> 命令：',
-                        importQuestion: 'URL 命令可以匯入/匯出設定或恢復備份嗎？',
-                        importAnswerIntro: '可以。你可以透過路徑匯入/匯出設定，也可以按最新、序號、名稱或路徑恢復備份。範例命令：',
-                        importAnswerTail: '版本 3 匯入和還原會先完成驗證，再取代目前分組和設定。'
+                        toolsAnswerIntro: '可以。把分組連接到你已經在使用的自動化工具。例如：',
+                        docsLink: '查看全部自動化命令',
+                        openQuestion: '自動化可以打開設定或備份嗎？',
+                        openAnswerIntro: '可以。使用以下命令：',
+                        importQuestion: '可以自動移轉設定或還原備份嗎？',
+                        importAnswerIntro: '可以。自動化可以儲存或載入設定，也可以還原備份。例如：',
+                        importAnswerTail: 'ShortcutCycle 會先檢查匯入的設定，再取代任何內容。如果無法安全使用，你目前的分組和設定會保持不變。'
                     },
                     privacy: {
                         title: '備份和隱私',
-                        backupQuestion: '可以備份設定嗎？',
-                        backupAnswer: '可以。ShortcutCycle 會使用 GFS（祖父-父-子）保留策略自動建立備份。你也可以手動把完整設定匯出為 JSON 檔案，方便保存或移轉到另一台 Mac。',
+                        backupQuestion: '可以備份我的設定嗎？',
+                        backupAnswer: '可以。ShortcutCycle 會自動保留一段實用的歷史設定。你也可以隨時匯出副本，儲存到其他位置或移轉到另一台 Mac。',
                         privateQuestion: '我的資料是私密的嗎？',
-                        privateAnswer: '當然。ShortcutCycle 完全在你的 Mac 上執行，<strong>沒有任何分析統計或追蹤</strong>。你的 App 分組和快捷鍵保存在本機使用者預設值中。我們看不到，也不會收集這些資料。'
+                        privateAnswer: '是的。ShortcutCycle 完全在你的 Mac 上執行，<strong>沒有分析統計或追蹤</strong>。你的 App 分組和快捷鍵都留在 Mac 上；我們看不到，也不會收集。'
                     },
                     compatibility: {
                         title: '相容性和專案',
@@ -2978,7 +2819,7 @@
                         monitorsQuestion: '支援多顯示器嗎？',
                         monitorsAnswer: '支援。ShortcutCycle 可以順暢處理多顯示器。HUD 浮層會出現在目前活躍顯示器上，無論 App 在哪個顯示器都能切換。',
                         windowQuestion: '為什麼不能切換到某個具體視窗？',
-                        windowAnswer: 'ShortcutCycle 的設計重點是隱私優先。可靠地控制單一視窗需要更廣泛的輔助功能權限，深入控制其他 App。我們有意保持權限更窄，把重點放在快速、穩定的 App 切換上。',
+                        windowAnswer: 'ShortcutCycle 切換的是 App，而不是單一視窗。這樣可以保持較少的權限，同時讓 App 分組切換維持快速穩定。',
                         openSourceQuestion: '它是開源的嗎？',
                         openSourceAnswer: '是的。ShortcutCycle 在 MIT 授權下 <strong>100% 開源</strong>。你可以在 <a href="https://github.com/xcv58/ShortcutCycle" target="_blank" rel="noopener noreferrer">GitHub</a> 查看程式碼、參與貢獻，或自行建置。'
                     }
