@@ -1,0 +1,29 @@
+id: shortcut-setup
+description: Focused shortcut recording with conflict guidance
+profile: default
+fixture: marketing-default
+source_clip: marketing/video/sources/shortcut-setup.mp4
+capture:
+  duration: 6.4
+  clean_background: true
+  background_color: "#F7F5EF"
+  background_image: marketing/video/assets/video-background.JPG
+  hide_cursor: true
+  recording_warmup_seconds: 1.0
+prepare_urls:
+  - open-settings?tab=groups
+  - select-group?group=Writing
+prepare_after_launch:
+  - { type: sleep, seconds: 1.1 }
+  - { type: hide-other-apps, except_bundle_ids: [com.xcv58.ShortcutCycle.dev] }
+window_stage_apps:
+  - com.xcv58.ShortcutCycle.dev
+window_layouts:
+  "com.xcv58.ShortcutCycle.dev": [192, 96, 1536, 864]
+initial_frontmost_app: com.xcv58.ShortcutCycle.dev
+actions:
+  - { at: 1.00, type: click-control, control: Keyboard Shortcut, highlight_duration: 0.85 }
+  - { at: 2.05, type: shortcut-sequence, shortcut: option+3, tap_count: 1, pre_hold: 0.12, post_hold: 0.32 }
+  - { at: 3.85, type: shortcut-sequence, shortcut: option+1, tap_count: 1, pre_hold: 0.12, post_hold: 0.32 }
+trim_hints:
+  - { label: conflict-then-save, start: 0.20, end: 6.00 }

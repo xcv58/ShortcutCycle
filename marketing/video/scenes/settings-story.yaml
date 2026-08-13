@@ -15,12 +15,12 @@ prepare_urls:
   - select-group?group=Writing
 prepare_after_launch:
   - { type: sleep, seconds: 1.1 }
-  - { type: hide-other-apps, except_bundle_ids: [com.xcv58.ShortcutCycle] }
+  - { type: hide-other-apps, except_bundle_ids: [com.xcv58.ShortcutCycle.dev] }
 window_stage_apps:
-  - com.xcv58.ShortcutCycle
+  - com.xcv58.ShortcutCycle.dev
 window_layouts:
-  "com.xcv58.ShortcutCycle": [192, 96, 1536, 864]
-initial_frontmost_app: com.xcv58.ShortcutCycle
+  "com.xcv58.ShortcutCycle.dev": [192, 96, 1536, 864]
+initial_frontmost_app: com.xcv58.ShortcutCycle.dev
 actions:
   - { at: 1.35, type: select-group, group: Tools, highlight_duration: 1.05 }
   - { at: 3.15, type: select-group, group: Showcase, highlight_duration: 1.05 }

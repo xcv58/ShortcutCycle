@@ -22,7 +22,7 @@ enum HelperError: Error, CustomStringConvertible {
     var description: String {
         switch self {
         case .appNotRunning:
-            return "ShortcutCycle.app is not running"
+            return "The configured ShortcutCycle app is not running"
         case .noWindow:
             return "Could not find a visible ShortcutCycle window"
         case .noSheet:
@@ -95,13 +95,18 @@ func shortcutCycleAppElement() throws -> AXElement {
 }
 
 func preferredShortcutCycleApp() throws -> NSRunningApplication {
-    let runningApps = NSWorkspace.shared.runningApplications.filter {
-        $0.bundleIdentifier == "com.xcv58.ShortcutCycle"
-    }
+    let allRunningApps = NSWorkspace.shared.runningApplications
 
     if let preferredPath = ProcessInfo.processInfo.environment["SHORTCUTCYCLE_AX_APP_PATH"],
-       let app = runningApps.first(where: { $0.bundleURL?.path == preferredPath }) {
+       let app = allRunningApps.first(where: {
+           $0.bundleURL?.standardizedFileURL.path == URL(fileURLWithPath: preferredPath).standardizedFileURL.path
+       }) {
         return app
+    }
+
+    let runningApps = allRunningApps.filter {
+        $0.bundleIdentifier == "com.xcv58.ShortcutCycle" ||
+            $0.bundleIdentifier == "com.xcv58.ShortcutCycle.dev"
     }
 
     if let app = runningApps.first(where: { $0.isActive }) {

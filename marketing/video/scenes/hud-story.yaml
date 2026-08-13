@@ -40,7 +40,7 @@ prepare_after_launch:
   - { type: sleep, seconds: 0.3 }
   - { type: open-file, bundle_id: com.apple.Preview, path: marketing/video/assets/shortcutcycle-demo.pdf }
   - { type: sleep, seconds: 0.6 }
-  - { type: hide-other-apps, except_bundle_ids: [com.xcv58.ShortcutCycle, com.apple.TextEdit, com.apple.calculator, com.apple.helpviewer, com.apple.FontBook, com.apple.Dictionary, com.apple.Preview, com.apple.Chess, com.apple.Image_Capture, com.apple.ColorSyncUtility] }
+  - { type: hide-other-apps, except_bundle_ids: [com.xcv58.ShortcutCycle.dev, com.apple.TextEdit, com.apple.calculator, com.apple.helpviewer, com.apple.FontBook, com.apple.Dictionary, com.apple.Preview, com.apple.Chess, com.apple.Image_Capture, com.apple.ColorSyncUtility] }
 window_layouts:
   "com.apple.TextEdit": [190, 42, 1510, 1080]
   "com.apple.calculator": [720, 82, 880, 955]

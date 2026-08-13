@@ -1,0 +1,31 @@
+{
+  "actions": [
+    {
+      "at": 1.0,
+      "highlight_rect": {
+        "height": 25.0,
+        "screenHeight": 1080.0,
+        "screenWidth": 1920.0,
+        "screenX": 0.0,
+        "screenY": 0.0,
+        "width": 126.0,
+        "x": 440.0,
+        "y": 283.0
+      },
+      "index": 0,
+      "type": "click-control"
+    },
+    {
+      "at": 2.05,
+      "index": 1,
+      "type": "shortcut-sequence"
+    },
+    {
+      "at": 3.85,
+      "index": 2,
+      "type": "shortcut-sequence"
+    }
+  ],
+  "scene_id": "shortcut-setup",
+  "version": 1
+}

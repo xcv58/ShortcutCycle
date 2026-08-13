@@ -1,0 +1,21 @@
+id: reddit-1.10
+description: Shortcut setup and app-group switching update for Reddit
+profile: reddit
+publish_to:
+  - marketing/reddit/output/shortcutcycle-1.10-reddit.mp4
+sequence:
+  - type: card
+    template: intro-social
+    duration: 1.0
+    title: One shortcut per group
+    rows:
+      - { shortcut: "⌥1", label: "Writing" }
+      - { shortcut: "⌥3", label: "Tools" }
+  - { type: scene, scene: shortcut-setup, trim_start: 0.20, trim_end: 6.00 }
+  - { type: scene, scene: overview-main, trim_start: 0.20, trim_end: 8.80 }
+validate:
+  resolution: [1920, 1080]
+  frame_rate: 30
+  min_duration: 15.2
+  max_duration: 17.0
+  audio: true

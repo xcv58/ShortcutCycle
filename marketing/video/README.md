@@ -44,7 +44,17 @@ Use `--recapture` only when the real UI journey changes. Use `--rerender-only` f
 ## Prerequisites
 
 - Install Python deps: `pip3 install PyYAML Pillow`
-- Build the integration app into `.artifacts/xcode-integration/DerivedData/Build/Products/Debug/ShortcutCycle.app`
+- Build the signed integration app into `.artifacts/xcode-integration/DerivedData/Build/Products/Debug/ShortcutCycle Dev.app`:
+
+```bash
+xcodebuild -project ShortcutCycle/ShortcutCycle.xcodeproj \
+  -scheme ShortcutCycle \
+  -configuration Debug \
+  -derivedDataPath .artifacts/xcode-integration/DerivedData \
+  build
+```
+
+The signed build is required for reliable delivery of `shortcutcycle-dev://` capture commands.
 - If automatic AVFoundation screen detection picks the wrong device, set `SHORTCUTCYCLE_CAPTURE_DEVICE` to an explicit ffmpeg device string such as `3:none`
 
 ## Current Scope

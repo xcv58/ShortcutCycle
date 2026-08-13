@@ -304,6 +304,10 @@ def bundle_id(profile: dict[str, Any]) -> str:
     return str(profile["bundle_id"])
 
 
+def url_scheme(profile: dict[str, Any]) -> str:
+    return str(profile.get("url_scheme", "shortcutcycle"))
+
+
 def expand_repo_path(path_value: str) -> Path:
     path = Path(path_value).expanduser()
     if path.is_absolute():
@@ -709,6 +713,8 @@ def seed_fixture(profile: dict[str, Any], fixture_id: str) -> None:
 
 def open_url(profile: dict[str, Any], url: str) -> None:
     bundle = app_bundle_path(profile)
+    if url.startswith("shortcutcycle://"):
+        url = f"{url_scheme(profile)}://{url.removeprefix('shortcutcycle://')}"
     subprocess.Popen(
         ["open", "-a", str(bundle), url],
         stdout=subprocess.DEVNULL,
@@ -885,7 +891,7 @@ def result_file_path(profile: dict[str, Any]) -> Path:
 
 
 def url_command(profile: dict[str, Any], command: str) -> None:
-    open_url(profile, f"shortcutcycle://{command}")
+    open_url(profile, f"{url_scheme(profile)}://{command}")
 
 
 def url_query(profile: dict[str, Any], command: str, *, timeout: float = 15.0) -> dict[str, Any]:
@@ -2912,7 +2918,7 @@ def execute_capture_action(profile: dict[str, Any], action: dict[str, Any]) -> N
     action_type = action["type"]
     if action_type == "cycle":
         group = quote(str(action["group"]))
-        open_url(profile, f"shortcutcycle://cycle?group={group}")
+        url_command(profile, f"cycle?group={group}")
     elif action_type == "shortcut-sequence":
         post_shortcut_sequence(
             str(action["shortcut"]),
