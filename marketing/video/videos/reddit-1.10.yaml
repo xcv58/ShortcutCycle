@@ -7,7 +7,7 @@ sequence:
   - type: card
     template: intro-social
     duration: 1.0
-    title: One shortcut per group
+    title: Custom groups. One shortcut each.
     rows:
       - { shortcut: "⌥1", label: "Writing" }
       - { shortcut: "⌥3", label: "Tools" }
