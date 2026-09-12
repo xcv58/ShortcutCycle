@@ -3,6 +3,34 @@ import SwiftUI
 import ShortcutCycleCore
 #endif
 
+/// Shares native glass between the live HUD and its settings preview while
+/// retaining each surface's existing background on older macOS versions.
+struct HUDGlassBackground<GlassShape: Shape, LegacyBackground: View>: ViewModifier {
+    let shape: GlassShape
+    let legacyBackground: LegacyBackground
+
+    init(shape: GlassShape, @ViewBuilder legacyBackground: () -> LegacyBackground) {
+        self.shape = shape
+        self.legacyBackground = legacyBackground()
+    }
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        // The compiler guard also keeps builds using pre-Xcode 26 SDKs working.
+        #if compiler(>=6.2)
+        if #available(macOS 26.0, *) {
+            // Regular glass follows system appearance and accessibility settings.
+            // Additional tint, borders, or shadows would obscure that appearance.
+            content.glassEffect(.regular, in: shape)
+        } else {
+            content.background(legacyBackground)
+        }
+        #else
+        content.background(legacyBackground)
+        #endif
+    }
+}
+
 enum HUDMotionPolicy {
     static func shouldAnimateSelection(reduceMotion: Bool) -> Bool {
         !reduceMotion
@@ -37,7 +65,7 @@ struct AppSwitcherHUDView: View {
                     horizontalListLayout
                 }
             }
-            .background(
+            .modifier(HUDGlassBackground(shape: RoundedRectangle(cornerRadius: 28, style: .continuous)) {
                 RoundedRectangle(cornerRadius: 28, style: .continuous)
                     .fill(.ultraThinMaterial)
                     // Adaptive tint based on color scheme
@@ -46,11 +74,11 @@ struct AppSwitcherHUDView: View {
                             .fill(colorScheme == .dark ? Color.black.opacity(0.3) : Color.white.opacity(0.3))
                     )
                     .shadow(color: .black.opacity(0.2), radius: 20, x: 0, y: 10)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 28, style: .continuous)
-                    .stroke(Color.primary.opacity(0.1), lineWidth: 1)
-            )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 28, style: .continuous)
+                            .stroke(Color.primary.opacity(0.1), lineWidth: 1)
+                    )
+            })
             
             // Active App Name
             activeAppNameView
@@ -113,11 +141,11 @@ struct AppSwitcherHUDView: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 8)
-        .background(
+        .modifier(HUDGlassBackground(shape: Capsule()) {
             Capsule()
-            .fill(.regularMaterial)
-            .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
-        )
+                .fill(.regularMaterial)
+                .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
+        })
     }
 
     @ViewBuilder

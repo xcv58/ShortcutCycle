@@ -641,19 +641,6 @@ private struct GroupShortcutEditor: View {
         KeyboardShortcuts.getShortcut(for: shortcutName)
     }
 
-    private var cyclingModeSelection: Binding<Bool> {
-        Binding(
-            get: { group.shouldOpenAppIfNeeded },
-            set: { newValue in
-                DispatchQueue.main.async {
-                    var updatedGroup = group
-                    updatedGroup.openAppIfNeeded = newValue
-                    store.updateGroup(updatedGroup)
-                }
-            }
-        )
-    }
-
     private var suggestionShortcuts: [KeyboardShortcuts.Shortcut] {
         let candidates = ShortcutSuggestions.available(
             for: store.groups,
@@ -706,24 +693,7 @@ private struct GroupShortcutEditor: View {
                     .font(.caption.weight(.medium))
                     .foregroundColor(.secondary)
 
-                ViewThatFits(in: .horizontal) {
-                    Picker("Cycling Mode".localized(language: selectedLanguage), selection: cyclingModeSelection) {
-                        Text("Running apps only".localized(language: selectedLanguage)).tag(false)
-                        Text("All apps (open if needed)".localized(language: selectedLanguage)).tag(true)
-                    }
-                    .pickerStyle(.segmented)
-                    .font(.caption)
-                    .labelsHidden()
-                    .fixedSize(horizontal: true, vertical: false)
-
-                    Picker("Cycling Mode".localized(language: selectedLanguage), selection: cyclingModeSelection) {
-                        Text("Running apps only".localized(language: selectedLanguage)).tag(false)
-                        Text("All apps (open if needed)".localized(language: selectedLanguage)).tag(true)
-                    }
-                    .pickerStyle(.menu)
-                    .font(.caption)
-                    .labelsHidden()
-                }
+                GroupCyclingModePicker(group: group, selectedLanguage: selectedLanguage)
             }
 
             Text(group.shouldOpenAppIfNeeded
@@ -804,6 +774,47 @@ private struct GroupShortcutEditor: View {
     private func refreshShortcutState() {
         shortcutRefreshToken += 1
         ShortcutManager.shared.registerAllShortcuts()
+    }
+}
+
+/// The shared adaptive picker is independently hostable for native menu interaction tests.
+struct GroupCyclingModePicker: View {
+    @EnvironmentObject private var store: GroupStore
+    let group: AppGroup
+    let selectedLanguage: String
+
+    private var cyclingModeSelection: Binding<Bool> {
+        Binding(
+            get: { group.shouldOpenAppIfNeeded },
+            set: { newValue in
+                DispatchQueue.main.async {
+                    var updatedGroup = group
+                    updatedGroup.openAppIfNeeded = newValue
+                    store.updateGroup(updatedGroup)
+                }
+            }
+        )
+    }
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            Picker("Cycling Mode".localized(language: selectedLanguage), selection: cyclingModeSelection) {
+                Text("Running apps only".localized(language: selectedLanguage)).tag(false)
+                Text("All apps (open if needed)".localized(language: selectedLanguage)).tag(true)
+            }
+            .pickerStyle(.segmented)
+            .font(.caption)
+            .labelsHidden()
+            .fixedSize(horizontal: true, vertical: false)
+
+            Picker("Cycling Mode".localized(language: selectedLanguage), selection: cyclingModeSelection) {
+                Text("Running apps only".localized(language: selectedLanguage)).tag(false)
+                Text("All apps (open if needed)".localized(language: selectedLanguage)).tag(true)
+            }
+            .pickerStyle(.menu)
+            .font(.caption)
+            .labelsHidden()
+        }
     }
 }
 
