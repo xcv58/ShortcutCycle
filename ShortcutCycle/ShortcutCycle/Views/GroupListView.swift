@@ -20,7 +20,7 @@ struct GroupListView: View {
             // Groups list
             List(selection: selection) {
                 ForEach(store.groups) { group in
-                    GroupRowView(group: group)
+                    GroupRowView(group: group, isSelected: selection.wrappedValue == group.id)
                         .tag(group.id)
                         .contextMenu {
                             Button("Rename".localized(language: selectedLanguage)) {
@@ -38,7 +38,7 @@ struct GroupListView: View {
                 }
             }
             .listStyle(.sidebar)
-            .scrollContentBackground(colorScheme == .dark ? .hidden : .automatic)
+            .scrollContentBackground(.hidden)
             .background(SettingsChromePalette.sidebarBackground(for: colorScheme))
             .id(selectedLanguage) // Force redraw of list and context menus when language changes
 
@@ -118,6 +118,7 @@ struct GroupListView: View {
 /// A single row in the groups list
 struct GroupRowView: View {
     let group: AppGroup
+    let isSelected: Bool
     @EnvironmentObject var store: GroupStore
     @Environment(\.colorScheme) private var colorScheme
     @State private var showDeleteConfirmation = false
@@ -136,6 +137,13 @@ struct GroupRowView: View {
             .toggleStyle(.switch)
             .controlSize(.mini)
             .labelsHidden()
+            .overlay {
+                if isSelected {
+                    Capsule()
+                        .strokeBorder(.primary.opacity(0.65), lineWidth: 1)
+                        .allowsHitTesting(false)
+                }
+            }
             .accessibilityLabel(group.name)
             .accessibilityHint(
                 group.isEnabled
@@ -146,7 +154,10 @@ struct GroupRowView: View {
             
             // Group icon
             Image(systemName: "folder.fill")
-                .foregroundColor(group.isEnabled ? .accentColor : .gray)
+                .foregroundStyle(
+                    isSelected ? AnyShapeStyle(.primary)
+                        : group.isEnabled ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.secondary)
+                )
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(group.name)

@@ -9,7 +9,7 @@ enum SettingsChromePalette {
     }
 
     static func sidebarBackground(for colorScheme: ColorScheme) -> Color {
-        colorScheme == .dark ? Color(nsColor: .underPageBackgroundColor) : .clear
+        Color(nsColor: colorScheme == .dark ? .underPageBackgroundColor : .windowBackgroundColor)
     }
 
     static func panelBackground(for colorScheme: ColorScheme) -> Color {
