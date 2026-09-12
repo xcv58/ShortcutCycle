@@ -60,17 +60,40 @@ final class GroupEditViewTests: XCTestCase {
         )
     }
 
-    func testCyclingModeFallsBackFromSegmentedControlWhenEditorIsNarrow() throws {
+    func testNarrowEditorAvoidsSegmentedCyclingModeControl() {
         let hostingView = hostGroupEditView(width: 320)
 
         XCTAssertNil(
             findSubview(ofType: NSSegmentedControl.self, in: hostingView),
             "Narrow layouts should avoid rendering the Cycling Mode control as a segmented control."
         )
-        XCTAssertNotNil(
-            findSubview(ofType: NSPopUpButton.self, in: hostingView),
-            "Narrow layouts should still render a usable Cycling Mode picker."
+    }
+
+    func testCyclingModeFallsBackToFunctionalMenuAndPersistsSelection() throws {
+        var group = try XCTUnwrap(store.groups.first)
+        group.openAppIfNeeded = false
+        store.updateGroup(group)
+        let groupId = group.id
+        let hostingView = try hostCyclingModePicker(groupId: groupId)
+        XCTAssertNil(findSubview(ofType: NSSegmentedControl.self, in: hostingView))
+
+        try selectCyclingMode(
+            "All apps (open if needed)",
+            currentlySelected: "Running apps only",
+            in: hostingView
         )
+        XCTAssertEqual(store.groups.first?.openAppIfNeeded, true)
+
+        // Reopen from persisted settings, as the real editor does after dismissal.
+        store = GroupStore(userDefaults: userDefaults)
+        let reopenedView = try hostCyclingModePicker(groupId: groupId)
+        try selectCyclingMode(
+            "Running apps only",
+            currentlySelected: "All apps (open if needed)",
+            in: reopenedView
+        )
+        XCTAssertEqual(store.groups.first?.openAppIfNeeded, false)
+        XCTAssertEqual(GroupStore(userDefaults: userDefaults).groups.first?.openAppIfNeeded, false)
     }
 
     func testRunningAppsQuickAddSectionVisibilityDependsOnCandidates() {
@@ -398,6 +421,76 @@ final class GroupEditViewTests: XCTestCase {
 
         XCTAssertGreaterThan(hostingView.fittingSize.width, 0)
         XCTAssertGreaterThan(hostingView.fittingSize.height, 0)
+    }
+
+    private func hostCyclingModePicker(groupId: UUID) throws -> NSHostingView<AnyView> {
+        let group = try XCTUnwrap(store.groups.first { $0.id == groupId })
+        window?.orderOut(nil)
+        window?.contentView = nil
+        return hostView(
+            AnyView(
+                GroupCyclingModePicker(group: group, selectedLanguage: "en")
+                    .environmentObject(store)
+                    .frame(width: 160, height: 40)
+            ),
+            width: 160,
+            height: 40
+        )
+    }
+
+    private func selectCyclingMode(
+        _ title: String,
+        currentlySelected: String,
+        in hostingView: NSHostingView<AnyView>
+    ) throws {
+        let window = try XCTUnwrap(hostingView.window)
+        var openedMenu = false
+        let observer = NotificationCenter.default.addObserver(
+            forName: NSMenu.didBeginTrackingNotification,
+            object: nil,
+            queue: .main
+        ) { notification in
+            MainActor.assumeIsolated {
+                guard let menu = notification.object as? NSMenu else { return }
+                openedMenu = true
+                // SwiftUI may populate menu items as tracking begins.
+                DispatchQueue.main.async {
+                    defer { menu.cancelTracking() }
+                    XCTAssertNotNil(menu.item(withTitle: "Running apps only"))
+                    XCTAssertNotNil(menu.item(withTitle: "All apps (open if needed)"))
+                    XCTAssertEqual(menu.item(withTitle: currentlySelected)?.state, .on)
+                    guard let index = menu.items.firstIndex(where: { $0.title == title }) else {
+                        XCTFail("The Cycling Mode menu must contain the requested option.")
+                        return
+                    }
+                    menu.performActionForItem(at: index)
+                }
+            }
+        }
+        defer { NotificationCenter.default.removeObserver(observer) }
+
+        window.makeKeyAndOrderFront(nil)
+        drainMainRunLoop()
+        let point = hostingView.convert(
+            NSPoint(x: hostingView.bounds.midX, y: hostingView.bounds.midY),
+            to: nil
+        )
+        let timestamp = ProcessInfo.processInfo.systemUptime
+        let mouseDown = try XCTUnwrap(NSEvent.mouseEvent(
+            with: .leftMouseDown, location: point, modifierFlags: [], timestamp: timestamp,
+            windowNumber: window.windowNumber, context: nil, eventNumber: 1, clickCount: 1, pressure: 1
+        ))
+        let mouseUp = try XCTUnwrap(NSEvent.mouseEvent(
+            with: .leftMouseUp, location: point, modifierFlags: [], timestamp: timestamp + 0.01,
+            windowNumber: window.windowNumber, context: nil, eventNumber: 2, clickCount: 1, pressure: 0
+        ))
+        // Older AppKit-backed pickers consume mouse-up in a tracking loop.
+        // Newer SwiftUI controls receive it through the window dispatcher.
+        NSApp.postEvent(mouseUp, atStart: false)
+        window.sendEvent(mouseDown)
+        window.sendEvent(mouseUp)
+        drainMainRunLoop()
+        XCTAssertTrue(openedMenu, "Clicking the narrow picker must open a native menu.")
     }
 
     private func hostGroupEditView(

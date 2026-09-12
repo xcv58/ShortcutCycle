@@ -68,8 +68,10 @@ final class HUDGlassAppearanceTests: XCTestCase {
             defaults.set(theme.rawValue, forKey: "appTheme")
             let hostingView = host(hud(items: Array(items.prefix(3)), selected: items[0].id))
             let rowSize = hostingView.fittingSize
-            XCTAssertGreaterThanOrEqual(rowSize.width, 3 * 72 + 2 * 20 + 64 + 80)
-            XCTAssertGreaterThan(rowSize.height, 72 + 48 + 80)
+            let minimumRowWidth: CGFloat = 400 // Three icons, gaps, and horizontal padding.
+            let minimumRowHeight: CGFloat = 200 // Icon height and vertical padding, before the label.
+            XCTAssertGreaterThanOrEqual(rowSize.width, minimumRowWidth)
+            XCTAssertGreaterThan(rowSize.height, minimumRowHeight)
 
             hostingView.rootView = hud(items: Array(items.prefix(3)), selected: items[2].id)
             hostingView.layoutSubtreeIfNeeded()
