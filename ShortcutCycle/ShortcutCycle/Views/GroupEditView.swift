@@ -42,7 +42,6 @@ struct GroupEditView: View {
     @State private var dragPreviewApps: [AppItem]?
     @State private var isNameFieldHovered: Bool = false
     @FocusState private var isNameFocused: Bool
-    @State private var suppressAutoFocus = true
     @State private var areSecondarySectionsMounted = false
     @State private var quickAddCandidates: [AppItem] = []
     @State private var isRefreshingQuickAddCandidates = false
@@ -69,25 +68,20 @@ struct GroupEditView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(SettingsChromePalette.windowBackground(for: colorScheme))
         .padding()
+        // Automatic focus should not begin a rename. Explicit clicks and keyboard
+        // traversal still use the normal text-field focus behavior.
+        .defaultFocus($isNameFocused, false)
         .onAppear {
+            isNameFocused = false
             loadGroupData()
-            // Prevent the system from auto-focusing the name field on appear
-            suppressAutoFocus = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                suppressAutoFocus = false
-            }
         }
-        .onChange(of: isNameFocused) { _, focused in
-            if focused && suppressAutoFocus {
-                isNameFocused = false
-            }
+        .onDisappear {
+            isNameFocused = false
         }
         .onChange(of: groupId) { _, _ in
-            suppressAutoFocus = true
+            // End the previous group's editing session before loading a new name.
+            isNameFocused = false
             loadGroupData()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                suppressAutoFocus = false
-            }
         }
         .onChange(of: (group?.apps.map(\.bundleIdentifier).sorted()) ?? []) { _, _ in
             dragPreviewApps = nil

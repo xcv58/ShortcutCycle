@@ -8,6 +8,67 @@ import ShortcutCycleCore
 
 @MainActor
 final class SettingsTabLayoutTests: XCTestCase {
+    func testChangingGroupsEndsNameEditingButAllowsDeliberateRefocus() async throws {
+        let suite = "SettingsTabFocusTests-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let store = GroupStore(userDefaults: defaults)
+        let first = try XCTUnwrap(store.groups.first)
+        let second = try XCTUnwrap(store.groups.dropFirst().first)
+        store.selectedGroupId = first.id
+        let host = NSHostingController(rootView: MainView().environmentObject(store).environmentObject(LocaleObserver()))
+        let window = NSWindow(contentViewController: host)
+        window.setContentSize(NSSize(width: 1000, height: 600))
+        defer {
+            window.orderOut(nil)
+            window.contentViewController = nil
+        }
+        window.makeKeyAndOrderFront(nil)
+        host.view.layoutSubtreeIfNeeded()
+        try await Task.sleep(for: .milliseconds(400))
+        func nameField(in view: NSView) -> NSTextField? {
+            if let field = view as? NSTextField, field.isEditable { return field }
+            return view.subviews.compactMap { nameField(in: $0) }.first
+        }
+        let field = try XCTUnwrap(nameField(in: host.view))
+        XCTAssertNil(field.currentEditor(), "Opening settings must not start renaming a group.")
+        XCTAssertTrue(window.makeFirstResponder(field))
+        await settle()
+        XCTAssertNotNil(field.currentEditor(), "Explicit focus must still allow editing.")
+
+        store.selectedGroupId = second.id
+        try await Task.sleep(for: .milliseconds(400))
+        let nextField = try XCTUnwrap(nameField(in: host.view))
+        XCTAssertEqual(nextField.stringValue, second.name)
+        XCTAssertNil(nextField.currentEditor(), "Changing groups must end editing, even if the old name was focused.")
+        XCTAssertEqual(store.groups.first(where: { $0.id == first.id })?.name, first.name)
+        XCTAssertEqual(store.groups.first(where: { $0.id == second.id })?.name, second.name)
+
+        XCTAssertTrue(window.makeFirstResponder(nextField))
+        await settle()
+        let editor = try XCTUnwrap(nextField.currentEditor() as? NSTextView)
+        editor.selectAll(nil)
+        editor.insertText("Renamed intentionally", replacementRange: editor.selectedRange())
+        await settle()
+        XCTAssertEqual(store.groups.first(where: { $0.id == second.id })?.name, "Renamed intentionally")
+
+        NotificationCenter.default.post(name: .settingsTabRequested, object: URLSettingsTab.general.rawValue)
+        try await Task.sleep(for: .milliseconds(100))
+        NotificationCenter.default.post(name: .settingsTabRequested, object: URLSettingsTab.groups.rawValue)
+        try await Task.sleep(for: .milliseconds(400))
+        let returnedField = try XCTUnwrap(nameField(in: host.view))
+        XCTAssertNil(returnedField.currentEditor(), "Returning from General must not resume a rename.")
+        XCTAssertEqual(returnedField.stringValue, "Renamed intentionally")
+
+        window.makeFirstResponder(nil)
+        for _ in 0..<20 {
+            window.selectNextKeyView(nil)
+            await settle()
+            if returnedField.currentEditor() != nil { break }
+        }
+        XCTAssertNotNil(returnedField.currentEditor(), "Keyboard traversal must still reach the name field.")
+    }
+
     func testSidebarWidthSurvivesCollapseAndWindowResize() {
         let controller = SettingsGroupSplitController()
         controller.sidebarHost.rootView = AnyView(Color.clear.frame(maxWidth: .infinity, maxHeight: .infinity))
