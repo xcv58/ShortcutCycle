@@ -80,7 +80,7 @@ struct HUDPreviewView: View {
                     .opacity(0.6)
             }
             .padding(12)
-            .background(
+            .modifier(HUDGlassBackground(shape: RoundedRectangle(cornerRadius: 20, style: .continuous)) {
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
                     .fill(previewShellFill)
                     .shadow(
@@ -89,11 +89,11 @@ struct HUDPreviewView: View {
                         x: 0,
                         y: colorScheme == .dark ? 10 : 4
                     )
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(previewShellBorder, lineWidth: 1)
-            )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .stroke(previewShellBorder, lineWidth: 1)
+                    )
+            })
             
             // App Name Label
             VStack(spacing: 2) {
@@ -110,14 +110,14 @@ struct HUDPreviewView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 6)
-            .background(
+            .modifier(HUDGlassBackground(shape: Capsule()) {
                 Capsule()
                     .fill(shortcutCapsuleFill)
-            )
-            .overlay(
-                Capsule()
-                    .stroke(previewShellBorder.opacity(colorScheme == .dark ? 0.85 : 0.65), lineWidth: 1)
-            )
+                    .overlay(
+                        Capsule()
+                            .stroke(previewShellBorder.opacity(colorScheme == .dark ? 0.85 : 0.65), lineWidth: 1)
+                    )
+            })
         }
         .accessibilityHidden(true)
     }
