@@ -70,8 +70,8 @@ struct MainView: View {
         } message: {
             Text("This action cannot be undone.".localized(language: selectedLanguage))
         }
-        .toolbarBackground(Color(nsColor: .windowBackgroundColor), for: .windowToolbar)
-        .toolbarBackground(.visible, for: .windowToolbar)
+        // Let macOS style the native tabs and toolbar, including Liquid Glass
+        // on supported systems. Each settings page owns its solid content surface.
         .preferredColorScheme(appTheme.colorScheme)
         .background(WindowAppearanceApplier(colorScheme: appTheme.colorScheme))
         .frame(minWidth: 720, minHeight: 460)
