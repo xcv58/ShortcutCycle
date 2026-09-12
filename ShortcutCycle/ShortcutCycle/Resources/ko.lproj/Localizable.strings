@@ -179,3 +179,8 @@
 "TestFlight Beta" = "TestFlight 베타";
 "This is a local development build. Its settings are kept separate from the App Store app." = "이것은 로컬 개발 빌드입니다. 설정은 App Store 앱과 별도로 저장됩니다.";
 "This beta build was installed with TestFlight." = "이 베타 빌드는 TestFlight를 통해 설치되었습니다.";
+
+// Generic HUD preview samples
+"HUD Preview Browser" = "브라우저";
+"HUD Preview Chat" = "채팅";
+"HUD Preview Mail" = "메일";

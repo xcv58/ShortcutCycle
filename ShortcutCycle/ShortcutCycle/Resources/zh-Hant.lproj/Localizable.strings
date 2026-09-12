@@ -181,3 +181,8 @@
 "TestFlight Beta" = "TestFlight 測試版";
 "This is a local development build. Its settings are kept separate from the App Store app." = "這是本機開發建置版本。其設定會與 App Store 版 App 分開儲存。";
 "This beta build was installed with TestFlight." = "此測試版透過 TestFlight 安裝。";
+
+// Generic HUD preview samples
+"HUD Preview Browser" = "瀏覽器";
+"HUD Preview Chat" = "聊天";
+"HUD Preview Mail" = "郵件";

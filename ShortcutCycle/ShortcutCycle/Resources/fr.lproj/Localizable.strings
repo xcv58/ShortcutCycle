@@ -179,3 +179,8 @@
 "TestFlight Beta" = "Bêta TestFlight";
 "This is a local development build. Its settings are kept separate from the App Store app." = "Il s’agit d’une version de développement locale. Ses réglages sont stockés séparément de l’app App Store.";
 "This beta build was installed with TestFlight." = "Cette version bêta a été installée avec TestFlight.";
+
+// Generic HUD preview samples
+"HUD Preview Browser" = "Navigateur";
+"HUD Preview Chat" = "Discussion";
+"HUD Preview Mail" = "Courrier";

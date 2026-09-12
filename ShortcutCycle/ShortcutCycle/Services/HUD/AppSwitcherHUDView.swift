@@ -53,6 +53,28 @@ struct AppSwitcherHUDView: View {
     
     @AppStorage("showShortcutInHUD") private var showShortcutInHUD = true
     @AppStorage("appTheme") private var appTheme: AppTheme = .system
+
+    var body: some View {
+        HUDContentView(
+            apps: apps,
+            activeAppId: activeAppId,
+            shortcutString: showShortcutInHUD ? shortcutString : nil,
+            onSelect: onSelect
+        )
+        .padding(40)
+        .preferredColorScheme(appTheme.colorScheme)
+        .background(WindowAppearanceApplier(colorScheme: appTheme.colorScheme))
+    }
+}
+
+/// Presentation shared by the floating switcher and the settings preview.
+/// Window appearance, preferences, and input handling stay with their callers.
+struct HUDContentView: View {
+    let apps: [HUDAppItem]
+    let activeAppId: String
+    let shortcutString: String?
+    var onSelect: ((String) -> Void)? = nil
+
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     
@@ -83,9 +105,7 @@ struct AppSwitcherHUDView: View {
             // Active App Name
             activeAppNameView
         }
-        .padding(40)
-        .preferredColorScheme(appTheme.colorScheme)
-        .background(WindowAppearanceApplier(colorScheme: appTheme.colorScheme))
+
     }
     
     private var gridLayout: some View {
@@ -132,7 +152,7 @@ struct AppSwitcherHUDView: View {
                     .foregroundColor(.primary)
             }
             
-            if showShortcutInHUD, let shortcut = shortcutString {
+            if let shortcut = shortcutString {
                 Text(shortcut)
                     .font(.caption)
                     .fontWeight(.medium)

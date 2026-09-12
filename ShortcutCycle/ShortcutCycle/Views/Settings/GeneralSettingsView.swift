@@ -121,9 +121,12 @@ struct GeneralSettingsView: View {
                         .background(
                             RoundedRectangle(cornerRadius: 8, style: .continuous)
                                 .fill(
-                                    colorScheme == .dark
-                                        ? SettingsChromePalette.panelBackground(for: colorScheme)
-                                        : Color.black.opacity(0.05)
+                                    LinearGradient(
+                                        colors: [Color.blue, Color.purple, Color.orange]
+                                            .map { $0.opacity(colorScheme == .dark ? 0.16 : 0.09) },
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
                                 )
                         )
                         .overlay(
