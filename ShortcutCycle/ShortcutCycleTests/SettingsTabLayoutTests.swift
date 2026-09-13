@@ -31,6 +31,13 @@ final class SettingsTabLayoutTests: XCTestCase {
             return view.subviews.compactMap { nameField(in: $0) }.first
         }
         let field = try XCTUnwrap(nameField(in: host.view))
+        func assertFocusRingHasRoom(_ field: NSTextField, file: StaticString = #filePath, line: UInt = #line) throws {
+            let viewport = try XCTUnwrap(field.enclosingScrollView?.contentView, file: file, line: line)
+            let fieldRect = field.convert(field.bounds, to: viewport)
+            XCTAssertGreaterThanOrEqual(fieldRect.minX - viewport.bounds.minX, 12, file: file, line: line)
+            XCTAssertGreaterThanOrEqual(viewport.bounds.maxX - fieldRect.maxX, 12, file: file, line: line)
+        }
+        try assertFocusRingHasRoom(field)
         XCTAssertNil(field.currentEditor(), "Opening settings must not start renaming a group.")
         XCTAssertTrue(window.makeFirstResponder(field))
         await settle()
@@ -59,6 +66,11 @@ final class SettingsTabLayoutTests: XCTestCase {
         let returnedField = try XCTUnwrap(nameField(in: host.view))
         XCTAssertNil(returnedField.currentEditor(), "Returning from General must not resume a rename.")
         XCTAssertEqual(returnedField.stringValue, "Renamed intentionally")
+
+        window.setContentSize(NSSize(width: 720, height: 600))
+        host.view.layoutSubtreeIfNeeded()
+        await settle()
+        try assertFocusRingHasRoom(returnedField)
 
         window.makeFirstResponder(nil)
         for _ in 0..<20 {

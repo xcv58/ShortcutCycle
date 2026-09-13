@@ -40,7 +40,6 @@ struct GroupEditView: View {
     @State private var groupName: String = ""
     @State private var draggingApp: AppItem?
     @State private var dragPreviewApps: [AppItem]?
-    @State private var isNameFieldHovered: Bool = false
     @FocusState private var isNameFocused: Bool
     @State private var areSecondarySectionsMounted = false
     @State private var quickAddCandidates: [AppItem] = []
@@ -64,10 +63,12 @@ struct GroupEditView: View {
         ScrollView {
             content
                 .frame(maxWidth: .infinity, alignment: .leading)
+                // Keep native control borders and focus rings inside the scroll
+                // viewport instead of clipping them against its side edges.
+                .padding()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(SettingsChromePalette.windowBackground(for: colorScheme))
-        .padding()
         // Automatic focus should not begin a rename. Explicit clicks and keyboard
         // traversal still use the normal text-field focus behavior.
         .defaultFocus($isNameFocused, false)
@@ -146,28 +147,7 @@ struct GroupEditView: View {
                 .focused($isNameFocused)
                 .font(.title2)
                 .fontWeight(.medium)
-                .textFieldStyle(.plain)
-                .padding(.vertical, 4)
-                .padding(.horizontal, 8)
-                .background(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(nameFieldBackgroundColor)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .stroke(nameFieldBorderColor, lineWidth: nameFieldBorderWidth)
-                )
-                .shadow(
-                    color: nameFieldGlowColor,
-                    radius: nameFieldGlowRadius,
-                    x: 0,
-                    y: 0
-                )
-                .animation(.easeInOut(duration: 0.15), value: isNameFocused)
-                .animation(.easeInOut(duration: 0.15), value: isNameFieldHovered)
-                .onHover { hovering in
-                    isNameFieldHovered = hovering
-                }
+                .textFieldStyle(.roundedBorder)
                 .onChange(of: groupName) { _, newValue in
                     guard isNameFocused else { return }
                     var updatedGroup = group
@@ -178,54 +158,6 @@ struct GroupEditView: View {
         .task(id: groupId) {
             GroupSwitchPerformanceTracker.shared.markHeaderVisible(for: groupId)
         }
-    }
-
-    private var nameFieldBackgroundColor: Color {
-        if isNameFocused {
-            return SettingsChromePalette.focusRingFill(for: colorScheme)
-        }
-
-        if isNameFieldHovered {
-            return SettingsChromePalette.hoverRingFill(for: colorScheme)
-        }
-
-        return .clear
-    }
-
-    private var nameFieldBorderColor: Color {
-        if isNameFocused {
-            return SettingsChromePalette.focusRingBorder(for: colorScheme)
-        }
-
-        if isNameFieldHovered {
-            return SettingsChromePalette.hoverRingBorder(for: colorScheme)
-        }
-
-        return .clear
-    }
-
-    private var nameFieldBorderWidth: CGFloat {
-        isNameFocused ? 1.5 : (isNameFieldHovered ? 1 : 0)
-    }
-
-    private var nameFieldGlowColor: Color {
-        if isNameFocused {
-            return SettingsChromePalette.focusRingGlow(for: colorScheme)
-        }
-
-        if isNameFieldHovered {
-            return SettingsChromePalette.hoverRingGlow(for: colorScheme)
-        }
-
-        return .clear
-    }
-
-    private var nameFieldGlowRadius: CGFloat {
-        if isNameFocused {
-            return 8
-        }
-
-        return isNameFieldHovered ? 4 : 0
     }
 
     private func appsSection(for group: AppGroup) -> some View {
