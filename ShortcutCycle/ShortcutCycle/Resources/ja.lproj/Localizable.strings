@@ -179,3 +179,8 @@
 "TestFlight Beta" = "TestFlightベータ";
 "This is a local development build. Its settings are kept separate from the App Store app." = "これはローカルの開発ビルドです。設定はApp Store版のアプリとは別に保存されます。";
 "This beta build was installed with TestFlight." = "このベータビルドはTestFlightでインストールされました。";
+
+// Generic HUD preview samples
+"HUD Preview Browser" = "ブラウザ";
+"HUD Preview Chat" = "チャット";
+"HUD Preview Mail" = "メール";

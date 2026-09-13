@@ -91,20 +91,25 @@ final class HUDGlassAppearanceTests: XCTestCase {
     }
 
     func testPreviewKeepsShortcutLayoutInStandardAndHighContrastAppearances() {
+        // The preview must obey its explicit toggle, even when the live HUD's
+        // persisted shortcut preference is disabled.
+        defaults.set(false, forKey: "showShortcutInHUD")
         for appearance in [NSAppearance.Name.aqua, .darkAqua,
                            .accessibilityHighContrastAqua, .accessibilityHighContrastDarkAqua] {
             let withoutShortcut = host(
-                AnyView(HUDPreviewView(showShortcut: false)),
+                AnyView(HUDPreviewView(showShortcut: false).defaultAppStorage(defaults)),
                 appearance: appearance
             ).fittingSize
             let withShortcut = host(
-                AnyView(HUDPreviewView(showShortcut: true)),
+                AnyView(HUDPreviewView(showShortcut: true).defaultAppStorage(defaults)),
                 appearance: appearance
             ).fittingSize
 
             XCTAssertGreaterThan(withoutShortcut.width, 0)
             XCTAssertEqual(withShortcut.width, withoutShortcut.width, accuracy: 1)
             XCTAssertGreaterThan(withShortcut.height, withoutShortcut.height)
+            XCTAssertLessThanOrEqual(withShortcut.height, 160, "The preview must fit its settings canvas.")
+            XCTAssertLessThanOrEqual(withShortcut.width, 320, "The preview must fit a narrow settings column.")
         }
     }
 

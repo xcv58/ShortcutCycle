@@ -93,7 +93,8 @@ struct AppCommands: Commands {
 
         CommandMenu("View") {
             Button("Toggle Sidebar") {
-                NSApp.sendAction(#selector(NSSplitViewController.toggleSidebar(_:)), to: nil, from: nil)
+                let store = GroupStore.shared
+                store.columnVisibility = store.columnVisibility == .detailOnly ? .all : .detailOnly
             }
             .keyboardShortcut("s", modifiers: [.command, .control])
             .disabled(selectedTab != "groups")

@@ -1,124 +1,87 @@
+import AppKit
 import SwiftUI
+#if canImport(ShortcutCycleCore)
+import ShortcutCycleCore
+#endif
 
-/// A static preview of the HUD for settings
+/// A noninteractive sample of the real HUD, using the original preview symbols.
 struct HUDPreviewView: View {
     let showShortcut: Bool
     var selectedLanguage: String = "system"
-    @Environment(\.colorScheme) var colorScheme
 
-    private var previewShellFill: Color {
-        colorScheme == .dark
-            ? SettingsChromePalette.panelBackground(for: colorScheme)
-            : Color.white.opacity(0.42)
-    }
+    private let scale: CGFloat = 2.0 / 3.0
 
-    private var previewShellBorder: Color {
-        colorScheme == .dark
-            ? SettingsChromePalette.panelBorder(for: colorScheme)
-            : Color.primary.opacity(0.10)
-    }
-
-    private var selectedTileFill: Color {
-        colorScheme == .dark
-            ? SettingsChromePalette.inlineFill(for: colorScheme)
-            : Color.primary.opacity(0.05)
-    }
-
-    private var selectedTileBorder: Color {
-        colorScheme == .dark
-            ? SettingsChromePalette.panelBorder(for: colorScheme)
-            : Color.primary.opacity(0.10)
-    }
-
-    private var shortcutCapsuleFill: Color {
-        colorScheme == .dark
-            ? SettingsChromePalette.inlineFill(for: colorScheme)
-            : Color.white.opacity(0.72)
-    }
-    
     var body: some View {
-        VStack(spacing: 16) {
-            // Icons Row
-            HStack(spacing: 16) {
-                // Mock icons
-                Image(systemName: "safari.fill")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 48, height: 48)
-                    .foregroundColor(.blue)
-                    .padding(8)
-                    .opacity(0.6)
-                
-                Image(systemName: "message.fill")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 48, height: 48)
-                    .foregroundColor(.green)
-                    .padding(8)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(selectedTileFill)
+        HUDPreviewLayout(scale: scale) {
+            HUDContentView(
+                apps: HUDPreviewSample.allCases.map { sample in
+                    HUDAppItem(
+                        id: sample.rawValue,
+                        name: sample.nameKey.localized(language: selectedLanguage),
+                        icon: sample.icon,
+                        isRunning: true
                     )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .stroke(selectedTileBorder, lineWidth: 1)
-                    )
-                    .shadow(
-                        color: colorScheme == .dark ? .black.opacity(0.18) : .black.opacity(0.10),
-                        radius: colorScheme == .dark ? 10 : 4,
-                        x: 0,
-                        y: colorScheme == .dark ? 6 : 2
-                    )
-                    .scaleEffect(1.1)
-                
-                Image(systemName: "envelope.fill")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 48, height: 48)
-                    .foregroundColor(.blue)
-                    .padding(8)
-                    .opacity(0.6)
-            }
-            .padding(12)
-            .modifier(HUDGlassBackground(shape: RoundedRectangle(cornerRadius: 20, style: .continuous)) {
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(previewShellFill)
-                    .shadow(
-                        color: colorScheme == .dark ? .black.opacity(0.24) : .black.opacity(0.10),
-                        radius: colorScheme == .dark ? 18 : 10,
-                        x: 0,
-                        y: colorScheme == .dark ? 10 : 4
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .stroke(previewShellBorder, lineWidth: 1)
-                    )
-            })
-            
-            // App Name Label
-            VStack(spacing: 2) {
-                Text("Messages")
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                
-                if showShortcut {
-                    Text("⌃ + ⌥ + ⌘ + C")
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .foregroundStyle(.secondary)
-                }
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 6)
-            .modifier(HUDGlassBackground(shape: Capsule()) {
-                Capsule()
-                    .fill(shortcutCapsuleFill)
-                    .overlay(
-                        Capsule()
-                            .stroke(previewShellBorder.opacity(colorScheme == .dark ? 0.85 : 0.65), lineWidth: 1)
-                    )
-            })
+                },
+                activeAppId: HUDPreviewSample.chat.rawValue,
+                shortcutString: showShortcut ? "⌃ + ⌥ + ⌘ + C" : nil
+            )
+            .scaleEffect(scale, anchor: .topLeading)
         }
+        .allowsHitTesting(false)
         .accessibilityHidden(true)
     }
+}
+
+/// Scale both the drawing and its layout footprint, leaving the live HUD's
+/// spacing and typography intact and avoiding clipped shadows in the preview.
+private struct HUDPreviewLayout: Layout {
+    let scale: CGFloat
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let size = subviews.first?.sizeThatFits(.unspecified) ?? .zero
+        return CGSize(width: size.width * scale, height: size.height * scale)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        subviews.first?.place(at: bounds.origin, anchor: .topLeading, proposal: .unspecified)
+    }
+}
+
+/// The same SF Symbols as the original preview; no installed app icon lookups.
+private enum HUDPreviewSample: String, CaseIterable {
+    case browser, chat, mail
+
+    var nameKey: String {
+        switch self {
+        case .browser: return "HUD Preview Browser"
+        case .chat: return "HUD Preview Chat"
+        case .mail: return "HUD Preview Mail"
+        }
+    }
+
+    var icon: NSImage? { Self.icons[self] }
+
+    private var symbolName: String {
+        switch self {
+        case .browser: return "safari.fill"
+        case .chat: return "message.fill"
+        case .mail: return "envelope.fill"
+        }
+    }
+
+    private static let icons: [HUDPreviewSample: NSImage] = Dictionary(
+        uniqueKeysWithValues: allCases.compactMap { sample in
+            let color: NSColor = sample == .chat ? .systemGreen : .systemBlue
+            let configuration = NSImage.SymbolConfiguration(pointSize: 72, weight: .regular)
+                .applying(NSImage.SymbolConfiguration(paletteColors: [color]))
+                .applying(.preferringMonochrome())
+            guard let icon = NSImage(systemSymbolName: sample.symbolName, accessibilityDescription: nil)?
+                .withSymbolConfiguration(configuration) else {
+                return nil
+            }
+            // Keep the blue/green symbol palette when rendered by the shared HUD.
+            icon.isTemplate = false
+            return (sample, icon)
+        }
+    )
 }
