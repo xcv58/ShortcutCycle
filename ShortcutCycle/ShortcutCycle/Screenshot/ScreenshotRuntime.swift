@@ -15,6 +15,20 @@ struct ScreenshotWindowInfo: Encodable {
     let windowNumber: Int
 }
 
+/// Fixtures must never replace backups from a normally launched app, including
+/// non-sandboxed local capture builds that share the user's Application Support.
+final class ScreenshotFileManager: FileManager, @unchecked Sendable {
+    private let fixtureRoot = FileManager.default.temporaryDirectory
+        .appendingPathComponent("ShortcutCycle-Screenshots-\(UUID().uuidString)", isDirectory: true)
+
+    override func urls(for directory: SearchPathDirectory, in domainMask: SearchPathDomainMask) -> [URL] {
+        if directory == .applicationSupportDirectory && domainMask == .userDomainMask {
+            return [fixtureRoot]
+        }
+        return super.urls(for: directory, in: domainMask)
+    }
+}
+
 enum ScreenshotError: LocalizedError {
     case captureFailed(String)
 
@@ -40,6 +54,7 @@ enum ScreenshotRuntime {
             userDefaults: .standard,
             backupDebounceInterval: 3600,
             saveDebounceInterval: 0,
+            fileManager: ScreenshotFileManager(),
             autoBackupEnabled: false
         )
     }

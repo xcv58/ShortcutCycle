@@ -1,0 +1,226 @@
+{
+  "captured_at": "2026-09-15T17:52:25.742041+00:00",
+  "source_commit": "6f788bf9d1121ad99fcb93b0e1c9219c9967e423",
+  "binary_sha256": "026843ac05f6dcf7df929800cdaf2c3ed0651e8dea3e8745f1a974573985b049",
+  "bundle_id": "com.xcv58.ShortcutCycle.capture",
+  "macos": "ProductName:\t\tmacOS\nProductVersion:\t\t27.0\nBuildVersion:\t\t26A428",
+  "hud_capture_region_points": "36,41,1440,900",
+  "glass_tint": "1",
+  "reduce_transparency": "0",
+  "increase_contrast": "0",
+  "images": {
+    "hud-light": {
+      "scene": "hud-horizontal",
+      "theme": "light",
+      "sha256": "c69c7621fc54d644a75b93ac23af37f0a5f83eca54e37bde112e24ebeaf5408a"
+    },
+    "hud-dark": {
+      "scene": "hud-horizontal",
+      "theme": "dark",
+      "sha256": "41a439eada53fff94752fb4fbd8adf701d14cf4e70e4130b2bef662c311573bb"
+    },
+    "hud-grid-light": {
+      "scene": "hud-grid",
+      "theme": "light",
+      "sha256": "33acb108e3a97341ca93f9b97294503df89eab16ec35dcbcfa6a94adb0d5deac"
+    },
+    "hud-grid-dark": {
+      "scene": "hud-grid",
+      "theme": "dark",
+      "sha256": "76bcdbfd84767f954357e78047e2f911dbde4466399060558a845cb34ee911c6"
+    },
+    "group-light": {
+      "scene": "group",
+      "theme": "light",
+      "sha256": "fda2995555c7975386cabea3c4e28fad8ab8993553b727e33f6c8514cdf9d774"
+    },
+    "group-dark": {
+      "scene": "group",
+      "theme": "dark",
+      "sha256": "8d7115e1b1a81da0656e244853fb4d67e47c143654f2b5c220c1ea7eefd4730a"
+    },
+    "general-light": {
+      "scene": "general",
+      "theme": "light",
+      "sha256": "21f707b024b06fd0ecba842572cbe6be491badf1751a63ebe25b955b0a39d71e"
+    },
+    "general-dark": {
+      "scene": "general",
+      "theme": "dark",
+      "sha256": "457977defbf01e28764ce405ad9cf5c988c136f21a7cacbfeb6fa4ff03cae729"
+    },
+    "automatic-backups": {
+      "scene": "backups",
+      "theme": "light",
+      "sha256": "27be6ad0eada3d5ac03c88b9c6a6a7cfb644401b434400635c13c45fd02ed552"
+    },
+    "automatic-backups-dark": {
+      "scene": "backups",
+      "theme": "dark",
+      "sha256": "be98fd4a9aceaff9672305760efb5ea53c75b91aa832f677dd9f2f8a51d93c7f"
+    }
+  },
+  "capture_preferences_restored": true,
+  "web_images": {
+    "hud-light.webp": {
+      "size": [
+        1800,
+        1125
+      ],
+      "sha256": "975d8379f18bf65af890ec39a66366d99d1b8030b8cb5790f119741ae31d547b",
+      "bytes": 360422
+    },
+    "hud-light-small.webp": {
+      "size": [
+        900,
+        562
+      ],
+      "sha256": "5ad207b806360b37979259a686232f0ce18d82d65462a7f80e723687fda6d13d",
+      "bytes": 102360
+    },
+    "hud-dark.webp": {
+      "size": [
+        1800,
+        1125
+      ],
+      "sha256": "eaa21bd2140399ec6a85226e63ddacf2ab73ae724ed5ec9b7431561372a734bb",
+      "bytes": 360088
+    },
+    "hud-dark-small.webp": {
+      "size": [
+        900,
+        562
+      ],
+      "sha256": "91bffd081d24d7e17f6093757b15a200288dea04939c5b03824822112415270a",
+      "bytes": 102284
+    },
+    "hud-grid-light.webp": {
+      "size": [
+        1800,
+        1125
+      ],
+      "sha256": "5c8a71bf56f8fd646cc02cd8fb41ebfafe916aa5284c07b6b514c0b0a0659abf",
+      "bytes": 330116
+    },
+    "hud-grid-light-small.webp": {
+      "size": [
+        900,
+        562
+      ],
+      "sha256": "cb96d3fa3faedd1df08dcfdbcc20437b5456d087b08480cdaa460e5b377b3c3d",
+      "bytes": 93738
+    },
+    "hud-grid-dark.webp": {
+      "size": [
+        1800,
+        1125
+      ],
+      "sha256": "0671f1d6f750d780b5b91b9054cb39c416227b57890717cbb2128871d5bac3a6",
+      "bytes": 329394
+    },
+    "hud-grid-dark-small.webp": {
+      "size": [
+        900,
+        562
+      ],
+      "sha256": "eab4ec08e420ff51959e82ed287c8e6a11f1b00b7e1c7dcaed388c622a9fc51d",
+      "bytes": 93244
+    },
+    "group-light.webp": {
+      "size": [
+        1800,
+        1125
+      ],
+      "sha256": "a44ef7b56cfa51264d9c97df8ca1b3aa200348f4bfe60007b7f91376efe7bc02",
+      "bytes": 53470
+    },
+    "group-light-small.webp": {
+      "size": [
+        900,
+        562
+      ],
+      "sha256": "e7af18f2bfdd4f6585916df8302185cd1b1772fcf41a8c4f698ae02592eef18f",
+      "bytes": 20732
+    },
+    "group-dark.webp": {
+      "size": [
+        1800,
+        1125
+      ],
+      "sha256": "972a271dca4465503000191555255014246e95188400486a24a9a6d81a4884d1",
+      "bytes": 52752
+    },
+    "group-dark-small.webp": {
+      "size": [
+        900,
+        562
+      ],
+      "sha256": "4b07e1e9fa2d31260ac74fb9a2b7ba852e28f0b5e94bdb91b84ad1773f3ee716",
+      "bytes": 20520
+    },
+    "general-light.webp": {
+      "size": [
+        1800,
+        1125
+      ],
+      "sha256": "a8530047f472ce3fd7ec5e5b7f7319f84ef254d90a571e2cb452993481849d1e",
+      "bytes": 29584
+    },
+    "general-light-small.webp": {
+      "size": [
+        900,
+        562
+      ],
+      "sha256": "3d654d7a595e305924c2e3a6e1cdabd2febdc95162c3f2af0c8d5581ef62ce54",
+      "bytes": 11022
+    },
+    "general-dark.webp": {
+      "size": [
+        1800,
+        1125
+      ],
+      "sha256": "39bef6c552ba49af41ca8f7758aad54ccbc7cc705b1df1f3899f1e4adb6b68c0",
+      "bytes": 29162
+    },
+    "general-dark-small.webp": {
+      "size": [
+        900,
+        562
+      ],
+      "sha256": "ecf651ee7e024a73c309fb5d9f93b6e33ff9ae3e7f4ff34ca74248b376b7ad34",
+      "bytes": 11196
+    },
+    "automatic-backups.webp": {
+      "size": [
+        1800,
+        1125
+      ],
+      "sha256": "cbd573256cc0256001eb5854b90401e47d95b89c55a88ff400ddcd88a08cc194",
+      "bytes": 42330
+    },
+    "automatic-backups-small.webp": {
+      "size": [
+        900,
+        562
+      ],
+      "sha256": "37c6c0d31d31db0807e9ca783b7bc3c47feda386e0b4e49115d3e68cdb88f420",
+      "bytes": 15534
+    },
+    "automatic-backups-dark.webp": {
+      "size": [
+        1800,
+        1125
+      ],
+      "sha256": "47939489f0ad75120b8985341804d56c2e72f2240836d5d8b522257aaff59725",
+      "bytes": 41874
+    },
+    "automatic-backups-dark-small.webp": {
+      "size": [
+        900,
+        562
+      ],
+      "sha256": "b44358609b643bfb7365a4960e4b55a93729b2606cc021e3a11c403e89ebd3da",
+      "bytes": 15676
+    }
+  }
+}

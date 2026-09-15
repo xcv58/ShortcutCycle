@@ -11,6 +11,8 @@ jobs:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v5
+    - name: Test capture isolation helpers
+      run: python3 -m unittest discover -s scripts -p test_video_pipeline.py
     - name: Run tests with coverage
       run: swift test --enable-code-coverage
       working-directory: ShortcutCycle
