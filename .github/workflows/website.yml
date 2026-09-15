@@ -1,0 +1,27 @@
+name: Website
+
+on:
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'scripts/test_website.cjs'
+      - 'ShortcutCycle/ShortcutCycle/Resources/**'
+      - '.github/workflows/website.yml'
+  push:
+    branches: [master]
+    paths:
+      - 'docs/**'
+      - 'scripts/test_website.cjs'
+      - 'ShortcutCycle/ShortcutCycle/Resources/**'
+      - '.github/workflows/website.yml'
+
+jobs:
+  localization:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check translations and appearance preferences
+        run: node --test scripts/test_website.cjs
