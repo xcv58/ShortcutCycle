@@ -137,5 +137,6 @@
   "actions.copyFailed": "コピーできませんでした",
   "actions.backToTop": "ページ上部へ",
   "footer.privacyPolicy": "プライバシーポリシー",
-  "footer.copyright": "&copy; 2026 Jenny Media LLC. All rights reserved."
+  "footer.copyright": "&copy; 2026 Jenny Media LLC. All rights reserved.",
+  "language.loading": "翻訳を読み込み中…"
 }

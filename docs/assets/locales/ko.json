@@ -137,5 +137,6 @@
   "actions.copyFailed": "복사하지 못했습니다",
   "actions.backToTop": "맨 위로",
   "footer.privacyPolicy": "개인정보 처리방침",
-  "footer.copyright": "&copy; 2026 Jenny Media LLC. 모든 권리 보유."
+  "footer.copyright": "&copy; 2026 Jenny Media LLC. 모든 권리 보유.",
+  "language.loading": "번역을 불러오는 중…"
 }

@@ -137,5 +137,6 @@
   "actions.copyFailed": "Échec de la copie",
   "actions.backToTop": "Retour en haut",
   "footer.privacyPolicy": "Politique de confidentialité",
-  "footer.copyright": "&copy; 2026 Jenny Media LLC. Tous droits réservés."
+  "footer.copyright": "&copy; 2026 Jenny Media LLC. Tous droits réservés.",
+  "language.loading": "Chargement de la traduction…"
 }

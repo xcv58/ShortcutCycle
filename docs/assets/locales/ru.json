@@ -137,5 +137,6 @@
   "actions.copyFailed": "Не удалось скопировать",
   "actions.backToTop": "Наверх",
   "footer.privacyPolicy": "Политика конфиденциальности",
-  "footer.copyright": "&copy; 2026 Jenny Media LLC. Все права защищены."
+  "footer.copyright": "&copy; 2026 Jenny Media LLC. Все права защищены.",
+  "language.loading": "Загрузка перевода…"
 }

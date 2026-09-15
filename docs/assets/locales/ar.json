@@ -137,5 +137,6 @@
   "actions.copyFailed": "تعذّر النسخ",
   "actions.backToTop": "العودة إلى الأعلى",
   "footer.privacyPolicy": "سياسة الخصوصية",
-  "footer.copyright": "&copy; ٢٠٢٦ Jenny Media LLC. جميع الحقوق محفوظة."
+  "footer.copyright": "&copy; ٢٠٢٦ Jenny Media LLC. جميع الحقوق محفوظة.",
+  "language.loading": "جارٍ تحميل الترجمة…"
 }

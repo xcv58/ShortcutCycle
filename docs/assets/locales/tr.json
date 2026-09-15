@@ -137,5 +137,6 @@
   "actions.copyFailed": "Kopyalanamadı",
   "actions.backToTop": "Başa dön",
   "footer.privacyPolicy": "Gizlilik Politikası",
-  "footer.copyright": "&copy; 2026 Jenny Media LLC. Tüm hakları saklıdır."
+  "footer.copyright": "&copy; 2026 Jenny Media LLC. Tüm hakları saklıdır.",
+  "language.loading": "Çeviri yükleniyor…"
 }

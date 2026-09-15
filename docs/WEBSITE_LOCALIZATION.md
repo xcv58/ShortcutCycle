@@ -45,7 +45,10 @@ support, privacy, and source-code destinations retain their own languages.
   Portuguese variants use the supported Brazilian Portuguese translation.
 - Only English and the selected locale are fetched initially. Subsequent choices
   are cached for the current page. A failed user selection preserves the previous
-  language and announces the failure. A failed initial load retains English HTML.
+  language and shows/announces the failure. A failed initial load retains English HTML.
+  Uncached choices immediately show a spinner and localized loading text, while
+  the picker remains usable. Requests time out after 10 seconds; stale requests
+  cannot clear feedback for a newer choice. Cached choices skip loading feedback.
 - The page sets `lang` and Arabic `dir="rtl"`. Navigation follows reading direction;
   code remains left-to-right. UI copy, accessibility labels, captions, and browser
   metadata update together. This is a client-side language picker, not separate
@@ -68,3 +71,9 @@ on small screens. Inspect Arabic navigation, gallery arrows, code blocks, and
 mixed-direction text, plus Japanese/Chinese sentence spacing and long headings.
 Test reload persistence, device appearance changes, footer reset, gallery theme
 override, failed locale loads, rapid language changes, and blocked storage.
+
+To reproduce slow-request regressions, open a fresh English page in an isolated
+browser and run `scripts/verify_website_loading.js` with
+`agent-browser eval --stdin < scripts/verify_website_loading.js`. It checks immediate
+feedback, changing choices mid-load, localized status, timeout, failure, cached
+selection, and retry. The timeout test takes 10 seconds.

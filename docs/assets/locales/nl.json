@@ -137,5 +137,6 @@
   "actions.copyFailed": "Kopiëren mislukt",
   "actions.backToTop": "Naar boven",
   "footer.privacyPolicy": "Privacybeleid",
-  "footer.copyright": "&copy; 2026 Jenny Media LLC. Alle rechten voorbehouden."
+  "footer.copyright": "&copy; 2026 Jenny Media LLC. Alle rechten voorbehouden.",
+  "language.loading": "Vertaling wordt geladen…"
 }

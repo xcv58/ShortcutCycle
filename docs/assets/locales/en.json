@@ -137,5 +137,6 @@
   "theme.switchToDark": "Switch to dark mode",
   "theme.switchToLight": "Switch to light mode",
   "theme.useSystem": "Use device appearance",
-  "theme.usingSystem": "Following device appearance"
+  "theme.usingSystem": "Following device appearance",
+  "language.loading": "Loading translation…"
 }

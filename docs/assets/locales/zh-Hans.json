@@ -137,5 +137,6 @@
   "theme.switchToDark": "切换到深色模式",
   "theme.switchToLight": "切换到浅色模式",
   "theme.useSystem": "跟随设备外观",
-  "theme.usingSystem": "当前跟随设备外观"
+  "theme.usingSystem": "当前跟随设备外观",
+  "language.loading": "正在加载翻译…"
 }
