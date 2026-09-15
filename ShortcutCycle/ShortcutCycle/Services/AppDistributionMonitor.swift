@@ -78,7 +78,8 @@ final class AppDistributionMonitor: ObservableObject {
 
     var shouldShowStatus: Bool {
         #if DEBUG
-        return !ScreenshotMode.usesSyntheticControls && channel != .appStore
+        // Marketing captures show the released UI in both native and synthetic modes.
+        return !ScreenshotMode.isActive && channel != .appStore
         #else
         return channel != .appStore
         #endif

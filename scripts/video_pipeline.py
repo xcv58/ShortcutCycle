@@ -319,7 +319,7 @@ def preferences_path(profile: dict[str, Any]) -> Path:
     raw_path = profile.get("preferences_path")
     if raw_path:
         return expand_repo_path(str(raw_path))
-    return integration_container_root(profile) / "Data" / "Library" / "Preferences" / f"{bundle_id(profile)}.plist"
+    return integration_home_directory(profile) / "Library" / "Preferences" / f"{bundle_id(profile)}.plist"
 
 
 def settings_backup_manifest_path(run_id: str, scene_id: str) -> Path:
@@ -416,7 +416,7 @@ def prepare_session_settings_backups(scene_ids: list[str], run_id: str, label: s
         if key in backups:
             continue
 
-        was_running = shortcutcycle_process_count() > 0
+        was_running = shortcutcycle_process_count(profile) > 0
         quit_integration_app(profile)
         backup_label = f"{label}-{slugify(bundle_id(profile))}"
         backups[key] = (
@@ -531,27 +531,47 @@ def integration_container_root(profile: dict[str, Any]) -> Path:
     return Path.home() / "Library" / "Containers" / bundle_id(profile)
 
 
+def integration_home_directory(profile: dict[str, Any]) -> Path:
+    if profile.get("sandboxed", True) is False:
+        return Path.home()
+    return integration_container_root(profile) / "Data"
+
+
 def integration_query_result_path(profile: dict[str, Any]) -> Path:
-    return integration_container_root(profile) / "Data" / "tmp" / "shortcutcycle-result.json"
+    return integration_home_directory(profile) / "tmp" / "shortcutcycle-result.json"
 
 
-def shortcutcycle_process_count() -> int:
-    result = run(["pgrep", "-x", "ShortcutCycle"], capture_output=True, check=False)
-    if result.returncode != 0:
-        return 0
-    return len([line for line in result.stdout.splitlines() if line.strip()])
+def integration_process_ids(profile: dict[str, Any]) -> list[int]:
+    """Match the configured app executable, never every ShortcutCycle install."""
+    bundle = app_bundle_path(profile)
+    with (bundle / "Contents" / "Info.plist").open("rb") as handle:
+        executable = plistlib.load(handle)["CFBundleExecutable"]
+    expected = str(bundle / "Contents" / "MacOS" / executable)
+    result = run(["ps", "-axo", "pid=,comm="], capture_output=True, check=True)
+    pids = []
+    for line in result.stdout.splitlines():
+        fields = line.strip().split(None, 1)
+        if len(fields) == 2 and fields[1] == expected:
+            pids.append(int(fields[0]))
+    return pids
+
+
+def shortcutcycle_process_count(profile: dict[str, Any]) -> int:
+    return len(integration_process_ids(profile))
 
 
 def quit_integration_app(profile: dict[str, Any]) -> None:
-    run(["pkill", "-x", "ShortcutCycle"], capture_output=True, check=False)
+    for pid in integration_process_ids(profile):
+        run(["kill", "-TERM", str(pid)], capture_output=True, check=False)
     deadline = time.monotonic() + 8.0
     while time.monotonic() < deadline:
-        if shortcutcycle_process_count() == 0:
+        if shortcutcycle_process_count(profile) == 0:
             time.sleep(0.4)
             return
         time.sleep(0.2)
 
-    run(["pkill", "-9", "-x", "ShortcutCycle"], capture_output=True, check=False)
+    for pid in integration_process_ids(profile):
+        run(["kill", "-KILL", str(pid)], capture_output=True, check=False)
     time.sleep(0.6)
 
 
@@ -561,7 +581,7 @@ def launch_integration_app(profile: dict[str, Any]) -> None:
 
     deadline = time.monotonic() + float(profile.get("launch_settle_seconds", 3.0)) + 5.0
     while time.monotonic() < deadline:
-        if shortcutcycle_process_count() > 0:
+        if shortcutcycle_process_count(profile) > 0:
             time.sleep(float(profile.get("launch_settle_seconds", 3.0)))
             return
         time.sleep(0.2)
@@ -675,7 +695,7 @@ def settings_export_payload_for_fixture(fixture: dict[str, Any]) -> dict[str, An
 
 
 def fixture_import_path(profile: dict[str, Any]) -> Path:
-    return integration_container_root(profile) / "Data" / "tmp" / "shortcutcycle-fixture.json"
+    return integration_home_directory(profile) / "tmp" / "shortcutcycle-fixture.json"
 
 
 def seed_fixture(profile: dict[str, Any], fixture_id: str) -> None:
@@ -3050,7 +3070,7 @@ def capture_scene(scene_id: str, run_id: str, *, settings_backups: SettingsBacku
             stash_cursor()
             time.sleep(0.25)
 
-        was_running = shortcutcycle_process_count() > 0
+        was_running = shortcutcycle_process_count(profile) > 0
         quit_integration_app(profile)
         if settings_backups is None or settings_backup_key(profile) not in settings_backups:
             settings_backup = backup_integration_settings(profile, scene_id, run_id, was_running=was_running)
