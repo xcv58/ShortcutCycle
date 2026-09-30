@@ -23,7 +23,7 @@ ShortcutCycle 1.12 makes it easier to share feedback.
 `ShortcutCycle/ShortcutCycle/Assets.xcassets/AppIcon.appiconset/1024.png`
 
 ## Privacy Policy
-[Privacy Policy](https://github.com/xcv58/ShortcutCycle/blob/master/PRIVACY_POLICY.md) (File created at root: `PRIVACY_POLICY.md`)
+[Privacy Policy](https://s.jenny.media/privacy/) (Source: `PRIVACY_POLICY.md`)
 
 ## Description
 **Master your workflow. Stop hunting for windows.**
@@ -67,7 +67,7 @@ ShortcutCycle acts as both a switcher and a launcher. If you try to cycle to an 
 productivity, window manager, command tab, alt tab, app switcher, workflow, hotkey, automation, launcher, macos, contexts, fast
 
 ## Support URL
-https://github.com/xcv58/ShortcutCycle/issues
+https://s.jenny.media/support/
 
 ## Copyright
 2026 ShortcutCycle

@@ -1,6 +1,6 @@
 # 隐私政策
 
-**最后更新日期：2026年1月26日**
+**最后更新日期：2026年9月30日**
 
 **ShortcutCycle**（"我们"）尊重您的隐私。本隐私政策说明了当您使用我们的应用程序时，我们如何收集、使用和处理您的信息。
 
@@ -15,9 +15,9 @@ ShortcutCycle 是一款完全在您设备上运行的本地化 macOS 工具。
 
 ## 2. 权限
 
-ShortcutCycle 请求**辅助功能权限**仅用于执行其核心功能：检测键盘快捷键并在应用程序之间切换。此数据在本地实时处理，永不存储或传输。
+ShortcutCycle 会注册您指定的键盘快捷键，并使用 macOS API 在应用之间切换。手动导入或导出设置时，您可以选择允许应用访问哪些设置文件。
 
 ## 3. 联系我们
 
 如果您对本隐私政策有任何疑问，请通过以下方式联系我们：
-[https://github.com/xcv58/ShortcutCycle/issues](https://github.com/xcv58/ShortcutCycle/issues)
+[ShortcutCycle 支持页面](https://s.jenny.media/support/)

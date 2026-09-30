@@ -15,7 +15,7 @@ ShortcutCycle is a localized macOS utility that operates entirely on your device
 
 ## 2. Permissions
 
-ShortcutCycle requests **Accessibility Permissions** solely to perform its core function: detecting keyboard shortcuts and switching between applications. This data is processed locally in real-time and is never stored or transmitted.
+ShortcutCycle registers the keyboard shortcuts you assign and switches between apps using macOS APIs. For manual imports and exports, you choose which settings files the app can access.
 
 ## 3. Contact Us
 
