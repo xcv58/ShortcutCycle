@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Last Updated: January 26, 2026**
+**Last Updated: September 30, 2026**
 
 **ShortcutCycle** ("we," "us," or "our") respects your privacy. This Privacy Policy describes how we collect, use, and handle your information when you use our application.
 
@@ -20,4 +20,4 @@ ShortcutCycle requests **Accessibility Permissions** solely to perform its core 
 ## 3. Contact Us
 
 If you have any questions about this Privacy Policy, please contact us at:
-[https://github.com/xcv58/ShortcutCycle/issues](https://github.com/xcv58/ShortcutCycle/issues)
+[ShortcutCycle Support](https://s.jenny.media/support/)

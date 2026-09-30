@@ -43,8 +43,9 @@ Support navigation stays on this site and uses the selected language.
 The Support page clearly labels its external GitHub Issues reporting destination;
 GitHub and source-code destinations retain their own languages.
 
-The Privacy page translates the existing `PRIVACY_POLICY.md` without changing its
-January 26, 2026 policy date or commitments. Support reuses the homepage FAQ keys
+The Privacy page translates `PRIVACY_POLICY.md`. Keep its last-updated date in sync
+across the Markdown policy, HTML fallback, and all locale files when updating it.
+Support reuses the homepage FAQ keys
 and adds permissions, shortcut troubleshooting, and the existing reporting channel.
 When changing header/footer markup, update all three HTML pages together.
 
