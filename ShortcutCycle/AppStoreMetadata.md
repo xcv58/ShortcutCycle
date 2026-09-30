@@ -12,8 +12,12 @@ Cycle apps by group, instantly.
 ## Promotional Text
 Stop endlessly tabbing. Group your apps by context—Web, Code, Social—and cycle through them with dedicated hotkeys. Build muscle memory and flow.
 
-## What's New (1.11)
-This maintenance update keeps ShortcutCycle current for App Store distribution. It contains no user-facing changes from version 1.10.
+## What's New (1.12)
+ShortcutCycle 1.12 makes it easier to share feedback.
+
+- Send bug reports and feature suggestions from the menu bar or General settings.
+- Share your experience with an optional App Store review link in General settings.
+- Feedback & Support is available in all 15 supported languages.
 
 ## App Icon
 `ShortcutCycle/ShortcutCycle/Assets.xcassets/AppIcon.appiconset/1024.png`
