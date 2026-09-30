@@ -184,3 +184,13 @@
 "HUD Preview Browser" = "브라우저";
 "HUD Preview Chat" = "채팅";
 "HUD Preview Mail" = "메일";
+/* Feedback & Support */
+"Feedback & Support" = "피드백 및 지원";
+"Help improve ShortcutCycle" = "ShortcutCycle 개선에 참여하세요";
+"Report a bug or suggest a feature." = "버그를 신고하거나 기능을 제안하세요.";
+"Send Feedback..." = "피드백 보내기...";
+"Opens GitHub Issues in your browser." = "브라우저에서 GitHub Issues를 엽니다.";
+"App Store Review" = "App Store 리뷰";
+"Share your experience on the App Store." = "App Store에서 사용 경험을 공유하세요.";
+"Write a Review..." = "리뷰 작성...";
+"Opens the App Store review page." = "App Store 리뷰 페이지를 엽니다.";

@@ -16,6 +16,10 @@
 		C0A1D0022FB0000100C0DE01 /* GroupSwitchPerformanceTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A1D0002FB0000100C0DE01 /* GroupSwitchPerformanceTracker.swift */; };
 		C3D100022FC2000100C0DE01 /* AppDistributionMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D100012FC2000100C0DE01 /* AppDistributionMonitor.swift */; };
 		C3D100032FC2000100C0DE01 /* AppDistributionMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D100012FC2000100C0DE01 /* AppDistributionMonitor.swift */; };
+		C3D200022FC3000100C0DE01 /* AppSupportLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D200012FC3000100C0DE01 /* AppSupportLinks.swift */; };
+		C3D200032FC3000100C0DE01 /* AppSupportLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D200012FC3000100C0DE01 /* AppSupportLinks.swift */; };
+		C3D200052FC3000100C0DE01 /* FeedbackSupportSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D200042FC3000100C0DE01 /* FeedbackSupportSection.swift */; };
+		C3D200062FC3000100C0DE01 /* FeedbackSupportSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D200042FC3000100C0DE01 /* FeedbackSupportSection.swift */; };
 		DF88A3762F300B110042E749 /* HUDManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3542F300B110042E749 /* HUDManager.swift */; };
 		DF88A3772F300B110042E749 /* ShortcutCycleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A3742F300B110042E749 /* ShortcutCycleApp.swift */; };
 		DF88A3782F300B110042E749 /* GroupEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF88A36D2F300B110042E749 /* GroupEditView.swift */; };
@@ -120,6 +124,8 @@
 		A1B200042F70000200C0DE01 /* LocalizedKeyboardShortcutRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizedKeyboardShortcutRecorder.swift; sourceTree = "<group>"; };
 		C0A1D0002FB0000100C0DE01 /* GroupSwitchPerformanceTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupSwitchPerformanceTracker.swift; sourceTree = "<group>"; };
 		C3D100012FC2000100C0DE01 /* AppDistributionMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDistributionMonitor.swift; sourceTree = "<group>"; };
+		C3D200012FC3000100C0DE01 /* AppSupportLinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSupportLinks.swift; sourceTree = "<group>"; };
+		C3D200042FC3000100C0DE01 /* FeedbackSupportSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackSupportSection.swift; sourceTree = "<group>"; };
 		DF88A3372F300B110042E749 /* String+Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Localization.swift"; sourceTree = "<group>"; };
 		DF88A3392F300B110042E749 /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
 		DF88A33A2F300B110042E749 /* AppItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppItem.swift; sourceTree = "<group>"; };
@@ -303,6 +309,7 @@
 			isa = PBXGroup;
 			children = (
 				C3D100012FC2000100C0DE01 /* AppDistributionMonitor.swift */,
+				C3D200012FC3000100C0DE01 /* AppSupportLinks.swift */,
 				DF88A3522F300B110042E749 /* AppSwitcher */,
 				C0A1D0032FB0000100C0DE01 /* Diagnostics */,
 				DF88A3552F300B110042E749 /* HUD */,
@@ -400,6 +407,7 @@
 			children = (
 				DF88A3AF2F300CB10042E749 /* BackupBrowserView.swift */,
 				DF88A3682F300B110042E749 /* GeneralSettingsView.swift */,
+				C3D200042FC3000100C0DE01 /* FeedbackSupportSection.swift */,
 				DF88A3692F300B110042E749 /* GroupSettingsView.swift */,
 				DF88A36A2F300B110042E749 /* HUDPreviewView.swift */,
 				DF88A3C02F300CE00042E749 /* WelcomeBannerView.swift */,
@@ -581,6 +589,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				C3D100022FC2000100C0DE01 /* AppDistributionMonitor.swift in Sources */,
+				C3D200022FC3000100C0DE01 /* AppSupportLinks.swift in Sources */,
+				C3D200052FC3000100C0DE01 /* FeedbackSupportSection.swift in Sources */,
 				DF88A3912F300C640042E749 /* HUDPreviewView.swift in Sources */,
 				DF88A39A2F300C800042E749 /* HUDAppItem.swift in Sources */,
 				DF88A3B92F300CB20042E749 /* HUDItemFilter.swift in Sources */,
@@ -633,6 +643,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				C3D100032FC2000100C0DE01 /* AppDistributionMonitor.swift in Sources */,
+				C3D200032FC3000100C0DE01 /* AppSupportLinks.swift in Sources */,
+				C3D200062FC3000100C0DE01 /* FeedbackSupportSection.swift in Sources */,
 				DF88A3762F300B110042E749 /* HUDManager.swift in Sources */,
 				DF88A3772F300B110042E749 /* ShortcutCycleApp.swift in Sources */,
 				DF88A3782F300B110042E749 /* GroupEditView.swift in Sources */,

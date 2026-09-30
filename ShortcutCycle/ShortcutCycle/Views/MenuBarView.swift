@@ -6,6 +6,7 @@ import KeyboardShortcuts
 
 /// Menu bar popover view showing quick access to groups
 struct MenuBarView: View {
+    @Environment(\.openURL) private var openURL
     @EnvironmentObject var store: GroupStore
     @StateObject private var launchAtLogin = LaunchAtLoginManager.shared
     @ObservedObject private var appDistribution = AppDistributionMonitor.shared
@@ -211,6 +212,10 @@ struct MenuBarView: View {
             // Settings button
             MenuBarButton(title: "Settings...".localized(language: selectedLanguage), icon: "gear") {
                 ShortcutCycleURLRouter.openSettingsFromOutsideView()
+            }
+
+            MenuBarButton(title: "Send Feedback...".localized(language: selectedLanguage), icon: "bubble.left") {
+                openURL(AppSupportLinks.feedback)
             }
 
             if WelcomeExperiencePolicy.shouldShowReplayControl(hasDismissedWelcome: hasDismissedWelcome) {

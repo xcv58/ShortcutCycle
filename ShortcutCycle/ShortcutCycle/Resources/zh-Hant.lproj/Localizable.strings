@@ -186,3 +186,13 @@
 "HUD Preview Browser" = "瀏覽器";
 "HUD Preview Chat" = "聊天";
 "HUD Preview Mail" = "郵件";
+/* Feedback & Support */
+"Feedback & Support" = "回饋與支援";
+"Help improve ShortcutCycle" = "協助改善 ShortcutCycle";
+"Report a bug or suggest a feature." = "回報問題或提出功能建議。";
+"Send Feedback..." = "傳送回饋...";
+"Opens GitHub Issues in your browser." = "在瀏覽器中開啟 GitHub Issues。";
+"App Store Review" = "App Store 評論";
+"Share your experience on the App Store." = "在 App Store 分享您的使用體驗。";
+"Write a Review..." = "撰寫評論...";
+"Opens the App Store review page." = "開啟 App Store 評論頁面。";
