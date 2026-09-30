@@ -1,0 +1,117 @@
+.content-main {
+    max-width: 880px;
+    margin-inline: auto;
+    padding-block: 48px 24px;
+    overflow-wrap: anywhere;
+}
+
+.home-link {
+    display: inline-block;
+    margin-block-end: 24px;
+    color: var(--accent);
+    font-size: 0.95rem;
+}
+
+.content-heading {
+    margin-block-end: 40px;
+}
+
+.content-heading h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    line-height: 1.2;
+    letter-spacing: -0.04em;
+    margin-block-end: 16px;
+}
+
+.content-intro {
+    max-width: 720px;
+    font-size: 1.15rem;
+    color: var(--text-secondary);
+}
+
+.policy-date {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-block-end: 24px;
+}
+
+.content-section {
+    padding-block: 32px;
+    border-block-start: 1px solid var(--border);
+}
+
+.content-section h2 {
+    font-size: 1.35rem;
+    margin-block-end: 16px;
+    line-height: 1.4;
+}
+
+.content-section p + p {
+    margin-block-start: 16px;
+}
+
+.policy-summary {
+    font-weight: 600;
+}
+
+.policy-list {
+    padding-inline-start: 24px;
+    margin-block-start: 16px;
+}
+
+.policy-list li + li {
+    margin-block-start: 8px;
+}
+
+.content-section a:not(.support-action) {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.support-action {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 44px;
+    padding: 10px 20px;
+    margin-block: 20px 8px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    font-weight: 600;
+}
+
+.support-action:hover {
+    background: var(--surface-hover);
+    border-color: var(--accent);
+}
+
+.destination-note {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.content-section .faq-item {
+    margin-block: 12px;
+}
+
+.nav-links a[aria-current="page"] {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 5px;
+}
+
+[dir="rtl"] .content-heading h1 {
+    letter-spacing: normal;
+    line-height: 1.5;
+}
+
+[dir="rtl"] .content-main {
+    line-height: 1.9;
+}
+
+@media (max-width: 599px) {
+    .content-main { padding-block-start: 32px; }
+    .content-intro { font-size: 1.05rem; }
+}

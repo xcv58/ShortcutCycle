@@ -1,8 +1,11 @@
 # Website language and appearance maintenance
 
-The landing page supports the same 15 languages as the Mac app. Copy lives in
+The homepage, Privacy page, and Support page support the same 15 languages as the
+Mac app. Copy lives in
 `assets/locales/<language>.json`; the language catalog and first-paint preference
-logic live in `assets/site-preferences.js`.
+logic live in `assets/site-preferences.js`. Shared styling and runtime controls live
+in `assets/site.css` and `assets/site.js`; `assets/content-pages.css` styles the
+reading layout on `/privacy/` and `/support/`.
 
 ## Writing and terminology
 
@@ -35,8 +38,15 @@ not. Keep literal shortcut names, URL schemes, and shell commands unchanged.
 The displayed price is explicitly in US dollars, using local decimal conventions;
 these translations do not invent local App Store prices. Brand names remain
 unchanged. Screenshots, videos, and the original Apple badge artwork remain the
-shared English assets, with translated captions and accessible labels. External
-support, privacy, and source-code destinations retain their own languages.
+shared English assets, with translated captions and accessible labels. Privacy and
+Support navigation stays on this site and uses the selected language.
+The Support page clearly labels its external GitHub Issues reporting destination;
+GitHub and source-code destinations retain their own languages.
+
+The Privacy page translates the existing `PRIVACY_POLICY.md` without changing its
+January 26, 2026 policy date or commitments. Support reuses the homepage FAQ keys
+and adds permissions, shortcut troubleshooting, and the existing reporting channel.
+When changing header/footer markup, update all three HTML pages together.
 
 ## Preference behavior
 
@@ -65,7 +75,9 @@ complete keys, preserved markup/links/commands, language matching, theme default
 and first-paint behavior with unavailable storage. These checks do not establish
 translation fluency; review the rendered copy as well.
 
-For browser verification, serve `docs/` over HTTP and check all languages at
+For browser verification, serve `docs/` over HTTP. Check navigation among the
+homepage, `/privacy/`, and `/support/`, including saved language/theme and direct
+visits. Check all languages at
 320, 390, 768, and 1440 pixels in light and dark modes. Keep navigation accessible
 on small screens. Inspect Arabic navigation, gallery arrows, code blocks, and
 mixed-direction text, plus Japanese/Chinese sentence spacing and long headings.
