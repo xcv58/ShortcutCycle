@@ -184,3 +184,13 @@
 "HUD Preview Browser" = "ブラウザ";
 "HUD Preview Chat" = "チャット";
 "HUD Preview Mail" = "メール";
+/* Feedback & Support */
+"Feedback & Support" = "フィードバックとサポート";
+"Help improve ShortcutCycle" = "ShortcutCycleの改善にご協力ください";
+"Report a bug or suggest a feature." = "不具合の報告や機能の提案をお寄せください。";
+"Send Feedback..." = "フィードバックを送信...";
+"Opens GitHub Issues in your browser." = "ブラウザでGitHub Issuesを開きます。";
+"App Store Review" = "App Storeレビュー";
+"Share your experience on the App Store." = "App Storeで使用感を共有してください。";
+"Write a Review..." = "レビューを書く...";
+"Opens the App Store review page." = "App Storeのレビューページを開きます。";

@@ -184,3 +184,13 @@
 "HUD Preview Browser" = "Браузер";
 "HUD Preview Chat" = "Чат";
 "HUD Preview Mail" = "Почта";
+/* Feedback & Support */
+"Feedback & Support" = "Обратная связь и поддержка";
+"Help improve ShortcutCycle" = "Помогите улучшить ShortcutCycle";
+"Report a bug or suggest a feature." = "Сообщите об ошибке или предложите новую функцию.";
+"Send Feedback..." = "Отправить отзыв...";
+"Opens GitHub Issues in your browser." = "Открывает GitHub Issues в браузере.";
+"App Store Review" = "Отзыв в App Store";
+"Share your experience on the App Store." = "Поделитесь впечатлениями в App Store.";
+"Write a Review..." = "Написать отзыв...";
+"Opens the App Store review page." = "Открывает страницу отзывов в App Store.";

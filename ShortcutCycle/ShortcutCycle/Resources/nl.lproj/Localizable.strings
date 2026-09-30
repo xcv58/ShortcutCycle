@@ -184,3 +184,13 @@
 "HUD Preview Browser" = "Browser";
 "HUD Preview Chat" = "Chat";
 "HUD Preview Mail" = "E-mail";
+/* Feedback & Support */
+"Feedback & Support" = "Feedback en ondersteuning";
+"Help improve ShortcutCycle" = "Help ShortcutCycle te verbeteren";
+"Report a bug or suggest a feature." = "Meld een fout of stel een functie voor.";
+"Send Feedback..." = "Feedback versturen...";
+"Opens GitHub Issues in your browser." = "Opent GitHub Issues in je browser.";
+"App Store Review" = "App Store-recensie";
+"Share your experience on the App Store." = "Deel je ervaring in de App Store.";
+"Write a Review..." = "Recensie schrijven...";
+"Opens the App Store review page." = "Opent de recensiepagina in de App Store.";

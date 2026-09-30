@@ -47,13 +47,13 @@ Both local archives and Xcode Cloud builds use the same version-sync script:
 ```sh
 SC_BUILD_NUMBER=123 /bin/sh scripts/sync_project_version.sh
 SC_CI_BUILD_OFFSET=2000 /bin/sh scripts/sync_project_version.sh
-SC_MARKETING_VERSION=1.11 /bin/sh scripts/sync_project_version.sh
+SC_MARKETING_VERSION=1.12 /bin/sh scripts/sync_project_version.sh
 ```
 
-For the next local archive after rejected build 134, the checked-in 134 baseline produces version `1.11` build `135`. To prepare those values explicitly without archiving:
+The 1.12 release uses build `140`, following the approved 1.11 build `139`. To prepare a future archive with an explicit build number:
 
 ```sh
-SC_BUILD_NUMBER=135 SC_MARKETING_VERSION=1.11 /bin/sh scripts/sync_project_version.sh
+SC_BUILD_NUMBER=141 SC_MARKETING_VERSION=1.12 /bin/sh scripts/sync_project_version.sh
 ```
 
 ## 4. Launch Checklist

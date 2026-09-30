@@ -361,6 +361,8 @@ struct GeneralSettingsView: View {
             } header: {
                 Text("Backup & Restore".localized(language: selectedLanguage))
             }
+
+            FeedbackSupportSection(selectedLanguage: selectedLanguage)
         }
         .formStyle(.grouped)
         .scrollContentBackground(colorScheme == .dark ? .hidden : .automatic)

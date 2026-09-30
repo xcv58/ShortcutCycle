@@ -2,10 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.11] - Unreleased
+## [1.12] - Unreleased
+
+### Added
+- **Feedback & Support**: Send bug reports and feature suggestions from the menu bar or General settings, with localized labels in all 15 supported languages.
+- **Optional App Store review**: General settings includes a direct link to share your experience on the Mac App Store.
+
+## [1.11] - 2026-09-14
 
 ### Changed
-- **App Store release version**: Advanced the version metadata after the approved 1.10 release closed that upload train. There are no user-facing behavior changes from 1.10.
+- **System appearance**: The switching HUD follows the system Liquid Glass appearance on supported macOS versions, and the settings preview matches the switcher.
+- **Settings layout**: Tabs remain centered while the Groups sidebar stays resizable and collapsible, with improved sidebar colors and selection contrast.
+
+### Fixed
+- **Text editing**: Fixed unwanted group-name selection and clipped text field borders.
 
 ## [1.10] - 2026-08-12
 

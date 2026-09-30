@@ -185,3 +185,13 @@
 "HUD Preview Browser" = "浏览器";
 "HUD Preview Chat" = "聊天";
 "HUD Preview Mail" = "邮件";
+/* Feedback & Support */
+"Feedback & Support" = "反馈与支持";
+"Help improve ShortcutCycle" = "帮助改进 ShortcutCycle";
+"Report a bug or suggest a feature." = "报告问题或提出功能建议。";
+"Send Feedback..." = "发送反馈...";
+"Opens GitHub Issues in your browser." = "在浏览器中打开 GitHub Issues。";
+"App Store Review" = "App Store 评价";
+"Share your experience on the App Store." = "在 App Store 分享您的使用体验。";
+"Write a Review..." = "撰写评价...";
+"Opens the App Store review page." = "打开 App Store 评价页面。";

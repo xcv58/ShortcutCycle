@@ -119,7 +119,9 @@ For the full command reference, parameters, and examples, see [URL_SCHEME.md](UR
 
 ## Support
 
-Found a bug or have a feature request? Please [open an issue](https://github.com/xcv58/ShortcutCycle/issues) on GitHub.
+Found a bug or have a feature request? Choose **Send Feedback...** from the menu bar popover or **Settings → General → Feedback & Support** to [open an issue](https://github.com/xcv58/ShortcutCycle/issues) on GitHub.
+
+You can also choose **Write a Review...** in the same settings section to share your experience on the Mac App Store.
 
 ## Privacy Policy
 
