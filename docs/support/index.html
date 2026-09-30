@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="system">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../assets/images/favicon-16.png">
+    <link rel="apple-touch-icon" href="../assets/images/app-icon.png">
+    <script src="../assets/site-preferences.js"></script>
+    <title data-i18n="support.meta.title">Support — ShortcutCycle</title>
+    <meta name="description" content="Get help with app groups, shortcuts, permissions, and backups in ShortcutCycle." data-i18n-content="support.meta.description">
+    <link rel="canonical" href="https://s.jenny.media/support/">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://s.jenny.media/support/">
+    <meta property="og:title" content="Support — ShortcutCycle" data-i18n-content="support.meta.title">
+    <meta property="og:description" content="Get help with app groups, shortcuts, permissions, and backups in ShortcutCycle." data-i18n-content="support.meta.description">
+    <meta property="og:image" content="https://s.jenny.media/assets/images/app-icon.png">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Support — ShortcutCycle" data-i18n-content="support.meta.title">
+    <meta name="twitter:description" content="Get help with app groups, shortcuts, permissions, and backups in ShortcutCycle." data-i18n-content="support.meta.description">
+    <link rel="stylesheet" href="../assets/site.css">
+    <link rel="stylesheet" href="../assets/content-pages.css">
+</head>
+<body class="preload">
+    <a href="#main-content" class="skip-link" data-i18n="a11y.skipToMain">Skip to main content</a>
+    <div class="container">
+        <header role="banner">
+            <a href="../index.html" class="logo" aria-label="ShortcutCycle home" data-i18n-aria-label="nav.homeLabel">
+                <img src="../assets/images/brand-mark.png" width="36" height="24" alt="">
+                <span class="logo-wordmark">ShortcutCycle</span>
+            </a>
+
+            <div class="nav-wrapper">
+                <nav class="nav-links" role="navigation" aria-label="Main navigation"
+                    data-i18n-aria-label="nav.mainLabel">
+                    <a href="../privacy/" data-i18n="nav.privacy">Privacy</a>
+                    <a href="../support/" aria-current="page" data-i18n="nav.support">Support</a>
+                    <a href="https://github.com/xcv58/ShortcutCycle" target="_blank"
+                        rel="noopener noreferrer">GitHub</a>
+                </nav>
+
+                <label class="language-selector">
+                    <svg class="language-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M2 12h20"></path>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                    </svg>
+                    <svg class="language-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M12 2a10 10 0 1 1-10 10" stroke-linecap="round"></path>
+                    </svg>
+                    <span id="language-status" class="language-status" hidden aria-hidden="true"></span>
+                    <span class="sr-only" data-i18n="language.label">Language</span>
+                    <select id="language-select" class="language-select" aria-label="Language"
+                        data-i18n-aria-label="language.label">
+                        <option value="en" lang="en">English</option>
+                        <option value="de" lang="de">Deutsch</option>
+                        <option value="fr" lang="fr">Français</option>
+                        <option value="es" lang="es">Español</option>
+                        <option value="ja" lang="ja">日本語</option>
+                        <option value="pt-BR" lang="pt-BR">Português (Brasil)</option>
+                        <option value="zh-Hans" lang="zh-Hans">简体中文</option>
+                        <option value="zh-Hant" lang="zh-Hant">繁體中文</option>
+                        <option value="it" lang="it">Italiano</option>
+                        <option value="ko" lang="ko">한국어</option>
+                        <option value="ar" lang="ar">العربية</option>
+                        <option value="nl" lang="nl">Nederlands</option>
+                        <option value="pl" lang="pl">Polski</option>
+                        <option value="tr" lang="tr">Türkçe</option>
+                        <option value="ru" lang="ru">Русский</option>
+                    </select>
+                </label>
+
+                <button class="theme-btn theme-toggle" id="theme-toggle" type="button"
+                    aria-label="Switch to dark mode" title="Switch to dark mode">
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <circle cx="12" cy="12" r="4"></circle>
+                        <path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"></path>
+                    </svg>
+                </button>
+            </div>
+        </header>
+        <!-- Screen reader announcements -->
+        <div role="status" aria-live="polite" aria-atomic="true" class="sr-only" id="theme-announcement"></div>
+        <div role="status" aria-live="polite" aria-atomic="true" class="sr-only" id="language-announcement"></div>
+
+        <main id="main-content" class="content-main">
+            <a href="../index.html" class="home-link" data-i18n="nav.home">Home</a>
+            <div class="content-heading">
+                <h1 data-i18n="support.title">Support</h1>
+                <p class="content-intro" data-i18n="support.intro">Find help for your shortcuts, app groups, and backups.</p>
+            </div>
+            <section class="content-section" aria-labelledby="getting-started">
+                <h2 id="getting-started" data-i18n="faq.gettingStarted.title">Getting Started</h2>
+                <details class="faq-item"><summary data-i18n="faq.gettingStarted.createQuestion">How do I create a group?</summary><p data-i18n-html="faq.gettingStarted.createAnswer">Open Settings, click <strong>+</strong>, and name a group such as "Social" or "Dev." Add apps that are running now or browse for others, then press the shortcut you want, such as <code>Option+1</code>.</p></details>
+                <details class="faq-item"><summary data-i18n="support.permissions.question">How do I enable Accessibility permission?</summary><p data-i18n-html="support.permissions.answer">Open System Settings → Privacy & Security → Accessibility, then enable ShortcutCycle. This permission is needed to switch apps using your shortcuts.</p></details>
+                <details class="faq-item"><summary data-i18n="support.shortcuts.question">Why is my shortcut not working?</summary><p data-i18n-html="support.shortcuts.answer">Check that the group is enabled and has a shortcut assigned. If the combination is already used by another group, app, or macOS, choose a different one.</p></details>
+            </section>
+            <section class="content-section" aria-labelledby="common-questions">
+                <h2 id="common-questions" data-i18n="faq.title">Frequently Asked Questions</h2>
+                <details class="faq-item"><summary data-i18n="faq.gettingStarted.shortcutsQuestion">Can I customize the shortcuts?</summary><p data-i18n-html="faq.gettingStarted.shortcutsAnswer">Yes. Press the combination you want. ShortcutCycle suggests recent choices and warns if one is already in use. Add Command, Control, or Option to letter and number keys; function keys can work on their own.</p></details>
+                <details class="faq-item"><summary data-i18n="faq.gettingStarted.closedAppQuestion">What happens if an app isn&#x27;t open?</summary><p data-i18n-html="faq.gettingStarted.closedAppAnswer">The group's mode decides. <strong>Running Apps Only</strong> skips closed apps while any group app is running; if none are running, it launches the first app. <strong>All Apps</strong> launches a closed app when selected.</p></details>
+                <details class="faq-item"><summary data-i18n="faq.privacy.backupQuestion">Can I back up my setup?</summary><p data-i18n-html="faq.privacy.backupAnswer">Yes. ShortcutCycle automatically keeps a useful history of earlier setups. You can also export a copy whenever you want to keep one elsewhere or move it to another Mac.</p></details>
+                <details class="faq-item"><summary data-i18n="faq.compatibility.macosQuestion">What macOS versions are supported?</summary><p data-i18n-html="faq.compatibility.macosAnswer">ShortcutCycle requires <strong>macOS 14.0 (Sonoma) or later</strong>.</p></details>
+                <details class="faq-item"><summary data-i18n="faq.compatibility.windowQuestion">Why doesn&#x27;t ShortcutCycle switch to a specific window?</summary><p data-i18n-html="faq.compatibility.windowAnswer">ShortcutCycle switches apps rather than individual windows. That keeps its permissions limited while making app-group switching fast and dependable.</p></details>
+            </section>
+            <section class="content-section" aria-labelledby="report-feedback">
+                <h2 id="report-feedback" data-i18n="support.report.title">Report a bug or suggest a feature</h2>
+                <p data-i18n="support.report.body">Share your feedback through GitHub Issues.</p>
+                <p data-i18n="support.report.include">Include your ShortcutCycle and macOS versions, what you expected, and the steps to reproduce the issue.</p>
+                <a class="support-action" href="https://github.com/xcv58/ShortcutCycle/issues" target="_blank" rel="noopener noreferrer" aria-describedby="report-destination" data-i18n="support.report.link">Open GitHub Issues</a>
+                <p id="report-destination" class="destination-note" data-i18n="support.report.destination">Opens GitHub in a new tab. A GitHub account is needed to submit an issue.</p>
+            </section>
+        </main>
+        <footer role="contentinfo">
+            <div class="footer-links">
+                <a href="https://apps.apple.com/us/app/shortcutcycle/id6758281578?mt=12">App Store</a>
+                <a href="https://github.com/xcv58/ShortcutCycle">GitHub</a>
+                <a href="../privacy/" data-i18n="footer.privacyPolicy">Privacy Policy</a>
+                <a href="../support/" data-i18n="nav.support">Support</a>
+            </div>
+            <br>
+            <button type="button" id="theme-system" class="theme-reset" data-i18n="theme.useSystem">Use device appearance</button>
+            <p data-i18n-html="footer.copyright">&copy; 2026 Jenny Media LLC. All rights reserved.</p>
+        </footer>
+    </div>
+    <!-- Back to Top Button -->
+    <button id="backToTop" class="back-to-top" aria-label="Back to Top" data-i18n-aria-label="actions.backToTop">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M12 4l-8 8h6v8h4v-8h6z" />
+        </svg>
+    </button>
+
+    <script src="../assets/site.js"></script>
+</body>
+</html>

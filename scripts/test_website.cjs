@@ -7,7 +7,8 @@ const root = path.resolve(__dirname, '..');
 const preferencesPath = path.join(root, 'docs/assets/site-preferences.js');
 const preferences = require(preferencesPath);
 const localesPath = path.join(root, 'docs/assets/locales');
-const html = fs.readFileSync(path.join(root, 'docs/index.html'), 'utf8');
+const pages = Object.fromEntries(['index.html', 'privacy/index.html', 'support/index.html'].map(file => [file,
+    fs.readFileSync(path.join(root, 'docs', file), 'utf8')]));
 const locales = Object.fromEntries(Object.keys(preferences.languages).map(language => [language,
     JSON.parse(fs.readFileSync(path.join(localesPath, `${language}.json`), 'utf8'))]));
 
@@ -32,9 +33,45 @@ test('every language has complete copy and preserves markup, links, and literal 
             assert.deepEqual(literals(strings[key]), literals(locales.en[key]), `${language}: command in ${key}`);
         }
     }
-    for (const [, key] of html.matchAll(/data-i18n(?:-[\w-]+)?="([^"]+)"/g)) {
-        assert.ok(Object.hasOwn(locales.en, key), `Missing HTML translation: ${key}`);
+    for (const [file, page] of Object.entries(pages)) {
+        for (const [, key] of page.matchAll(/data-i18n(?:-[\w-]+)?="([^"]+)"/g)) {
+            assert.ok(Object.hasOwn(locales.en, key), `${file}: missing translation ${key}`);
+        }
     }
+});
+
+test('Privacy and Support navigation stays on the site from every page', () => {
+    for (const [file, page] of Object.entries(pages)) {
+        const links = [...page.matchAll(/<a\b([^>]+)>/g)].map(match => match[1]);
+        for (const [key, destination] of Object.entries({
+            'nav.privacy': 'privacy', 'footer.privacyPolicy': 'privacy', 'nav.support': 'support'
+        })) {
+            const matching = links.filter(attributes => attributes.includes(`data-i18n="${key}"`));
+            assert.ok(matching.length, `${file}: missing ${key} link`);
+            for (const attributes of matching) {
+                const href = attributes.match(/href="([^"]+)"/)[1];
+                assert.equal(path.resolve(root, 'docs', path.dirname(file), href),
+                    path.join(root, 'docs', destination), `${file}: ${key} destination`);
+                assert.ok(!attributes.includes('target='), `${file}: internal navigation opens a new tab`);
+            }
+        }
+    }
+});
+
+test('nested pages have valid assets, page metadata, and readable English without JavaScript', () => {
+    for (const name of ['privacy', 'support']) {
+        const page = pages[`${name}/index.html`];
+        assert.match(page, new RegExp(`<title data-i18n="${name}\\.meta\\.title">`));
+        assert.ok(page.includes(`href="https://s.jenny.media/${name}/"`));
+        assert.ok(page.includes(`data-i18n="${name}.title">${locales.en[`${name}.title`]}</h1>`));
+        assert.ok(page.includes('aria-current="page"'));
+        for (const [, asset] of page.matchAll(/(?:src|href)="(\.\.\/assets\/[^"]+)"/g)) {
+            assert.ok(fs.existsSync(path.resolve(root, 'docs', name, asset)), `${name}: missing ${asset}`);
+        }
+    }
+    assert.ok(pages['privacy/index.html'].includes(locales.en['privacy.collection.summary']));
+    assert.ok(pages['privacy/index.html'].includes(locales.en['privacy.updated']));
+    assert.match(pages['support/index.html'], /aria-describedby="report-destination"/);
 });
 
 test('language detection handles regional variants and explicit script tags', () => {
