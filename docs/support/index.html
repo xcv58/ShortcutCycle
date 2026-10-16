@@ -20,26 +20,25 @@
     <meta name="twitter:description" content="Get help with app groups, shortcuts, and backups in ShortcutCycle." data-i18n-content="support.meta.description">
     <link rel="stylesheet" href="../assets/site.css">
     <link rel="stylesheet" href="../assets/content-pages.css">
+    <script src="../assets/navigation.js" defer></script>
 </head>
 <body class="preload">
     <a href="#main-content" class="skip-link" data-i18n="a11y.skipToMain">Skip to main content</a>
     <div class="container">
-        <header role="banner">
+        <header class="site-header" role="banner">
             <a href="../index.html" class="logo" aria-label="ShortcutCycle home" data-i18n-aria-label="nav.homeLabel">
                 <img src="../assets/images/brand-mark.png" width="36" height="24" alt="">
-                <span class="logo-wordmark">ShortcutCycle</span>
+                <span class="logo-wordmark">Shortcut<wbr>Cycle</span>
             </a>
-
-            <div class="nav-wrapper">
-                <nav class="nav-links" role="navigation" aria-label="Main navigation"
+            <div class="nav-wrapper desktop-controls">
+                <nav class="nav-links desktop-nav" role="navigation" aria-label="Main navigation"
                     data-i18n-aria-label="nav.mainLabel">
                     <a href="../privacy/" data-i18n="nav.privacy">Privacy</a>
                     <a href="../support/" aria-current="page" data-i18n="nav.support">Support</a>
                     <a href="https://github.com/xcv58/ShortcutCycle" target="_blank"
                         rel="noopener noreferrer">GitHub</a>
                 </nav>
-
-                <label class="language-selector">
+                <label class="language-selector" hidden>
                     <svg class="language-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <circle cx="12" cy="12" r="10"></circle>
@@ -70,8 +69,13 @@
                         <option value="ru" lang="ru">Русский</option>
                     </select>
                 </label>
-
-                <button class="theme-btn theme-toggle" id="theme-toggle" type="button"
+            </div>
+            <button class="menu-toggle" type="button" hidden aria-label="Main navigation"
+                data-i18n-aria-label="nav.mainLabel" aria-expanded="false" aria-controls="mobile-navigation">
+                <svg class="menu-icon-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                <svg class="menu-icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+            </button>
+            <button class="theme-btn theme-toggle" id="theme-toggle" type="button" hidden
                     aria-label="Switch to dark mode" title="Switch to dark mode">
                     <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
@@ -81,6 +85,45 @@
                         <path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"></path>
                     </svg>
                 </button>
+            <div class="mobile-panel" id="mobile-navigation">
+                <nav class="nav-links mobile-nav" role="navigation" aria-label="Main navigation"
+                    data-i18n-aria-label="nav.mainLabel">
+                    <a href="../privacy/" data-i18n="nav.privacy">Privacy</a>
+                    <a href="../support/" aria-current="page" data-i18n="nav.support">Support</a>
+                    <a href="https://github.com/xcv58/ShortcutCycle" target="_blank"
+                        rel="noopener noreferrer">GitHub</a>
+                </nav>
+                <label class="language-selector" hidden>
+                    <svg class="language-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M2 12h20"></path>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                    </svg>
+                    <svg class="language-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M12 2a10 10 0 1 1-10 10" stroke-linecap="round"></path>
+                    </svg>
+                    <span id="mobile-language-status" class="language-status" hidden aria-hidden="true"></span>
+                    <span class="sr-only" data-i18n="language.label">Language</span>
+                    <select id="mobile-language-select" class="language-select" aria-label="Language"
+                        data-i18n-aria-label="language.label">
+                        <option value="en" lang="en">English</option>
+                        <option value="de" lang="de">Deutsch</option>
+                        <option value="fr" lang="fr">Français</option>
+                        <option value="es" lang="es">Español</option>
+                        <option value="ja" lang="ja">日本語</option>
+                        <option value="pt-BR" lang="pt-BR">Português (Brasil)</option>
+                        <option value="zh-Hans" lang="zh-Hans">简体中文</option>
+                        <option value="zh-Hant" lang="zh-Hant">繁體中文</option>
+                        <option value="it" lang="it">Italiano</option>
+                        <option value="ko" lang="ko">한국어</option>
+                        <option value="ar" lang="ar">العربية</option>
+                        <option value="nl" lang="nl">Nederlands</option>
+                        <option value="pl" lang="pl">Polski</option>
+                        <option value="tr" lang="tr">Türkçe</option>
+                        <option value="ru" lang="ru">Русский</option>
+                    </select>
+                </label>
             </div>
         </header>
         <!-- Screen reader announcements -->
