@@ -11,9 +11,9 @@
     <!-- Resolve preferences before CSS to avoid an incorrect first-paint theme. -->
     <script src="assets/site-preferences.js"></script>
 
-    <title>ShortcutCycle - Cycle apps by group, instantly.</title>
+    <title>ShortcutCycle — Your apps, one shortcut away.</title>
     <meta name="description"
-        content="Stop endlessly tabbing. Group your apps by context—Web, Code, Social—and cycle through them with dedicated hotkeys."
+        content="Put apps you use together into groups, then switch between them with a shortcut for each group. Keep work, writing, and conversations close at hand."
         data-i18n-content="meta.description">
     <meta name="keywords"
         content="macOS app switcher, keyboard shortcuts, productivity, window management, app launcher, command tab alternative, alfred alternative">
@@ -23,9 +23,9 @@
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://s.jenny.media/">
-    <meta property="og:title" content="ShortcutCycle - Cycle apps by group, instantly." data-i18n-content="meta.title">
+    <meta property="og:title" content="ShortcutCycle — Your apps, one shortcut away." data-i18n-content="meta.title">
     <meta property="og:description"
-        content="Stop endlessly tabbing. Group your apps by context—Web, Code, Social—and cycle through them with dedicated hotkeys."
+        content="Put apps you use together into groups, then switch between them with a shortcut for each group. Keep work, writing, and conversations close at hand."
         data-i18n-content="meta.description">
     <meta property="og:image" content="https://s.jenny.media/assets/images/hud-light.webp">
     <meta property="og:image:width" content="1800">
@@ -33,9 +33,9 @@
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="ShortcutCycle - Cycle apps by group, instantly." data-i18n-content="meta.title">
+    <meta name="twitter:title" content="ShortcutCycle — Your apps, one shortcut away." data-i18n-content="meta.title">
     <meta name="twitter:description"
-        content="Stop endlessly tabbing. Group your apps by context and cycle with dedicated hotkeys."
+        content="Group the apps you use together and switch between them with familiar keyboard shortcuts."
         data-i18n-content="meta.twitterDescription">
     <meta name="twitter:image" content="https://s.jenny.media/assets/images/hud-light.webp">
 
@@ -58,9 +58,9 @@
         "price": "3.99",
         "priceCurrency": "USD"
       },
-      "description": "Group your apps by context and cycle through them with dedicated hotkeys.",
+      "description": "Group the apps you use together and switch between them with familiar keyboard shortcuts.",
       "screenshot": "https://s.jenny.media/assets/images/hud-light.webp",
-      "downloadUrl": "https://apps.apple.com/us/app/shortcutcycle/id6758281578"
+      "downloadUrl": "https://apps.apple.com/app/shortcutcycle/id6758281578"
     }
     </script>
 
@@ -71,6 +71,7 @@
     </noscript>
 
     <link rel="stylesheet" href="assets/site.css">
+    <script src="assets/navigation.js" defer></script>
 </head>
 
 <body class="preload">
@@ -79,22 +80,20 @@
     <a href="#main-content" class="skip-link" data-i18n="a11y.skipToMain">Skip to main content</a>
 
     <div class="container">
-        <header role="banner">
+        <header class="site-header" role="banner">
             <a href="index.html" class="logo" aria-label="ShortcutCycle home" data-i18n-aria-label="nav.homeLabel">
                 <img src="assets/images/brand-mark.png" width="36" height="24" alt="">
-                <span class="logo-wordmark">ShortcutCycle</span>
+                <span class="logo-wordmark">Shortcut<wbr>Cycle</span>
             </a>
-
-            <div class="nav-wrapper">
-                <nav class="nav-links" role="navigation" aria-label="Main navigation"
+            <div class="nav-wrapper desktop-controls">
+                <nav class="nav-links desktop-nav" role="navigation" aria-label="Main navigation"
                     data-i18n-aria-label="nav.mainLabel">
                     <a href="privacy/" data-i18n="nav.privacy">Privacy</a>
                     <a href="support/" data-i18n="nav.support">Support</a>
                     <a href="https://github.com/xcv58/ShortcutCycle" target="_blank"
                         rel="noopener noreferrer">GitHub</a>
                 </nav>
-
-                <label class="language-selector">
+                <label class="language-selector" hidden>
                     <svg class="language-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <circle cx="12" cy="12" r="10"></circle>
@@ -125,8 +124,13 @@
                         <option value="ru" lang="ru">Русский</option>
                     </select>
                 </label>
-
-                <button class="theme-btn theme-toggle" id="theme-toggle" type="button"
+            </div>
+            <button class="menu-toggle" type="button" hidden aria-label="Main navigation"
+                data-i18n-aria-label="nav.mainLabel" aria-expanded="false" aria-controls="mobile-navigation">
+                <svg class="menu-icon-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                <svg class="menu-icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+            </button>
+            <button class="theme-btn theme-toggle" id="theme-toggle" type="button" hidden
                     aria-label="Switch to dark mode" title="Switch to dark mode">
                     <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
@@ -136,6 +140,45 @@
                         <path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"></path>
                     </svg>
                 </button>
+            <div class="mobile-panel" id="mobile-navigation">
+                <nav class="nav-links mobile-nav" role="navigation" aria-label="Main navigation"
+                    data-i18n-aria-label="nav.mainLabel">
+                    <a href="privacy/" data-i18n="nav.privacy">Privacy</a>
+                    <a href="support/" data-i18n="nav.support">Support</a>
+                    <a href="https://github.com/xcv58/ShortcutCycle" target="_blank"
+                        rel="noopener noreferrer">GitHub</a>
+                </nav>
+                <label class="language-selector" hidden>
+                    <svg class="language-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M2 12h20"></path>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                    </svg>
+                    <svg class="language-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M12 2a10 10 0 1 1-10 10" stroke-linecap="round"></path>
+                    </svg>
+                    <span id="mobile-language-status" class="language-status" hidden aria-hidden="true"></span>
+                    <span class="sr-only" data-i18n="language.label">Language</span>
+                    <select id="mobile-language-select" class="language-select" aria-label="Language"
+                        data-i18n-aria-label="language.label">
+                        <option value="en" lang="en">English</option>
+                        <option value="de" lang="de">Deutsch</option>
+                        <option value="fr" lang="fr">Français</option>
+                        <option value="es" lang="es">Español</option>
+                        <option value="ja" lang="ja">日本語</option>
+                        <option value="pt-BR" lang="pt-BR">Português (Brasil)</option>
+                        <option value="zh-Hans" lang="zh-Hans">简体中文</option>
+                        <option value="zh-Hant" lang="zh-Hant">繁體中文</option>
+                        <option value="it" lang="it">Italiano</option>
+                        <option value="ko" lang="ko">한국어</option>
+                        <option value="ar" lang="ar">العربية</option>
+                        <option value="nl" lang="nl">Nederlands</option>
+                        <option value="pl" lang="pl">Polski</option>
+                        <option value="tr" lang="tr">Türkçe</option>
+                        <option value="ru" lang="ru">Русский</option>
+                    </select>
+                </label>
             </div>
         </header>
 
@@ -146,12 +189,11 @@
         <main id="main-content" role="main">
 
             <section class="hero">
-                <h1 class="text-gradient" data-i18n="hero.title">Cycle apps by group, instantly.</h1>
+                <h1 class="text-gradient" data-i18n="hero.title">Your apps, one shortcut away.</h1>
 
                 <div class="hero-split">
                     <div class="hero-text">
-                        <p class="hero-subtitle" data-i18n="hero.subtitle">Stop endlessly tabbing. Group apps by
-                            context—Web, Code, Social—and cycle with dedicated hotkeys.</p>
+                        <p class="hero-subtitle" data-i18n="hero.subtitle">Put the apps you use together into groups, then switch between them with a shortcut for each group.</p>
                         <p class="hero-benefit">
                             <span class="tooltip-trigger" tabindex="0" aria-describedby="hero-benefit-tooltip"
                                 data-tooltip="Dedicated shortcuts make familiar app groups easy to reach without scanning a long list."
@@ -161,7 +203,7 @@
                                 shortcuts make familiar app groups easy to reach without scanning a long list.</span><span data-i18n="hero.benefitSuffix"> with familiar shortcuts for the apps you use together.</span>
                         </p>
                         <div class="cta-group">
-                            <a href="https://apps.apple.com/us/app/shortcutcycle/id6758281578?mt=12"
+                            <a href="https://apps.apple.com/app/shortcutcycle/id6758281578?mt=12"
                                 class="cta-badge-link cta-store-link" aria-label="Download ShortcutCycle on the App Store"
                                 data-i18n-aria-label="hero.appStoreAria">
                                 <img src="assets/images/app-store-badge-light.svg"
@@ -230,18 +272,18 @@
                     <div class="gallery-scroller">
                         <a href="assets/images/hud-light.webp" class="screenshot-frame screenshot-variant glightbox"
                             data-screenshot-key="hud"
-                            data-gallery="screenshots" data-title="HUD Overlay Light"
+                            data-gallery="screenshots" data-title="App switching preview, light appearance"
                             data-light-href="assets/images/hud-light.webp"
                             data-light-src="assets/images/hud-light.webp"
                             data-light-srcset="assets/images/hud-light-small.webp 900w, assets/images/hud-light.webp 1800w"
-                            data-light-title="HUD Overlay Light" data-light-alt="HUD Overlay Light"
+                            data-light-title="App switching preview, light appearance" data-light-alt="App switching preview, light appearance"
                             data-dark-href="assets/images/hud-dark.webp"
                             data-dark-src="assets/images/hud-dark.webp"
                             data-dark-srcset="assets/images/hud-dark-small.webp 900w, assets/images/hud-dark.webp 1800w"
-                            data-dark-title="HUD Overlay Dark" data-dark-alt="HUD Overlay Dark">
+                            data-dark-title="App switching preview, dark appearance" data-dark-alt="App switching preview, dark appearance">
                             <img src="assets/images/hud-light.webp"
                                 srcset="assets/images/hud-light-small.webp 900w, assets/images/hud-light.webp 1800w"
-                                sizes="(max-width: 900px) 100vw, 900px" width="900" height="562" alt="HUD Overlay Light"
+                                sizes="(max-width: 900px) 100vw, 900px" width="900" height="562" alt="App switching preview, light appearance"
                                 fetchpriority="high" decoding="async">
                         </a>
                         <a href="assets/images/hud-grid-light.webp"
@@ -331,9 +373,7 @@
                     data-i18n="comparison.title">A shortcut for every part of your day</h2>
                 <p class="section-subtitle"
                     style="max-width: 700px; margin: 0 auto 60px auto; color: var(--text-secondary); text-align: center; font-size: 1.1rem; line-height: 1.6;">
-                    <span data-i18n-html="comparison.subtitle">Keep the switchers and launchers you already like.
-                        ShortcutCycle adds a <strong>repeatable path</strong> for the app groups you visit all day, so a
-                        familiar shortcut always takes you back to the right context.</span>
+                    <span data-i18n-html="comparison.subtitle">Keep the switching tools you already like. ShortcutCycle adds a <strong>familiar shortcut</strong> for each group of apps you use together, so you can return to the right task without searching.</span>
                 </p>
                 <div class="versus-grid">
                     <!-- The Old Way -->
@@ -355,8 +395,7 @@
                                 <span class="versus-icon">🤯</span>
                                 <div class="versus-content">
                                     <strong data-i18n="comparison.old.loadTitle">More choice each time</strong>
-                                    <span data-i18n="comparison.old.loadBody">Perfect for one-off jumps, but repeated
-                                        workflows still ask you to scan and decide.</span>
+                                    <span data-i18n="comparison.old.loadBody">Useful for an occasional jump, but doing the same task again still means looking through a list and choosing an app.</span>
                                 </div>
                             </li>
                             <li class="versus-item">
@@ -372,7 +411,7 @@
 
                     <!-- ShortcutCycle -->
                     <div class="versus-card new-way">
-                        <div class="card-badge" data-i18n="comparison.new.badge">For repeated workflows</div>
+                        <div class="card-badge" data-i18n="comparison.new.badge">For the apps you use together</div>
                         <div class="versus-header">
                             <h3 style="color: var(--accent);">ShortcutCycle</h3>
                             <p data-i18n="comparison.new.subtitle">Dedicated shortcuts for app groups</p>
@@ -381,7 +420,7 @@
                             <li class="versus-item">
                                 <span class="versus-icon">⚡️</span>
                                 <div class="versus-content">
-                                    <strong data-i18n="comparison.new.memoryTitle">A shortcut becomes a place</strong>
+                                    <strong data-i18n="comparison.new.memoryTitle">A familiar shortcut for each group</strong>
                                     <span data-i18n="comparison.new.memoryBody">Option+1 always means Browsers. Option+2
                                         always means Dev.</span>
                                 </div>
@@ -390,8 +429,7 @@
                                 <span class="versus-icon">🎯</span>
                                 <div class="versus-content">
                                     <strong data-i18n="comparison.new.scopeTitle">Only the apps that belong</strong>
-                                    <span data-i18n="comparison.new.scopeBody">Each shortcut cycles one context, without
-                                        mixing in the rest of your desktop.</span>
+                                    <span data-i18n="comparison.new.scopeBody">Each shortcut switches within one group, keeping unrelated apps out of the way.</span>
                                 </div>
                             </li>
                             <li class="versus-item">
@@ -419,9 +457,8 @@
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">🎯</span>
-                        <h3 data-i18n="features.groups.title">Context Groups</h3>
-                        <p data-i18n="features.groups.body">Stop cycling through 20 irrelevant apps. Group apps by workflow—"coding", "writing",
-                            "social"—and switch only between what you need.</p>
+                        <h3 data-i18n="features.groups.title">Apps grouped by task</h3>
+                        <p data-i18n="features.groups.body">Put apps for coding, writing, or keeping in touch into separate groups. Switch only between the apps you need for that task.</p>
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">⚡️</span>
@@ -437,9 +474,8 @@
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">✨</span>
-                        <h3 data-i18n="features.hud.title">Beautiful HUD</h3>
-                        <p data-i18n="features.hud.body">A native, lightweight overlay shows your target before you switch. Know exactly where you're
-                            landing.</p>
+                        <h3 data-i18n="features.hud.title">Preview before switching</h3>
+                        <p data-i18n="features.hud.body">A simple preview shows the selected app before you switch, so you know where you are going.</p>
                     </div>
                     <div class="feature-card">
                         <span class="feature-icon">💻</span>
@@ -502,8 +538,8 @@
                             <source src="assets/videos/2.mp4?v=20260525-shortcut-lead" type="video/mp4">
                             <span data-i18n="videos.unsupported">Your browser does not support the video tag.</span>
                         </video>
-                        <h3 data-i18n="videos.hud.title">Visual HUD Overlay</h3>
-                        <p data-i18n="videos.hud.body">See exactly what you're switching to with the beautiful native overlay</p>
+                        <h3 data-i18n="videos.hud.title">Preview your next app</h3>
+                        <p data-i18n="videos.hud.body">See the selected app before you switch.</p>
                     </div>
                     <div class="video-card">
                         <video controls preload="none" poster="assets/images/poster-3.webp">
@@ -637,8 +673,7 @@
 
                         <details class="faq-item">
                             <summary data-i18n="faq.compatibility.monitorsQuestion">Does it work with multiple monitors?</summary>
-                            <p data-i18n="faq.compatibility.monitorsAnswer">Yes, ShortcutCycle works seamlessly across multiple monitors. The HUD overlay appears on your
-                                active display, and app switching works regardless of which monitor the app is on.</p>
+                            <p data-i18n="faq.compatibility.monitorsAnswer">Yes. The switching preview appears on the display you are using, and you can switch to an app on any connected display.</p>
                         </details>
 
                         <details class="faq-item">
@@ -663,7 +698,7 @@
 
         <footer role="contentinfo">
             <div class="footer-links">
-                <a href="https://apps.apple.com/us/app/shortcutcycle/id6758281578?mt=12">App Store</a>
+                <a href="https://apps.apple.com/app/shortcutcycle/id6758281578?mt=12">App Store</a>
                 <a href="https://github.com/xcv58/ShortcutCycle">GitHub</a>
                 <a href="privacy/" data-i18n="footer.privacyPolicy">Privacy Policy</a>
                 <a href="support/" data-i18n="nav.support">Support</a>

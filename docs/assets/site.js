@@ -1,5 +1,8 @@
 // Shared site controls; gallery and FAQ behavior activate only where those elements exist.
 const localeBaseURL = new URL('locales/', document.currentScript.src);
+const siteBaseURL = new URL('../', document.currentScript.src);
+const internalPagePaths = new Set(['', 'index.html', 'privacy/', 'privacy/index.html', 'support/', 'support/index.html']
+    .map(path => new URL(path, siteBaseURL).pathname));
 
 // Enable active state on iOS
 document.addEventListener('touchstart', () => { }, { passive: true });
@@ -24,15 +27,20 @@ const screenshotThemeBtns = {
 const screenshotThemeAnnouncement = document.getElementById('screenshot-theme-announcement');
 const screenshotVariantFrames = Array.from(document.querySelectorAll('.screenshot-variant'));
 const desktopHoverMedia = window.matchMedia('(hover: hover) and (pointer: fine)');
-const languageSelect = document.getElementById('language-select');
+const languageSelects = Array.from(document.querySelectorAll('.language-select'));
+const languageSelect = languageSelects[0];
 const languageAnnouncement = document.getElementById('language-announcement');
 const languageStatus = document.getElementById('language-status');
 
 function showLanguageStatus(message = '', loading = false) {
-    languageStatus.textContent = message;
-    languageStatus.hidden = !message;
-    languageSelect.setAttribute('aria-busy', String(loading));
-    languageSelect.closest('.language-selector').classList.toggle('is-loading', loading);
+    document.querySelectorAll('.language-status').forEach(status => {
+        status.textContent = message;
+        status.hidden = !message;
+    });
+    languageSelects.forEach(select => {
+        select.setAttribute('aria-busy', String(loading));
+        select.closest('.language-selector').classList.toggle('is-loading', loading);
+    });
 }
 const languageStorageKey = 'shortcutcycle-language';
 let isScreenshotThemeOverridden = false;
@@ -42,12 +50,15 @@ const pendingLanguages = new Map();
 
 const translations = {};
 const initialLanguagePreference = html.dataset.language || 'en';
-languageSelect.replaceChildren(...Object.entries(preferences.languages).map(([code, name]) => {
-    const option = new Option(name, code);
-    option.lang = code;
-    option.dir = code === 'ar' ? 'rtl' : 'ltr';
-    return option;
-}));
+languageSelects.forEach(select => {
+    select.replaceChildren(...Object.entries(preferences.languages).map(([code, name]) => {
+        const option = new Option(name, code);
+        option.lang = code;
+        option.dir = code === 'ar' ? 'rtl' : 'ltr';
+        return option;
+    }));
+    select.closest('.language-selector').hidden = false;
+});
 
 async function loadLanguage(language) {
     if (translations[language]) return translations[language];
@@ -174,6 +185,16 @@ function applyTranslations() {
     }
 }
 
+function updateInternalLanguageLinks() {
+    document.querySelectorAll('a[href]').forEach(link => {
+        const href = link.getAttribute('href');
+        if (!href || href.startsWith('#')) return;
+        const target = new URL(href, window.location.href);
+        if (target.origin !== siteBaseURL.origin || !internalPagePaths.has(target.pathname)) return;
+        link.href = preferences.languageURL(target.href, currentLanguage);
+    });
+}
+
 async function setLanguage(language, options = {}) {
     let normalizedLanguage = normalizeLanguage(language) || 'en';
     const { persist = false, announce = false } = options;
@@ -189,7 +210,7 @@ async function setLanguage(language, options = {}) {
             if (request !== languageRequest) return false;
             failureMessage = translateText('language.loadFailed') || 'This language could not be loaded. Please try again.';
             if (persist) {
-                languageSelect.value = currentLanguage;
+                languageSelects.forEach(select => { select.value = currentLanguage; });
                 languageAnnouncement.textContent = failureMessage;
                 return false;
             }
@@ -202,9 +223,16 @@ async function setLanguage(language, options = {}) {
         html.lang = normalizedLanguage;
         html.dir = normalizedLanguage === 'ar' ? 'rtl' : 'ltr';
         html.setAttribute('data-language', normalizedLanguage);
-        languageSelect.value = normalizedLanguage;
-        if (persist) saveLanguage(normalizedLanguage);
+        languageSelects.forEach(select => { select.value = normalizedLanguage; });
+        if (persist) {
+            saveLanguage(normalizedLanguage);
+            // A direct picker choice also survives reloads when storage is blocked.
+            try {
+                window.history.replaceState(window.history.state, '', preferences.languageURL(window.location.href, normalizedLanguage));
+            } catch { /* Internal links still keep the chosen language. */ }
+        }
         if (translations.en) applyTranslations();
+        updateInternalLanguageLinks();
         if (announce || needsLoading) languageAnnouncement.textContent = failureMessage || translateText('language.changed');
         document.dispatchEvent(new CustomEvent('language-updated', { detail: normalizedLanguage }));
         return true;
@@ -293,6 +321,7 @@ function setTheme(theme, shouldAnnounce = true) {
 }
 
 function updateControls(activeTheme) {
+    themeToggle.hidden = false;
     const dark = getResolvedTheme(activeTheme) === 'dark';
     const label = translateText(dark ? 'theme.switchToLight' : 'theme.switchToDark') ||
         (dark ? 'Switch to light mode' : 'Switch to dark mode');
@@ -379,14 +408,27 @@ document.querySelectorAll('.copy-command-btn').forEach((button) => {
     });
 });
 
+// Keep a newer explicit choice when a cached page is restored with Back or Forward.
+function refreshLanguagePreference() {
+    const language = preferences.detectLanguage(preferences.readStorage(languageStorageKey),
+        navigator.languages || [navigator.language || 'en'], preferences.languageHint(window.location.search));
+    if (language !== currentLanguage) setLanguage(language, { persist: false, announce: false });
+    else updateInternalLanguageLinks();
+}
+window.addEventListener('pageshow', event => { if (event.persisted) refreshLanguagePreference(); });
+window.addEventListener('popstate', refreshLanguagePreference);
+window.addEventListener('storage', event => {
+    if (event.key === languageStorageKey || event.key === null) refreshLanguagePreference();
+});
+
 // Initialize Language
 setLanguage(initialLanguagePreference, { persist: false, announce: false });
 
-if (languageSelect) {
-    languageSelect.addEventListener('change', () => {
-        setLanguage(languageSelect.value, { persist: true, announce: true });
+languageSelects.forEach(select => {
+    select.addEventListener('change', () => {
+        setLanguage(select.value, { persist: true, announce: true });
     });
-}
+});
 
 window.ShortcutCycleI18n = {
     setLanguage: (language) => setLanguage(language, { persist: true, announce: false }),

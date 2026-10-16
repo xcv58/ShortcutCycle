@@ -114,3 +114,51 @@ test('first paint survives blocked storage and sets Arabic direction before rend
     assert.equal(htmlElement.dir, 'ltr');
     assert.equal(htmlElement.dataset.theme, 'dark');
 });
+
+
+test('directory language hints accept canonical catalogs and preserve saved choices', () => {
+    for (const language of Object.keys(preferences.languages)) {
+        assert.equal(preferences.languageHint(`?ref=apps&lang=${language}`), language);
+        assert.equal(preferences.detectLanguage(null, ['en-US'], language), language);
+        assert.equal(preferences.detectLanguage('de', ['en-US'], language), 'de');
+    }
+    for (const invalid of ['zh-TW', 'ZH-Hant', 'en-US', 'english', '', 'missing']) {
+        assert.equal(preferences.languageHint(`?lang=${invalid}`), null, invalid);
+    }
+    assert.equal(preferences.detectLanguage(null, ['fr-CA'], preferences.languageHint('?lang=zh-TW')), 'fr');
+    assert.equal(preferences.detectLanguage('invalid', ['en-US'], 'zh-Hant'), 'zh-Hant');
+});
+
+test('first paint persists a valid directory hint without changing the URL', () => {
+    const stored = {};
+    const location = {search:'?ref=apps&lang=zh-Hant', href:'https://s.jenny.media/?ref=apps&lang=zh-Hant#faq'};
+    const context = {
+        URLSearchParams, location, document:{documentElement:{dataset:{}}}, navigator:{languages:['en-US']},
+        localStorage:{getItem:key=>stored[key] || null,setItem:(key,value)=>{stored[key]=value;}}
+    };
+    vm.runInNewContext(fs.readFileSync(preferencesPath, 'utf8'), context);
+    assert.equal(context.document.documentElement.lang, 'zh-Hant');
+    assert.equal(stored['shortcutcycle-language'], 'zh-Hant');
+    assert.equal(location.href, 'https://s.jenny.media/?ref=apps&lang=zh-Hant#faq');
+    stored['shortcutcycle-language']='en';
+    vm.runInNewContext(fs.readFileSync(preferencesPath, 'utf8'), context);
+    assert.equal(context.document.documentElement.lang, 'en');
+    assert.equal(stored['shortcutcycle-language'], 'en');
+    context.localStorage={getItem(){throw Error('Blocked');},setItem(){throw Error('Blocked');}};
+    vm.runInNewContext(fs.readFileSync(preferencesPath, 'utf8'), context);
+    assert.equal(context.document.documentElement.lang, 'zh-Hant');
+});
+
+test('public App Store destinations leave storefront selection to Apple', () => {
+    for (const [file,page] of Object.entries(pages)) assert.doesNotMatch(page, /https:\/\/apps\.apple\.com\/us\/app\//, file);
+});
+
+
+test('language links retain unrelated parameters and fragments with canonical choices only', () => {
+    assert.equal(preferences.languageURL('https://s.jenny.media/privacy/?ref=apps&lang=zh-Hant#permissions', 'en'),
+        'https://s.jenny.media/privacy/?ref=apps&lang=en#permissions');
+    assert.equal(preferences.languageURL('https://s.jenny.media/support/?message=a%26b#contact', 'zh-Hans'),
+        'https://s.jenny.media/support/?message=a%26b&lang=zh-Hans#contact');
+    assert.equal(preferences.languageURL('https://s.jenny.media/?ref=apps#faq', 'zh-TW'),
+        'https://s.jenny.media/?ref=apps#faq');
+});
