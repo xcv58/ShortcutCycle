@@ -175,6 +175,8 @@ header {
     display: flex;
     align-items: center;
     gap: 9px;
+    max-width: 100%;
+    min-width: 0;
 }
 
 .logo img {
@@ -187,6 +189,8 @@ header {
 .logo-wordmark {
     letter-spacing: -0.03em;
     line-height: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .nav-wrapper {
@@ -413,6 +417,9 @@ header {
     border-bottom: 1px dotted var(--text-secondary);
     cursor: help;
     position: relative;
+    display: inline-block;
+    max-width: 100%;
+    overflow-wrap: anywhere;
     transition: color 0.2s ease;
 }
 
@@ -586,6 +593,8 @@ header {
 .gallery-scroller {
     margin-top: 60px;
     display: flex;
+    min-width: 0;
+    width: 100%;
     gap: 20px;
     overflow-x: auto;
     padding-bottom: 20px;
@@ -709,11 +718,11 @@ header {
 }
 
 .scroll-btn.prev {
-    inset-inline-start: -64px;
+    inset-inline-start: 8px;
 }
 
 .scroll-btn.next {
-    inset-inline-end: -64px;
+    inset-inline-end: 8px;
 }
 
 @media(max-width: 800px) {
@@ -754,7 +763,7 @@ header {
 @media(min-width: 768px) {
     .screenshot-frame {
         flex: 0 0 auto;
-        width: 900px;
+        width: min(900px, 100%);
     }
 }
 
@@ -1218,8 +1227,6 @@ footer {
 
     .tooltip-trigger::after {
         width: 200px;
-        left: 50%;
-        margin-left: -100px;
     }
 
     .cta-group {
@@ -1471,7 +1478,8 @@ footer {
 [dir="rtl"] .hero-subtitle, [dir="rtl"] .feature-card p { line-height: 1.9; }
 .logo, code, pre { direction: ltr; unicode-bidi: isolate; }
 code, pre { text-align: left; }
-.hero > h1, .feature-card, .versus-card, .video-card { overflow-wrap: anywhere; }
+.hero > h1, .section h2, .feature-card, .versus-card, .video-card,
+.faq-group-title, .faq-item summary { overflow-wrap: anywhere; }
 .nav-wrapper, .language-selector { min-width: 0; }
 @media (max-width: 900px) {
     header { flex-wrap: wrap; gap: 20px; }
