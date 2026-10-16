@@ -1,5 +1,8 @@
 // Shared site controls; gallery and FAQ behavior activate only where those elements exist.
 const localeBaseURL = new URL('locales/', document.currentScript.src);
+const siteBaseURL = new URL('../', document.currentScript.src);
+const internalPagePaths = new Set(['', 'index.html', 'privacy/', 'privacy/index.html', 'support/', 'support/index.html']
+    .map(path => new URL(path, siteBaseURL).pathname));
 
 // Enable active state on iOS
 document.addEventListener('touchstart', () => { }, { passive: true });
@@ -174,6 +177,16 @@ function applyTranslations() {
     }
 }
 
+function updateInternalLanguageLinks() {
+    document.querySelectorAll('a[href]').forEach(link => {
+        const href = link.getAttribute('href');
+        if (!href || href.startsWith('#')) return;
+        const target = new URL(href, window.location.href);
+        if (target.origin !== siteBaseURL.origin || !internalPagePaths.has(target.pathname)) return;
+        link.href = preferences.languageURL(target.href, currentLanguage);
+    });
+}
+
 async function setLanguage(language, options = {}) {
     let normalizedLanguage = normalizeLanguage(language) || 'en';
     const { persist = false, announce = false } = options;
@@ -203,8 +216,15 @@ async function setLanguage(language, options = {}) {
         html.dir = normalizedLanguage === 'ar' ? 'rtl' : 'ltr';
         html.setAttribute('data-language', normalizedLanguage);
         languageSelect.value = normalizedLanguage;
-        if (persist) saveLanguage(normalizedLanguage);
+        if (persist) {
+            saveLanguage(normalizedLanguage);
+            // A direct picker choice also survives reloads when storage is blocked.
+            try {
+                window.history.replaceState(window.history.state, '', preferences.languageURL(window.location.href, normalizedLanguage));
+            } catch { /* Internal links still keep the chosen language. */ }
+        }
         if (translations.en) applyTranslations();
+        updateInternalLanguageLinks();
         if (announce || needsLoading) languageAnnouncement.textContent = failureMessage || translateText('language.changed');
         document.dispatchEvent(new CustomEvent('language-updated', { detail: normalizedLanguage }));
         return true;
@@ -377,6 +397,19 @@ document.querySelectorAll('.copy-command-btn').forEach((button) => {
             button.textContent = translateText('actions.copy');
         }, 1400);
     });
+});
+
+// Keep a newer explicit choice when a cached page is restored with Back or Forward.
+function refreshLanguagePreference() {
+    const language = preferences.detectLanguage(preferences.readStorage(languageStorageKey),
+        navigator.languages || [navigator.language || 'en'], preferences.languageHint(window.location.search));
+    if (language !== currentLanguage) setLanguage(language, { persist: false, announce: false });
+    else updateInternalLanguageLinks();
+}
+window.addEventListener('pageshow', event => { if (event.persisted) refreshLanguagePreference(); });
+window.addEventListener('popstate', refreshLanguagePreference);
+window.addEventListener('storage', event => {
+    if (event.key === languageStorageKey || event.key === null) refreshLanguagePreference();
 });
 
 // Initialize Language

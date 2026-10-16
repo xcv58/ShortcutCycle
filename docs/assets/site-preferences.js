@@ -18,8 +18,19 @@
         if (base === 'pt') return 'pt-BR';
         return Object.hasOwn(languages, base) ? base : null;
     }
-    function detectLanguage(saved, browserLanguages) {
-        return normalizeLanguage(saved) || browserLanguages.map(normalizeLanguage).find(Boolean) || 'en';
+    function languageHint(search) {
+        if (!search) return null;
+        const value = new URLSearchParams(search).get('lang');
+        return Object.hasOwn(languages, value) ? value : null;
+    }
+    function languageURL(href, language) {
+        const target = new URL(href);
+        if (Object.hasOwn(languages, language)) target.searchParams.set('lang', language);
+        return target.href;
+    }
+    function detectLanguage(saved, browserLanguages, hint = null) {
+        return normalizeLanguage(saved) || (Object.hasOwn(languages, hint) ? hint : null) ||
+            browserLanguages.map(normalizeLanguage).find(Boolean) || 'en';
     }
     function normalizeTheme(theme) {
         return ['light', 'dark'].includes(theme) ? theme : 'system';
@@ -30,12 +41,17 @@
     function readStorage(key) {
         try { return root.localStorage.getItem(key); } catch { return null; }
     }
-    const api = { languages, normalizeLanguage, detectLanguage, normalizeTheme, resolveTheme, readStorage };
+    const api = { languages, normalizeLanguage, languageHint, languageURL, detectLanguage, normalizeTheme, resolveTheme, readStorage };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     root.ShortcutCyclePreferences = api;
     if (root.document) {
         const html = root.document.documentElement;
-        const language = detectLanguage(readStorage('shortcutcycle-language'), root.navigator.languages || [root.navigator.language || 'en']);
+        const savedLanguage = readStorage('shortcutcycle-language');
+        const hint = languageHint(root.location?.search || '');
+        const language = detectLanguage(savedLanguage, root.navigator.languages || [root.navigator.language || 'en'], hint);
+        if (!normalizeLanguage(savedLanguage) && hint) {
+            try { root.localStorage.setItem('shortcutcycle-language', hint); } catch { /* Internal links also retain the selected language. */ }
+        }
         html.lang = language;
         html.dir = language === 'ar' ? 'rtl' : 'ltr';
         html.dataset.language = language;
