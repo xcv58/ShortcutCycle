@@ -239,6 +239,12 @@ header {
     color: var(--accent);
 }
 
+.nav-links a, .footer-links a {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+}
+
 .language-selector {
     display: inline-flex;
     align-items: center;
