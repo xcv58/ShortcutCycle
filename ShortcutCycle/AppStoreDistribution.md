@@ -47,14 +47,16 @@ Both local archives and Xcode Cloud builds use the same version-sync script:
 ```sh
 SC_BUILD_NUMBER=123 /bin/sh scripts/sync_project_version.sh
 SC_CI_BUILD_OFFSET=2000 /bin/sh scripts/sync_project_version.sh
-SC_MARKETING_VERSION=1.12 /bin/sh scripts/sync_project_version.sh
+SC_MARKETING_VERSION=1.13 /bin/sh scripts/sync_project_version.sh
 ```
 
-The 1.12 release uses build `140`, following the approved 1.11 build `139`. To prepare a future archive with an explicit build number:
+Version `1.12` is approved and its upload train is closed. Build `144` was rejected because it still used version `1.12`. The replacement upload uses version `1.13`, build `145`. To prepare those values explicitly:
 
 ```sh
-SC_BUILD_NUMBER=141 SC_MARKETING_VERSION=1.12 /bin/sh scripts/sync_project_version.sh
+SC_BUILD_NUMBER=145 SC_MARKETING_VERSION=1.13 /bin/sh scripts/sync_project_version.sh
 ```
+
+After that upload, the checked-in build `145` baseline produces build `146` for the next local archive. Check the latest approved App Store version before uploading; if `1.13` has been approved, advance the marketing version again.
 
 ## 4. Launch Checklist
 - [ ] Agreements: the Paid Applications Agreement is active in Business.
