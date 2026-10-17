@@ -2,7 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.12] - Unreleased
+## [1.13] - Unreleased
+
+### Changed
+- **App Store release version**: Advanced the marketing version to 1.13 and prepared build 145 after the approved 1.12 release closed that upload train. There are no user-facing behavior changes from 1.12.
+
+## [1.12] - 2026-10-01
 
 ### Added
 - **Feedback & Support**: Send bug reports and feature suggestions from the menu bar or General settings, with localized labels in all 15 supported languages.
